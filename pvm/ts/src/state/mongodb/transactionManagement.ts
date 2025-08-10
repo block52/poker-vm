@@ -4,8 +4,8 @@ import { StateManager } from "../stateManager";
 import { ITransactionManagement } from "../interfaces";
 
 export class TransactionManagement extends StateManager implements ITransactionManagement {
-    constructor() {
-        super(process.env.DB_URL || "mongodb://localhost:27017/pvm");
+    constructor(protected readonly connString: string) {
+        super(connString);
     }
 
     public async addTransaction(tx: Transaction): Promise<void> {
@@ -85,7 +85,11 @@ export class TransactionManagement extends StateManager implements ITransactionM
 let instance: TransactionManagement;
 export const getTransactionInstance = (): ITransactionManagement => {
     if (!instance) {
-        instance = new TransactionManagement();
+        const connString = process.env.DB_URL;
+        if (!connString) {
+            throw new Error("No database connection string provided. Please set the DB_URL environment variable.");
+        }
+        instance = new TransactionManagement(connString!);
     }
     return instance;
 };

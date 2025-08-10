@@ -3,27 +3,27 @@ import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { IAction, Range } from "../types";
 
-class SitOutAction extends BaseAction implements IAction {
-    get type(): PlayerActionType { return PlayerActionType.SIT_OUT }
+class SitInAction extends BaseAction implements IAction {
+    get type(): PlayerActionType { return PlayerActionType.SIT_IN }
 
     /**
-     * Verify if a player can sit out. In poker, sitting out is allowed regardless of player status
-     * or game state, as players can always choose to forfeit their hand.
+     * Verify if a player can sit in. In poker, sitting in is allowed regardless of player status
+     * or game state, as players can always choose to join a hand.
      * 
      * Unlike other actions which have restrictions on when they can be performed,
-     * sitting out is universally permitted so that players can exit a hand that they
-     * don't wish to continue playing.
+     * sitting in is universally permitted so that players can enter a hand that they
+     * wish to participate in.
      *
-     * @param player The player attempting to sit out
-     * @returns A Range object with min and max amount both set to 0 (sitting out costs nothing)
+     * @param player The player attempting to sit in
+     * @returns A Range object with min and max amount both set to 0 (sitting in costs nothing)
      */
     verify(player: Player): Range {
-        if (player.status === PlayerStatus.FOLDED) {
-            return { minAmount: 0n, maxAmount: 0n };
+        if (player.status !== PlayerStatus.SITTING_OUT) {
+            throw new Error("Player must be sitting out to sit in.");
         }
 
         if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Sit out is only allowed during the ante round.");
+            throw new Error("Sit in action is not allowed during showdown round.");
         }
 
         return { minAmount: 0n, maxAmount: 0n };

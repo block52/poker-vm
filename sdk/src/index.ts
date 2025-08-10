@@ -5,8 +5,10 @@ export * from "./client";
 
 export enum KEYS {
     ACTION_TYPE = "actiontype",
-    DATA = "data",
     INDEX = "index",
+    PUBLIC_KEY = "publickey",
     SEAT = "seat",
+    SEED = "seed",
     TX_HASH = "txHash",
+    VALUE = "value"
 }

@@ -200,8 +200,11 @@ export class GameManagement extends StateManager implements IGameManagement {
 let instance: GameManagement;
 export const getGameManagementInstance = (): IGameManagement => {
     if (!instance) {
-        const connString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
-        instance = new GameManagement(connString);
+        const connString = process.env.DB_URL;
+        if (!connString) {
+            throw new Error("No database connection string provided. Please set the DB_URL environment variable.");
+        }
+        instance = new GameManagement(connString!);
     }
     return instance;
 };
