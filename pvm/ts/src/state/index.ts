@@ -5,7 +5,6 @@ import { getTransactionInstance } from "./mongodb/transactionManagement";
 import { MongoDBBlockchainManagement } from "./mongodb/blockchainManagement";
 import { getRedisAccountManagementInstance } from "./redis/redisAccountManagement";
 import { getMongoAccountManagementInstance } from "./mongodb/accountManagement";
-export { getGameManagementInstance, getTransactionInstance };
 
 export const getBlockchainInstance = (): IBlockchainManagement => {
     const connString = process.env.DB_URL || "redis://localhost:6379";
@@ -44,3 +43,5 @@ export const getAccountManagementInstance = (): IAccountManagement => {
 
     throw new Error("Unsupported database type");
 }
+
+export { getGameManagementInstance, getTransactionInstance };
