@@ -33,7 +33,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log(`Executing ${this.action} command...`);
 
-        if (await !this.isGameTransaction(this.to)) {
+        if (!(await this.isGameTransaction(this.to))) {
             console.log(`Not a game transaction, checking if ${this.to} is a game...`);
             throw new Error("Not a game transaction");
         }
