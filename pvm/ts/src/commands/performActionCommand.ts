@@ -7,15 +7,11 @@ import TexasHoldemGame from "../engine/texasHoldem";
 import { signResult } from "./abstractSignedCommand";
 import { IGameManagement, ITransactionManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
-import { AccountCommand } from "./accountCommand";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     protected readonly gameManagement: IGameManagement;
     protected readonly transactionManagement: ITransactionManagement;
     protected readonly mempool: Mempool;
-
-    // Check if the action is a game to account transaction
-    private readonly actionTypes: NonPlayerActionType[] = [NonPlayerActionType.JOIN, NonPlayerActionType.LEAVE];
 
     constructor(
         protected readonly from: string,
@@ -37,16 +33,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log(`Executing ${this.action} command...`);
 
-        // const accountCommand = new AccountCommand(this.from, this.privateKey);
-        // const accountResponse = await accountCommand.execute();
-        // const fromAccount = accountResponse.data;
-        // console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
-
-        // if (this.nonce !== fromAccount.nonce) {
-        //     console.log(`Invalid nonce: expected=${fromAccount.nonce}, provided=${this.nonce}`);
-        //     throw new Error("Invalid nonce");
-        // }
-
         if (await !this.isGameTransaction(this.to)) {
             console.log(`Not a game transaction, checking if ${this.to} is a game...`);
             throw new Error("Not a game transaction");
@@ -54,33 +40,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         // const txHash = this.getTxHash();
         let value = this.amount;
-
-        // if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
-        //     if (!txHash) {
-        //         console.log(`No transaction hash provided, creating a new transaction...`);
-        //         throw new Error(`Invalid action type: ${this.action}. Must be one of ${this.actionTypes.join(", ")} or provide a transaction hash.`);
-        //     }
-
-        //     console.log(`Using provided transaction hash: ${txHash}`);
-
-        //     // Check if the transaction exists in the mempool or the transaction management
-        //     const existingTransaction = await this.findTransactionByHash(txHash);
-
-        //     if (existingTransaction.value !== this.amount) {
-        //         console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
-        //         throw new Error("Transaction amount mismatch");
-        //     }
-
-        //     if (existingTransaction.to !== this.to || existingTransaction.from !== this.from) {
-        //         console.log(
-        //             `Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`
-        //         );
-        //         throw new Error("Transaction address mismatch");
-        //     }
-
-        //     // Get the amount from the existing transaction
-        //     value = existingTransaction.value;
-        // }
 
         console.log(`Processing game transaction: action=${this.action} data=${this.data}, to=${this.to}`);
         const gameState = await this.gameManagement.getByAddress(this.to);
@@ -103,18 +62,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
             orderedTransactions.forEach(tx => {
                 try {
-                    
-                    // // Check if the amount is packed in the transaction data
-                    // if (tx.data) {
-                    //     const params = new URLSearchParams(tx.data);
-                    //     if (params.has(KEYS.VALUE)) {
-                    //         const valueStr = params.get(KEYS.VALUE);
-                    //         if (valueStr) {
-                    //             value = BigInt(valueStr);
-                    //         }
-                    //     }
-                    // }
-
                     console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
                     game.performAction(tx.from, tx.type, tx.index, value, tx.data);
                     
@@ -129,7 +76,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const params = new URLSearchParams();
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
-        // params.set(KEYS.TX_HASH, txHash || "");
         params.set(KEYS.VALUE, value.toString());
 
         const data = params.toString();
@@ -160,16 +106,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         return signResult(txResponse, this.privateKey);
     }
 
-    private getTxHash(): string | undefined {
-        if (this.data) {
-            const params = new URLSearchParams(this.data);
-            if (params.has(KEYS.TX_HASH)) {
-                return params.get(KEYS.TX_HASH) || undefined; // Optional transaction hash
-            }
-        }
-        return undefined;
-    }
-
     private async isGameTransaction(address: string): Promise<Boolean> {
         console.log(`Checking if ${address} is a game transaction...`);
         const game = await this.gameManagement.getByAddress(address);
@@ -179,23 +115,5 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
         console.log(`Is game transaction: ${found}`);
         return found;
-    }
-
-    private async findTransactionByHash(txHash: string): Promise<Transaction> {
-        console.log(`Finding transaction by hash: ${txHash}`);
-        const existingTransaction = await this.transactionManagement.getTransaction(txHash);
-
-        if (existingTransaction) {
-            console.log(`Transaction found in transaction management: ${existingTransaction.hash}`);
-            return existingTransaction;
-        }
-
-        const mempoolTransaction = this.mempool.find(tx => tx.hash === txHash);
-        if (mempoolTransaction) {
-            console.log(`Transaction found in mempool: ${mempoolTransaction.hash}`);
-            return mempoolTransaction;
-        }
-
-        throw new Error("Transaction not found");
     }
 }

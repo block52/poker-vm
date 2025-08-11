@@ -50,17 +50,6 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
             throw new Error("Insufficient balance");
         }
 
-        // if (this.data) {
-        //     // Assume the SDK is correct
-        //     const urlSearch = new URLSearchParams(this.data);
-        //     const playerAction = urlSearch.get(KEYS.ACTION_TYPE);
-        //     if (playerAction === NonPlayerActionType.JOIN || playerAction === NonPlayerActionType.LEAVE) {
-        //         const performAction = new PerformActionCommand(this.from, this.to, 0, this.amount, playerAction, this.nonce, this.privateKey, this.data);
-        //         await performAction.execute();
-        //         console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${this.amount}`);
-        //     }
-        // }
-
         try {
             // If we haven't thrown an error, then we can create the transaction
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, BigInt(this.nonce), this.privateKey, this.data ?? "");
