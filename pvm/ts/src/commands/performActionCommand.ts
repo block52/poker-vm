@@ -37,50 +37,50 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
     public async execute(): Promise<ISignedResponse<TransactionResponse>> {
         console.log(`Executing ${this.action} command...`);
 
-        const accountCommand = new AccountCommand(this.from, this.privateKey);
-        const accountResponse = await accountCommand.execute();
-        const fromAccount = accountResponse.data;
-        console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
+        // const accountCommand = new AccountCommand(this.from, this.privateKey);
+        // const accountResponse = await accountCommand.execute();
+        // const fromAccount = accountResponse.data;
+        // console.log(`Account balance for ${this.from}: ${fromAccount.balance} ${fromAccount.nonce}`);
 
-        if (this.nonce !== fromAccount.nonce) {
-            console.log(`Invalid nonce: expected=${fromAccount.nonce}, provided=${this.nonce}`);
-            throw new Error("Invalid nonce");
-        }
+        // if (this.nonce !== fromAccount.nonce) {
+        //     console.log(`Invalid nonce: expected=${fromAccount.nonce}, provided=${this.nonce}`);
+        //     throw new Error("Invalid nonce");
+        // }
 
         if (await !this.isGameTransaction(this.to)) {
             console.log(`Not a game transaction, checking if ${this.to} is a game...`);
             throw new Error("Not a game transaction");
         }
 
-        const txHash = this.getTxHash();
+        // const txHash = this.getTxHash();
         let value = this.amount;
 
-        if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
-            if (!txHash) {
-                console.log(`No transaction hash provided, creating a new transaction...`);
-                throw new Error(`Invalid action type: ${this.action}. Must be one of ${this.actionTypes.join(", ")} or provide a transaction hash.`);
-            }
+        // if (this.actionTypes.includes(this.action as NonPlayerActionType)) {
+        //     if (!txHash) {
+        //         console.log(`No transaction hash provided, creating a new transaction...`);
+        //         throw new Error(`Invalid action type: ${this.action}. Must be one of ${this.actionTypes.join(", ")} or provide a transaction hash.`);
+        //     }
 
-            console.log(`Using provided transaction hash: ${txHash}`);
+        //     console.log(`Using provided transaction hash: ${txHash}`);
 
-            // Check if the transaction exists in the mempool or the transaction management
-            const existingTransaction = await this.findTransactionByHash(txHash);
+        //     // Check if the transaction exists in the mempool or the transaction management
+        //     const existingTransaction = await this.findTransactionByHash(txHash);
 
-            if (existingTransaction.value !== this.amount) {
-                console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
-                throw new Error("Transaction amount mismatch");
-            }
+        //     if (existingTransaction.value !== this.amount) {
+        //         console.log(`Transaction found in transaction management with different amount: ${existingTransaction.value} !== ${this.amount}`);
+        //         throw new Error("Transaction amount mismatch");
+        //     }
 
-            if (existingTransaction.to !== this.to || existingTransaction.from !== this.from) {
-                console.log(
-                    `Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`
-                );
-                throw new Error("Transaction address mismatch");
-            }
+        //     if (existingTransaction.to !== this.to || existingTransaction.from !== this.from) {
+        //         console.log(
+        //             `Transaction found in transaction management with different addresses: ${existingTransaction.to} !== ${this.to} or ${existingTransaction.from} !== ${this.from}`
+        //         );
+        //         throw new Error("Transaction address mismatch");
+        //     }
 
-            // Get the amount from the existing transaction
-            value = existingTransaction.value;
-        }
+        //     // Get the amount from the existing transaction
+        //     value = existingTransaction.value;
+        // }
 
         console.log(`Processing game transaction: action=${this.action} data=${this.data}, to=${this.to}`);
         const gameState = await this.gameManagement.getByAddress(this.to);
@@ -104,16 +104,16 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             orderedTransactions.forEach(tx => {
                 try {
                     
-                    // Check if the amount is packed in the transaction data
-                    if (tx.data) {
-                        const params = new URLSearchParams(tx.data);
-                        if (params.has(KEYS.VALUE)) {
-                            const valueStr = params.get(KEYS.VALUE);
-                            if (valueStr) {
-                                value = BigInt(valueStr);
-                            }
-                        }
-                    }
+                    // // Check if the amount is packed in the transaction data
+                    // if (tx.data) {
+                    //     const params = new URLSearchParams(tx.data);
+                    //     if (params.has(KEYS.VALUE)) {
+                    //         const valueStr = params.get(KEYS.VALUE);
+                    //         if (valueStr) {
+                    //             value = BigInt(valueStr);
+                    //         }
+                    //     }
+                    // }
 
                     console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
                     game.performAction(tx.from, tx.type, tx.index, value, tx.data);
@@ -129,15 +129,14 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const params = new URLSearchParams();
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
-        params.set(KEYS.TX_HASH, txHash || "");
+        // params.set(KEYS.TX_HASH, txHash || "");
         params.set(KEYS.VALUE, value.toString());
-
 
         const data = params.toString();
         const tx: Transaction = await Transaction.create(
             this.to, // game receives funds (to)
             this.from, // player sends funds (from)
-            0n, // no value for game actions
+            this.amount, // no value for game actions
             nonce,
             this.privateKey,
             data
