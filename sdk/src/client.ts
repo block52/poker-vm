@@ -396,11 +396,6 @@ export class NodeRpcClient implements IClient {
      */
     public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        // const transferResponse = await this.transfer(gameAddress, amount.toString());
-
-        // if (!transferResponse) {
-        //     throw new Error("Failed to transfer funds to the game");
-        // }
 
         if (!nonce) {
             nonce = await this.getNonce(address);
@@ -413,7 +408,6 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEAT, seat.toString());
         params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
-        // params.set(KEYS.TX_HASH, transferResponse.hash);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
