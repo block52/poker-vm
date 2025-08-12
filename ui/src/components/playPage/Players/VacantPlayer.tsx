@@ -147,7 +147,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxPlayers, gameOptions?.maxBuyIn]);
+        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxBuyIn]);
 
 
         // Memoize container styles
