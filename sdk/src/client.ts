@@ -396,11 +396,11 @@ export class NodeRpcClient implements IClient {
      */
     public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        const transferResponse = await this.transfer(gameAddress, amount.toString());
+        // const transferResponse = await this.transfer(gameAddress, amount.toString());
 
-        if (!transferResponse) {
-            throw new Error("Failed to transfer funds to the game");
-        }
+        // if (!transferResponse) {
+        //     throw new Error("Failed to transfer funds to the game");
+        // }
 
         if (!nonce) {
             nonce = await this.getNonce(address);
@@ -412,13 +412,15 @@ export class NodeRpcClient implements IClient {
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEAT, seat.toString());
-        params.set(KEYS.TX_HASH, transferResponse.hash);
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
+        // params.set(KEYS.TX_HASH, transferResponse.hash);
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            method: RPCMethods.TRANSFER,
+            // params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, amount, nonce, formattedData],
             signature: signature
         });
 
@@ -433,7 +435,6 @@ export class NodeRpcClient implements IClient {
      * @returns A Promise that resolves to the transaction
      */
     public async playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
-
         const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
         if (!gameState) {
             throw new Error("Game state not found");

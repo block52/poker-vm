@@ -1,9 +1,10 @@
-import { TransactionResponse } from "@bitcoinbrisbane/block52";
+import { KEYS, NonPlayerActionType, PlayerActionType, TransactionResponse } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { AccountCommand } from "./accountCommand";
+import { PerformActionCommandWithResult } from "./performActionCommandWithResult";
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     private readonly mempool: Mempool;
@@ -53,6 +54,17 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
             // If we haven't thrown an error, then we can create the transaction
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, BigInt(this.nonce), this.privateKey, this.data ?? "");
             await this.mempool.add(transaction);
+
+            if (this.data) {
+                // Assume the SDK is correct
+                const urlSearch = new URLSearchParams(this.data);
+                const playerAction = urlSearch.get(KEYS.ACTION_TYPE);
+                if (playerAction === NonPlayerActionType.JOIN || playerAction === NonPlayerActionType.LEAVE) {
+                    const performAction = new PerformActionCommandWithResult(this.from, this.to, 0, this.amount, playerAction, this.nonce, this.privateKey, this.data);
+                    await performAction.execute();
+                    console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${this.amount}`);
+                }
+            }
 
             const txResponse: TransactionResponse = {
                 nonce: this.nonce.toString(),

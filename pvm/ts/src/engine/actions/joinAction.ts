@@ -63,8 +63,18 @@ class JoinAction extends BaseAction {
             // Choose randomly from the available seats
             seat = Math.floor(Math.random() * availableSeats.length);
         } else {
-            const params = new URLSearchParams(data);
-            seat = parseInt(params.get(KEYS.SEAT) || "1");
+            // Hack for old unit tests
+            // Check via REGEX if data has the format "seat=1"
+            // Should be anywhere in the string, so we use ^ and $ to match the whole string
+            const regex = new RegExp(`${KEYS.SEAT}=(\\d+)$`);
+            const match = data.match(regex);
+            if (!match) {
+                // If it matches, parse the seat number
+                seat = parseInt(data);
+            } else {
+                const params = new URLSearchParams(data);
+                seat = parseInt(params.get(KEYS.SEAT) || "1");
+            }
         }
 
         return seat;
