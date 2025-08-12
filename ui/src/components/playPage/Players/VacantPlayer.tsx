@@ -129,7 +129,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
                 
                 const response = await joinTable(tableId, {
-                    buyInAmount: buyInWei,
+                    amount: buyInWei,
                     seatNumber: index
                 });
                 
