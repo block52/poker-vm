@@ -14,16 +14,13 @@ export async function leaveTable(tableId: string, amount: string, nonce?: number
     // Get the singleton client instance
     const client = getClient();
 
-    // Convert the amount from string to bigint
-    const amountBigInt = BigInt(amount);
-    
     console.log("👋 Leave table attempt");
     console.log("👋 Table ID:", tableId);
-    console.log("👋 Amount:", amountBigInt.toString());
+    console.log("👋 Amount:", amount);
     console.log("👋 Nonce:", nonce);
 
     // Call the playerLeave method (let SDK handle nonce if not provided)
-    const response = await client.playerLeave(tableId, amountBigInt, nonce);
+    const response = await client.playerLeave(tableId, amount, nonce);
 
     console.log("👋 Leave table response:", response);
     return response;

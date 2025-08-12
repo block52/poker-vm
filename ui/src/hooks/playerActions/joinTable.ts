@@ -14,10 +14,7 @@ export async function joinTable(tableId: string, options: JoinTableOptions): Pro
     const client = getClient();
 
     console.log("🎮 Join table attempt");
-    console.log("🎮 Buy-in amount:", options.buyInAmount);
-
-    // Convert the buyInAmount from string to bigint
-    const buyInAmountBigInt = BigInt(options.buyInAmount);
+    console.log("🎮 Buy-in amount:", options.amount);
 
     // Use the client's playerJoin method (let SDK handle nonce internally)
     if (!tableId) {
@@ -28,7 +25,7 @@ export async function joinTable(tableId: string, options: JoinTableOptions): Pro
     if (options.seatNumber === undefined || options.seatNumber === null) {
         const response = await client.playerJoinRandomSeat(
             tableId,
-            buyInAmountBigInt
+            options.amount
         );
         console.log("🎮 Join table response:", response);
         return response;
@@ -36,7 +33,7 @@ export async function joinTable(tableId: string, options: JoinTableOptions): Pro
 
     const response = await client.playerJoin(
         tableId,
-        buyInAmountBigInt,
+        options.amount,
         options.seatNumber
     );
 
