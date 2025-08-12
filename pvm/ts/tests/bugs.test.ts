@@ -18,7 +18,8 @@ import {
     test_971,
     test_949,
     test_984,
-    test_1006
+    test_1006,
+    test_1055
 } from "./senarios/data";
 import { N } from "ethers";
 
@@ -60,7 +61,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(nextToAct).toBeDefined();
         });
 
-        it.only("should test bug 735 3", () => {
+        it("should test bug 735 3", () => {
             game = fromTestJson(test_735_3);
             // Check the current round
             expect(game.currentPlayerId).toEqual("0xC84737526E425D7549eF20998Fa992f88EAC2484"); // Seat 2 has checked
@@ -256,7 +257,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions[2].min).toEqual("40000000000000000");
         });
 
-        it.only("should test bug 1006 second test", () => {
+        it("should test bug 1006 second test", () => {
             game = fromTestJson(test_1006);
 
             const nextToAct = game.getNextPlayerToAct();
@@ -268,6 +269,13 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions[0].action).toEqual(NonPlayerActionType.DEAL);
             expect(legalActions[1].action).toEqual(PlayerActionType.FOLD);
             expect(legalActions[2].action).toEqual(PlayerActionType.SIT_OUT);
+        });
+
+        it("should test bug 1055", () => {
+            game = fromTestJson(test_1055);
+
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct!.address).toEqual("0xc264FEDe83B081C089530BA0b8770C98266d058a");
         });
     });
 });
