@@ -31,10 +31,10 @@ export interface IClient {
     newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse>;
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
-    playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
-    playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
-    playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
-    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerJoin(gameAddress: string, amount: string, seat: number, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinAtNextSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinRandomSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
+    playerLeave(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
@@ -394,7 +394,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoin(gameAddress: string, amount: string, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
         // const transferResponse = await this.transfer(gameAddress, amount.toString());
 
@@ -434,7 +434,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoinAtNextSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse> {
         const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
         if (!gameState) {
             throw new Error("Game state not found");
@@ -464,7 +464,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoinRandomSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse> {
 
         const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
         if (!gameState) {
@@ -548,7 +548,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+    public async playerLeave(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
 
         if (!nonce) {
@@ -565,7 +565,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount, nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
