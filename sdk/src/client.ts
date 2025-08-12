@@ -349,12 +349,12 @@ export class NodeRpcClient implements IClient {
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEED, seed);
-        const formattedData = params.toString();
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, "0", nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -408,13 +408,13 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEAT, seat.toString());
         params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
-        const formattedData = params.toString();
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            // params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
-            params: [address, gameAddress, amount, nonce, formattedData],
+            // params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, amount, nonce, encodedData],
             signature: signature
         });
 
@@ -511,7 +511,7 @@ export class NodeRpcClient implements IClient {
             // Generate URLSearchParams formatted data
             const params = new URLSearchParams();
             params.set(KEYS.INDEX, index.toString());
-            const formattedData = params.toString();
+            const encodedData = params.toString();
 
             // If data is provided, append it to the params
             if (data) {
@@ -524,7 +524,7 @@ export class NodeRpcClient implements IClient {
             const { data: body } = await axios.post(this.url, {
                 id: 1, // this.getRequestId(),
                 method: RPCMethods.PERFORM_ACTION,
-                params: [address, gameAddress, action, amount, nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+                params: [address, gameAddress, action, amount, nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
                 signature: signature
             });
 
@@ -554,12 +554,12 @@ export class NodeRpcClient implements IClient {
         // Generate URLSearchParams formatted data
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
-        const formattedData = params.toString();
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -586,12 +586,12 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEED, seed);
         params.set(KEYS.PUBLIC_KEY, publicKey);
-        const formattedData = params.toString();
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
