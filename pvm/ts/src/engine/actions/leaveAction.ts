@@ -19,7 +19,6 @@ class LeaveAction extends BaseAction {
 
         // Get player seat BEFORE changing any state
         const seat = this.game.getPlayerSeatNumber(player.address);
-
         this.game.dealerManager.handlePlayerLeave(seat);
 
         const playerAddress = player.address;

@@ -9,6 +9,16 @@ import { IGameManagement, ITransactionManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
+    private readonly accountToContractActions: NonPlayerActionType[] = [
+        NonPlayerActionType.JOIN
+    ];
+
+    private readonly contractToAccountActions: NonPlayerActionType[] = [
+        NonPlayerActionType.LEAVE
+    ];
+
+    private readonly nonMempoolActions: NonPlayerActionType[] = [...this.accountToContractActions, ...this.contractToAccountActions];
+
     protected readonly gameManagement: IGameManagement;
     protected readonly transactionManagement: ITransactionManagement;
     protected readonly mempool: Mempool;
@@ -79,9 +89,11 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             this.data ?? "" // data can be empty for game actions
         );
 
-        //if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
+        // If the tx is a contract to account action or a account to contract action, we dont want to add it to the mempool
+        if (!this.nonMempoolActions.includes(this.action as NonPlayerActionType) && !this.mempool.has(tx.hash)) {
             await this.mempool.add(tx);
-        //}
+            console.log(`Added transaction to mempool: ${tx.hash}`);
+        }
 
         const txResponse: TransactionResponse = {
             nonce: tx.nonce.toString(),

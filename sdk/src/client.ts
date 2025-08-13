@@ -589,7 +589,7 @@ export class NodeRpcClient implements IClient {
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            params: [gameAddress, address, amount, nonce, encodedData],
+            params: [gameAddress, address, amount, nonce, encodedData], // Reversed order of from/to
             signature: signature
         });
 

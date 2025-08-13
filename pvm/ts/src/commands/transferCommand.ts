@@ -63,7 +63,8 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         try {
             // If we haven't thrown an error, then we can create the transaction
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, BigInt(this.nonce), this.privateKey, this.data ?? "");
-
+            this.mempool.add(transaction); // Add to mempool immediately
+            
             if (this.data) {
                 // Assume the SDK is correct
                 const urlSearch = new URLSearchParams(this.data);
@@ -85,17 +86,24 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 // I think we can always safely do this regardless of the action type
                 if (playerActionStr && this.contractToAccountActions.includes(playerActionStr as NonPlayerActionType)) {
                     const playerAction = playerActionStr.trim() as PlayerActionType | NonPlayerActionType;
-                    const performAction = new PerformActionCommandWithResult(this.to, this.from, index, value, playerAction, this.nonce, this.privateKey, this.data);
+                    const to = this.from; // Reverse the from/to for contract to account actions
+                    const from = this.to; // Reverse the from/to for contract to account actions
+                    const performAction = new PerformActionCommandWithResult(from, to, index, value, playerAction, this.nonce, this.privateKey, this.data);
                     await performAction.execute();
-                    console.log(`Performed action: ${playerAction} from ${this.to} to ${this.from} with amount ${value ? BigInt(value) : BigInt(0)}`);
+                    console.log(`Performed action: ${playerAction} from ${from} to ${to} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
+
+                // // If the transaction is account to contract or contract to account, we add it to the mempool
+                // if (playerActionStr && !this.mempool.has(transaction.hash) && (this.accountToContractActions.includes(playerActionStr as NonPlayerActionType) || this.contractToAccountActions.includes(playerActionStr as NonPlayerActionType))) {
+                //     console.log(`Adding transaction to mempool for game action: ${this.data}`);
+                    
+                //     await this.mempool.add(transaction);
+                // }
             }
 
-            // TODO: Use new mempool.has
-
-            // Perform action command will add to mempool if it was a game action
-            if (!this.data) {
-                console.log(`Transaction already exists in mempool: ${transaction.hash}`);
+            // Add normal transaction to mempool if it doesn't already exist
+            if (!this.data && !this.mempool.has(transaction.hash)) {
+                console.log(`Adding transaction to mempool: ${transaction.hash}`);
                 await this.mempool.add(transaction);
             }
 
