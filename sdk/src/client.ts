@@ -396,11 +396,6 @@ export class NodeRpcClient implements IClient {
      */
     public async playerJoin(gameAddress: string, amount: string, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        // const transferResponse = await this.transfer(gameAddress, amount.toString());
-
-        // if (!transferResponse) {
-        //     throw new Error("Failed to transfer funds to the game");
-        // }
 
         if (!nonce) {
             nonce = await this.getNonce(address);
@@ -424,7 +419,29 @@ export class NodeRpcClient implements IClient {
             signature: signature
         });
 
-        return body.result.data;
+        if (!body || !body.result || !body.result.data) {
+            throw new Error("Failed to join game: Invalid transfer response from server");
+        }
+
+        // Now get game state for the front end
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, address);
+        if (!gameState) {
+            throw new Error("Game state not found after joining");
+        }
+
+        const response: PerformActionResponse = {
+            state: gameState,
+            nonce: body.result.data.nonce,
+            to: body.result.data.to,
+            from: body.result.data.from,
+            value: body.result.data.value,
+            hash: body.result.data.hash,
+            signature: body.result.data.signature,
+            timestamp: body.result.data.timestamp,
+            data: body.result.data.data
+        };
+
+        return response
     }
 
     /**
