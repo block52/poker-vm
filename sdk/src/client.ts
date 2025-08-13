@@ -569,7 +569,7 @@ export class NodeRpcClient implements IClient {
         const address = this.getAddress();
 
         if (!nonce) {
-            nonce = await this.getNonce(address);
+            nonce = await this.getNonce(gameAddress);
         }
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
