@@ -9,16 +9,6 @@ import { IGameManagement, ITransactionManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
-    // private readonly accountToContractActions: NonPlayerActionType[] = [
-    //     NonPlayerActionType.JOIN
-    // ];
-
-    // private readonly contractToAccountActions: NonPlayerActionType[] = [
-    //     NonPlayerActionType.LEAVE
-    // ];
-
-    // private readonly nonMempoolActions: NonPlayerActionType[] = [...this.accountToContractActions, ...this.contractToAccountActions];
-
     protected readonly gameManagement: IGameManagement;
     protected readonly transactionManagement: ITransactionManagement;
     protected readonly mempool: Mempool;
@@ -98,22 +88,20 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             console.log(`Added current transaction to ordered transactions: ${tx.hash}`);
         }
 
-        if (orderedTransactions.length > 0) {
-            // Only load the game state if there are transactions to process
-            const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
-            const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
+        const gameOptions = await this.gameManagement.getGameOptions(gameState.address);
+        const game: TexasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
 
-            orderedTransactions.forEach(tx => {
-                try {
-                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
-                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+        orderedTransactions.forEach(tx => {
+            try {
+                console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+                game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
 
-                } catch (error) {
-                    console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
-                    // Continue with other transactions, don't let this error propagate up
-                }
-            });
-        }
+            } catch (error) {
+                console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
+                // Continue with other transactions, don't let this error propagate up
+            }
+        });
+
 
         const txResponse: TransactionResponse = {
             nonce: tx.nonce.toString(),
