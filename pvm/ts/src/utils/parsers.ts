@@ -50,36 +50,6 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
             data: tx.data
         };
     } catch (error) {
-        // Fallback to old comma-separated format for backward compatibility
-        console.warn(`Failed to parse URLSearchParams format, falling back to comma-separated: ${error}`);
-
-        const params = tx.data.split(",");
-        const action = params[0].trim() as PlayerActionType;
-
-        if (params.length < 2) {
-            return {
-                from: tx.from,
-                to: tx.to,
-                value: tx.value,
-                type: action,
-                index: 0
-            };
-        }
-
-        const index = parseInt(params[1].trim());
-
-        let data = params[2] ? params[2].trim() : null;
-        if (data == "undefined") {
-            data = null;
-        }
-
-        return {
-            from: tx.from,
-            to: tx.to,
-            value: tx.value,
-            type: action,
-            index: index,
-            data
-        };
+        throw new Error(`Error parsing transaction data: ${error}. Data: ${tx.data}`);
     }
 };

@@ -10,7 +10,7 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
     constructor(
         readonly from: string,
         readonly to: string,
-        readonly index: number, // Allow array for join actions with seat number
+        readonly index: number, // Turn index
         readonly value: bigint,
         readonly action: PlayerActionType | NonPlayerActionType,
         readonly nonce: number,

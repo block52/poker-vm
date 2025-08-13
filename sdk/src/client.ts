@@ -533,7 +533,6 @@ export class NodeRpcClient implements IClient {
 
             // Generate URLSearchParams formatted data
             const params = new URLSearchParams();
-            params.set(KEYS.INDEX, index.toString());
             const encodedData = params.toString();
 
             // If data is provided, append it to the params
@@ -545,7 +544,7 @@ export class NodeRpcClient implements IClient {
             }
 
             const { data: body } = await axios.post(this.url, {
-                id: 1, // this.getRequestId(),
+                id: this.getRequestId(),
                 method: RPCMethods.PERFORM_ACTION,
                 params: [address, gameAddress, action, amount, nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
                 signature: signature
