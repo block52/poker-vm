@@ -9,15 +9,15 @@ import { IGameManagement, ITransactionManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
 
 export class PerformActionCommand implements ICommand<ISignedResponse<TransactionResponse>> {
-    private readonly accountToContractActions: NonPlayerActionType[] = [
-        NonPlayerActionType.JOIN
-    ];
+    // private readonly accountToContractActions: NonPlayerActionType[] = [
+    //     NonPlayerActionType.JOIN
+    // ];
 
-    private readonly contractToAccountActions: NonPlayerActionType[] = [
-        NonPlayerActionType.LEAVE
-    ];
+    // private readonly contractToAccountActions: NonPlayerActionType[] = [
+    //     NonPlayerActionType.LEAVE
+    // ];
 
-    private readonly nonMempoolActions: NonPlayerActionType[] = [...this.accountToContractActions, ...this.contractToAccountActions];
+    // private readonly nonMempoolActions: NonPlayerActionType[] = [...this.accountToContractActions, ...this.contractToAccountActions];
 
     protected readonly gameManagement: IGameManagement;
     protected readonly transactionManagement: ITransactionManagement;
@@ -31,7 +31,8 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         protected readonly action: PlayerActionType | NonPlayerActionType,
         protected readonly nonce: number,
         protected readonly privateKey: string,
-        protected readonly data?: string
+        protected readonly data?: string,
+        protected readonly addToMempool: boolean = true // Whether to add the transaction to the mempool
     ) {
         console.log(`Creating PerformActionCommand: from=${from}, to=${to}, value=${value}, action=${action}, data=${data}`);
         
@@ -55,12 +56,33 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             throw new Error(`Game state not found for address: ${this.to}`);
         }
 
+        const nonce = BigInt(this.nonce);
+        const tx: Transaction = await Transaction.create(
+            this.to, // game receives funds (to)
+            this.from, // player sends funds (from)
+            this.value, // no value for game actions
+            nonce,
+            this.privateKey,
+            this.data ?? "" // data can be empty for game actions
+        );
+
         // Get mempool transactions for the game
         const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.to && tx.data !== undefined && tx.data !== null && tx.data !== "");
         console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
+        // If the tx is a contract to account action or a account to contract action, we dont want to add it to the mempool
+        if (this.addToMempool && !this.mempool.has(tx.hash)) {
+            await this.mempool.add(tx);
+            console.log(`Added transaction to mempool: ${tx.hash}`);
+        }
+
         // Sort transactions by index
         const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
+        if (!this.addToMempool) {
+            // If we're not adding to the mempool, we still need to process the transaction
+            orderedTransactions.push(toOrderedTransaction(tx));
+            console.log(`Added current transaction to ordered transactions: ${tx.hash}`);
+        }
 
         if (orderedTransactions.length > 0) {
             // Only load the game state if there are transactions to process
@@ -79,21 +101,11 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             });
         }
 
-        const nonce = BigInt(this.nonce);
-        const tx: Transaction = await Transaction.create(
-            this.to, // game receives funds (to)
-            this.from, // player sends funds (from)
-            this.value, // no value for game actions
-            nonce,
-            this.privateKey,
-            this.data ?? "" // data can be empty for game actions
-        );
-
-        // If the tx is a contract to account action or a account to contract action, we dont want to add it to the mempool
-        if (!this.nonMempoolActions.includes(this.action as NonPlayerActionType) && !this.mempool.has(tx.hash)) {
-            await this.mempool.add(tx);
-            console.log(`Added transaction to mempool: ${tx.hash}`);
-        }
+        // // If the tx is a contract to account action or a account to contract action, we dont want to add it to the mempool
+        // if (!this.nonMempoolActions.includes(this.action as NonPlayerActionType) && !this.mempool.has(tx.hash)) {
+        //     await this.mempool.add(tx);
+        //     console.log(`Added transaction to mempool: ${tx.hash}`);
+        // }
 
         const txResponse: TransactionResponse = {
             nonce: tx.nonce.toString(),

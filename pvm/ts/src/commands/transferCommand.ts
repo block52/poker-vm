@@ -63,8 +63,10 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         try {
             // If we haven't thrown an error, then we can create the transaction
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, BigInt(this.nonce), this.privateKey, this.data ?? "");
-            this.mempool.add(transaction); // Add to mempool immediately
-            
+            if (!this.mempool.has(transaction.hash)) {
+                this.mempool.add(transaction); // Add to mempool immediately
+            }
+
             if (this.data) {
                 // Assume the SDK is correct
                 const urlSearch = new URLSearchParams(this.data);
@@ -78,7 +80,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 // I think we can always safely do this regardless of the action type
                 if (playerActionStr && this.accountToContractActions.includes(playerActionStr as NonPlayerActionType)) {
                     const playerAction = playerActionStr.trim() as PlayerActionType | NonPlayerActionType;
-                    const performAction = new PerformActionCommandWithResult(this.from, this.to, index, value, playerAction, this.nonce, this.privateKey, this.data);
+                    const performAction = new PerformActionCommandWithResult(this.from, this.to, index, value, playerAction, this.nonce, this.privateKey, this.data, false);
                     await performAction.execute();
                     console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
@@ -88,7 +90,7 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     const playerAction = playerActionStr.trim() as PlayerActionType | NonPlayerActionType;
                     const to = this.from; // Reverse the from/to for contract to account actions
                     const from = this.to; // Reverse the from/to for contract to account actions
-                    const performAction = new PerformActionCommandWithResult(from, to, index, value, playerAction, this.nonce, this.privateKey, this.data);
+                    const performAction = new PerformActionCommandWithResult(from, to, index, value, playerAction, this.nonce, this.privateKey, this.data, false);
                     await performAction.execute();
                     console.log(`Performed action: ${playerAction} from ${from} to ${to} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
