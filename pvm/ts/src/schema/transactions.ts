@@ -49,6 +49,6 @@ const transactionSchema = new Schema<ITransactionDocument>({
     }
 });
 
-transactionSchema.index({ from: 1, nonce: 1 }, { unique: true }); // Unique constraint on from + nonce combination
+// transactionSchema.index({ from: 1, nonce: 1 }, { unique: true }); // Unique constraint on from + nonce combination
 
 export default model("Transactions", transactionSchema);

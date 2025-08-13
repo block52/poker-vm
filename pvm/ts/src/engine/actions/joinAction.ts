@@ -66,15 +66,25 @@ class JoinAction extends BaseAction {
             // Hack for old unit tests
             // Check via REGEX if data has the format "seat=1"
             // Should be anywhere in the string, so we use ^ and $ to match the whole string
-            const regex = new RegExp(`${KEYS.SEAT}=(\\d+)$`);
-            const match = data.match(regex);
+            const seatRegex = /seat=(\d+)/;
+            const match = data.match(seatRegex);
+            
+            if (match && match[1]) {
+                return parseInt(match[1], 10);
+            }
+
+            // If it doesn't match the regex, we assume it's a seat number
+            // and parse it directly.  Old unit tests used to pass the seat number directly
+            // without the "seat=" prefix.
             if (!match) {
                 // If it matches, parse the seat number
                 seat = parseInt(data);
-            } else {
-                const params = new URLSearchParams(data);
-                seat = parseInt(params.get(KEYS.SEAT) || "1");
             }
+        }
+
+        // Validate the seat number, ensuring it's a valid integer
+        if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {
+            throw new Error(`Invalid seat number: ${seat}`);
         }
 
         return seat;

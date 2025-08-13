@@ -60,7 +60,6 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         try {
             // If we haven't thrown an error, then we can create the transaction
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, BigInt(this.nonce), this.privateKey, this.data ?? "");
-            await this.mempool.add(transaction);
 
             if (this.data) {
                 // Assume the SDK is correct
@@ -79,6 +78,14 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     await performAction.execute();
                     console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
+            }
+
+            // TODO: Use new mempool.has
+
+            // Perform action command will add to mempool if it was a game action
+            if (!this.data) {
+                console.log(`Transaction already exists in mempool: ${transaction.hash}`);
+                await this.mempool.add(transaction);
             }
 
             const txResponse: TransactionResponse = {
