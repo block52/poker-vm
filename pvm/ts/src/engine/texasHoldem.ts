@@ -424,24 +424,26 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Adds a player to the game at a specific seat
      */
     joinAtSeat(player: Player, seat: number): void {
-        // Check if the player is already in the game
-        if (this.exists(player.address)) {
-            throw new Error("Player already joined.");
-        }
-
         // Ensure the seat is valid
         if (seat === -1) {
             throw new Error("Table full.");
         }
 
-        // Check buy-in limits
-        if (player.chips < this.minBuyIn || player.chips > this.maxBuyIn) {
-            throw new Error("Player does not have enough or too many chips to join.");
-        }
-
         // Add player to the table
         this._playersMap.set(seat, player);
         player.updateStatus(PlayerStatus.ACTIVE);
+    }
+
+    /**
+     * Removes a player from the game
+     */
+    removePlayer(playerAddress: string): void {
+        const seat = this.getPlayerSeatNumber(playerAddress);
+        if (seat === -1) {
+            throw new Error("Player not found.");
+        }
+
+        this._playersMap.delete(seat);
     }
 
     /**
@@ -1011,17 +1013,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Adds a non-player action to the game state
      */
     addNonPlayerAction(turn: Turn, data?: string): void {
-        // For LEAVE action, we still want to record it before the player is removed
-        const isLeaveAction = turn.action === NonPlayerActionType.LEAVE;
+        // // For LEAVE action, we still want to record it before the player is removed
+        // const isLeaveAction = turn.action === NonPlayerActionType.LEAVE;
 
-        // Only check if player exists for non-LEAVE actions
-        if (!isLeaveAction) {
-            const playerExists = this.exists(turn.playerId);
-            if (!playerExists) {
-                console.log(`Skipping non-player action for player ${turn.playerId} who has left the game`);
-                return;
-            }
-        }
+        // // Only check if player exists for non-LEAVE actions
+        // if (!isLeaveAction) {
+        //     const playerExists = this.exists(turn.playerId);
+        //     if (!playerExists) {
+        //         console.log(`Skipping non-player action for player ${turn.playerId} who has left the game`);
+        //         return;
+        //     }
+        // }
 
         const timestamp = Date.now();
         const seat = data ? Number(data) : this.getPlayerSeatNumber(turn.playerId);
@@ -1041,12 +1043,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             this._rounds.set(round, actions);
         } else {
             this._rounds.set(round, [turn]);
-        }
-
-        // If this is a LEAVE action, remove the player from the game
-        if (turn.action === NonPlayerActionType.LEAVE) {
-            console.log(`Removing player ${turn.playerId} from seat ${turn.seat}`);
-            this._playersMap.delete(turn.seat);
         }
     }
 

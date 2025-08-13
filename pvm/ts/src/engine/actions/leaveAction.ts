@@ -26,13 +26,15 @@ class LeaveAction extends BaseAction {
 
         console.log(`Player ${playerAddress} at seat ${seat} leaving with ${playerChips} chips...`);
 
+        this.game.removePlayer(playerAddress);
+
         // Add leave action to history BEFORE removing the player
         this.game.addNonPlayerAction({ 
             playerId: playerAddress, 
             action: NonPlayerActionType.LEAVE, 
             index: index,
             amount: playerChips // Include chips amount in the action
-        });
+        }, seat.toString());
     }
 }
 
