@@ -57,24 +57,38 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
 
         const nonce = BigInt(this.nonce);
+        const params = new URLSearchParams();
+        params.set(KEYS.ACTION_TYPE, this.action.toString());
+        params.set(KEYS.INDEX, this.index.toString());
+        params.set(KEYS.VALUE, this.value.toString());
+
+        // If data is provided, append it to the params
+        if (this.data) {
+            const dataParams = new URLSearchParams(this.data);
+            for (const [key, value] of dataParams.entries()) {
+                params.set(key, value);
+            }
+        }
+
+        const encodedData = params.toString();
         const tx: Transaction = await Transaction.create(
             this.to, // game receives funds (to)
             this.from, // player sends funds (from)
             this.value, // no value for game actions
             nonce,
             this.privateKey,
-            this.data ?? "" // data can be empty for game actions
+            encodedData
         );
-
-        // Get mempool transactions for the game
-        const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.to && tx.data !== undefined && tx.data !== null && tx.data !== "");
-        console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
         // If the tx is a contract to account action or a account to contract action, we dont want to add it to the mempool
         if (this.addToMempool && !this.mempool.has(tx.hash)) {
             await this.mempool.add(tx);
             console.log(`Added transaction to mempool: ${tx.hash}`);
         }
+
+        // Get mempool transactions for the game
+        const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.to && tx.data !== undefined && tx.data !== null && tx.data !== "");
+        console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
         // Sort transactions by index
         const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
@@ -101,12 +115,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             });
         }
 
-        // // If the tx is a contract to account action or a account to contract action, we dont want to add it to the mempool
-        // if (!this.nonMempoolActions.includes(this.action as NonPlayerActionType) && !this.mempool.has(tx.hash)) {
-        //     await this.mempool.add(tx);
-        //     console.log(`Added transaction to mempool: ${tx.hash}`);
-        // }
-
         const txResponse: TransactionResponse = {
             nonce: tx.nonce.toString(),
             to: tx.to,
@@ -115,7 +123,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             hash: tx.hash,
             signature: tx.signature,
             timestamp: tx.timestamp.toString(),
-            data: tx.data
+            data: encodedData
         };
 
         return signResult(txResponse, this.privateKey);
