@@ -7,7 +7,14 @@ import { AccountCommand } from "./accountCommand";
 import { PerformActionCommandWithResult } from "./performActionCommandWithResult";
 
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
+    
+    private readonly accountToContractActions: NonPlayerActionType[] = [
+        NonPlayerActionType.JOIN,
+        NonPlayerActionType.LEAVE
+    ];
+
     private readonly mempool: Mempool;
+    
     /**
      * Creates a new TransferCommand instance.
      * @param from The address sending the funds.
@@ -58,11 +65,19 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
             if (this.data) {
                 // Assume the SDK is correct
                 const urlSearch = new URLSearchParams(this.data);
-                const playerAction = urlSearch.get(KEYS.ACTION_TYPE);
-                if (playerAction === NonPlayerActionType.JOIN || playerAction === NonPlayerActionType.LEAVE) {
-                    const performAction = new PerformActionCommandWithResult(this.from, this.to, 0, this.amount, playerAction, this.nonce, this.privateKey, this.data);
+                const playerActionStr = urlSearch.get(KEYS.ACTION_TYPE);
+                const indexStr = urlSearch.get(KEYS.INDEX);
+                const valueStr = urlSearch.get(KEYS.VALUE);
+
+                const index = indexStr ? parseInt(indexStr) : 0; // Default to 0 if not provided
+                const value = valueStr ? BigInt(valueStr) : BigInt(0); //
+
+                // I think we can always safely do this regardless of the action type
+                if (playerActionStr && this.accountToContractActions.includes(playerActionStr as NonPlayerActionType)) {
+                    const playerAction = playerActionStr.trim() as PlayerActionType | NonPlayerActionType;
+                    const performAction = new PerformActionCommandWithResult(this.from, this.to, index, value, playerAction, this.nonce, this.privateKey, this.data);
                     await performAction.execute();
-                    console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${this.amount}`);
+                    console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
             }
 

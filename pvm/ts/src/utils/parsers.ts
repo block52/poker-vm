@@ -25,35 +25,26 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
     try {
         // Parse URLSearchParams format
         const params = new URLSearchParams(tx.data);
-        
+
         const actionType = params.get(KEYS.ACTION_TYPE);
         const indexStr = params.get(KEYS.INDEX);
-        
+        const valueStr = params.get(KEYS.VALUE);
+
         if (!actionType || !indexStr) {
             throw new Error(`Invalid transaction data format: missing ${KEYS.ACTION_TYPE} or ${KEYS.INDEX} in ${tx.data}`);
         }
 
         const action = actionType.trim() as PlayerActionType | NonPlayerActionType;
         const index = parseInt(indexStr.trim());
-        
+
         if (isNaN(index)) {
             throw new Error(`Invalid index in transaction data: ${indexStr}`);
-        }
-
-        // Hack for now until we implement 1057
-        let value = tx.value;
-        if (action === NonPlayerActionType.JOIN ) {
-            const dataParams = new URLSearchParams(tx.data);
-            const valueStr = dataParams.get(KEYS.VALUE);
-            if (valueStr) {
-                value = BigInt(valueStr);
-            }
         }
 
         return {
             from: tx.from,
             to: tx.to,
-            value: value,
+            value: valueStr ? BigInt(valueStr) : BigInt(0), // Default to 0 if value is not provided
             type: action,
             index: index,
             data: tx.data
@@ -61,7 +52,7 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
     } catch (error) {
         // Fallback to old comma-separated format for backward compatibility
         console.warn(`Failed to parse URLSearchParams format, falling back to comma-separated: ${error}`);
-        
+
         const params = tx.data.split(",");
         const action = params[0].trim() as PlayerActionType;
 

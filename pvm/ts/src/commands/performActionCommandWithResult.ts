@@ -11,13 +11,13 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
         readonly from: string,
         readonly to: string,
         readonly index: number, // Allow array for join actions with seat number
-        readonly amount: bigint,
+        readonly value: bigint,
         readonly action: PlayerActionType | NonPlayerActionType,
         readonly nonce: number,
         readonly privateKey: string,
         readonly data?: string
     ) {
-        super(from, to, index, amount, action, nonce, privateKey, data);
+        super(from, to, index, value, action, nonce, privateKey, data);
     }
 
     public override async execute(): Promise<ISignedResponse<PerformActionResponse>> {

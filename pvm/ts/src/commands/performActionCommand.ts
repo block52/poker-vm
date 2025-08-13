@@ -17,13 +17,13 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         protected readonly from: string,
         protected readonly to: string,
         protected readonly index: number, // Allow array for join actions with seat number
-        protected readonly amount: bigint,
+        protected readonly value: bigint,
         protected readonly action: PlayerActionType | NonPlayerActionType,
         protected readonly nonce: number,
         protected readonly privateKey: string,
         protected readonly data?: string
     ) {
-        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, amount=${amount}, action=${action}, data=${data}`);
+        console.log(`Creating PerformActionCommand: from=${from}, to=${to}, value=${value}, action=${action}, data=${data}`);
         
         this.gameManagement = getGameManagementInstance();
         this.transactionManagement = getTransactionInstance();
@@ -37,9 +37,6 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             console.log(`Not a game transaction, checking if ${this.to} is a game...`);
             throw new Error("Not a game transaction");
         }
-
-        // const txHash = this.getTxHash();
-        let value = this.amount;
 
         console.log(`Processing game transaction: action=${this.action} data=${this.data}, to=${this.to}`);
         const gameState = await this.gameManagement.getByAddress(this.to);
@@ -62,9 +59,9 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
 
             orderedTransactions.forEach(tx => {
                 try {
-                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${value}, index ${tx.index}, and data ${tx.data}`);
-                    game.performAction(tx.from, tx.type, tx.index, value, tx.data);
-                    
+                    console.log(`Processing ${tx.type} action from ${tx.from} with value ${tx.value}, index ${tx.index}, and data ${tx.data}`);
+                    game.performAction(tx.from, tx.type, tx.index, tx.value, tx.data);
+
                 } catch (error) {
                     console.warn(`Error processing transaction ${tx.index} from ${tx.from}: ${(error as Error).message}`);
                     // Continue with other transactions, don't let this error propagate up
@@ -76,13 +73,13 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         const params = new URLSearchParams();
         params.set(KEYS.ACTION_TYPE, this.action);
         params.set(KEYS.INDEX, this.index.toString());
-        params.set(KEYS.VALUE, value.toString());
+        params.set(KEYS.VALUE, this.value.toString());
 
         const encodedData = params.toString();
         const tx: Transaction = await Transaction.create(
             this.to, // game receives funds (to)
             this.from, // player sends funds (from)
-            this.amount, // no value for game actions
+            this.value, // no value for game actions
             nonce,
             this.privateKey,
             encodedData
@@ -96,7 +93,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             nonce: tx.nonce.toString(),
             to: tx.to,
             from: tx.from,
-            value: value.toString(),
+            value: this.value.toString(),
             hash: tx.hash,
             signature: tx.signature,
             timestamp: tx.timestamp.toString(),

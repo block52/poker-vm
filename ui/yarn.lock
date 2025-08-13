@@ -188,10 +188,10 @@
     "@babel/helper-string-parser" "^7.27.1"
     "@babel/helper-validator-identifier" "^7.27.1"
 
-"@bitcoinbrisbane/block52@1.0.155":
-  version "1.0.155"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.155.tgz#a2934954ac98411e79407fe925233d9433164e93"
-  integrity sha512-HUN5W6srJJaFMq/cfbNnjKkosio9b4szsXPqFPPS07LM3ouUmII0xRthYnWhTzjWU7Zy/7ZhDoeisabsNWwhDg==
+"@bitcoinbrisbane/block52@1.0.156":
+  version "1.0.156"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.0.156.tgz#49680a22cf55693938614da17fa90ac176a9ed7b"
+  integrity sha512-lYixzZ69P1q9KdV+AYwjTxrbcD9OEvInY85sw/u9yUK7zkMcai6NmVQ/EjCgyLfeRhwnIxrgzHlOnD+pdpOq8Q==
   dependencies:
     axios "^1.8.1"
     bigunit "^1.2.5"

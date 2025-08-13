@@ -413,7 +413,7 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEAT, seat.toString());
         params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
-        // params.set(KEYS.TX_HASH, transferResponse.hash);
+        params.set(KEYS.VALUE, amount.toString()); // This does not always be 1 for 1.  A tournament may have a fee, for example, or value may be a chip amount
         const formattedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
