@@ -1013,18 +1013,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Adds a non-player action to the game state
      */
     addNonPlayerAction(turn: Turn, data?: string): void {
-        // // For LEAVE action, we still want to record it before the player is removed
-        // const isLeaveAction = turn.action === NonPlayerActionType.LEAVE;
-
-        // // Only check if player exists for non-LEAVE actions
-        // if (!isLeaveAction) {
-        //     const playerExists = this.exists(turn.playerId);
-        //     if (!playerExists) {
-        //         console.log(`Skipping non-player action for player ${turn.playerId} who has left the game`);
-        //         return;
-        //     }
-        // }
-
         const timestamp = Date.now();
         const seat = data ? Number(data) : this.getPlayerSeatNumber(turn.playerId);
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };

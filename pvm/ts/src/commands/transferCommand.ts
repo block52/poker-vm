@@ -94,13 +94,6 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     await performAction.execute();
                     console.log(`Performed action: ${playerAction} from ${from} to ${to} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
-
-                // // If the transaction is account to contract or contract to account, we add it to the mempool
-                // if (playerActionStr && !this.mempool.has(transaction.hash) && (this.accountToContractActions.includes(playerActionStr as NonPlayerActionType) || this.contractToAccountActions.includes(playerActionStr as NonPlayerActionType))) {
-                //     console.log(`Adding transaction to mempool for game action: ${this.data}`);
-                    
-                //     await this.mempool.add(transaction);
-                // }
             }
 
             // Add normal transaction to mempool if it doesn't already exist
