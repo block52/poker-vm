@@ -30,8 +30,12 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
         const indexStr = params.get(KEYS.INDEX);
         const valueStr = params.get(KEYS.VALUE);
 
-        if (!actionType || !indexStr) {
-            throw new Error(`Invalid transaction data format: missing ${KEYS.ACTION_TYPE} or ${KEYS.INDEX} in ${tx.data}`);
+        if (!actionType) {
+            throw new Error(`Invalid transaction data format: missing ${KEYS.ACTION_TYPE} in ${tx.data}`);
+        }
+
+        if (!indexStr) {
+            throw new Error(`Invalid transaction data format: missing ${KEYS.INDEX} in ${tx.data}`);
         }
 
         const action = actionType.trim() as PlayerActionType | NonPlayerActionType;

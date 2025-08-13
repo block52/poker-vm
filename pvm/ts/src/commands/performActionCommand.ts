@@ -70,13 +70,28 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
         }
 
         const nonce = BigInt(this.nonce);
+        const params = new URLSearchParams();
+        params.set(KEYS.ACTION_TYPE, this.action.toString());
+        params.set(KEYS.INDEX, this.index.toString());
+        params.set(KEYS.VALUE, this.value.toString());
+
+        // If data is provided, append it to the params
+        if (this.data) {
+            const dataParams = new URLSearchParams(this.data);
+            for (const [key, value] of dataParams.entries()) {
+                params.set(key, value);
+            }
+        }
+
+        const encodedData = params.toString();
+        
         const tx: Transaction = await Transaction.create(
             this.to, // game receives funds (to)
             this.from, // player sends funds (from)
             this.value, // no value for game actions
             nonce,
             this.privateKey,
-            this.data ?? "" // data can be empty for game actions
+            encodedData
         );
 
         //if (!this.actionTypes.includes(this.action as NonPlayerActionType)) {
@@ -91,7 +106,7 @@ export class PerformActionCommand implements ICommand<ISignedResponse<Transactio
             hash: tx.hash,
             signature: tx.signature,
             timestamp: tx.timestamp.toString(),
-            data: tx.data
+            data: encodedData
         };
 
         return signResult(txResponse, this.privateKey);
