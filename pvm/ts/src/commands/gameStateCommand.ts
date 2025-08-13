@@ -1,4 +1,4 @@
-import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { KEYS, NonPlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { getGameManagementInstance } from "../state/index";
@@ -7,6 +7,7 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { Transaction } from "../models";
 import { IGameManagement } from "../state/interfaces";
 import { toOrderedTransaction } from "../utils/parsers";
+import { OrderedTransaction } from "../engine/types";
 
 export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
     private readonly gameManagement: IGameManagement;
@@ -30,7 +31,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
             const mempoolTransactions: Transaction[] = this.mempool.findAll(tx => tx.to === this.address && tx.data !== undefined && tx.data !== null && tx.data !== "");
             console.log(`Found ${mempoolTransactions.length} mempool transactions`);
 
-            const orderedTransactions = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
+            const orderedTransactions: OrderedTransaction[] = mempoolTransactions.map(tx => toOrderedTransaction(tx)).sort((a, b) => a.index - b.index);
 
             orderedTransactions.forEach(tx => {
                 try {

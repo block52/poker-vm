@@ -10,14 +10,15 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
     constructor(
         readonly from: string,
         readonly to: string,
-        readonly index: number, // Allow array for join actions with seat number
-        readonly amount: bigint,
+        readonly index: number, // Turn index
+        readonly value: bigint,
         readonly action: PlayerActionType | NonPlayerActionType,
         readonly nonce: number,
         readonly privateKey: string,
-        readonly data?: string
+        readonly data?: string,
+        readonly addToMempool: boolean = true // Whether to add the transaction to the mempool
     ) {
-        super(from, to, index, amount, action, nonce, privateKey, data);
+        super(from, to, index, value, action, nonce, privateKey, data);
     }
 
     public override async execute(): Promise<ISignedResponse<PerformActionResponse>> {

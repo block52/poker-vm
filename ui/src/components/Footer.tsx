@@ -26,6 +26,25 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Add ref to track if we're already attempting to auto-deal
     const attemptToAutoDeal = useRef<boolean>(false);
+    
+    // Detect mobile landscape
+    const [isMobileLandscape, setIsMobileLandscape] = useState(
+        window.innerWidth <= 926 && window.innerWidth > window.innerHeight
+    );
+    
+    useEffect(() => {
+        const checkOrientation = () => {
+            setIsMobileLandscape(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
+        };
+        
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        
+        return () => {
+            window.removeEventListener('resize', checkOrientation);
+            window.removeEventListener('orientationchange', checkOrientation);
+        };
+    }, []);
 
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState } = useGameStateContext();
@@ -256,8 +275,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
 
     return (
-        <div className="fixed bottom-12 lg:bottom-1 left-0 right-0 text-white p-2 lg:p-1 pb-4 lg:pb-1 flex justify-center items-center relative">
-            <div className="flex flex-col w-full lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 justify-center rounded-lg relative z-10">
+        <div className={`fixed left-0 right-0 text-white flex justify-center items-center relative ${
+            isMobileLandscape 
+                ? 'bottom-0 p-0.5' 
+                : 'bottom-12 lg:bottom-1 p-2 lg:p-1 pb-4 lg:pb-1'
+        }`}>
+            <div className={`flex flex-col w-full justify-center rounded-lg relative z-10 ${
+                isMobileLandscape 
+                    ? 'mx-1 space-y-0.5 max-w-full' 
+                    : 'lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 max-w-full'
+            }`}>
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-2 lg:mb-3">
@@ -344,7 +371,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {!hideOtherButtons && (
                     <>
                         {/* Player Action Buttons Container */}
-                        <div className="flex justify-center items-center gap-1 lg:gap-2">
+                        <div className={`flex justify-center items-center ${
+                            isMobileLandscape ? 'gap-0.5' : 'gap-1 lg:gap-2'
+                        }`}>
                             {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostSmallBlind}
@@ -389,12 +418,16 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
                         {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
                             <>
-                                <div className="flex justify-between gap-1 lg:gap-2">
+                                <div className={`flex justify-between ${
+                                    isMobileLandscape ? 'gap-0.5' : 'gap-1 lg:gap-2'
+                                }`}>
                                     {canFoldAnytime && (
                                         <button
-                                            className="btn-fold cursor-pointer active:scale-105
-px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm
-transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
+                                            className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium ${
+                                                isMobileLandscape 
+                                                    ? 'px-2 py-0.5 text-[10px] min-w-[50px]'
+                                                    : 'px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]'
+                                            }`}
                                             onClick={() => handleFold(tableId)}
                                         >
                                             FOLD
@@ -409,9 +442,13 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
 
                                     {hasCheckAction && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
-                                            px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
-                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                                            className={`cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
+                                            rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)] ${
+                                                isMobileLandscape 
+                                                    ? 'px-2 py-0.5 text-[10px]'
+                                                    : 'px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm'
+                                            }`}
                                             onClick={() => handleCheck(tableId)}
                                         >
                                             CHECK
@@ -419,8 +456,12 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                     )}
                                     {hasCallAction && (
                                         <button
-                                            className="btn-call cursor-pointer px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border shadow-md backdrop-blur-sm text-xs lg:text-sm
-                                            transition-all duration-200 font-medium transform active:scale-105"
+                                            className={`btn-call cursor-pointer rounded-lg w-full border shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform active:scale-105 ${
+                                                isMobileLandscape 
+                                                    ? 'px-2 py-0.5 text-[10px]'
+                                                    : 'px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm'
+                                            }`}
                                             onClick={() => handleCall(callAction, callAmount, tableId)}
                                         >
                                             CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span>
@@ -430,9 +471,13 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                         <button
                                             onClick={hasRaiseAction ? handleRaise : handleBet}
                                             disabled={hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn}
-                                            className="cursor-pointer hover:scale-105 btn-raise px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border shadow-md backdrop-blur-sm text-xs lg:text-sm transition-all duration-200 font-medium"
+                                            className={`cursor-pointer hover:scale-105 btn-raise rounded-lg w-full border shadow-md backdrop-blur-sm transition-all duration-200 font-medium ${
+                                                isMobileLandscape 
+                                                    ? 'px-2 py-0.5 text-[10px]'
+                                                    : 'px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm'
+                                            }`}
                                         >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"}{" "}
+                                            {hasRaiseAction ? "RAISE" : "BET"}{" "}
                                             <span style={{ color: colors.brand.primary }}>
                                                 ${hasRaiseAction ? raiseActionAmount.toFixed(2) : minBet.toFixed(2)}
                                             </span>
@@ -443,10 +488,26 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                 {/* Only show slider and betting options if player can bet or raise */}
                                 {(hasBetAction || hasRaiseAction) && (
                                     <>
-                                        {/* Slider and Controls */}
-                                        <div className="flex items-center space-x-2 lg:space-x-4 bg-[#0f172a40] backdrop-blur-sm p-2 lg:p-3 rounded-lg border border-[#3a546d]/50 shadow-inner">
+                                        {/* Slider and Controls - Compact for mobile landscape */}
+                                        <div className={`flex items-center bg-[#0f172a40] backdrop-blur-sm rounded-lg border border-[#3a546d]/50 shadow-inner ${
+                                            isMobileLandscape 
+                                                ? 'gap-1 px-1 py-0.5 h-8' 
+                                                : 'space-x-2 lg:space-x-4 p-2 lg:p-3'
+                                        }`}>
+                                            {/* Min/Max text - placed first in mobile landscape */}
+                                            {isMobileLandscape && (
+                                                <div className="flex items-center text-[9px] text-gray-400 whitespace-nowrap">
+                                                    <span>Min:${formattedRaiseAmount}</span>
+                                                    <span className="mx-1">/</span>
+                                                    <span>Max:${formattedMaxBetAmount}</span>
+                                                </div>
+                                            )}
+                                            
                                             <button
-                                                className="btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                className={isMobileLandscape 
+                                                    ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
+                                                    : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                }
                                                 onClick={() => handleRaiseChange(-getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
@@ -464,7 +525,10 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     handleRaiseChange(Number(e.target.value));
                                                     setLastAmountSource("slider");
                                                 }}
-                                                className="flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
+                                                className={isMobileLandscape 
+                                                    ? "flex-1 accent-[#64ffda] h-1 rounded-full transition-all duration-200"
+                                                    : "flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
+                                                }
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
                                                         ((raiseActionAmount - (hasBetAction ? minBet : minRaise)) /
@@ -479,15 +543,55 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 disabled={!isPlayerTurn}
                                             />
                                             <button
-                                                className="btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                className={isMobileLandscape 
+                                                    ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
+                                                    : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                }
                                                 onClick={() => handleRaiseChange(getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 +
                                             </button>
 
-                                            {/* Inline Input Box and Min/Max */}
-                                            <div className="flex flex-col items-end gap-1 w-[100px] lg:w-[120px]">
+                                            {/* Inline Input Box - compact for mobile landscape */}
+                                            {!isMobileLandscape && (
+                                                <div className="flex flex-col items-end gap-1 min-w-0">
+                                                    <input
+                                                        type="text"
+                                                        inputMode="decimal"
+                                                        value={formattedRaiseAmount}
+                                                        onChange={e => {
+                                                            const raw = e.target.value;
+
+                                                            // Always allow clearing the field
+                                                            if (raw === "") {
+                                                                setRaiseInputRaw("");
+                                                                setRaiseAmount(0);
+                                                                return;
+                                                            }
+
+                                                            // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
+                                                            if (/^\d*\.?\d{0,2}$/.test(raw)) {
+                                                                setRaiseInputRaw(raw);
+
+                                                                // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
+                                                                if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
+                                                                    setRaiseAmount(parseFloat(raw));
+                                                                    setLastAmountSource("input");
+                                                                }
+                                                            }
+                                                        }}
+                                                        className={`${inputFieldClassName} px-1 lg:px-2 py-1 rounded text-xs lg:text-sm w-[80px] lg:w-[100px] transition-all duration-200 border`}
+                                                        disabled={!isPlayerTurn}
+                                                    />
+                                                    <div className={`${minMaxTextClassName} text-[8px] lg:text-[10px] text-right leading-snug`}>
+                                                        <div>Min: ${formattedRaiseAmount}</div>
+                                                        <div>Max: ${formattedMaxBetAmount}</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {isMobileLandscape && (
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
@@ -513,80 +617,78 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                             }
                                                         }
                                                     }}
-                                                    className={`${inputFieldClassName} px-1 lg:px-2 py-1 rounded text-xs lg:text-sm w-full transition-all duration-200 border`}
+                                                    className={`${inputFieldClassName} px-1 py-0.5 rounded text-[10px] w-[50px] transition-all duration-200 border`}
                                                     disabled={!isPlayerTurn}
                                                 />
+                                            )}
 
-                                                <div className={`${minMaxTextClassName} text-[8px] lg:text-[10px] w-full text-right leading-snug`}>
-                                                    <div>Min: ${formattedRaiseAmount}</div>
-                                                    <div>Max: ${formattedMaxBetAmount}</div>
-                                                </div>
+                                        </div>
+
+                                        {/* Additional Options - Hide in mobile landscape to save space */}
+                                        {!isMobileLandscape && (
+                                            <div className="flex justify-between gap-1 lg:gap-2 mb-1">
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
+                                                        handleRaiseChange(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    1/4 Pot
+                                                </button>
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
+                                                        handleRaiseChange(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    1/2 Pot
+                                                </button>
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
+                                                        handleRaiseChange(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    3/4 Pot
+                                                </button>
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
+                                                        handleRaiseChange(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    Pot
+                                                </button>
+                                                <button
+                                                    className="btn-all-in px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 font-medium transform active:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = hasBetAction ? maxBet : maxRaise;
+                                                        handleRaiseChange(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    ALL-IN
+                                                </button>
                                             </div>
-                                        </div>
-
-                                        {/* Additional Options */}
-                                        <div className="flex justify-between gap-1 lg:gap-2 mb-1">
-                                            <button
-                                                className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                1/4 Pot
-                                            </button>
-                                            <button
-                                                className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                1/2 Pot
-                                            </button>
-                                            <button
-                                                className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                3/4 Pot
-                                            </button>
-                                            <button
-                                                className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                Pot
-                                            </button>
-                                            <button
-                                                className="btn-all-in px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 font-medium transform active:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = hasBetAction ? maxBet : maxRaise;
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                ALL-IN
-                                            </button>
-                                        </div>
+                                        )}
                                     </>
                                 )}
                             </>

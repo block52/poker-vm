@@ -55,7 +55,7 @@ export interface FoldOptions {
 }
 
 export interface JoinTableOptions {
-    buyInAmount: string;
+    amount: string;
     seatNumber?: number;
 }
 

@@ -7,6 +7,7 @@ import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { joinTable } from "../../hooks/playerActions/joinTable";
+import { JoinTableOptions } from "../../hooks/playerActions/types";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {
@@ -62,7 +63,7 @@ const HexagonPattern = React.memo(() => (
 interface BuyInModalProps {
     tableId?: string; // Optional tableId for joining specific table
     onClose: () => void;
-    onJoin: (buyInAmount: string, waitForBigBlind: boolean) => void;
+    onJoin: (amount: string, waitForBigBlind: boolean) => void;
 }
 
 const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tableId }) => {
@@ -191,14 +192,14 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
     const handleJoinClick = useCallback(() => {
         try {
-            const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+            const buyInWei = ethers.parseUnits(buyInAmount, 18);
 
-            if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
+            if (buyInWei < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is $${minBuyInFormatted}`);
                 return;
             }
 
-            if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
+            if (buyInWei > BigInt(maxBuyInWei)) {
                 setBuyInError(`Maximum buy-in is $${maxBuyInFormatted}`);
                 return;
             }
@@ -223,14 +224,14 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             setIsJoiningRandomSeat(true);
 
             // Validate buy-in amount first
-            const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+            const buyInWei = ethers.parseUnits(buyInAmount, 18);
 
-            if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
+            if (buyInWei < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is ${minBuyInFormatted}`);
                 return;
             }
 
-            if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
+            if (buyInWei > BigInt(maxBuyInWei)) {
                 setBuyInError(`Maximum buy-in is ${maxBuyInFormatted}`);
                 return;
             }
@@ -246,8 +247,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 return;
             }
 
-            const joinOptions = {
-                buyInAmount: buyInWei,
+            const joinOptions: JoinTableOptions = {
+                amount: buyInWei.toString(),
                 seatNumber: undefined // Let the server handle random seat assignment
             };
 

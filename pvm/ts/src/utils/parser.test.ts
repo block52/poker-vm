@@ -2,23 +2,21 @@ import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { toOrderedTransaction } from "./parsers";
 
 describe("Parser", () => {
-    
     describe("toOrderedTransaction", () => {
         it("should create ordered transaction with all data", () => {
             const tx = {
                 from: "0x1234",
                 to: "0x5678",
                 value: 1000n,
-                data: "join,0,1"
+                data: "actiontype=join&index=1"
             };
 
             const actual = toOrderedTransaction(tx);
-            expect(actual.index).toBe(0);
+            expect(actual.index).toBe(1);
             expect(actual.from).toBe("0x1234");
             expect(actual.to).toBe("0x5678");
             expect(actual.value).toBe(1000n);
             expect(actual.type).toBe(NonPlayerActionType.JOIN);
-            expect(actual.data).toBe("1");
         });
 
         it("should create ordered transaction with only action type and index", () => {
@@ -26,16 +24,15 @@ describe("Parser", () => {
                 from: "0x1234",
                 to: "0x5678",
                 value: 1000n,
-                data: "join,0"
+                data: "actiontype=join&index=1"
             };
 
             const actual = toOrderedTransaction(tx);
-            expect(actual.index).toBe(0);
+            expect(actual.index).toBe(1);
             expect(actual.from).toBe("0x1234");
             expect(actual.to).toBe("0x5678");
             expect(actual.value).toBe(1000n);
             expect(actual.type).toBe(NonPlayerActionType.JOIN);
-            expect(actual.data).toBeNull();
         });
 
         it("should remove 'undefined", () => {
@@ -59,8 +56,8 @@ describe("Parser", () => {
             const tx = {
                 from: "0x1234",
                 to: "0x5678",
-                value: 1000n,
-                data: "actiontype=join&index=0&data=1"
+                value: 0n,
+                data: "actiontype=join&index=0&value=1000"
             };
 
             const actual = toOrderedTransaction(tx);
@@ -69,7 +66,6 @@ describe("Parser", () => {
             expect(actual.to).toBe("0x5678");
             expect(actual.value).toBe(1000n);
             expect(actual.type).toBe(NonPlayerActionType.JOIN);
-            expect(actual.data).toBe("1");
         });
     });
 });

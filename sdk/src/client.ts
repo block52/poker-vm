@@ -31,10 +31,10 @@ export interface IClient {
     newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse>;
     newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
-    playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse>;
-    playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
-    playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
-    playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse>;
+    playerJoin(gameAddress: string, amount: string, seat: number, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinAtNextSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
+    playerJoinRandomSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
+    playerLeave(gameAddress: string, value: string, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
@@ -349,12 +349,12 @@ export class NodeRpcClient implements IClient {
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEED, seed);
-        const formattedData = params.toString();
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION, // not NEW_HAND any more
-            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.NEW_HAND, "0", nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 
@@ -394,13 +394,8 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoin(gameAddress: string, amount: bigint, seat: number, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoin(gameAddress: string, amount: string, seat: number, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
-        const transferResponse = await this.transfer(gameAddress, amount.toString());
-
-        if (!transferResponse) {
-            throw new Error("Failed to transfer funds to the game");
-        }
 
         if (!nonce) {
             nonce = await this.getNonce(address);
@@ -412,17 +407,41 @@ export class NodeRpcClient implements IClient {
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEAT, seat.toString());
-        params.set(KEYS.TX_HASH, transferResponse.hash);
-        const formattedData = params.toString();
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
+        params.set(KEYS.VALUE, amount.toString()); // This does not always be 1 for 1.  A tournament may have a fee, for example, or value may be a chip amount
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            method: RPCMethods.TRANSFER,
+            // params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, amount, nonce, encodedData],
             signature: signature
         });
 
-        return body.result.data;
+        if (!body || !body.result || !body.result.data) {
+            throw new Error("Failed to join game: Invalid transfer response from server");
+        }
+
+        // Now get game state for the front end
+        const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, address);
+        if (!gameState) {
+            throw new Error("Game state not found after joining");
+        }
+
+        const response: PerformActionResponse = {
+            state: gameState,
+            nonce: body.result.data.nonce,
+            to: body.result.data.to,
+            from: body.result.data.from,
+            value: body.result.data.value,
+            hash: body.result.data.hash,
+            signature: body.result.data.signature,
+            timestamp: body.result.data.timestamp,
+            data: body.result.data.data
+        };
+
+        return response
     }
 
     /**
@@ -432,8 +451,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoinAtNextSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
-
+    public async playerJoinAtNextSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse> {
         const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
         if (!gameState) {
             throw new Error("Game state not found");
@@ -463,7 +481,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerJoinRandomSeat(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+    public async playerJoinRandomSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse> {
 
         const gameState: TexasHoldemStateDTO = await this.getGameState(gameAddress, this.getAddress());
         if (!gameState) {
@@ -515,8 +533,7 @@ export class NodeRpcClient implements IClient {
 
             // Generate URLSearchParams formatted data
             const params = new URLSearchParams();
-            params.set(KEYS.INDEX, index.toString());
-            const formattedData = params.toString();
+            const encodedData = params.toString();
 
             // If data is provided, append it to the params
             if (data) {
@@ -527,9 +544,9 @@ export class NodeRpcClient implements IClient {
             }
 
             const { data: body } = await axios.post(this.url, {
-                id: 1, // this.getRequestId(),
+                id: this.getRequestId(),
                 method: RPCMethods.PERFORM_ACTION,
-                params: [address, gameAddress, action, amount, nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+                params: [address, gameAddress, action, amount, nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
                 signature: signature
             });
 
@@ -543,15 +560,15 @@ export class NodeRpcClient implements IClient {
     /**
      * Leave a Texas Holdem game
      * @param gameAddress The address of the game
-     * @param amount The amount to leave with
+     * @param value The value to leave with
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerLeave(gameAddress: string, amount: bigint, nonce?: number): Promise<PerformActionResponse> {
+    public async playerLeave(gameAddress: string, value: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
 
         if (!nonce) {
-            nonce = await this.getNonce(address);
+            nonce = await this.getNonce(gameAddress);
         }
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
@@ -559,12 +576,19 @@ export class NodeRpcClient implements IClient {
         // Generate URLSearchParams formatted data
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
-        const formattedData = params.toString();
+        params.set(KEYS.VALUE, value.toString());
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.LEAVE);
+        const encodedData = params.toString();
+
+        // Assume 1:1 mapping for amount to value such as cash game.
+        // If this is a tournament, the amount may be different than the value.
+        // For example, a player may leave with 100 chips but the value is 50
+        const amount = value; // The amount to leave with is the same as the value
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            method: RPCMethods.TRANSFER,
+            params: [gameAddress, address, amount, nonce, encodedData], // Reversed order of from/to
             signature: signature
         });
 
@@ -591,12 +615,12 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.INDEX, index.toString());
         params.set(KEYS.SEED, seed);
         params.set(KEYS.PUBLIC_KEY, publicKey);
-        const formattedData = params.toString();
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
             signature: signature
         });
 

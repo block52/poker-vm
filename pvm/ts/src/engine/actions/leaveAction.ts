@@ -19,7 +19,6 @@ class LeaveAction extends BaseAction {
 
         // Get player seat BEFORE changing any state
         const seat = this.game.getPlayerSeatNumber(player.address);
-
         this.game.dealerManager.handlePlayerLeave(seat);
 
         const playerAddress = player.address;
@@ -27,13 +26,15 @@ class LeaveAction extends BaseAction {
 
         console.log(`Player ${playerAddress} at seat ${seat} leaving with ${playerChips} chips...`);
 
+        this.game.removePlayer(playerAddress);
+
         // Add leave action to history BEFORE removing the player
         this.game.addNonPlayerAction({ 
             playerId: playerAddress, 
             action: NonPlayerActionType.LEAVE, 
             index: index,
             amount: playerChips // Include chips amount in the action
-        });
+        }, seat.toString());
     }
 }
 

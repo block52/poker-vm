@@ -26,7 +26,17 @@ class NewHandAction extends BaseAction implements IAction {
         // First verify the action
         this.verify(player);
         const deck = new Deck();
-        const _seed: string[] = this.data.split("-");
+        if (!this.data || this.data.trim() === "") {
+            throw new Error("Seed data is required to create a new hand.");
+        }
+
+        const urlSearchParams = new URLSearchParams(this.data);
+        if (!urlSearchParams.has("seed")) {
+            throw new Error("Seed parameter is required in the data.");
+        }
+
+        const seedStr = urlSearchParams.get("seed") || "";
+        const _seed: string[] = seedStr.split("-");
 
         console.log(`New hand action with seed: ${_seed}`);
         
