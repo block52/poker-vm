@@ -15,7 +15,8 @@ export class PerformActionCommandWithResult extends PerformActionCommand impleme
         readonly action: PlayerActionType | NonPlayerActionType,
         readonly nonce: number,
         readonly privateKey: string,
-        readonly data?: string
+        readonly data?: string,
+        readonly addToMempool: boolean = true // Whether to add the transaction to the mempool
     ) {
         super(from, to, index, value, action, nonce, privateKey, data);
     }

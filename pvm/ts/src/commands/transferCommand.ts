@@ -9,7 +9,10 @@ import { PerformActionCommandWithResult } from "./performActionCommandWithResult
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     
     private readonly accountToContractActions: NonPlayerActionType[] = [
-        NonPlayerActionType.JOIN,
+        NonPlayerActionType.JOIN
+    ];
+
+    private readonly contractToAccountActions: NonPlayerActionType[] = [
         NonPlayerActionType.LEAVE
     ];
 
@@ -60,6 +63,9 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
         try {
             // If we haven't thrown an error, then we can create the transaction
             const transaction: Transaction = await Transaction.create(this.to, this.from, this.amount, BigInt(this.nonce), this.privateKey, this.data ?? "");
+            if (!this.mempool.has(transaction.hash)) {
+                this.mempool.add(transaction); // Add to mempool immediately
+            }
 
             if (this.data) {
                 // Assume the SDK is correct
@@ -74,17 +80,25 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                 // I think we can always safely do this regardless of the action type
                 if (playerActionStr && this.accountToContractActions.includes(playerActionStr as NonPlayerActionType)) {
                     const playerAction = playerActionStr.trim() as PlayerActionType | NonPlayerActionType;
-                    const performAction = new PerformActionCommandWithResult(this.from, this.to, index, value, playerAction, this.nonce, this.privateKey, this.data);
+                    const performAction = new PerformActionCommandWithResult(this.from, this.to, index, value, playerAction, this.nonce, this.privateKey, this.data, false);
                     await performAction.execute();
                     console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
+
+                // I think we can always safely do this regardless of the action type
+                if (playerActionStr && this.contractToAccountActions.includes(playerActionStr as NonPlayerActionType)) {
+                    const playerAction = playerActionStr.trim() as PlayerActionType | NonPlayerActionType;
+                    const to = this.from; // Reverse the from/to for contract to account actions
+                    const from = this.to; // Reverse the from/to for contract to account actions
+                    const performAction = new PerformActionCommandWithResult(from, to, index, value, playerAction, this.nonce, this.privateKey, this.data, false);
+                    await performAction.execute();
+                    console.log(`Performed action: ${playerAction} from ${from} to ${to} with amount ${value ? BigInt(value) : BigInt(0)}`);
+                }
             }
 
-            // TODO: Use new mempool.has
-
-            // Perform action command will add to mempool if it was a game action
-            if (!this.data) {
-                console.log(`Transaction already exists in mempool: ${transaction.hash}`);
+            // Add normal transaction to mempool if it doesn't already exist
+            if (!this.data && !this.mempool.has(transaction.hash)) {
+                console.log(`Adding transaction to mempool: ${transaction.hash}`);
                 await this.mempool.add(transaction);
             }
 

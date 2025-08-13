@@ -34,7 +34,7 @@ export interface IClient {
     playerJoin(gameAddress: string, amount: string, seat: number, nonce?: number): Promise<PerformActionResponse>;
     playerJoinAtNextSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
     playerJoinRandomSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
-    playerLeave(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
+    playerLeave(gameAddress: string, value: string, nonce?: number): Promise<PerformActionResponse>;
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
@@ -409,13 +409,13 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.SEAT, seat.toString());
         params.set(KEYS.ACTION_TYPE, NonPlayerActionType.JOIN);
         params.set(KEYS.VALUE, amount.toString()); // This does not always be 1 for 1.  A tournament may have a fee, for example, or value may be a chip amount
-        const formattedData = params.toString();
+        const encodedData = params.toString();
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.TRANSFER,
-            // params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, formattedData], // [from, to, action, amount, nonce, index, data]
-            params: [address, gameAddress, amount, nonce, formattedData],
+            // params: [address, gameAddress, NonPlayerActionType.JOIN, amount.toString(), nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
+            params: [address, gameAddress, amount, nonce, encodedData],
             signature: signature
         });
 
@@ -560,15 +560,15 @@ export class NodeRpcClient implements IClient {
     /**
      * Leave a Texas Holdem game
      * @param gameAddress The address of the game
-     * @param amount The amount to leave with
+     * @param value The value to leave with
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the transaction
      */
-    public async playerLeave(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse> {
+    public async playerLeave(gameAddress: string, value: string, nonce?: number): Promise<PerformActionResponse> {
         const address = this.getAddress();
 
         if (!nonce) {
-            nonce = await this.getNonce(address);
+            nonce = await this.getNonce(gameAddress);
         }
 
         const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
@@ -576,12 +576,19 @@ export class NodeRpcClient implements IClient {
         // Generate URLSearchParams formatted data
         const params = new URLSearchParams();
         params.set(KEYS.INDEX, index.toString());
+        params.set(KEYS.VALUE, value.toString());
+        params.set(KEYS.ACTION_TYPE, NonPlayerActionType.LEAVE);
         const encodedData = params.toString();
+
+        // Assume 1:1 mapping for amount to value such as cash game.
+        // If this is a tournament, the amount may be different than the value.
+        // For example, a player may leave with 100 chips but the value is 50
+        const amount = value; // The amount to leave with is the same as the value
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
-            method: RPCMethods.PERFORM_ACTION,
-            params: [address, gameAddress, NonPlayerActionType.LEAVE, amount, nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
+            method: RPCMethods.TRANSFER,
+            params: [gameAddress, address, amount, nonce, encodedData], // Reversed order of from/to
             signature: signature
         });
 
