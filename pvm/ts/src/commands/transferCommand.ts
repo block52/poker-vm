@@ -9,7 +9,10 @@ import { PerformActionCommandWithResult } from "./performActionCommandWithResult
 export class TransferCommand implements ICommand<ISignedResponse<TransactionResponse>> {
     
     private readonly accountToContractActions: NonPlayerActionType[] = [
-        NonPlayerActionType.JOIN,
+        NonPlayerActionType.JOIN
+    ];
+
+    private readonly contractToAccountActions: NonPlayerActionType[] = [
         NonPlayerActionType.LEAVE
     ];
 
@@ -77,6 +80,14 @@ export class TransferCommand implements ICommand<ISignedResponse<TransactionResp
                     const performAction = new PerformActionCommandWithResult(this.from, this.to, index, value, playerAction, this.nonce, this.privateKey, this.data);
                     await performAction.execute();
                     console.log(`Performed action: ${playerAction} from ${this.from} to ${this.to} with amount ${value ? BigInt(value) : BigInt(0)}`);
+                }
+
+                // I think we can always safely do this regardless of the action type
+                if (playerActionStr && this.contractToAccountActions.includes(playerActionStr as NonPlayerActionType)) {
+                    const playerAction = playerActionStr.trim() as PlayerActionType | NonPlayerActionType;
+                    const performAction = new PerformActionCommandWithResult(this.to, this.from, index, value, playerAction, this.nonce, this.privateKey, this.data);
+                    await performAction.execute();
+                    console.log(`Performed action: ${playerAction} from ${this.to} to ${this.from} with amount ${value ? BigInt(value) : BigInt(0)}`);
                 }
             }
 
