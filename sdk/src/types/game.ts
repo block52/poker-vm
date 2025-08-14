@@ -198,3 +198,14 @@ export type PerformActionResponse= {
     timestamp: string;
     data?: string;
 }
+
+export type WithdrawResponse = {
+    nonce: string;
+    to: string;
+    from: string;
+    value: string;
+    hash: string;
+    signature: string;
+    timestamp: string;
+    withdrawSignature: string;
+}

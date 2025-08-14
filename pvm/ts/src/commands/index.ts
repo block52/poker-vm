@@ -31,6 +31,7 @@ import { SharedSecretCommand } from "./sharedSecretCommand";
 import { ShutdownCommand } from "./shutdownCommand";
 import { StartServerCommand } from "./startServerCommand";
 import { StopServerCommand } from "./stopServerCommand";
+import { WithdrawCommand } from "./withdrawCommand";
 import { ISignedResponse } from "./interfaces";
 
 export {
@@ -65,7 +66,8 @@ export {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
-    TransferCommand
+    TransferCommand,
+    WithdrawCommand
 };
 
 // TypeScript's isolatedModules flag requires type-only exports to use 'export type'

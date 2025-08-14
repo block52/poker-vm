@@ -29,7 +29,8 @@ import {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
-    TransferCommand
+    TransferCommand,
+    WithdrawCommand
 } from "./commands";
 
 import { makeErrorRPCResponse } from "./types/response";
