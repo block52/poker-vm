@@ -157,13 +157,13 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
         // Ensure account data is loaded
         if (!account) return false;
         
-        // Convert balance from wei to ether for comparison
-        // account.balance is in wei (smallest unit)
-        // User enters amount in USDC (ether units)
-        const balanceInEther = ethers.formatEther(account.balance);
+        // Convert balance from wei to USDC for comparison
+        // Use the same formatBalance function as Dashboard for consistency
+        // formatBalance returns a string, so we need to convert back to number
+        const balanceInUSDC = Number(formatBalance(account.balance));
         
         // Check if user has sufficient balance
-        return Number(value) <= Number(balanceInEther);
+        return Number(value) <= balanceInUSDC;
     };
 
     /**
@@ -274,7 +274,9 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 
     if (!isOpen) return null;
 
-    const balanceInEther = account ? ethers.formatEther(account.balance) : "0";
+    // Convert balance from wei to USDC for display and validation
+    // Use the same formatBalance function as Dashboard for consistency
+    const balanceInUSDC = account?.balance ? formatBalance(account.balance) : "0.00";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={modalOverlayStyle}>
@@ -287,7 +289,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                 <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: hexToRgba(colors.ui.bgMedium, 0.3) }}>
                     <p className="text-sm" style={{ color: colors.ui.textSecondary }}>Available Balance</p>
                     <p className="text-xl font-bold" style={{ color: colors.brand.primary }}>
-                        {formatBalance(balanceInEther)} USDC
+                        ${account ? formatBalance(account.balance) : "0.00"} USDC
                     </p>
                 </div>
 
@@ -351,7 +353,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                                 placeholder="0.00"
                                 step="0.01"
                                 min="0"
-                                max={balanceInEther}
+                                max={balanceInUSDC}
                                 className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2"
                                 style={inputStyle}
                                 disabled={isWithdrawing}
@@ -361,7 +363,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                                     Minimum: 0.01 USDC
                                 </p>
                                 <button
-                                    onClick={() => setAmount(balanceInEther)}
+                                    onClick={() => setAmount(balanceInUSDC)}
                                     className="text-xs underline hover:opacity-80"
                                     style={{ color: colors.brand.primary }}
                                     disabled={isWithdrawing}
