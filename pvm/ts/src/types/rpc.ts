@@ -31,7 +31,8 @@ export const WRITE_METHODS = [
     RPCMethods.NEW_HAND,
     RPCMethods.NEW_TABLE,
     RPCMethods.PERFORM_ACTION,
-    RPCMethods.TRANSFER
+    RPCMethods.TRANSFER,
+    RPCMethods.WITHDRAW
 ];
 
 export const CONTROL_METHODS = [

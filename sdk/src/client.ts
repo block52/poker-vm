@@ -1,4 +1,4 @@
-import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
+import { AccountDTO, BlockDTO, TransactionDTO, WithdrawResponseDTO } from "./types/chain";
 import {
     GameOptionsResponse,
     LegalActionDTO,
@@ -6,7 +6,7 @@ import {
     PerformActionResponse,
     PlayerActionType,
     TexasHoldemStateDTO,
-    TransactionResponse
+    TransactionResponse,
 } from "./types/game";
 import { RPCMethods, RPCRequest, RPCResponse } from "./types/rpc";
 import { KEYS } from "./index";
@@ -38,6 +38,7 @@ export interface IClient {
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
+    withdraw(amount: string, from: string, receiver?: string, nonce?: number): Promise<WithdrawResponseDTO>;
 }
 
 /**
@@ -621,6 +622,37 @@ export class NodeRpcClient implements IClient {
             id: this.getRequestId(),
             method: RPCMethods.PERFORM_ACTION,
             params: [address, gameAddress, NonPlayerActionType.DEAL, "0", nonce, index, encodedData], // [from, to, action, amount, nonce, index, data]
+            signature: signature
+        });
+
+        return body.result.data;
+    }
+
+
+    /**
+     * Withdraw funds from an account
+     * @param amount The amount to withdraw
+     * @param from The address to withdraw from
+     * @param receiver The address to receive the funds (optional)
+     * @param nonce The nonce of the transaction (optional)
+     * @returns A Promise that resolves when the request is complete
+     */
+    public async withdraw(amount: string, from?: string, receiver?: string, nonce?: number): Promise<WithdrawResponseDTO> {
+        from = from || this.getAddress();
+        if (!nonce) {
+            nonce = await this.getNonce(from);
+        }
+
+        if (!receiver) {
+            receiver = from; // If no receiver is specified, withdraw to the same address
+        }
+
+        const signature = await this.getSignature(nonce, [from, receiver, amount]);
+
+        const { data: body } = await axios.post(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.WITHDRAW,
+            params: [from, receiver, amount, nonce],
             signature: signature
         });
 

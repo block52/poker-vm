@@ -35,11 +35,6 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const bridgeAbi = ["function deposits(uint256) view returns (address account, uint256 amount)", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
-        // const baseRPCUrl = process.env.RPC_URL;
-        // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
-        //     staticNetwork: true
-        // });
-
         this.mempool = getMempoolInstance();
         this.transactionManagement = getTransactionInstance();
 
@@ -97,7 +92,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
             const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
             underlyingAssetDecimals = await underlyingAsset.decimals();
         }
-        const value: bigint = NativeToken.convertFromDecimals(amount, 6n);
+
+        const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
         console.log("💰 Converted value:", {
             original: amount.toString(),
             converted: value.toString(),

@@ -29,7 +29,8 @@ import {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
-    TransferCommand
+    TransferCommand,
+    WithdrawCommand
 } from "./commands";
 
 import { makeErrorRPCResponse } from "./types/response";
@@ -376,6 +377,17 @@ export class RPC {
                     const blockHash = request.params[0] as string;
                     const nodeUrl = request.params[1] as string;
                     const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.WITHDRAW: {
+                    if (request.params?.length !== 4) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [from, receiver, amountString, nonce] = request.params as RPCRequestParams[RPCMethods.WITHDRAW];
+                    const amount = BigInt(amountString);    // JSON doesn't allow BigInts
+                    const command = new WithdrawCommand(from, receiver, amount, Number(nonce), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

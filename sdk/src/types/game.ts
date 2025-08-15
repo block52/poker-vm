@@ -187,7 +187,7 @@ export type GameStateResponse = {
     state: TexasHoldemStateDTO;
 }
 
-export type PerformActionResponse= {
+export type PerformActionResponse = {
     state: TexasHoldemStateDTO;
     nonce: string;
     to: string;
