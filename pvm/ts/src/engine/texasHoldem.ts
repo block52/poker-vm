@@ -37,6 +37,7 @@ import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./dealerManager";
 import { BetManager } from "./managers/betManager";
+import SitInAction from "./actions/sitInAction";
 
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
@@ -131,6 +132,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, ""),
             new SitOutAction(this, this._update),
+            new SitInAction(this, this._update),
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
