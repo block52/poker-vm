@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"; // Import React, useEffect, and useRef
-import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
 import "./Dashboard.css"; // Import the CSS file with animations
 
@@ -8,6 +8,7 @@ import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; //
 import { Wallet } from "ethers";
 
 import BuyInModal from "./playPage/BuyInModal";
+import WithdrawalModal from "./WithdrawalModal";
 
 // game wallet and SDK imports
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
@@ -50,20 +51,47 @@ const NetworkDisplay = React.memo(({ isMainnet = false }: { isMainnet?: boolean 
     );
 });
 
-// Memoized Deposit button component
-const DepositButton = React.memo(() => {
+// Memoized Deposit button component  
+const DepositButton = React.memo(({ onClick }: { onClick: () => void }) => {
     const buttonStyle = useMemo(() => ({ 
         background: `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)` 
     }), []);
     
+    const handleClick = useCallback(() => {
+        onClick();
+    }, [onClick]);
+    
     return (
-        <Link
-            to="/qr-deposit"
-            className="block flex-1 text-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+        <button
+            type="button"
+            onClick={handleClick}
+            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
             style={buttonStyle}
         >
             Deposit
-        </Link>
+        </button>
+    );
+});
+
+// Memoized Withdraw button component
+const WithdrawButton = React.memo(({ onClick }: { onClick: () => void }) => {
+    const buttonStyle = useMemo(() => ({ 
+        background: `linear-gradient(135deg, ${colors.accent.withdraw} 0%, ${hexToRgba(colors.accent.withdraw, 0.8)} 100%)` 
+    }), []);
+    
+    const handleClick = useCallback(() => {
+        onClick();
+    }, [onClick]);
+    
+    return (
+        <button
+            type="button"
+            onClick={handleClick}
+            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            style={buttonStyle}
+        >
+            Withdraw
+        </button>
     );
 });
 
@@ -79,8 +107,9 @@ const CreateTableButton = React.memo(({ onClick }: { onClick: () => void }) => {
     
     return (
         <button
+            type="button"
             onClick={handleClick}
-            className="block flex-1 text-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
             style={buttonStyle}
         >
             Create New Table
@@ -142,6 +171,9 @@ const Dashboard: React.FC = () => {
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
     const [buyInTableId, setBuyInTableId] = useState(""); // Optional, if needed later
+    
+    // Withdrawal Modal
+    const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -394,6 +426,16 @@ const Dashboard: React.FC = () => {
     // Memoized Create Table callback
     const handleCreateTableClick = useCallback(() => {
         setShowCreateGameModal(true);
+    }, []);
+    
+    // Memoized Deposit callback
+    const handleDepositClick = useCallback(() => {
+        navigate("/qr-deposit");
+    }, [navigate]);
+    
+    // Memoized Withdrawal callback
+    const handleWithdrawClick = useCallback(() => {
+        setShowWithdrawalModal(true);
     }, []);
     
     // Memoized Import Modal callback
@@ -809,8 +851,9 @@ const Dashboard: React.FC = () => {
                                             </div>
                                         </div>
                                     )}
-                                    <div className="flex gap-2 pt-2">
-                                        <DepositButton />
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <DepositButton onClick={handleDepositClick} />
+                                        <WithdrawButton onClick={handleWithdrawClick} />
                                         <CreateTableButton onClick={handleCreateTableClick} />
                                     </div>
                                     <div className="mt-2 flex justify-center">
@@ -1165,6 +1208,16 @@ const Dashboard: React.FC = () => {
                             tableId={buyInTableId}
                             onClose={handleBuyInModalClose}
                             onJoin={handleBuyInModalJoin}
+                        />
+                    )}
+                    {showWithdrawalModal && (
+                        <WithdrawalModal
+                            isOpen={showWithdrawalModal}
+                            onClose={() => setShowWithdrawalModal(false)}
+                            onSuccess={() => {
+                                // Refresh account balance after successful withdrawal
+                                refetchAccount();
+                            }}
                         />
                     )}
                 </>
