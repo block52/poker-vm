@@ -57,10 +57,12 @@ export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawRespons
         }
 
         // Create withdrawal signature
-        const withdraw_nonce = ethers.id("unique_nonce");
+        // Unique, unpredictable nonce (bytes32)
+        const withdraw_nonce = ethers.hexlify(ethers.randomBytes(32));
+        // Bind the signature to the sender to prevent misuse
         const messageHash = ethers.solidityPackedKeccak256(
-            ["address", "uint256", "bytes32"],
-            [this.receiver, this.amount, withdraw_nonce]
+            ["address", "address", "uint256", "bytes32"],
+            [this.from, this.receiver, this.amount, withdraw_nonce]
         );
 
         const validator = new ethers.Wallet(this.privateKey);
