@@ -1,10 +1,11 @@
 import { KEYS, WithdrawResponse } from "@bitcoinbrisbane/block52";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { AccountCommand } from "./accountCommand";
-import { Contract, ethers, InterfaceAbi } from "ethers";
+import { Contract, ethers, InterfaceAbi, Wallet } from "ethers";
 import { CONTRACT_ADDRESSES } from "../core/constants";
 import { Transaction } from "../models/transaction";
 import { getMempoolInstance, Mempool } from "../core/mempool";
+import { signResult } from "./abstractSignedCommand";
 
 export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawResponse>> {
 
@@ -87,14 +88,15 @@ export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawRespons
         console.log("📨 Sending to mempool...");
         await this.mempool.add(withdrawTx);
 
-        const walletResponse = {
-            from: this.from,
+        const walletResponse: WithdrawResponse = {
+            nonce: withdraw_nonce,
             to: this.receiver,
-            amount: this.amount,
-            nonce: this.nonce,
-            privateKey: this.privateKey,
-            withdrawNonce: withdraw_nonce,
-            signature: signature
+            from: this.from,
+            value: this.amount.toString(),
+            hash: withdrawTx.hash,
+            signature: signature,
+            timestamp: Date.now().toString(),
+            withdrawSignature: signature,
         }
 
         return signResult(walletResponse, this.privateKey);

@@ -381,6 +381,17 @@ export class RPC {
                     break;
                 }
 
+                case RPCMethods.WITHDRAW: {
+                    if (request.params?.length !== 4) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [from, receiver, amountString, nonce] = request.params as RPCRequestParams[RPCMethods.WITHDRAW];
+                    const amount = BigInt(amountString);    // JSON doesn't allow BigInts
+                    const command = new WithdrawCommand(from, receiver, amount, Number(nonce), validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
                 default:
                     return makeErrorRPCResponse(id, "Method not found");
             }
