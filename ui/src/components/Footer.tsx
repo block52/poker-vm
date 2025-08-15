@@ -16,7 +16,7 @@ import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
 import { ethers } from "ethers";
-import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleSitIn, handleSitOut, handleStartNewHand } from "./common/actionHandlers";
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
@@ -27,14 +27,18 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Add ref to track if we're already attempting to auto-deal
     const attemptToAutoDeal = useRef<boolean>(false);
     
-    // Detect mobile landscape
+    // Detect mobile landscape and portrait
     const [isMobileLandscape, setIsMobileLandscape] = useState(
         window.innerWidth <= 926 && window.innerWidth > window.innerHeight
+    );
+    const [isMobilePortrait, setIsMobilePortrait] = useState(
+        window.innerWidth <= 414 && window.innerHeight > window.innerWidth
     );
     
     useEffect(() => {
         const checkOrientation = () => {
             setIsMobileLandscape(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
+            setIsMobilePortrait(window.innerWidth <= 414 && window.innerHeight > window.innerWidth);
         };
         
         window.addEventListener('resize', checkOrientation);
@@ -84,6 +88,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const hasMuckAction = hasAction(legalActions, PlayerActionType.MUCK);
     const hasShowAction = hasAction(legalActions, PlayerActionType.SHOW);
     const hasDealAction = hasAction(legalActions, NonPlayerActionType.DEAL);
+    const hasSitInAction = hasAction(legalActions, PlayerActionType.SIT_IN);
+    const hasSitOutAction = hasAction(legalActions, PlayerActionType.SIT_OUT);
 
     // Show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction && isUsersTurn;
@@ -111,9 +117,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
     };
 
-    // These are the default amounts
-    const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
-    const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2));
+    // These are the default amounts - initialize with proper minimum
+    const initialAmount = hasBetAction ? (minBet > 0 ? minBet : 0) : (minRaise > 0 ? minRaise : 0);
+    const [raiseAmount, setRaiseAmount] = useState<number>(initialAmount);
+    const [, setRaiseInputRaw] = useState<string>(initialAmount.toFixed(2));
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
     // Handle raise amount changes from slider or input
@@ -121,9 +128,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
     console.log(`Raise action amount: ${raiseActionAmount}`);
 
     const isRaiseAmountInvalid = hasRaiseAction
-        ? raiseActionAmount < minRaise || raiseActionAmount > maxRaise
+        ? raiseAmount < minRaise || raiseAmount > maxRaise
         : hasBetAction
-        ? raiseActionAmount < minBet || raiseActionAmount > maxBet
+        ? raiseAmount < minBet || raiseAmount > maxBet
         : false;
 
     // Get total pot for percentage calculations
@@ -160,10 +167,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const formattedBigBlindAmount = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
 
-    const formattedRaiseAmount = useMemo(
-        () => getRaiseToAmount(minRaise, gameState?.previousActions || [], currentRound, userAddress || "").toFixed(2),
-        [minRaise, gameState?.previousActions, currentRound, userAddress]
-    );
+    // Removed formattedRaiseAmount - we use raiseAmount directly now
 
     const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
 
@@ -192,13 +196,16 @@ const PokerActionPanel: React.FC = React.memo(() => {
         setRaiseAmount(newRaiseAmount);
     };
 
-    // Min Raise Text Prefill
+    const setRaiseAmountAbsolute = (amount: number) => {
+        setRaiseAmount(amount);
+    };
+
+    // Min Raise Text Prefill - Always set to minimum when actions become available
     useEffect(() => {
         if (hasRaiseAction && minRaise > 0) {
             setRaiseAmount(minRaise);
             setRaiseInputRaw(minRaise.toFixed(2));
-        }
-        if (hasBetAction && minBet > 0) {
+        } else if (hasBetAction && minBet > 0) {
             setRaiseAmount(minBet);
             setRaiseInputRaw(minBet.toFixed(2));
         }
@@ -229,7 +236,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        const amountWei = ethers.parseUnits(minBet.toString(), 18).toString();
+        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         try {
             await betHand(tableId, amountWei);
@@ -367,6 +374,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                     </div>
                 )}
 
+
                 {/* Only show other buttons if deal button is not showing */}
                 {!hideOtherButtons && (
                     <>
@@ -479,7 +487,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                         >
                                             {hasRaiseAction ? "RAISE" : "BET"}{" "}
                                             <span style={{ color: colors.brand.primary }}>
-                                                ${hasRaiseAction ? raiseActionAmount.toFixed(2) : minBet.toFixed(2)}
+                                                ${raiseAmount.toFixed(2)}
                                             </span>
                                         </button>
                                     )}
@@ -497,7 +505,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Min/Max text - placed first in mobile landscape */}
                                             {isMobileLandscape && (
                                                 <div className="flex items-center text-[9px] text-gray-400 whitespace-nowrap">
-                                                    <span>Min:${formattedRaiseAmount}</span>
+                                                    <span>Min:${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</span>
                                                     <span className="mx-1">/</span>
                                                     <span>Max:${formattedMaxBetAmount}</span>
                                                 </div>
@@ -517,12 +525,12 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? minBet : raiseActionAmount}
+                                                min={hasBetAction ? minBet : minRaise}
                                                 max={hasBetAction ? maxBet : maxRaise}
                                                 step={step}
-                                                value={raiseActionAmount}
+                                                value={raiseAmount}
                                                 onChange={e => {
-                                                    handleRaiseChange(Number(e.target.value));
+                                                    setRaiseAmountAbsolute(Number(e.target.value));
                                                     setLastAmountSource("slider");
                                                 }}
                                                 className={isMobileLandscape 
@@ -531,11 +539,11 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 }
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
-                                                        ((raiseActionAmount - (hasBetAction ? minBet : minRaise)) /
-                                                            ((raiseActionAmount ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
+                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
+                                                            ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b ${
-                                                        ((raiseActionAmount - (hasBetAction ? minBet : minRaise)) /
+                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
                                                             ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b 100%)`
@@ -559,7 +567,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     <input
                                                         type="text"
                                                         inputMode="decimal"
-                                                        value={formattedRaiseAmount}
+                                                        value={raiseAmount.toFixed(2)}
                                                         onChange={e => {
                                                             const raw = e.target.value;
 
@@ -585,7 +593,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                         disabled={!isPlayerTurn}
                                                     />
                                                     <div className={`${minMaxTextClassName} text-[8px] lg:text-[10px] text-right leading-snug`}>
-                                                        <div>Min: ${formattedRaiseAmount}</div>
+                                                        <div>Min: ${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</div>
                                                         <div>Max: ${formattedMaxBetAmount}</div>
                                                     </div>
                                                 </div>
@@ -595,7 +603,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
-                                                    value={formattedRaiseAmount}
+                                                    value={raiseAmount.toFixed(2)}
                                                     onChange={e => {
                                                         const raw = e.target.value;
 
@@ -632,7 +640,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
-                                                        handleRaiseChange(newAmt);
+                                                        setRaiseAmountAbsolute(newAmt);
                                                         setLastAmountSource("button");
                                                     }}
                                                     disabled={!isPlayerTurn}
@@ -644,7 +652,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
-                                                        handleRaiseChange(newAmt);
+                                                        setRaiseAmountAbsolute(newAmt);
                                                         setLastAmountSource("button");
                                                     }}
                                                     disabled={!isPlayerTurn}
@@ -656,7 +664,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
-                                                        handleRaiseChange(newAmt);
+                                                        setRaiseAmountAbsolute(newAmt);
                                                         setLastAmountSource("button");
                                                     }}
                                                     disabled={!isPlayerTurn}
@@ -668,7 +676,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
-                                                        handleRaiseChange(newAmt);
+                                                        setRaiseAmountAbsolute(newAmt);
                                                         setLastAmountSource("button");
                                                     }}
                                                     disabled={!isPlayerTurn}
@@ -680,7 +688,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 font-medium transform active:scale-105"
                                                     onClick={() => {
                                                         const newAmt = hasBetAction ? maxBet : maxRaise;
-                                                        handleRaiseChange(newAmt);
+                                                        setRaiseAmountAbsolute(newAmt);
                                                         setLastAmountSource("button");
                                                     }}
                                                     disabled={!isPlayerTurn}

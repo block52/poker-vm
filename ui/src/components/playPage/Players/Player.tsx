@@ -15,7 +15,7 @@ import { colors } from "../../../utils/colorConfig";
 const Player: React.FC<PlayerProps> = memo(
   ({ left, top, index, currentIndex, color, status }) => {
     const { id } = useParams<{ id: string }>();
-    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
+    const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
     const { 
         extendTime, 
@@ -75,6 +75,8 @@ const Player: React.FC<PlayerProps> = memo(
       ? isWinner
         ? "opacity-100"
         : "opacity-40"
+      : isSittingOut
+      ? "opacity-50"
       : isFolded
       ? "opacity-60"
       : "opacity-100";
@@ -130,6 +132,13 @@ const Player: React.FC<PlayerProps> = memo(
           </span>
         );
       }
+      if (isSittingOut) {
+        return (
+          <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "#ff9800" }}>
+            SITTING OUT
+          </span>
+        );
+      }
       if (isFolded) {
         return (
           <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
@@ -145,7 +154,7 @@ const Player: React.FC<PlayerProps> = memo(
         );
       }
       return null;
-    }, [isWinner, winnerAmount, isFolded, isAllIn]);
+    }, [isWinner, winnerAmount, isSittingOut, isFolded, isAllIn]);
 
     // 7) container style for positioning
     const containerStyle = useMemo(

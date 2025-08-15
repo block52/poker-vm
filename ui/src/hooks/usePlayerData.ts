@@ -48,6 +48,10 @@ export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
     return playerData?.status === PlayerStatus.ALL_IN;
   }, [playerData]);
   
+  const isSittingOut = React.useMemo((): boolean => {
+    return playerData?.status === PlayerStatus.SITTING_OUT;
+  }, [playerData]);
+  
   const holeCards = React.useMemo((): string[] => {
     return playerData?.holeCards || [];
   }, [playerData]);
@@ -61,6 +65,7 @@ export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
     stackValue,
     isFolded,
     isAllIn,
+    isSittingOut,
     holeCards,
     round,
     isLoading,

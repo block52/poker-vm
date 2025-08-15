@@ -8,6 +8,8 @@ import joinAction from "./joinAction";
 import leaveAction from "./leaveAction";
 import raiseAction from "./raiseAction";
 import smallBlindAction from "./smallBlindAction";
+import SitInAction from "./sitInAction";
+import SitOutAction from "./sitOutAction";
 
 export const actions = {
     allInAction,
@@ -19,5 +21,7 @@ export const actions = {
     joinAction,
     leaveAction,
     raiseAction,
+    SitInAction,
+    SitOutAction,
     smallBlindAction
 };
