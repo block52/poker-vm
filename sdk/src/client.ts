@@ -1,4 +1,4 @@
-import { AccountDTO, BlockDTO, TransactionDTO } from "./types/chain";
+import { AccountDTO, BlockDTO, TransactionDTO, WithdrawResponseDTO } from "./types/chain";
 import {
     GameOptionsResponse,
     LegalActionDTO,
@@ -7,7 +7,6 @@ import {
     PlayerActionType,
     TexasHoldemStateDTO,
     TransactionResponse,
-    WithdrawResponse
 } from "./types/game";
 import { RPCMethods, RPCRequest, RPCResponse } from "./types/rpc";
 import { KEYS } from "./index";
@@ -39,7 +38,7 @@ export interface IClient {
     sendBlock(blockHash: string, block: string): Promise<void>;
     sendBlockHash(blockHash: string, nodeUrl: string): Promise<void>;
     transfer(to: string, amount: string, nonce?: number, data?: string): Promise<TransactionResponse>;
-    withdraw(amount: string, from: string, receiver?: string, nonce?: number): Promise<WithdrawResponse>;
+    withdraw(amount: string, from: string, receiver?: string, nonce?: number): Promise<WithdrawResponseDTO>;
 }
 
 /**
@@ -638,7 +637,7 @@ export class NodeRpcClient implements IClient {
      * @param nonce The nonce of the transaction (optional)
      * @returns A Promise that resolves when the request is complete
      */
-    public async withdraw(amount: string, from?: string, receiver?: string, nonce?: number): Promise<WithdrawResponse> {
+    public async withdraw(amount: string, from?: string, receiver?: string, nonce?: number): Promise<WithdrawResponseDTO> {
         from = from || this.getAddress();
         if (!nonce) {
             nonce = await this.getNonce(from);

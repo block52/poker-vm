@@ -187,7 +187,7 @@ export type GameStateResponse = {
     state: TexasHoldemStateDTO;
 }
 
-export type PerformActionResponse= {
+export type PerformActionResponse = {
     state: TexasHoldemStateDTO;
     nonce: string;
     to: string;
@@ -197,15 +197,4 @@ export type PerformActionResponse= {
     signature: string;
     timestamp: string;
     data?: string;
-}
-
-export type WithdrawResponse = {
-    nonce: string;
-    to: string;
-    from: string;
-    value: string;
-    hash: string;
-    signature: string;
-    timestamp: string;
-    withdrawSignature: string;
 }

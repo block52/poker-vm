@@ -1,4 +1,4 @@
-import { KEYS, WithdrawResponse } from "@bitcoinbrisbane/block52";
+import { KEYS, WithdrawResponseDTO } from "@bitcoinbrisbane/block52";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { AccountCommand } from "./accountCommand";
 import { Contract, ethers, InterfaceAbi, Wallet } from "ethers";
@@ -7,13 +7,10 @@ import { Transaction } from "../models/transaction";
 import { getMempoolInstance, Mempool } from "../core/mempool";
 import { signResult } from "./abstractSignedCommand";
 
-export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawResponse>> {
+export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawResponseDTO>> {
 
     private readonly accountCommand: AccountCommand = new AccountCommand(this.from, this.privateKey);
-    // private readonly transactionManagement: ITransactionManagement;
     private readonly mempool: Mempool;
-    private readonly bridge: Contract;
-    private readonly underlyingAssetAbi: InterfaceAbi;
     
     /**
      * Creates a new WithdrawCommand instance.
@@ -36,15 +33,10 @@ export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawRespons
             throw new Error("Private key must be provided");
         }
 
-        const bridgeAbi = ["function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external", "function underlying() view returns (address)"];
-        this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
-        this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi);
-
         this.mempool = getMempoolInstance();
-        // this.transactionManagement = getTransactionInstance();
     }
 
-    public async execute(): Promise<ISignedResponse<WithdrawResponse>> {
+    public async execute(): Promise<ISignedResponse<WithdrawResponseDTO>> {
         if (!Number.isInteger(this.nonce) || this.nonce < 0) {
             throw new Error("Invalid nonce: must be a non-negative integer");
         }
@@ -88,12 +80,10 @@ export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawRespons
         console.log("📨 Sending to mempool...");
         await this.mempool.add(withdrawTx);
 
-        const walletResponse: WithdrawResponse = {
+        const walletResponse: WithdrawResponseDTO = {
             nonce: withdraw_nonce,
-            to: this.receiver,
-            from: this.from,
-            value: this.amount.toString(),
-            hash: withdrawTx.hash,
+            receiver: this.receiver,
+            amount: this.amount.toString(),
             signature: signature,
             timestamp: Date.now().toString(),
             withdrawSignature: signature,
