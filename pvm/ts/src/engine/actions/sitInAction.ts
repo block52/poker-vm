@@ -25,18 +25,18 @@ class SitInAction extends BaseAction implements IAction {
     }
 
     /**
-     * Execute the fold action, setting the player's status to FOLDED
-     * 
-     * @param player The player performing the fold action
+     * Execute the sit-in action, setting the player's status to ACTIVE
+     *
+     * @param player The player performing the sit-in action
      * @param index The sequential action index for this game
-     * @param amount Optional amount parameter (unused for fold)
+     * @param amount Amount parameter (unused for sit-in)
      */
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number, amount: bigint): void {
         // First verify the action
         this.verify(player);
 
-        // Set player status to SITTING_IN
-        player.updateStatus(PlayerStatus.SITTING_IN);
+         // Set player status to ACTIVE (ready to play)
+        player.updateStatus(PlayerStatus.ACTIVE);
 
         // Add the action to the game
         const round = this.game.currentRound;

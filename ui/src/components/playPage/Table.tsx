@@ -107,7 +107,7 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { getAccountBalance, getPublicKey, getFormattedAddress } from "../../utils/b52AccountUtils";
-import { handleSitOut } from "../common/actionHandlers";
+import { handleSitOut, handleSitIn } from "../common/actionHandlers";
 import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
@@ -217,8 +217,9 @@ const Table = React.memo(() => {
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
     
-    // Check if sit out action is available
+    // Check if sit out/sit in actions are available
     const hasSitOutAction = hasAction(playerLegalActions, PlayerActionType.SIT_OUT);
+    const hasSitInAction = hasAction(playerLegalActions, PlayerActionType.SIT_IN);
 
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat } = usePlayerSeatInfo();
@@ -346,7 +347,7 @@ const Table = React.memo(() => {
     // Optimize window width detection - only check on resize
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 414);
     const [isMobileLandscape, setIsMobileLandscape] = useState(
-        window.innerWidth <= 926 && window.innerWidth > window.innerHeight
+        window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600
     );
 
     // 🔧 PERFORMANCE FIX: Disabled mouse tracking to prevent hundreds of re-renders
@@ -410,7 +411,7 @@ const Table = React.memo(() => {
         setTimeout(() => {
             tableLayout.refreshLayout();
             setIsMobile(window.innerWidth <= 414);
-            setIsMobileLandscape(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
+            setIsMobileLandscape(window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600);
         }, 100);
     }, [tableLayout]);
 
@@ -952,19 +953,65 @@ const Table = React.memo(() => {
                 </div>
             )}
 
-            {/* Sit Out Button - Bottom Left */}
+            {/* Sit Out Toggle - Professional Mobile Design */}
             {hasSitOutAction && (
-                <div className="fixed bottom-20 left-4 z-30">
+                <div className={`fixed z-30 ${
+                    isMobileLandscape 
+                        ? 'bottom-2 left-2' 
+                        : isMobile
+                            ? 'bottom-[260px] right-4' // Moved to right side on mobile portrait to avoid blind button overlap
+                            : 'bottom-20 left-4'
+                }`}>
+                    {/* Mobile: Compact Button Design */}
+                    {(isMobile || isMobileLandscape) ? (
+                        <button
+                            onClick={() => handleSitOut(id)}
+                            className="btn-sit-out text-white font-medium py-1.5 px-3 rounded-lg shadow-md text-xs
+                            backdrop-blur-sm transition-all duration-300 border
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            SIT OUT
+                        </button>
+                    ) : (
+                        /* Desktop: Original Button Design */
+                        <button
+                            onClick={() => handleSitOut(id)}
+                            className="btn-sit-out text-white font-medium py-2 px-4 rounded-lg shadow-md text-sm
+                            backdrop-blur-sm transition-all duration-300 border
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            SIT OUT
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Sit In Button - Shows when player is sitting out */}
+            {hasSitInAction && (
+                <div className={`fixed z-30 ${
+                    isMobileLandscape 
+                        ? 'bottom-2 left-2' 
+                        : isMobile
+                            ? 'bottom-[260px] right-4'
+                            : 'bottom-20 left-4'
+                }`}>
                     <button
-                        onClick={() => handleSitOut(id)}
-                        className="btn-sit-out text-white font-medium py-2 px-4 rounded-lg shadow-md text-sm
-                        backdrop-blur-sm transition-all duration-300 border
-                        flex items-center justify-center gap-2 transform hover:scale-105"
+                        onClick={() => handleSitIn(id)}
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600
+                            text-white font-bold py-2 px-4 rounded-lg shadow-lg border-2 border-green-600
+                            transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105
+                            animate-pulse text-sm"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        SIT OUT
+                        SIT IN
                     </button>
                 </div>
             )}
