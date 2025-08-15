@@ -75,7 +75,7 @@ export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawRespons
         const encodedData = params.toString();
 
         console.log("📝 Creating transaction...");
-        const withdrawTx: Transaction = await Transaction.create(fromAccount.address, CONTRACT_ADDRESSES.bridgeAddress, this.amount, BigInt(this.nonce), this.privateKey, encodedData);
+        const withdrawTx: Transaction = await Transaction.create(CONTRACT_ADDRESSES.bridgeAddress, this.from, this.amount, BigInt(this.nonce), this.privateKey, encodedData);
 
         console.log("📨 Sending to mempool...");
         await this.mempool.add(withdrawTx);
