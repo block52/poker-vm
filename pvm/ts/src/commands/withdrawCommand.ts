@@ -1,12 +1,16 @@
-import { WithdrawResponse } from "@bitcoinbrisbane/block52";
+import { KEYS, WithdrawResponse } from "@bitcoinbrisbane/block52";
 import { ICommand, ISignedResponse } from "./interfaces";
 import { AccountCommand } from "./accountCommand";
 import { Contract, ethers, InterfaceAbi } from "ethers";
 import { CONTRACT_ADDRESSES } from "../core/constants";
+import { Transaction } from "../models/transaction";
+import { getMempoolInstance, Mempool } from "../core/mempool";
 
 export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawResponse>> {
 
     private readonly accountCommand: AccountCommand = new AccountCommand(this.from, this.privateKey);
+    // private readonly transactionManagement: ITransactionManagement;
+    private readonly mempool: Mempool;
     private readonly bridge: Contract;
     private readonly underlyingAssetAbi: InterfaceAbi;
     
@@ -34,6 +38,9 @@ export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawRespons
         const bridgeAbi = ["function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
         this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi);
+
+        this.mempool = getMempoolInstance();
+        // this.transactionManagement = getTransactionInstance();
     }
 
     public async execute(): Promise<ISignedResponse<WithdrawResponse>> {
@@ -56,11 +63,40 @@ export class WithdrawCommand implements ICommand<ISignedResponse<WithdrawRespons
             throw new Error("Insufficient balance");
         }
 
+        // Create withdrawal signature
+        const withdraw_nonce = ethers.id("unique_nonce");
+        const messageHash = ethers.solidityPackedKeccak256(
+            ["address", "uint256", "bytes32"],
+            [this.receiver, this.amount, withdraw_nonce]
+        );
 
+        const validator = new ethers.Wallet(this.privateKey);
+        const signature = await validator.signMessage(ethers.getBytes(messageHash));
 
-        // const signedResponse = await performActionCommand.execute();
-        // return signResult(signedResponse, this.privateKey);
+        const params = new URLSearchParams();
+        params.set(KEYS.AMOUNT, this.amount.toString());
+        params.set(KEYS.RECEIVER, this.receiver);
+        params.set(KEYS.WITHDRAW_NONCE, withdraw_nonce);
+        params.set(KEYS.WITHDRAW_SIGNATURE, signature);
 
-        throw new Error("WithdrawCommand is not yet implemented");
+        const encodedData = params.toString();
+
+        console.log("📝 Creating transaction...");
+        const withdrawTx: Transaction = await Transaction.create(fromAccount.address, CONTRACT_ADDRESSES.bridgeAddress, this.amount, BigInt(this.nonce), this.privateKey, encodedData);
+
+        console.log("📨 Sending to mempool...");
+        await this.mempool.add(withdrawTx);
+
+        const walletResponse = {
+            from: this.from,
+            to: this.receiver,
+            amount: this.amount,
+            nonce: this.nonce,
+            privateKey: this.privateKey,
+            withdrawNonce: withdraw_nonce,
+            signature: signature
+        }
+
+        return signResult(walletResponse, this.privateKey);
     }
 }
