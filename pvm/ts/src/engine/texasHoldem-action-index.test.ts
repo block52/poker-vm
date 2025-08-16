@@ -32,8 +32,8 @@ describe("Texas Holdem - Action Index", () => {
 
         it("should reset turn index to 0 when game is reinitialized", () => {
             // Add players
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "1");
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "2");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2");
 
             // Post blinds
             game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
@@ -53,8 +53,8 @@ describe("Texas Holdem - Action Index", () => {
     describe("Action Index Increments", () => {
         beforeEach(() => {
             // Add two players for the tests
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "1");
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "2");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2");
         });
 
         it("should increment turn index by exactly 1 for each action", () => {
@@ -98,7 +98,7 @@ describe("Texas Holdem - Action Index", () => {
 
         it.skip("should maintain turn index across different types of actions", () => {
             // Add a third player
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=3");
             expect(game.getActionIndex()).toBe(1);
             
             // Perform a fold action
@@ -121,8 +121,8 @@ describe("Texas Holdem - Action Index", () => {
     describe("Turn Index in Legal Actions", () => {
         beforeEach(() => {
             // Add two players for the tests
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT);
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT);
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2");
         });
 
         it("should include current turn index in legal actions", () => {
@@ -163,8 +163,8 @@ describe("Texas Holdem - Action Index", () => {
     describe("Turn Index Validation", () => {
         beforeEach(() => {
             // Add two players for the tests
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "1");
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "2");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2");
 
             expect(game.getPlayerCount()).toBe(2);
         });
