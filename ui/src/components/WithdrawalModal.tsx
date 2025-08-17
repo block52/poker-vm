@@ -230,7 +230,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
             // STEP 2: Now call the smart contract with the SDK response
             await contractWithdraw(
                 result.nonce,
-                receiverAddress,
+                receiverAddress || "",
                 BigInt(amountInWei),
                 result.signature
             );
