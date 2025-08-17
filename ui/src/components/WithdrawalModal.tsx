@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, use } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ethers } from "ethers";
 import { getClient, getPublicKey } from "../utils/b52AccountUtils";
 import { useAccount } from "../hooks/useAccount";
@@ -6,6 +6,7 @@ import { formatBalance } from "../utils/numberUtils";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
 import { WithdrawResponseDTO } from "@bitcoinbrisbane/block52";
+import { useWithdraw } from "../hooks/DepositPage/useWithdraw";
 
 /**
  * WithdrawalModal Component
@@ -76,6 +77,16 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [txData, setTxData] = useState<any>(null);
+
+    // Add the withdraw hook at the top level (IMPORTANT: NOT inside handleWithdraw)
+    const {
+        withdraw: contractWithdraw,
+        hash: contractHash,
+        isLoading: isContractLoading,
+        isWithdrawPending: isContractPending,
+        isWithdrawConfirmed: isContractConfirmed,
+        withdrawError: contractError
+    } = useWithdraw();
 
     // Reset form when modal opens/closes
     useEffect(() => {
@@ -181,16 +192,16 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
      * 6. Handle success/error states
      * 7. Refresh balance and close modal
      */
+    // Update the handleWithdraw function
     const handleWithdraw = async () => {
-        // STEP 1: Validate the receiver address (where funds will be sent on mainnet)
+        // STEP 1: Validate the receiver address
         if (!validateEthereumAddress(receiverAddress)) {
             setError("Please enter a valid Ethereum address");
             return;
         }
 
-        // STEP 2: Validate the amount against the Layer 2 game account balance
+        // STEP 2: Validate the amount
         if (!validateAmount(amount)) {
-            // Provide specific error message based on validation failure
             if (Number(amount) < 0.01) {
                 setError("Minimum withdrawal amount is 0.01 USDC");
             } else {
@@ -203,71 +214,33 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
         setError("");
 
         try {
-            // Get the SDK client instance using the game account private key from localStorage
+            // Get the SDK client instance
             const client = getClient();
-            
-            // Convert amount from USDC (ether units) to wei for the blockchain
             const amountInWei = ethers.parseEther(amount).toString();
             
-            /**
-             * Call the withdraw method from the Block52 SDK (@bitcoinbrisbane/block52)
-             * 
-             * SDK Method Signature:
-             * withdraw(amount: string, from?: string, receiver?: string, nonce?: number)
-             * 
-             * Parameters we provide:
-             * 1. amountInWei - Amount to withdraw in wei (string)
-             * 2. publicKey - The Layer 2 game account address (source of funds)
-             * 3. receiverAddress - The Ethereum mainnet address (destination)
-             * 
-             * What the SDK does internally:
-             * - Retrieves the current nonce from the L2 account if not provided
-             * - Signs the withdrawal request using the private key from localStorage
-             * - Constructs the RPC request with method "WITHDRAW"
-             * - Sends the signed request to the PVM backend
-             * - Returns a WithdrawResponseDTO with transaction details
-             * 
-             * The backend will then:
-             * - Validate the signature and account balance
-             * - Process the withdrawal through the bridge
-             * - Send funds to the receiver address on Ethereum mainnet
-             */
+            // STEP 1: Call the SDK to prepare the withdrawal
             const result: WithdrawResponseDTO = await client.withdraw(
-                amountInWei,                    // Amount in wei as string
-                publicKey || undefined,          // From: Layer 2 game account (optional, defaults to client address)
-                receiverAddress                  // To: User's specified Ethereum address
+                amountInWei,
+                publicKey || undefined,
+                receiverAddress
             );
 
-            // Now call the smart contract
-            useWithdraw({
-                nonce: result.nonce,
-                receiver: receiverAddress,
-                amount: BigInt(amountInWei),
-                signature: result.signature
-            });
+            console.log("SDK withdrawal prepared:", result);
+
+            // STEP 2: Now call the smart contract with the SDK response
+            await contractWithdraw(
+                result.nonce,
+                receiverAddress,
+                BigInt(amountInWei),
+                result.signature
+            );
 
             setSuccess(true);
             setTxData(result);
             
-            // Refresh account balance after 2 seconds to allow backend to process
-            setTimeout(() => {
-                refetchAccount();
-                // Call parent's success callback if provided
-                if (onSuccess) {
-                    onSuccess();
-                }
-            }, 2000);
-            
-            // Auto-close modal after 3 seconds to show success message
-            setTimeout(() => {
-                onClose();
-            }, 3000);
-            
         } catch (err: any) {
-            // Log full error for debugging
             console.error("Withdrawal error:", err);
             
-            // Provide user-friendly error messages
             if (err.message?.includes("insufficient")) {
                 setError("Insufficient balance for withdrawal");
             } else if (err.message?.includes("network")) {
@@ -275,13 +248,33 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
             } else if (err.message?.includes("signature")) {
                 setError("Failed to sign transaction. Please try again");
             } else {
-                // Fallback to generic error or actual error message
                 setError(err.message || "Failed to process withdrawal");
             }
         } finally {
             setIsWithdrawing(false);
         }
     };
+
+    // // Add useEffect to handle contract confirmation
+    // useEffect(() => {
+    //     if (isContractConfirmed) {
+    //         console.log("Smart contract withdrawal confirmed!", contractHash);
+            
+    //         // Refresh account balance
+    //         setTimeout(() => {
+    //             refetchAccount();
+    //             if (onSuccess) {
+    //                 onSuccess();
+    //             }
+    //         }, 2000);
+            
+    //         // Auto-close modal
+    //         setTimeout(() => {
+    //             onClose();
+    //         }, 3000);
+    //     }
+    // }, [isContractConfirmed, contractHash, refetchAccount, onSuccess, onClose]);
+
 
     if (!isOpen) return null;
 
@@ -413,3 +406,4 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 };
 
 export default WithdrawalModal;
+
