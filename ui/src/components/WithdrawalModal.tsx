@@ -6,7 +6,7 @@ import { formatBalance } from "../utils/numberUtils";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
 import { WithdrawResponseDTO } from "@bitcoinbrisbane/block52";
-import { useWithdraw } from "../hooks/DepositPage/useWithdraw";
+import useWithdraw from "../hooks/DepositPage/useWithdraw";
 
 /**
  * WithdrawalModal Component
@@ -67,7 +67,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     const { address: web3Address } = useUserWalletConnect();
     
     // Receiver address - where the user wants to receive funds on Ethereum mainnet
-    const [receiverAddress, setReceiverAddress] = useState(web3Address || "");
+    const [receiverAddress, setReceiverAddress] = useState(web3Address);
 
     // Amount to withdraw in USDC
     const [amount, setAmount] = useState("");
@@ -91,14 +91,14 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     // Reset form when modal opens/closes
     useEffect(() => {
         if (isOpen) {
-            setReceiverAddress("");
+            setReceiverAddress(web3Address || "");
             setAmount("");
             setError("");
             setSuccess(false);
             setTxData(null);
             refetchAccount();
         }
-    }, [isOpen, refetchAccount]);
+    }, [isOpen, refetchAccount, web3Address]);
 
     const modalOverlayStyle = useMemo(() => ({
         backgroundColor: "rgba(0, 0, 0, 0.7)",
