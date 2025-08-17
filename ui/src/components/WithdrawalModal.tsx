@@ -1,9 +1,11 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, use } from "react";
 import { ethers } from "ethers";
 import { getClient, getPublicKey } from "../utils/b52AccountUtils";
 import { useAccount } from "../hooks/useAccount";
 import { formatBalance } from "../utils/numberUtils";
 import { colors, hexToRgba } from "../utils/colorConfig";
+import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
+import { WithdrawResponseDTO } from "@bitcoinbrisbane/block52";
 
 /**
  * WithdrawalModal Component
@@ -61,10 +63,11 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     // This is the account that holds the funds to be withdrawn
     const publicKey = getPublicKey();
     const { account, refetch: refetchAccount } = useAccount(publicKey || undefined);
+    const { address: web3Address } = useUserWalletConnect();
     
     // Receiver address - where the user wants to receive funds on Ethereum mainnet
-    const [receiverAddress, setReceiverAddress] = useState("");
-    
+    const [receiverAddress, setReceiverAddress] = useState(web3Address || "");
+
     // Amount to withdraw in USDC
     const [amount, setAmount] = useState("");
     
@@ -229,12 +232,20 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
              * - Process the withdrawal through the bridge
              * - Send funds to the receiver address on Ethereum mainnet
              */
-            const result = await client.withdraw(
+            const result: WithdrawResponseDTO = await client.withdraw(
                 amountInWei,                    // Amount in wei as string
                 publicKey || undefined,          // From: Layer 2 game account (optional, defaults to client address)
                 receiverAddress                  // To: User's specified Ethereum address
             );
-            
+
+            // Now call the smart contract
+            useWithdraw({
+                nonce: result.nonce,
+                receiver: receiverAddress,
+                amount: BigInt(amountInWei),
+                signature: result.signature
+            });
+
             setSuccess(true);
             setTxData(result);
             

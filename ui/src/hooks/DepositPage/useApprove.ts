@@ -23,7 +23,6 @@ const useApprove = () => {
             return;
         }
 
-
         try {
             const tx = await writeContract({
                 address: tokenAddress as `0x${string}`,
