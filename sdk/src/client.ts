@@ -659,13 +659,13 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
-    private async getSignature(nonce: number, args?: any[]): Promise<string> {
+    public async getSignature(nonce: number, args?: string[]): Promise<string> {
         if (!this.wallet) {
             throw new Error("Cannot sign without a private key");
         }
 
         const timestamp = Math.floor(Date.now());
-        const paramsString = args ? args.map(arg => (arg).join("-")) : [];
+        const paramsString = args ? args.join("-") : "";
         const message = `${timestamp}-${nonce}-${paramsString}`;
         const signature = await this.wallet.signMessage(message);
         return signature;

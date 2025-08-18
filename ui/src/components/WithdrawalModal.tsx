@@ -4,27 +4,34 @@ import { getClient, getPublicKey } from "../utils/b52AccountUtils";
 import { useAccount } from "../hooks/useAccount";
 import { formatBalance } from "../utils/numberUtils";
 import { colors, hexToRgba } from "../utils/colorConfig";
+import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
+import { WithdrawResponseDTO } from "@bitcoinbrisbane/block52";
+import useWithdraw from "../hooks/DepositPage/useWithdraw";
 
 /**
  * WithdrawalModal Component
  * 
  * PURPOSE:
- * Allows users to withdraw funds from their Layer 2 game wallet to any Ethereum mainnet address.
- * This component handles the entire withdrawal flow including validation, SDK interaction, and user feedback.
+ * Allows users to withdraw funds from their Layer 2 game wallet to their connected MetaMask wallet.
+ * This component handles the entire withdrawal flow including validation, SDK interaction, MetaMask transaction signing, and user feedback.
  * 
  * TECHNICAL FLOW:
- * 1. User enters an Ethereum address (destination) and amount to withdraw
- * 2. Component validates the address format and checks sufficient balance
- * 3. Uses Block52 SDK to sign and submit withdrawal request
- * 4. Backend processes withdrawal through the bridge contract
- * 5. User receives funds on Ethereum mainnet
+ * 1. User must have MetaMask connected (withdrawal address comes from connected wallet)
+ * 2. User enters amount to withdraw
+ * 3. Component validates the amount and checks sufficient balance
+ * 4. Uses Block52 SDK to prepare withdrawal proof (nonce, signature)
+ * 5. Executes Web3 transaction via MetaMask using the proof
+ * 6. User pays gas fees via MetaMask for the withdrawal
+ * 7. User receives funds on Ethereum mainnet
  * 
  * DEPENDENCIES:
- * - @bitcoinbrisbane/block52 SDK for withdrawal API
+ * - @bitcoinbrisbane/block52 SDK for withdrawal proof generation
  * - ethers.js for address validation and amount conversion
- * - Private key stored in localStorage for transaction signing
+ * - wagmi/viem for Web3 transaction execution
+ * - MetaMask (REQUIRED) for transaction signing and gas payment
+ * - Private key stored in localStorage for L2 account signing
  * 
- * IMPORTANT: Understanding the three different addresses/accounts:
+ * IMPORTANT: Understanding the addresses/accounts involved:
  * 
  * 1. GAME ACCOUNT (Layer 2 / Block52 Chain):
  *    - This is the player's Layer 2 gaming wallet
@@ -33,21 +40,24 @@ import { colors, hexToRgba } from "../utils/colorConfig";
  *    - This is WHERE the funds are being withdrawn FROM
  *    - Accessed via: getPublicKey() from localStorage
  * 
- * 2. CONNECTED WEB3 WALLET (Optional):
- *    - External wallet like MetaMask, WalletConnect, etc.
- *    - Connected via WalletConnect/Web3Modal
- *    - Currently used for deposits but NOT required for withdrawals
- *    - Could be used as default receiver address if user prefers
- * 
- * 3. RECEIVER ADDRESS (Ethereum Mainnet):
- *    - The destination Ethereum address for the withdrawal
- *    - Can be ANY valid Ethereum address the user controls
- *    - Does NOT need to be the connected wallet
- *    - User manually enters this address in the form
+ * 2. CONNECTED METAMASK WALLET (REQUIRED):
+ *    - External MetaMask wallet connected via WalletConnect/Web3Modal
+ *    - REQUIRED for withdrawals (not optional)
+ *    - Used as the receiver address for withdrawals
+ *    - User pays gas fees from this wallet
  *    - This is WHERE the funds are being sent TO on mainnet
  * 
  * WITHDRAWAL FLOW:
- * Game Account (L2) → Bridge → Receiver Address (Mainnet)
+ * 1. SDK prepares withdrawal proof using L2 private key
+ * 2. MetaMask executes bridge contract withdrawal using proof
+ * 3. Game Account (L2) → Bridge Contract → MetaMask Wallet (Mainnet)
+ * 
+ * LOGGING:
+ * Comprehensive logging is implemented for debugging:
+ * - [WithdrawalModal] prefix for all logs
+ * - Logs each step of the withdrawal process
+ * - Logs all parameters and responses
+ * - Error details including message, code, and data
  */
 
 interface WithdrawalModalProps {
@@ -61,9 +71,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     // This is the account that holds the funds to be withdrawn
     const publicKey = getPublicKey();
     const { account, refetch: refetchAccount } = useAccount(publicKey || undefined);
-    
-    // Receiver address - where the user wants to receive funds on Ethereum mainnet
-    const [receiverAddress, setReceiverAddress] = useState("");
+    const { address: web3Address, isConnected: isWeb3Connected } = useUserWalletConnect();
     
     // Amount to withdraw in USDC
     const [amount, setAmount] = useState("");
@@ -74,17 +82,31 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     const [success, setSuccess] = useState(false);
     const [txData, setTxData] = useState<any>(null);
 
+    // Add the withdraw hook at the top level (IMPORTANT: NOT inside handleWithdraw)
+    const {
+        withdraw: contractWithdraw,
+        hash: contractHash,
+        isLoading: isContractLoading,
+        isWithdrawPending: isContractPending,
+        isWithdrawConfirmed: isContractConfirmed,
+        withdrawError: contractError
+    } = useWithdraw();
+
     // Reset form when modal opens/closes
     useEffect(() => {
         if (isOpen) {
-            setReceiverAddress("");
             setAmount("");
             setError("");
             setSuccess(false);
             setTxData(null);
             refetchAccount();
+            
+            console.log("[WithdrawalModal] Modal opened");
+            console.log("[WithdrawalModal] Web3 Connected:", isWeb3Connected);
+            console.log("[WithdrawalModal] Web3 Address:", web3Address);
+            console.log("[WithdrawalModal] L2 Account Address:", publicKey);
         }
-    }, [isOpen, refetchAccount]);
+    }, [isOpen, refetchAccount, web3Address, isWeb3Connected, publicKey]);
 
     const modalOverlayStyle = useMemo(() => ({
         backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -178,19 +200,34 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
      * 6. Handle success/error states
      * 7. Refresh balance and close modal
      */
+    // Update the handleWithdraw function
     const handleWithdraw = async () => {
-        // STEP 1: Validate the receiver address (where funds will be sent on mainnet)
-        if (!validateEthereumAddress(receiverAddress)) {
-            setError("Please enter a valid Ethereum address");
+        console.log("[WithdrawalModal] === Starting withdrawal process ===");
+        console.log("[WithdrawalModal] Web3 Connected:", isWeb3Connected);
+        console.log("[WithdrawalModal] Web3 Address:", web3Address);
+        console.log("[WithdrawalModal] Amount:", amount, "USDC");
+        
+        // STEP 1: Check if MetaMask is connected
+        if (!isWeb3Connected || !web3Address) {
+            console.error("[WithdrawalModal] MetaMask not connected");
+            setError("Please connect your MetaMask wallet first");
             return;
         }
 
-        // STEP 2: Validate the amount against the Layer 2 game account balance
+        // STEP 2: Validate the connected wallet address
+        if (!validateEthereumAddress(web3Address)) {
+            console.error("[WithdrawalModal] Invalid MetaMask address:", web3Address);
+            setError("Invalid MetaMask wallet address");
+            return;
+        }
+
+        // STEP 3: Validate the amount
         if (!validateAmount(amount)) {
-            // Provide specific error message based on validation failure
             if (Number(amount) < 0.01) {
+                console.error("[WithdrawalModal] Amount too small:", amount);
                 setError("Minimum withdrawal amount is 0.01 USDC");
             } else {
+                console.error("[WithdrawalModal] Invalid amount or insufficient balance:", amount);
                 setError("Invalid amount or insufficient balance");
             }
             return;
@@ -200,77 +237,94 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
         setError("");
 
         try {
-            // Get the SDK client instance using the game account private key from localStorage
+            // Get the SDK client instance
             const client = getClient();
-            
-            // Convert amount from USDC (ether units) to wei for the blockchain
             const amountInWei = ethers.parseEther(amount).toString();
             
-            /**
-             * Call the withdraw method from the Block52 SDK (@bitcoinbrisbane/block52)
-             * 
-             * SDK Method Signature:
-             * withdraw(amount: string, from?: string, receiver?: string, nonce?: number)
-             * 
-             * Parameters we provide:
-             * 1. amountInWei - Amount to withdraw in wei (string)
-             * 2. publicKey - The Layer 2 game account address (source of funds)
-             * 3. receiverAddress - The Ethereum mainnet address (destination)
-             * 
-             * What the SDK does internally:
-             * - Retrieves the current nonce from the L2 account if not provided
-             * - Signs the withdrawal request using the private key from localStorage
-             * - Constructs the RPC request with method "WITHDRAW"
-             * - Sends the signed request to the PVM backend
-             * - Returns a WithdrawResponseDTO with transaction details
-             * 
-             * The backend will then:
-             * - Validate the signature and account balance
-             * - Process the withdrawal through the bridge
-             * - Send funds to the receiver address on Ethereum mainnet
-             */
-            const result = await client.withdraw(
-                amountInWei,                    // Amount in wei as string
-                publicKey || undefined,          // From: Layer 2 game account (optional, defaults to client address)
-                receiverAddress                  // To: User's specified Ethereum address
-            );
+            console.log("[WithdrawalModal] STEP 1: Calling SDK withdraw");
+            console.log("[WithdrawalModal] - Amount in Wei:", amountInWei);
+            console.log("[WithdrawalModal] - From L2 Address:", publicKey);
+            console.log("[WithdrawalModal] - To Mainnet Address:", web3Address);
             
+            // STEP 1: Call the SDK to prepare the withdrawal
+            const result: WithdrawResponseDTO = await client.withdraw(
+                amountInWei,
+                publicKey || undefined,
+                web3Address  // Use the connected MetaMask address
+            );
+
+            console.log("[WithdrawalModal] SDK withdrawal response received:", result);
+            console.log("[WithdrawalModal] - Nonce:", result.nonce);
+            console.log("[WithdrawalModal] - Signature:", result.signature);
+
+            console.log("[WithdrawalModal] STEP 2: Executing Web3 transaction via MetaMask");
+            
+            // STEP 2: Now call the smart contract with the SDK response
+            await contractWithdraw(
+                result.nonce,
+                web3Address,  // Use the connected MetaMask address
+                BigInt(amountInWei),
+                result.signature
+            );
+
+            console.log("[WithdrawalModal] Web3 transaction submitted successfully");
             setSuccess(true);
             setTxData(result);
             
-            // Refresh account balance after 2 seconds to allow backend to process
+            // Refresh balance after successful withdrawal
             setTimeout(() => {
+                console.log("[WithdrawalModal] Refreshing account balance");
                 refetchAccount();
-                // Call parent's success callback if provided
                 if (onSuccess) {
                     onSuccess();
                 }
             }, 2000);
             
-            // Auto-close modal after 3 seconds to show success message
-            setTimeout(() => {
-                onClose();
-            }, 3000);
-            
         } catch (err: any) {
-            // Log full error for debugging
-            console.error("Withdrawal error:", err);
+            console.error("[WithdrawalModal] Withdrawal error:", err);
+            console.error("[WithdrawalModal] Error details:", {
+                message: err.message,
+                code: err.code,
+                data: err.data
+            });
             
-            // Provide user-friendly error messages
             if (err.message?.includes("insufficient")) {
                 setError("Insufficient balance for withdrawal");
             } else if (err.message?.includes("network")) {
                 setError("Network error. Please try again");
             } else if (err.message?.includes("signature")) {
                 setError("Failed to sign transaction. Please try again");
+            } else if (err.message?.includes("rejected")) {
+                setError("Transaction rejected by user");
             } else {
-                // Fallback to generic error or actual error message
                 setError(err.message || "Failed to process withdrawal");
             }
         } finally {
             setIsWithdrawing(false);
+            console.log("[WithdrawalModal] === Withdrawal process completed ===");
         }
     };
+
+    // // Add useEffect to handle contract confirmation
+    // useEffect(() => {
+    //     if (isContractConfirmed) {
+    //         console.log("Smart contract withdrawal confirmed!", contractHash);
+            
+    //         // Refresh account balance
+    //         setTimeout(() => {
+    //             refetchAccount();
+    //             if (onSuccess) {
+    //                 onSuccess();
+    //             }
+    //         }, 2000);
+            
+    //         // Auto-close modal
+    //         setTimeout(() => {
+    //             onClose();
+    //         }, 3000);
+    //     }
+    // }, [isContractConfirmed, contractHash, refetchAccount, onSuccess, onClose]);
+
 
     if (!isOpen) return null;
 
@@ -304,7 +358,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                         </p>
                         {txData && (
                             <p className="text-sm mt-2" style={{ color: colors.ui.textSecondary }}>
-                                Transaction ID: {txData.id || txData.transactionId || "Processing..."}
+                                Transaction processing on blockchain...
                             </p>
                         )}
                     </div>
@@ -322,56 +376,72 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 
                 {!success && (
                     <>
-                        {/* Receiver Address Input */}
-                        <div className="mb-4">
-                            <label className="block text-sm mb-2" style={{ color: colors.ui.textSecondary }}>
-                                Ethereum Address
-                            </label>
-                            <input
-                                type="text"
-                                value={receiverAddress}
-                                onChange={(e) => setReceiverAddress(e.target.value)}
-                                placeholder="0x..."
-                                className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2"
-                                style={inputStyle}
-                                disabled={isWithdrawing}
-                            />
-                            <p className="text-xs mt-1 text-gray-500">
-                                Enter the Ethereum address where you want to receive your funds
-                            </p>
-                        </div>
-
-                        {/* Amount Input */}
-                        <div className="mb-6">
-                            <label className="block text-sm mb-2" style={{ color: colors.ui.textSecondary }}>
-                                Amount (USDC)
-                            </label>
-                            <input
-                                type="number"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                placeholder="0.00"
-                                step="0.01"
-                                min="0"
-                                max={balanceInUSDC}
-                                className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2"
-                                style={inputStyle}
-                                disabled={isWithdrawing}
-                            />
-                            <div className="flex justify-between mt-1">
-                                <p className="text-xs text-gray-500">
-                                    Minimum: 0.01 USDC
+                        {/* MetaMask Connection Status */}
+                        {!isWeb3Connected || !web3Address ? (
+                            <div className="mb-4 p-3 rounded-lg" style={{ 
+                                backgroundColor: hexToRgba("#FFA500", 0.1),
+                                border: `1px solid #FFA500`
+                            }}>
+                                <p className="font-semibold mb-2" style={{ color: "#FFA500" }}>
+                                    MetaMask Not Connected
                                 </p>
-                                <button
-                                    onClick={() => setAmount(balanceInUSDC)}
-                                    className="text-xs underline hover:opacity-80"
-                                    style={{ color: colors.brand.primary }}
-                                    disabled={isWithdrawing}
-                                >
-                                    Max
-                                </button>
+                                <p className="text-sm" style={{ color: colors.ui.textSecondary }}>
+                                    Please connect your MetaMask wallet to withdraw funds. The withdrawal will be sent to your connected MetaMask address.
+                                </p>
                             </div>
-                        </div>
+                        ) : (
+                            /* Receiver Address Display (Read-only) */
+                            <div className="mb-4">
+                                <label className="block text-sm mb-2" style={{ color: colors.ui.textSecondary }}>
+                                    Withdrawal Address (MetaMask)
+                                </label>
+                                <div className="p-3 rounded-lg" style={{
+                                    backgroundColor: hexToRgba(colors.ui.bgMedium, 0.3),
+                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                }}>
+                                    <p className="font-mono text-sm" style={{ color: colors.brand.primary }}>
+                                        {web3Address}
+                                    </p>
+                                </div>
+                                <p className="text-xs mt-1 text-gray-500">
+                                    Funds will be sent to your connected MetaMask wallet
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Amount Input - Only show if MetaMask is connected */}
+                        {isWeb3Connected && web3Address && (
+                            <div className="mb-6">
+                                <label className="block text-sm mb-2" style={{ color: colors.ui.textSecondary }}>
+                                    Amount (USDC)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    max={balanceInUSDC}
+                                    className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2"
+                                    style={inputStyle}
+                                    disabled={isWithdrawing}
+                                />
+                                <div className="flex justify-between mt-1">
+                                    <p className="text-xs text-gray-500">
+                                        Minimum: 0.01 USDC
+                                    </p>
+                                    <button
+                                        onClick={() => setAmount(balanceInUSDC)}
+                                        className="text-xs underline hover:opacity-80"
+                                        style={{ color: colors.brand.primary }}
+                                        disabled={isWithdrawing}
+                                    >
+                                        Max
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
 
@@ -390,9 +460,9 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                             onClick={handleWithdraw}
                             className="flex-1 py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
                             style={buttonStyle}
-                            disabled={isWithdrawing || !receiverAddress || !amount}
+                            disabled={isWithdrawing || !isWeb3Connected || !web3Address || !amount}
                         >
-                            {isWithdrawing ? "Processing..." : "Withdraw"}
+                            {isWithdrawing ? "Processing..." : (!isWeb3Connected ? "Connect Wallet First" : "Withdraw")}
                         </button>
                     )}
                 </div>
@@ -402,3 +472,4 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 };
 
 export default WithdrawalModal;
+
