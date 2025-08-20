@@ -249,6 +249,15 @@ Genesis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 ```
 
 
+## Docker notes
+### Dockerfile
+
+```bash
+cd pvm/ts
+docker build -t poker-vm .
+docker run -p 8545:8545 poker-vm
+```
+
 ## Notes
 
 RANDO https://eth2book.info/capella/part2/building_blocks/randomness/#the-randao
