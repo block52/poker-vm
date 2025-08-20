@@ -615,12 +615,11 @@ const QRDeposit: React.FC = () => {
             await tx.wait();
 
             // Update session with amount (if proxy is available)
-            if (!sessionToUse._id.startsWith('web3-')) {
-                await completeSession(parseFloat(depositAmount));
+            if (!sessionToUse._id.startsWith("web3-")) {
+                await completeSession(amount.toString()); // USDC base units (6 decimals)
             } else {
                 console.log("✅ Direct transfer completed without proxy session");
             }
-
             // Refresh balances
             fetchWeb3Balance();
             refreshBalance();
