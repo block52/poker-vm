@@ -3,13 +3,17 @@
 services:
   # MongoDB Database
   mongodb:
-    image: mongo:6.0
-    container_name: poker-mongodb
+    image: mongo:8.0.9-noble
+    container_name: pvm-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password}
-      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-poker_db}
+      # MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      # MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password}
+      # MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-poker_db}
+      MONGO_INITDB_DATABASE: pvm
+      # No auth for now
+      MONGO_INITDB_ROOT_USERNAME: node1
+      MONGO_INITDB_ROOT_PASSWORD: Passw0rd123
     ports:
       - "27017:27017"
     volumes:
