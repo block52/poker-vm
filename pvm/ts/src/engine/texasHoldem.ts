@@ -35,7 +35,7 @@ import PokerSolver from "pokersolver";
 import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
-import { DealerPositionManager } from "./dealerManager";
+import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager } from "./managers/betManager";
 import SitInAction from "./actions/sitInAction";
 
@@ -589,7 +589,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         actions.push(...this._rounds.get(round) || []);
 
         // Special logic for ante round - prioritize blind posting order
-        if (round === TexasHoldemRound.ANTE) { 
+        if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
 
