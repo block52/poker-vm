@@ -45,6 +45,41 @@
     100% { opacity: 0.6; }
 }
 
+/* Custom input styles for QRDeposit */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Placeholder text color */
+input::placeholder {
+    color: rgba(156, 163, 175, 0.6);
+    opacity: 1;
+}
+
+input::-webkit-input-placeholder {
+    color: rgba(156, 163, 175, 0.6);
+}
+
+input::-moz-placeholder {
+    color: rgba(156, 163, 175, 0.6);
+}
+
+input:-ms-input-placeholder {
+    color: rgba(156, 163, 175, 0.6);
+}
+
+/* Focus ring styles */
+input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
 .text-gradient {
     background-clip: text;
     -webkit-background-clip: text;
