@@ -38,11 +38,13 @@ import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager } from "./managers/betManager";
 import SitInAction from "./actions/sitInAction";
+import { IBetManager } from "../types/interfaces";
 
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
     public readonly dealerManager: IDealerPositionManager;
+    private readonly betManager: IBetManager;;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
@@ -136,6 +138,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
+
     }
 
     // ==================== INITIALIZATION METHODS ====================
