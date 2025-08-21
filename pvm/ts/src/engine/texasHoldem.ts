@@ -39,12 +39,13 @@ import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager } from "./managers/betManager";
 import SitInAction from "./actions/sitInAction";
 import { IBetManager } from "../types/interfaces";
+import { CashGameBlindsManager, IBlindsManager } from "./managers/blindsManager";
 
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
     public readonly dealerManager: IDealerPositionManager;
-    private readonly betManager: IBetManager;;
+    private readonly blindsManager: IBlindsManager;;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
@@ -138,7 +139,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
-
+        this.blindsManager = new CashGameBlindsManager(this._gameOptions);
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -266,11 +267,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     get bigBlind(): bigint {
-        return this._gameOptions.bigBlind;
+        const { bigBlind } = this.blindsManager.getBlinds();
+        return bigBlind;
     }
 
     get smallBlind(): bigint {
-        return this._gameOptions.smallBlind;
+        const { smallBlind } = this.blindsManager.getBlinds();
+        return smallBlind;
     }
 
     // Position getters
