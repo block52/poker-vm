@@ -592,7 +592,9 @@ const QRDeposit: React.FC = () => {
                         _id: `web3-${Date.now()}`,
                         userAddress: loggedInAccount || web3Address,
                         depositAddress: DEPOSIT_ADDRESS,
-                        status: "PENDING"
+                        status: "PENDING",
+                        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
+                        amount: null
                     };
                     setCurrentSession(sessionToUse as any);
                 }
@@ -615,8 +617,8 @@ const QRDeposit: React.FC = () => {
             await tx.wait();
 
             // Update session with amount (if proxy is available)
-            if (!sessionToUse._id.startsWith("web3-")) {
-                await completeSession(amount.toString()); // USDC base units (6 decimals)
+            if (sessionToUse && !sessionToUse._id.startsWith("web3-")) {
+                await completeSession(Number(amount.toString())); // Convert BigInt to number for USDC base units (6 decimals)
             } else {
                 console.log("✅ Direct transfer completed without proxy session");
             }
