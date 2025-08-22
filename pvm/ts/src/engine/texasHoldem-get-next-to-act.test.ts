@@ -169,7 +169,7 @@ describe("Texas Holdem Game - Next seat", () => {
             const turn1: Turn = {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
                 action: PlayerActionType.SMALL_BLIND,
-                amount: gameAsAny._gameOptions.smallBlind,
+                amount: gameAsAny.smallBlind,
                 index: 3
             };
             const turn2: Turn = {
