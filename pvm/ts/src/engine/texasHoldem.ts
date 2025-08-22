@@ -38,14 +38,13 @@ import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager } from "./managers/betManager";
 import SitInAction from "./actions/sitInAction";
-import { IBetManager } from "../types/interfaces";
-import { CashGameBlindsManager, IBlindsManager } from "./managers/blindsManager";
-
+import { CashGameBlindsManager } from "./managers/index";
+import { IBlindsManager } from "./managers/blindsManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
     public readonly dealerManager: IDealerPositionManager;
-    private readonly blindsManager: IBlindsManager;;
+    private readonly blindsManager: IBlindsManager;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
