@@ -1,6 +1,6 @@
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-import { Player } from "../models/player";
-import { IDealerGameInterface, IDealerPositionManager } from "./types";
+import { Player } from "../../models/player";
+import { IDealerGameInterface, IDealerPositionManager } from "../types";
 
 /**
  * Standalone dealer position manager that works with TexasHoldemGame instances

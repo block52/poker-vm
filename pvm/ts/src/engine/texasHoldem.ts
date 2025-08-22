@@ -35,14 +35,16 @@ import PokerSolver from "pokersolver";
 import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import NewHandAction from "./actions/newHandAction";
-import { DealerPositionManager } from "./dealerManager";
+import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager } from "./managers/betManager";
 import SitInAction from "./actions/sitInAction";
-
+import { CashGameBlindsManager } from "./managers/index";
+import { IBlindsManager } from "./managers/blindsManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
     public readonly dealerManager: IDealerPositionManager;
+    private readonly blindsManager: IBlindsManager;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
@@ -136,6 +138,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
+        this.blindsManager = new CashGameBlindsManager(this._gameOptions);
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -263,11 +266,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     get bigBlind(): bigint {
-        return this._gameOptions.bigBlind;
+        const { bigBlind } = this.blindsManager.getBlinds();
+        return bigBlind;
     }
 
     get smallBlind(): bigint {
-        return this._gameOptions.smallBlind;
+        const { smallBlind } = this.blindsManager.getBlinds();
+        return smallBlind;
     }
 
     // Position getters
@@ -589,7 +594,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         actions.push(...this._rounds.get(round) || []);
 
         // Special logic for ante round - prioritize blind posting order
-        if (round === TexasHoldemRound.ANTE) { 
+        if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
 
@@ -1346,8 +1351,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             maxBuyIn: this._gameOptions.maxBuyIn.toString(),
             maxPlayers: this._gameOptions.maxPlayers,
             minPlayers: this._gameOptions.minPlayers,
-            smallBlind: this._gameOptions.smallBlind.toString(),
-            bigBlind: this._gameOptions.bigBlind.toString(),
+            smallBlind: this.blindsManager.getBlinds().smallBlind.toString(),
+            bigBlind: this.blindsManager.getBlinds().bigBlind.toString(),
             timeout: this._gameOptions.timeout
         };
 
