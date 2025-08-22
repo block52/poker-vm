@@ -27,10 +27,18 @@ export enum GameType {
     TOURNAMENT = "tournament"
 }
 
+export enum GameStatus {
+    WAITING_FOR_PLAYERS = "waiting-for-players",
+    REGISTRATION = "registration",
+    IN_PROGRESS = "in-progress",
+    FINISHED = "finished"
+}
+
 export enum PlayerStatus {
     NOT_ACTED = "not-acted",
     TURN = "turn",
     ACTIVE = "active",
+    BUSTED = "busted",
     FOLDED = "folded",
     ALL_IN = "all-in",
     SITTING_OUT = "sitting-out",

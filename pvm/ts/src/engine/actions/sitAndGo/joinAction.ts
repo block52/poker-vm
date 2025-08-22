@@ -1,7 +1,7 @@
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
-import BaseAction from "./baseAction";
-import { Player } from "../../models/player";
-import { Range } from "../types";
+import BaseAction from "./../baseAction";
+import { Player } from "../../../models/player";
+import { Range } from "../../types";
 
 class JoinAction extends BaseAction {
     get type(): NonPlayerActionType {
@@ -10,6 +10,11 @@ class JoinAction extends BaseAction {
 
     // Override verify method for join action
     verify(player: Player): Range {
+
+        if (this.game.status !== "waiting-for-players") {
+            throw new Error("Game is not in the waiting-for-players state.");
+        }
+
         if (this.game.exists(player.address)) {
             throw new Error("Player already exists in the game.");
         }
@@ -22,7 +27,7 @@ class JoinAction extends BaseAction {
     }
 
     // Override execute to handle player joining
-    execute(player: Player, index: number, amount?: bigint, requestedSeat?: string): void {
+    execute(player: Player, index: number, amount?: bigint): void {
         // First verify the action
         const range = this.verify(player);
 
@@ -33,7 +38,7 @@ class JoinAction extends BaseAction {
         }
 
         // Find an available seat or use the requested one
-        const seat: number = this.getSeat(requestedSeat);
+        const seat: number = this.getSeat();
         this.game.joinAtSeat(player, seat);
         this.game.dealerManager.handlePlayerJoin(seat);
 
@@ -49,38 +54,18 @@ class JoinAction extends BaseAction {
         );
     }
 
-    private getSeat(data?: string): number {
+    private getSeat(): number {
         // Find an available seat or use the requested one
         let seat: number = 1;
-        if (data === undefined || data === "" || data === null) {
-            // get all available seats
-            const availableSeats = this.game.getAvailableSeats();
+        // get all available seats
+        const availableSeats = this.game.getAvailableSeats();
 
-            // If all seats are occupied, throw an error
-            if (availableSeats.length === 0)
-                throw new Error("No available seats to join.");
+        // If all seats are occupied, throw an error
+        if (availableSeats.length === 0)
+            throw new Error("No available seats to join.");
 
-            // Choose randomly from the available seats
-            seat = Math.floor(Math.random() * availableSeats.length);
-        } else {
-            // Hack for old unit tests
-            // Check via REGEX if data has the format "seat=1"
-            // Should be anywhere in the string, so we use ^ and $ to match the whole string
-            const seatRegex = /seat=(\d+)/;
-            const match = data.match(seatRegex);
-            
-            if (match && match[1]) {
-                return parseInt(match[1], 10);
-            }
-
-            // If it doesn't match the regex, we assume it's a seat number
-            // and parse it directly.  Old unit tests used to pass the seat number directly
-            // without the "seat=" prefix.
-            if (!match) {
-                // If it matches, parse the seat number
-                seat = parseInt(data);
-            }
-        }
+        // Choose randomly from the available seats
+        seat = Math.floor(Math.random() * availableSeats.length);
 
         // Validate the seat number, ensuring it's a valid integer
         if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {

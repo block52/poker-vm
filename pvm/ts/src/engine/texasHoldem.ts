@@ -3,6 +3,7 @@ import {
     Card,
     GameOptions,
     GameOptionsDTO,
+    GameType,
     LegalActionDTO,
     NonPlayerActionType,
     PlayerActionType,
@@ -201,6 +202,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     // ==================== GAME STATE PROPERTIES ====================
+    get type(): GameType {
+        return GameType.CASH;
+    }
 
     // Core game state getters
     get players(): Map<number, Player | null> {
@@ -277,8 +281,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     // Position getters
     get dealerPosition(): number {
-        // get form dealer manager
-        return this._dealer;
+        // get from dealer manager
+        return this.dealerManager.getDealerPosition();
     }
 
     private setDealerPosition(seat: number): void {
