@@ -1352,8 +1352,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             maxBuyIn: this._gameOptions.maxBuyIn.toString(),
             maxPlayers: this._gameOptions.maxPlayers,
             minPlayers: this._gameOptions.minPlayers,
-            smallBlind: this._gameOptions.smallBlind.toString(),
-            bigBlind: this._gameOptions.bigBlind.toString(),
+            smallBlind: this.blindsManager.getBlinds().smallBlind.toString(),
+            bigBlind: this.blindsManager.getBlinds().bigBlind.toString(),
             timeout: this._gameOptions.timeout
         };
 
