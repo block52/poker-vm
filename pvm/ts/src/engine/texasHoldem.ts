@@ -3,6 +3,7 @@ import {
     Card,
     GameOptions,
     GameOptionsDTO,
+    GameStatus,
     GameType,
     LegalActionDTO,
     NonPlayerActionType,
@@ -16,31 +17,34 @@ import {
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 
-// Import all action types
-import BetAction from "./actions/betAction";
-import BigBlindAction from "./actions/bigBlindAction";
-import CallAction from "./actions/callAction";
-import CheckAction from "./actions/checkAction";
-import DealAction from "./actions/dealAction";
-import FoldAction from "./actions/foldAction";
-import JoinAction from "./actions/joinAction";
-import LeaveAction from "./actions/leaveAction";
-import MuckAction from "./actions/muckAction";
-import RaiseAction from "./actions/raiseAction";
-import ShowAction from "./actions/showAction";
-import SmallBlindAction from "./actions/smallBlindAction";
-import SitOutAction from "./actions/sitOutAction";
+// Import all action types from the actions index
+import {
+    BetAction,
+    BigBlindAction,
+    CallAction,
+    CheckAction,
+    DealAction,
+    FoldAction,
+    JoinAction,
+    LeaveAction,
+    MuckAction,
+    NewHandAction,
+    RaiseAction,
+    ShowAction,
+    SmallBlindAction,
+    SitOutAction,
+    SitInAction
+} from "./actions";
+
+import JoinActionSitAndGo from "./actions/sitAndGo/joinAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
-import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./managers/dealerManager";
-import { BetManager } from "./managers/betManager";
-import SitInAction from "./actions/sitInAction";
-import { CashGameBlindsManager } from "./managers/index";
-import { IBlindsManager } from "./managers/blindsManager";
+import { BetManager, CashGameBlindsManager } from "./managers/index";
+import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
@@ -139,9 +143,20 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
-        this.blindsManager = new CashGameBlindsManager(this._gameOptions);
 
-        // if (this._gameOptions.)
+        switch (this.type) {
+            case GameType.SIT_AND_GO:
+            case GameType.TOURNAMENT: // Change once sit and go package is published
+                // Initialize Sit and Go specific managers if needed
+                // this.statusManager = new SitAndGoStatusManager(this.getSeatedPlayers(), this._gameOptions);
+                this.blindsManager = new SitAndGoBlindsManager(10, this._gameOptions);
+                break;
+            case GameType.CASH:
+            default:
+                this.blindsManager = new CashGameBlindsManager(this._gameOptions);
+                break;
+        }
+
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -205,7 +220,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     // ==================== GAME STATE PROPERTIES ====================
     get type(): GameType {
-        return GameType.CASH;
+        return this._gameOptions.type || GameType.CASH;
     }
 
     // Core game state getters
@@ -482,21 +497,24 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Deals cards to all players
      */
     deal(): void {
-        // Check minimum players
-        if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
-            throw new Error("Not enough active players");
-        }
+        // // Check minimum players: TODO change this to use gameStatus
+        // if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
+        //     throw new Error("Not enough active players");
+        // }
+
+
+        // This is all done in the verify method of DealAction
 
         // Validate current round
         if (this.currentRound !== TexasHoldemRound.ANTE) {
             throw new Error("Can only deal in preflop round.");
         }
 
-        // Check if cards have already been dealt
-        const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
-        if (anyPlayerHasCards) {
-            throw new Error("Cards have already been dealt for this hand.");
-        }
+        // // Check if cards have already been dealt
+        // const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
+        // if (anyPlayerHasCards) {
+        //     throw new Error("Cards have already been dealt for this hand.");
+        // }
 
         const players = this.getSeatedPlayers();
 
@@ -938,7 +956,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         switch (action) {
             case NonPlayerActionType.JOIN:
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                new JoinAction(this, this._update).execute(player, index, _amount, data);
+                // Hack
+                if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
+                    new JoinActionSitAndGo(this, this._update).execute(player, index, _amount);
+                    return;
+                }
+                if (this.type === GameType.CASH) {
+                    new JoinAction(this, this._update).execute(player, index, _amount, data);
+                }
                 return;
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);

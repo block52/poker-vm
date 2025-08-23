@@ -9,6 +9,12 @@ class DealAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range {
+
+        // Check minimum players: TODO change this to use gameStatus
+        if (this.game.getActivePlayerCount() < this.game.minPlayers) {
+            throw new Error("Not enough active players");
+        }
+
         // Any one can deal
         super.verify(player);
 

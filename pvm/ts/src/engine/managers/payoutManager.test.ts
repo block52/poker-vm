@@ -1,29 +1,18 @@
 import { PayoutManager } from "./payoutManager";
-import { GameOptions, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import { ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "../testConstants";
 
 describe("PayoutManager", () => {
     let payoutManager: PayoutManager;
-    let gameOptions: GameOptions;
     let players: Player[];
 
     beforeEach(() => {
-        gameOptions = {
-            minBuyIn: ONE_HUNDRED_TOKENS,
-            maxBuyIn: ONE_HUNDRED_TOKENS,
-            minPlayers: 9,
-            maxPlayers: 9,
-            smallBlind: ONE_TOKEN,
-            bigBlind: TWO_TOKENS,
-            timeout: 60000
-        };
         players = Array.from({ length: 9 }, (_, i) => ({
             status: PlayerStatus.ACTIVE,
             id: i.toString()
         } as Player));
-
-        payoutManager = new PayoutManager(gameOptions, players);
+        payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, players);
     });
 
     describe("calculatePayout", () => {
@@ -59,7 +48,7 @@ describe("PayoutManager", () => {
     describe("calculateCurrentPayout", () => {
         it("should return 1st place payout when 1 player remains", () => {
             players.forEach((player, index) => {
-                if (index > 0) player.status = PlayerStatus.OUT;
+                if (index > 0) player.status = PlayerStatus.BUSTED;
             });
 
             const payout = payoutManager.calculateCurrentPayout();
@@ -68,7 +57,7 @@ describe("PayoutManager", () => {
 
         it("should return 2nd place payout when 2 players remain", () => {
             players.forEach((player, index) => {
-                if (index > 1) player.status = PlayerStatus.OUT;
+                if (index > 1) player.status = PlayerStatus.BUSTED;
             });
 
             const payout = payoutManager.calculateCurrentPayout();
@@ -77,7 +66,7 @@ describe("PayoutManager", () => {
 
         it("should return 3rd place payout when 3 players remain", () => {
             players.forEach((player, index) => {
-                if (index > 2) player.status = PlayerStatus.OUT;
+                if (index > 2) player.status = PlayerStatus.BUSTED;
             });
 
             const payout = payoutManager.calculateCurrentPayout();
@@ -90,7 +79,7 @@ describe("PayoutManager", () => {
         });
 
         it("should throw error when no active players", () => {
-            players.forEach(player => player.status = PlayerStatus.OUT);
+            players.forEach(player => player.status = PlayerStatus.BUSTED);
 
             expect(() => payoutManager.calculateCurrentPayout()).toThrow("No active players to calculate payout");
         });

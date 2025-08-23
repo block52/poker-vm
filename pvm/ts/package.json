@@ -13,7 +13,7 @@
         "sign": "npx ts-node scripts/sign.ts"
     },
     "dependencies": {
-        "@bitcoinbrisbane/block52": "1.2.3",
+        "@bitcoinbrisbane/block52": "1.2.8",
         "@types/cors": "^2.8.19",
         "@types/node": "^22.15.30",
         "@types/ws": "^8.18.1",
@@ -49,6 +49,6 @@
         "ts-jest": "^29.2.5"
     },
     "engines": {
-        "node": "20.18"
+        "node": "22.18"
     }
 }

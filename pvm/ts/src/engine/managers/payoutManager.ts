@@ -1,16 +1,17 @@
-import { GameOptions, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 
 export class PayoutManager {
 
+    private readonly runners: number;
     // This class will handle the payout logic for the game
     // It will calculate payouts based on the game state and player positions
 
-    constructor(private readonly gameOptions: GameOptions, private readonly players: Player[]) {
-        // Initialize any necessary properties or dependencies
+    constructor(private readonly buyIn: bigint, private readonly players: Player[]) {
+        this.runners = players.length;
     }
 
-    calculateCurrentPayout(): BigInt {
+    calculateCurrentPayout(): bigint {
         const livePlayers = this.players.filter(player => player.status === PlayerStatus.ACTIVE);
 
         if (livePlayers.length === 0) {
@@ -21,17 +22,16 @@ export class PayoutManager {
         // If only 1 player left, they get 1st place
         // If only 2 players left, next elimination gets 2nd place
         // If only 3 players left, next elimination gets 3rd place
-        const payoutPosition = livePlayers.length;
 
-        return this.calculatePayout(payoutPosition);
+        return this.calculatePayout(livePlayers.length);
     }
 
-    calculatePayout(place: number): BigInt {
+    calculatePayout(place: number): bigint {
         if (place < 1 || place > 3) {
             return 0n; // Only top 3 places get paid
         }
 
-        const totalPrizePool = BigInt(this.gameOptions.minBuyIn) * BigInt(9); // 9 players total
+        const totalPrizePool = this.buyIn * BigInt(this.runners);
 
         switch (place) {
             case 1: // First place - 60%

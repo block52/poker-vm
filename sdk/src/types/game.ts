@@ -24,6 +24,7 @@ export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
 
 export enum GameType {
     CASH = "cash",
+    SIT_AND_GO = "sit-and-go",
     TOURNAMENT = "tournament"
 }
 
@@ -64,7 +65,7 @@ export type GameOptions = {
     smallBlind: bigint;
     bigBlind: bigint;
     timeout: number;
-    type: GameType | undefined; // Optional for cash games
+    type: GameType; // Optional for cash games
     otherOptions?: Record<string, any>; // Placeholder for future options
 };
 
