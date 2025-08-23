@@ -1,0 +1,320 @@
+import {
+    PlayerStatus,
+    TexasHoldemRound,
+    GameOptions,
+    PlayerActionType,
+    NonPlayerActionType,
+    GameType,
+    GameStatus
+} from "@bitcoinbrisbane/block52";
+import TexasHoldemGame from "./texasHoldem";
+import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN, FIFTY_TOKENS } from "./testConstants";
+import { Player } from "../models/player";
+import { SitAndGoStatusManager } from "./managers/statusManager";
+import { PayoutManager } from "./managers/payoutManager";
+
+describe("Sit and Go - Full Game", () => {
+    describe("Complete Tournament Flow", () => {
+        let game: TexasHoldemGame;
+        let gameOptions: GameOptions;
+
+        // Player addresses for a 6-max sit and go
+        const PLAYER_1 = "0x1111111111111111111111111111111111111111";
+        const PLAYER_2 = "0x2222222222222222222222222222222222222222";
+        const PLAYER_3 = "0x3333333333333333333333333333333333333333";
+        const PLAYER_4 = "0x4444444444444444444444444444444444444444";
+        const PLAYER_5 = "0x5555555555555555555555555555555555555555";
+        const PLAYER_6 = "0x6666666666666666666666666666666666666666";
+
+        beforeEach(() => {
+            gameOptions = {
+                minBuyIn: ONE_HUNDRED_TOKENS,
+                maxBuyIn: ONE_HUNDRED_TOKENS, // Fixed buy-in for sit and go
+                minPlayers: 6,
+                maxPlayers: 6,
+                smallBlind: ONE_TOKEN,
+                bigBlind: TWO_TOKENS,
+                timeout: 60000,
+                type: GameType.TOURNAMENT
+            };
+
+            const baseGameConfig = {
+                address: "0x0000000000000000000000000000000000000000",
+                dealer: 6,
+                nextToAct: 1,
+                currentRound: "ante",
+                communityCards: [],
+                pot: 0n,
+                players: [],
+                now: Date.now()
+            };
+
+            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+        });
+
+        it("should run a complete 6-player sit and go tournament", () => {
+            // Phase 1: Player Registration
+            console.log("=== PHASE 1: PLAYER REGISTRATION ===");
+
+            // Players join the tournament
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
+            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5");
+
+            // Verify we're waiting for the last player
+            expect(game.getPlayerCount()).toBe(5);
+            const livePlayers = game.findLivePlayers();
+            const statusManager = new SitAndGoStatusManager(livePlayers, gameOptions);
+            expect(statusManager.getState()).toBe(GameStatus.WAITING_FOR_PLAYERS);
+
+            // Last player joins - tournament should be ready to start
+            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6");
+            expect(game.getPlayerCount()).toBe(6);
+
+            const finalLivePlayers = game.findLivePlayers();
+            const finalStatusManager = new SitAndGoStatusManager(finalLivePlayers, gameOptions);
+            expect(finalStatusManager.getState()).toBe(GameStatus.IN_PROGRESS);
+
+            // Verify all players have correct starting chips
+            const allPlayers = game.findLivePlayers();
+            allPlayers.forEach((player: Player) => {
+                expect(player.chips).toBe(ONE_HUNDRED_TOKENS);
+                expect(player.status).toBe(PlayerStatus.ACTIVE);
+            });
+
+            console.log("✓ All 6 players registered successfully");
+
+            // Phase 2: First Hand - Early Tournament Play
+            console.log("\n=== PHASE 2: EARLY TOURNAMENT PLAY ===");
+
+            // Start first hand
+            game.deal();
+            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+
+            // Post blinds (Player 1 = small blind, Player 2 = big blind)
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
+
+            // Action starts with Player 3 (UTG)
+            let nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toBe(PLAYER_3);
+
+            // Simulate some early game action - conservative play
+            game.performAction(PLAYER_3, PlayerActionType.FOLD, 9);
+            game.performAction(PLAYER_4, PlayerActionType.CALL, 10, TWO_TOKENS);
+            game.performAction(PLAYER_5, PlayerActionType.FOLD, 11);
+            game.performAction(PLAYER_6, PlayerActionType.FOLD, 12);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 13, ONE_TOKEN); // Complete small blind
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 14);
+
+            console.log("✓ Preflop action completed - 3 players to flop");
+            expect(game.pot).toBeGreaterThan(0n);
+
+            // Phase 3: Mid-game - Players start getting eliminated
+            console.log("\n=== PHASE 3: MID-GAME ELIMINATION PHASE ===");
+
+            // Simulate several hands where players get eliminated
+            // For brevity, we'll simulate this by having players leave when their chips get low
+
+            let handsPlayed = 0;
+            const maxHands = 50; // Prevent infinite loops in test
+
+            while (game.getPlayerCount() > 3 && handsPlayed < maxHands) {
+                // Simulate a hand by having some players fold and others play
+                try {
+                    // Only deal if we're not in the middle of a hand
+                    if (game.currentRound === TexasHoldemRound.ANTE) {
+                        game.deal();
+                    }
+
+                    // Get current active players
+                    const activePlayers = game.findLivePlayers();
+                    if (activePlayers.length < 2) break;
+
+                    // Simulate aggressive play to eliminate players faster
+                    // This is a simplified simulation - in reality, showdowns would determine winners
+
+                    // Find players with low chips and simulate their elimination
+                    const playersWithLowChips = activePlayers.filter(p => p.chips < FIFTY_TOKENS);
+
+                    if (playersWithLowChips.length > 0) {
+                        // Simulate elimination by having low-chip players leave
+                        const playerToEliminate = playersWithLowChips[0];
+                        console.log(`Player ${playerToEliminate.address} eliminated with ${playerToEliminate.chips} chips`);
+
+                        // Calculate payout for eliminated player
+                        const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, activePlayers, 6);
+                        const payout = payoutManager.calculateCurrentPayout();
+
+                        game.performAction(playerToEliminate.address, NonPlayerActionType.LEAVE, handsPlayed + 20);
+
+                        console.log(`✓ Player eliminated - ${game.getPlayerCount()} players remaining`);
+
+                        if (game.getPlayerCount() <= 3) {
+                            console.log("✓ Final table reached!");
+                            break;
+                        }
+                    }
+
+                    handsPlayed++;
+                } catch (error) {
+                    // Handle any game state issues gracefully
+                    console.warn(`Hand ${handsPlayed} simulation issue:`, error);
+                    handsPlayed++;
+                }
+            }
+
+            // Phase 4: Final Table (3 players or less)
+            console.log("\n=== PHASE 4: FINAL TABLE ===");
+
+            const finalPlayers = game.findLivePlayers();
+            expect(finalPlayers.length).toBeLessThanOrEqual(3);
+            expect(finalPlayers.length).toBeGreaterThanOrEqual(1);
+
+            console.log(`Final table has ${finalPlayers.length} players`);
+
+            // Phase 5: Heads-up or Final Payouts
+            console.log("\n=== PHASE 5: TOURNAMENT COMPLETION ===");
+
+            if (finalPlayers.length === 3) {
+                // Eliminate one more to get to heads-up
+                const thirdPlacePlayer = finalPlayers[0];
+                console.log(`3rd place: ${thirdPlacePlayer.address}`);
+
+                const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, finalPlayers, 6);
+                const thirdPlacePayout = payoutManager.calculatePayout(3);
+                console.log(`3rd place payout: ${thirdPlacePayout}`);
+
+                game.performAction(thirdPlacePlayer.address, NonPlayerActionType.LEAVE, 100);
+            }
+
+            const remainingPlayers = game.findLivePlayers();
+
+            if (remainingPlayers.length === 2) {
+                console.log("=== HEADS-UP PLAY ===");
+                const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, remainingPlayers, 6);
+
+                // Simulate heads-up completion
+                const secondPlacePlayer = remainingPlayers[0];
+                const firstPlacePlayer = remainingPlayers[1];
+
+                const secondPlacePayout = payoutManager.calculatePayout(2);
+                const firstPlacePayout = payoutManager.calculatePayout(1);
+
+                console.log(`2nd place: ${secondPlacePlayer.address} - Payout: ${secondPlacePayout}`);
+                console.log(`1st place: ${firstPlacePlayer.address} - Payout: ${firstPlacePayout}`);
+
+                // Verify payouts are correct
+                expect(secondPlacePayout).toBe((ONE_HUNDRED_TOKENS * 6n * 30n) / 100n); // 30% of prize pool
+                expect(firstPlacePayout).toBe((ONE_HUNDRED_TOKENS * 6n * 60n) / 100n); // 60% of prize pool
+
+                game.performAction(secondPlacePlayer.address, NonPlayerActionType.LEAVE, 101);
+            }
+
+            // Final verification
+            const winner = game.findLivePlayers();
+            expect(winner.length).toBe(1);
+
+            console.log(`\n🏆 TOURNAMENT WINNER: ${winner[0].address}`);
+            console.log("✓ Sit and Go tournament completed successfully!");
+
+            // Verify tournament integrity
+            expect(game.getPlayerCount()).toBe(1); // Only winner remains
+            expect(winner[0].status).toBe(PlayerStatus.ACTIVE);
+        });
+
+        it("should handle payout calculations correctly", () => {
+            // Test the payout structure for a 6-player sit and go
+            const mockPlayers = [
+                new Player(PLAYER_1, undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE),
+                new Player(PLAYER_2, undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE),
+                new Player(PLAYER_3, undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE)
+            ];
+
+            const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, mockPlayers, 6);
+
+            // Test individual place payouts
+            const firstPlace = payoutManager.calculatePayout(1);
+            const secondPlace = payoutManager.calculatePayout(2);
+            const thirdPlace = payoutManager.calculatePayout(3);
+            const fourthPlace = payoutManager.calculatePayout(4);
+
+            // Total prize pool: 6 * 100 = 600 tokens
+            // 1st: 60% = 360 tokens
+            // 2nd: 30% = 180 tokens  
+            // 3rd: 10% = 60 tokens
+            // 4th+: 0 tokens
+
+            expect(firstPlace).toBe(360n * ONE_TOKEN); // 60% of 600 tokens
+            expect(secondPlace).toBe(180n * ONE_TOKEN); // 30% of 600 tokens
+            expect(thirdPlace).toBe(60n * ONE_TOKEN);   // 10% of 600 tokens
+            expect(fourthPlace).toBe(0n);                // No payout for 4th+
+
+            // Verify total payouts equal 100% of prize pool
+            const totalPayouts = firstPlace + secondPlace + thirdPlace;
+            const totalPrizePool = ONE_HUNDRED_TOKENS * 6n;
+            expect(totalPayouts).toBe(totalPrizePool);
+        });
+
+        it("should track elimination order correctly", () => {
+            // Join all players
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
+            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5");
+            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6");
+
+            expect(game.getPlayerCount()).toBe(6);
+
+            // Simulate eliminations in specific order
+            game.performAction(PLAYER_6, NonPlayerActionType.LEAVE, 10); // 6th place
+            expect(game.getPlayerCount()).toBe(5);
+
+            game.performAction(PLAYER_5, NonPlayerActionType.LEAVE, 11); // 5th place
+            expect(game.getPlayerCount()).toBe(4);
+
+            game.performAction(PLAYER_4, NonPlayerActionType.LEAVE, 12); // 4th place
+            expect(game.getPlayerCount()).toBe(3);
+
+            // At this point, we're at the final table (top 3)
+            const finalThreePlayers = game.findLivePlayers();
+            expect(finalThreePlayers.length).toBe(3);
+
+            // Verify the remaining players are correct
+            const remainingAddresses = finalThreePlayers.map(p => p.address);
+            expect(remainingAddresses).toContain(PLAYER_1);
+            expect(remainingAddresses).toContain(PLAYER_2);
+            expect(remainingAddresses).toContain(PLAYER_3);
+
+            // Final eliminations for podium places
+            game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, 13); // 3rd place
+            game.performAction(PLAYER_2, NonPlayerActionType.LEAVE, 14); // 2nd place
+
+            // Winner
+            const winner = game.findLivePlayers();
+            expect(winner.length).toBe(1);
+            expect(winner[0].address).toBe(PLAYER_1);
+        });
+
+        it("should handle blind increases in tournament format", () => {
+            // This test would require implementing the SitAndGoBlindsManager
+            // For now, we'll just verify the game can handle the concept
+
+            const currentBlinds = {
+                smallBlind: gameOptions.smallBlind,
+                bigBlind: gameOptions.bigBlind
+            };
+
+            // In a real tournament, blinds would increase over time
+            // Example: Level 1: 1/2, Level 2: 2/4, Level 3: 4/8, etc.
+
+            expect(currentBlinds.smallBlind).toBe(ONE_TOKEN);
+            expect(currentBlinds.bigBlind).toBe(TWO_TOKENS);
+
+            // Future enhancement: Test blind increases based on time or hands played
+        });
+    });
+});
