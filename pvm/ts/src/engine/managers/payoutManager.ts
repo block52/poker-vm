@@ -1,4 +1,4 @@
-import { GameOptions, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 
 export class PayoutManager {
@@ -11,7 +11,7 @@ export class PayoutManager {
         this.runners = runners || 9; // Default to 9 runners if not specified
     }
 
-    calculateCurrentPayout(): BigInt {
+    calculateCurrentPayout(): bigint {
         const livePlayers = this.players.filter(player => player.status === PlayerStatus.ACTIVE);
 
         if (livePlayers.length === 0) {
@@ -26,7 +26,7 @@ export class PayoutManager {
         return this.calculatePayout(livePlayers.length);
     }
 
-    calculatePayout(place: number): BigInt {
+    calculatePayout(place: number): bigint {
         if (place < 1 || place > 3) {
             return 0n; // Only top 3 places get paid
         }
