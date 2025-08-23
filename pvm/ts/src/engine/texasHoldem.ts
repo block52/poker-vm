@@ -3,6 +3,7 @@ import {
     Card,
     GameOptions,
     GameOptionsDTO,
+    GameStatus,
     GameType,
     LegalActionDTO,
     NonPlayerActionType,
@@ -141,7 +142,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this.dealerManager = dealerManager || new DealerPositionManager(this);
         this.blindsManager = new CashGameBlindsManager(this._gameOptions);
 
-        // if (this._gameOptions.)
+        // TODO: Set cash game or sit and go game type
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -476,27 +477,34 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return this._now - lastAction.timestamp > this._now + this._autoExpire * 1000; // Auto expire time
     }
 
+    private getGameStatus(): GameStatus {
+        throw new Error("Method not implemented.");
+    }
+
     // ==================== GAME FLOW METHODS ====================
 
     /**
      * Deals cards to all players
      */
     deal(): void {
-        // Check minimum players
-        if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
-            throw new Error("Not enough active players");
-        }
+        // // Check minimum players: TODO change this to use gameStatus
+        // if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
+        //     throw new Error("Not enough active players");
+        // }
+
+
+        // This is all done in the verify method of DealAction
 
         // Validate current round
         if (this.currentRound !== TexasHoldemRound.ANTE) {
             throw new Error("Can only deal in preflop round.");
         }
 
-        // Check if cards have already been dealt
-        const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
-        if (anyPlayerHasCards) {
-            throw new Error("Cards have already been dealt for this hand.");
-        }
+        // // Check if cards have already been dealt
+        // const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
+        // if (anyPlayerHasCards) {
+        //     throw new Error("Cards have already been dealt for this hand.");
+        // }
 
         const players = this.getSeatedPlayers();
 

@@ -29,7 +29,9 @@ class LeaveAction extends BaseAction {
         // Get player seat BEFORE changing any state
         const seat = this.game.getPlayerSeatNumber(player.address);
         this.game.dealerManager.handlePlayerLeave(seat);
-        const payoutManager = new PayoutManager(this.game.gameOptions, this.game.players);
+
+        const players: Player[] = this.game.players;
+        const payoutManager = new PayoutManager(this.game.buyIn, players);
 
         console.log(`Player ${player.address} at seat ${seat} leaving with ${player.chips} chips...`);
 
