@@ -140,6 +140,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
         this.blindsManager = new CashGameBlindsManager(this._gameOptions);
+
+        // if (this._gameOptions.)
     }
 
     // ==================== INITIALIZATION METHODS ====================

@@ -1,4 +1,5 @@
 export class CashGameStateManager {
+
 }
 
 export class SitAndGoStateManager {
