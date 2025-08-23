@@ -5,25 +5,14 @@ import { ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "../testConstants";
 
 describe("PayoutManager", () => {
     let payoutManager: PayoutManager;
-    let gameOptions: GameOptions;
     let players: Player[];
 
     beforeEach(() => {
-        gameOptions = {
-            minBuyIn: ONE_HUNDRED_TOKENS,
-            maxBuyIn: ONE_HUNDRED_TOKENS,
-            minPlayers: 9,
-            maxPlayers: 9,
-            smallBlind: ONE_TOKEN,
-            bigBlind: TWO_TOKENS,
-            timeout: 60000
-        };
         players = Array.from({ length: 9 }, (_, i) => ({
             status: PlayerStatus.ACTIVE,
             id: i.toString()
         } as Player));
-
-        payoutManager = new PayoutManager(gameOptions, players);
+        payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, players);
     });
 
     describe("calculatePayout", () => {

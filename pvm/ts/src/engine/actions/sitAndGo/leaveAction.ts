@@ -1,0 +1,48 @@
+import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import BaseAction from "./../baseAction";
+import { Player } from "../../../models/player";
+import { Range } from "../../types";
+import { PayoutManager } from "../../managers/payoutManager";
+
+class LeaveAction extends BaseAction {
+    get type(): NonPlayerActionType {
+        return NonPlayerActionType.LEAVE;
+    }
+
+    // Override verify method to allow leaving anytime
+    verify(player: Player): Range {
+        if (player.status !== PlayerStatus.ACTIVE) {
+            throw new Error("Player is not active and cannot leave.");
+        }
+
+        if (player.chips <= 0n) {
+            throw new Error("Player has no chips and cannot leave.");
+        }
+
+        return { minAmount: 0n, maxAmount: 0n };
+    }
+
+    // Override execute to handle player leaving
+    execute(player: Player, index: number): void {
+        this.verify(player);
+
+        // Get player seat BEFORE changing any state
+        const seat = this.game.getPlayerSeatNumber(player.address);
+        this.game.dealerManager.handlePlayerLeave(seat);
+        const payoutManager = new PayoutManager(this.game.gameOptions, this.game.players);
+
+        console.log(`Player ${player.address} at seat ${seat} leaving with ${player.chips} chips...`);
+
+        this.game.removePlayer(player.address);
+
+        // Add leave action to history BEFORE removing the player
+        this.game.addNonPlayerAction({ 
+            playerId: player.address, 
+            action: NonPlayerActionType.LEAVE, 
+            index: index,
+            amount: playerChips // Include chips amount in the action
+        }, seat.toString());
+    }
+}
+
+export default LeaveAction;

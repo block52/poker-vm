@@ -205,7 +205,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     // ==================== GAME STATE PROPERTIES ====================
     get type(): GameType {
-        return GameType.CASH;
+        return this._gameOptions.type || GameType.CASH;
     }
 
     // Core game state getters

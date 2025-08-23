@@ -3,11 +3,12 @@ import { Player } from "../../models/player";
 
 export class PayoutManager {
 
+    private readonly runners: number;
     // This class will handle the payout logic for the game
     // It will calculate payouts based on the game state and player positions
 
-    constructor(private readonly gameOptions: GameOptions, private readonly players: Player[], private readonly runners?: number) {
-        // Initialize any necessary properties or dependencies
+    constructor(private readonly buyIn: bigint, private readonly players: Player[], runners?: number) {
+        this.runners = runners || 9; // Default to 9 runners if not specified
     }
 
     calculateCurrentPayout(): BigInt {
@@ -31,7 +32,7 @@ export class PayoutManager {
             return 0n; // Only top 3 places get paid
         }
 
-        const totalPrizePool = BigInt(this.gameOptions.minBuyIn) * BigInt(9); // 9 players total
+        const totalPrizePool = this.buyIn * BigInt(9); // 9 players total
 
         switch (place) {
             case 1: // First place - 60%

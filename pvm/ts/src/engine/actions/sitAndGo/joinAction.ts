@@ -11,9 +11,9 @@ class JoinAction extends BaseAction {
     // Override verify method for join action
     verify(player: Player): Range {
 
-        if (this.game.status !== "waiting-for-players") {
-            throw new Error("Game is not in the waiting-for-players state.");
-        }
+        // if (this.game.status !== "waiting-for-players") {
+        //     throw new Error("Game is not in the waiting-for-players state.");
+        // }
 
         if (this.game.exists(player.address)) {
             throw new Error("Player already exists in the game.");
@@ -36,6 +36,8 @@ class JoinAction extends BaseAction {
         if (buyIn < range.minAmount || buyIn > range.maxAmount) {
             throw new Error("Player does not have enough or too many chips to join.");
         }
+        
+        // Todo: convert buyIn to the appropriate amount of chips
 
         // Find an available seat or use the requested one
         const seat: number = this.getSeat();
