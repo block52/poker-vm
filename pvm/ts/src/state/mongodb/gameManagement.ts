@@ -2,7 +2,7 @@ import { StateManager } from "../stateManager";
 import GameState from "../../schema/gameState";
 import { ethers } from "ethers";
 import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
-import { GameOptions, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, GameType, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../../models";
 import { IGameManagement } from "../interfaces";
 import { createAddress } from "../../utils/crypto";
@@ -190,7 +190,8 @@ export class GameManagement extends StateManager implements IGameManagement {
             maxPlayers: parseInt(args[3]),
             smallBlind: BigInt(args[4]),
             bigBlind: BigInt(args[5]),
-            timeout: timeout
+            timeout: timeout,
+            type: args[8] as GameType
         };
 
         return options;

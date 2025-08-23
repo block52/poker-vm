@@ -34,7 +34,7 @@ class LeaveAction extends BaseAction {
 
         const payoutManager = new PayoutManager(100n, players);
         const amount = payoutManager.calculateCurrentPayout();
-        console.log(`Player ${player.address} at seat ${seat} leaving with ${player.chips} chips...`);
+        console.log(`Player ${player.address} at seat ${seat} leaving with ${amount} amount...`);
 
         this.game.removePlayer(player.address);
 
@@ -43,7 +43,7 @@ class LeaveAction extends BaseAction {
             playerId: player.address, 
             action: NonPlayerActionType.LEAVE, 
             index: index,
-            amount: amount // Include chips amount in the action
+            amount: amount // Include payout amount in the action
         }, seat.toString());
     }
 }
