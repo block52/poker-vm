@@ -6,7 +6,7 @@ export class PayoutManager {
     // This class will handle the payout logic for the game
     // It will calculate payouts based on the game state and player positions
 
-    constructor(private readonly gameOptions: GameOptions, private readonly players: Player[]) {
+    constructor(private readonly gameOptions: GameOptions, private readonly players: Player[], private readonly runners?: number) {
         // Initialize any necessary properties or dependencies
     }
 
