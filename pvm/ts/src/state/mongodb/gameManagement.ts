@@ -103,7 +103,7 @@ export class GameManagement extends StateManager implements IGameManagement {
         deck.shuffle(seed);
 
         const state: TexasHoldemGameState = {
-            type: "cash",
+            type: gameOptions.type,
             address: address,
             minBuyIn: gameOptions.minBuyIn.toString(),
             maxBuyIn: gameOptions.maxBuyIn.toString(),

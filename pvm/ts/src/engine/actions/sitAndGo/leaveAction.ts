@@ -30,13 +30,10 @@ class LeaveAction extends BaseAction {
         const seat = this.game.getPlayerSeatNumber(player.address);
         this.game.dealerManager.handlePlayerLeave(seat);
 
-        const players: Player[] = [];
-        for (const [_, player] of this.game.players.entries()) {
-            player && players.push(player);
-        }
+        const players = this.game.findLivePlayers();
 
         const payoutManager = new PayoutManager(100n, players);
-        const amount = payoutManager.calculatePayout(1);
+        const amount = payoutManager.calculateCurrentPayout();
         console.log(`Player ${player.address} at seat ${seat} leaving with ${player.chips} chips...`);
 
         this.game.removePlayer(player.address);
