@@ -29,9 +29,10 @@ export class SitAndGoBlindsManager implements IBlindsManager {
     start: Date | undefined;
     private readonly levelLength: number; // in minutes
 
-    constructor(levelLength: number, gameOptions: GameOptions) {
+    constructor(levelLength: number, gameOptions: GameOptions, start?: Date) {
         this.levelLength = levelLength;
         this.gameOptions = gameOptions;
+        this.start = start;
     }
 
     setStartTime(start: Date): void {

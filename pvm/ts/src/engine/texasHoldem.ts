@@ -49,7 +49,7 @@ import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager"
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
     public readonly dealerManager: IDealerPositionManager;
-    private readonly blindsManager: IBlindsManager;
+    private blindsManager: IBlindsManager;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
@@ -507,7 +507,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Validate current round
         if (this.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Can only deal in preflop round.");
+            throw new Error("Can only deal in ante round.");
+        }
+
+        // Initialize blinds manager for Sit and Go
+        // Bit of a hack.  Another option would be to get the last join action timestamp
+        if (this.type === GameType.SIT_AND_GO) {
+            this.blindsManager = new SitAndGoBlindsManager(10, this._gameOptions, new Date());
         }
 
         // // Check if cards have already been dealt

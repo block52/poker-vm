@@ -66,6 +66,10 @@ class JoinAction extends BaseAction {
         if (availableSeats.length === 0)
             throw new Error("No available seats to join.");
 
+        if (availableSeats.length === 1) {
+            seat = availableSeats[0];
+        }
+
         // Choose randomly from the available seats
         const randomIndex = Math.floor(Math.random() * availableSeats.length);
         seat = availableSeats[randomIndex];

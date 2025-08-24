@@ -97,11 +97,13 @@ describe("Sit and Go - Full Game", () => {
 
             // Start first hand
             game.deal();
-            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
 
             // Post blinds (Player 1 = small blind, Player 2 = big blind)
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
+
+            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
             // Action starts with Player 3 (UTG)
             let nextToAct = game.getNextPlayerToAct();
