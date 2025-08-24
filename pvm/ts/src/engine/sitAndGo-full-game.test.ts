@@ -89,6 +89,13 @@ describe("Sit and Go - Full Game", () => {
                 expect(player.status).toBe(PlayerStatus.ACTIVE);
             });
 
+            // As sit and go players are randomly seated, we need to create a mapping of player addresses to their seats
+            const seatMap: Record<number, string> = {};
+            for (let i = 1; i <= allPlayers.length; i++) {
+                const player = game.getPlayerAtSeat(i);
+                player && (seatMap[i] = player.address);
+            }
+
             console.log("✓ All 6 players registered successfully");
 
             // Phase 2: First Hand - Early Tournament Play
@@ -98,24 +105,24 @@ describe("Sit and Go - Full Game", () => {
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
 
             // Post blinds (Player 1 = small blind, Player 2 = big blind)
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
+            game.performAction(seatMap[1], PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
+            game.performAction(seatMap[2], PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
 
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
-            game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 9);
+            game.performAction(seatMap[3], NonPlayerActionType.DEAL, 9);
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
             // Action starts with Player 3 (UTG)
             let nextToAct = game.getNextPlayerToAct();
-            expect(nextToAct?.address).toBe(PLAYER_3);
+            expect(nextToAct?.address).toBe(seatMap[3]);
 
             // Simulate some early game action - conservative play
-            game.performAction(PLAYER_3, PlayerActionType.FOLD, 10);
-            game.performAction(PLAYER_4, PlayerActionType.CALL, 11, TWO_TOKENS);
-            game.performAction(PLAYER_5, PlayerActionType.FOLD, 12);
-            game.performAction(PLAYER_6, PlayerActionType.FOLD, 13);
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 14, ONE_TOKEN); // Complete small blind
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 15);
+            game.performAction(seatMap[3], PlayerActionType.FOLD, 10);
+            game.performAction(seatMap[4], PlayerActionType.CALL, 11, TWO_TOKENS);
+            game.performAction(seatMap[5], PlayerActionType.FOLD, 12);
+            game.performAction(seatMap[6], PlayerActionType.FOLD, 13);
+            game.performAction(seatMap[1], PlayerActionType.CALL, 14, ONE_TOKEN); // Complete small blind
+            game.performAction(seatMap[2], PlayerActionType.CHECK, 15);
 
             console.log("✓ Preflop action completed - 3 players to flop");
             expect(game.pot).toBeGreaterThan(0n);
