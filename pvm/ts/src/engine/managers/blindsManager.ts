@@ -40,9 +40,9 @@ export class SitAndGoBlindsManager implements IBlindsManager {
     }
 
     getBlinds(): Blinds {
-
+        // Return initial blinds if start time is not set
         if (!this.start) {
-            throw new Error("Start time not set. Please call setStartTime() before getting blinds.");
+            return { smallBlind: this.gameOptions.smallBlind, bigBlind: 0n };
         }
 
         const timePast = Math.floor((Date.now() - this.start.getTime()) / 1000 / 60);

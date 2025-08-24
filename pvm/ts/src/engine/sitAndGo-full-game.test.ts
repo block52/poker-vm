@@ -53,7 +53,6 @@ describe("Sit and Go - Full Game", () => {
         });
 
         it("should run a complete 6-player sit and go tournament", () => {
-
             // Sanity checks
             expect(game.getPlayerCount()).toBe(0);
             expect(game.findLivePlayers().length).toBe(0);
@@ -96,13 +95,14 @@ describe("Sit and Go - Full Game", () => {
             console.log("\n=== PHASE 2: EARLY TOURNAMENT PLAY ===");
 
             // Start first hand
-            game.deal();
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
 
             // Post blinds (Player 1 = small blind, Player 2 = big blind)
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
 
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+            game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 9);
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
             // Action starts with Player 3 (UTG)
@@ -110,12 +110,12 @@ describe("Sit and Go - Full Game", () => {
             expect(nextToAct?.address).toBe(PLAYER_3);
 
             // Simulate some early game action - conservative play
-            game.performAction(PLAYER_3, PlayerActionType.FOLD, 9);
-            game.performAction(PLAYER_4, PlayerActionType.CALL, 10, TWO_TOKENS);
-            game.performAction(PLAYER_5, PlayerActionType.FOLD, 11);
-            game.performAction(PLAYER_6, PlayerActionType.FOLD, 12);
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 13, ONE_TOKEN); // Complete small blind
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 14);
+            game.performAction(PLAYER_3, PlayerActionType.FOLD, 10);
+            game.performAction(PLAYER_4, PlayerActionType.CALL, 11, TWO_TOKENS);
+            game.performAction(PLAYER_5, PlayerActionType.FOLD, 12);
+            game.performAction(PLAYER_6, PlayerActionType.FOLD, 13);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 14, ONE_TOKEN); // Complete small blind
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 15);
 
             console.log("✓ Preflop action completed - 3 players to flop");
             expect(game.pot).toBeGreaterThan(0n);
