@@ -7,8 +7,8 @@ export class PayoutManager {
     // This class will handle the payout logic for the game
     // It will calculate payouts based on the game state and player positions
 
-    constructor(private readonly buyIn: bigint, private readonly players: Player[], runners?: number) {
-        this.runners = runners || 9; // Default to 9 runners if not specified
+    constructor(private readonly buyIn: bigint, private readonly players: Player[]) {
+        this.runners = players.length;
     }
 
     calculateCurrentPayout(): bigint {

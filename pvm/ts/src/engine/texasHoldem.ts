@@ -142,6 +142,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this.dealerManager = dealerManager || new DealerPositionManager(this);
 
         switch (this.type) {
+            case GameType.SIT_AND_GO:
             case GameType.TOURNAMENT: // Change once sit and go package is published
                 // Initialize Sit and Go specific managers if needed
                 // this.statusManager = new SitAndGoStatusManager(this.getSeatedPlayers(), this._gameOptions);
