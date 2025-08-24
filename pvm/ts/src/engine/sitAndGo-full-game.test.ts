@@ -53,6 +53,12 @@ describe("Sit and Go - Full Game", () => {
         });
 
         it("should run a complete 6-player sit and go tournament", () => {
+
+            // Sanity checks
+            expect(game.getPlayerCount()).toBe(0);
+            expect(game.findLivePlayers().length).toBe(0);
+            expect(game.type).toBe(GameType.SIT_AND_GO);
+
             // Phase 1: Player Registration
             console.log("=== PHASE 1: PLAYER REGISTRATION ===");
 

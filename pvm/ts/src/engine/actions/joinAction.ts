@@ -61,7 +61,8 @@ class JoinAction extends BaseAction {
                 throw new Error("No available seats to join.");
 
             // Choose randomly from the available seats
-            seat = Math.floor(Math.random() * availableSeats.length);
+            const randomIndex = Math.floor(Math.random() * availableSeats.length);
+            seat = availableSeats[randomIndex];
         } else {
             // Hack for old unit tests
             // Check via REGEX if data has the format "seat=1"

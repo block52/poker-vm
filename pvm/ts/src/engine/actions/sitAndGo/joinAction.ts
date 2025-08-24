@@ -36,7 +36,7 @@ class JoinAction extends BaseAction {
         if (buyIn < range.minAmount || buyIn > range.maxAmount) {
             throw new Error("Player does not have enough or too many chips to join.");
         }
-        
+
         // Todo: convert buyIn to the appropriate amount of chips
 
         // Find an available seat or use the requested one
@@ -67,7 +67,8 @@ class JoinAction extends BaseAction {
             throw new Error("No available seats to join.");
 
         // Choose randomly from the available seats
-        seat = Math.floor(Math.random() * availableSeats.length);
+        const randomIndex = Math.floor(Math.random() * availableSeats.length);
+        seat = availableSeats[randomIndex];
 
         // Validate the seat number, ensuring it's a valid integer
         if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {
