@@ -36,6 +36,8 @@ import {
     SitInAction
 } from "./actions";
 
+import JoinActionSitAndGo from "./actions/sitAndGo/joinAction";
+
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
@@ -487,10 +489,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         return this._now - lastAction.timestamp > this._now + this._autoExpire * 1000; // Auto expire time
-    }
-
-    private getGameStatus(): GameStatus {
-        throw new Error("Method not implemented.");
     }
 
     // ==================== GAME FLOW METHODS ====================
@@ -960,7 +958,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
                 // Hack
                 if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
-                    player.updateStatus(PlayerStatus.ACTIVE);
+                    new JoinActionSitAndGo(this, this._update).execute(player, index, _amount);
+                    return;
                 }
                 if (this.type === GameType.CASH) {
                     new JoinAction(this, this._update).execute(player, index, _amount, data);
