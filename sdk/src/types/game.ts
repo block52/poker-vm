@@ -24,6 +24,7 @@ export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
 
 export enum GameType {
     CASH = "cash",
+    SIT_AND_GO = "sit-and-go",
     TOURNAMENT = "tournament"
 }
 

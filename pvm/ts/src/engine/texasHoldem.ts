@@ -41,7 +41,7 @@ import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager } from "./managers/betManager";
 import SitInAction from "./actions/sitInAction";
 import { CashGameBlindsManager } from "./managers/index";
-import { IBlindsManager } from "./managers/blindsManager";
+import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
@@ -140,9 +140,19 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
-        this.blindsManager = new CashGameBlindsManager(this._gameOptions);
 
-        // TODO: Set cash game or sit and go game type
+        switch (this.type) {
+            case GameType.TOURNAMENT: // Change once sit and go package is published
+                // Initialize Sit and Go specific managers if needed
+                // this.statusManager = new SitAndGoStatusManager(this.getSeatedPlayers(), this._gameOptions);
+                this.blindsManager = new SitAndGoBlindsManager(10, this._gameOptions);
+                break;
+            case GameType.CASH:
+            default:
+                this.blindsManager = new CashGameBlindsManager(this._gameOptions);
+                break;
+        }
+        
     }
 
     // ==================== INITIALIZATION METHODS ====================
