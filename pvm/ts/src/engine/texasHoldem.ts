@@ -17,30 +17,31 @@ import {
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 
-// Import all action types
-import BetAction from "./actions/betAction";
-import BigBlindAction from "./actions/bigBlindAction";
-import CallAction from "./actions/callAction";
-import CheckAction from "./actions/checkAction";
-import DealAction from "./actions/dealAction";
-import FoldAction from "./actions/foldAction";
-import JoinAction from "./actions/joinAction";
-import LeaveAction from "./actions/leaveAction";
-import MuckAction from "./actions/muckAction";
-import RaiseAction from "./actions/raiseAction";
-import ShowAction from "./actions/showAction";
-import SmallBlindAction from "./actions/smallBlindAction";
-import SitOutAction from "./actions/sitOutAction";
+// Import all action types from the actions index
+import {
+    BetAction,
+    BigBlindAction,
+    CallAction,
+    CheckAction,
+    DealAction,
+    FoldAction,
+    JoinAction,
+    LeaveAction,
+    MuckAction,
+    NewHandAction,
+    RaiseAction,
+    ShowAction,
+    SmallBlindAction,
+    SitOutAction,
+    SitInAction
+} from "./actions";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
-import NewHandAction from "./actions/newHandAction";
 import { DealerPositionManager } from "./managers/dealerManager";
-import { BetManager } from "./managers/betManager";
-import SitInAction from "./actions/sitInAction";
-import { CashGameBlindsManager } from "./managers/index";
+import { BetManager, CashGameBlindsManager } from "./managers/index";
 import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
@@ -153,7 +154,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 this.blindsManager = new CashGameBlindsManager(this._gameOptions);
                 break;
         }
-        
+
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -957,7 +958,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         switch (action) {
             case NonPlayerActionType.JOIN:
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                new JoinAction(this, this._update).execute(player, index, _amount, data);
+                // Hack
+                if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
+                    player.updateStatus(PlayerStatus.ACTIVE);
+                }
+                if (this.type === GameType.CASH) {
+                    new JoinAction(this, this._update).execute(player, index, _amount, data);
+                }
                 return;
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
