@@ -347,15 +347,15 @@ export class RPC {
                 }
 
                 case RPCMethods.NEW_TABLE: {
-                    // The SDK sends [schemaAddress, owner, nonce] but we now also accept timestamp for uniqueness
-                    const [gameOptionsString, owner, nonce, timestamp] = request.params as [string, string, number, string];
+                    // The SDK sends [schemaAddress, owner, nonce]
+                    const [gameOptionsString, owner, nonce] = request.params as [string, string, number, string];
+
+                    if (!gameOptionsString || nonce === undefined) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+
                     const gameOptions: GameOptions = GameManagement.parseSchema(gameOptionsString);
-                    console.log("🏗️ NEW_TABLE RPC called:");
-                    console.log(`Game Options: ${gameOptionsString}`);
-                    console.log(`Owner: ${owner}`);
-                    console.log(`Nonce: ${nonce}`);
-                    console.log(`Timestamp: ${timestamp || "not provided"}`);
-                    const command = new NewTableCommand(owner, gameOptions, BigInt(nonce || 0), validatorPrivateKey, timestamp);
+                    const command = new NewTableCommand(owner, gameOptions, BigInt(nonce), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

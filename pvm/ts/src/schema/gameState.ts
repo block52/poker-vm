@@ -5,7 +5,9 @@ const gameStateSchema = new Schema<IGameStateDocument>(
     {
         address: {
             type: String,
-            required: true
+            required: true,
+            unique: true,
+            index: true
         },
         gameOptions: {
             type: Object,

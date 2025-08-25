@@ -1,4 +1,4 @@
-import { ActionDTO, GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, GameOptions, GameType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
 import { Player } from "../models/player";
@@ -29,7 +29,8 @@ export const gameOptions: GameOptions = {
     maxPlayers: 9,
     smallBlind: ONE_TOKEN,
     bigBlind: TWO_TOKENS,
-    timeout: 60000
+    timeout: 60000,
+    type: GameType.CASH
 };
 
 export const baseGameConfig = {

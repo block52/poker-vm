@@ -26,16 +26,24 @@ export class CashGameBlindsManager implements IBlindsManager {
 
 export class SitAndGoBlindsManager implements IBlindsManager {
     private readonly gameOptions: GameOptions;
-    private readonly start: Date;
+    start: Date | undefined;
     private readonly levelLength: number; // in minutes
 
-    constructor(start: Date, levelLength: number, gameOptions: GameOptions) {
-        this.start = start;
+    constructor(levelLength: number, gameOptions: GameOptions, start?: Date) {
         this.levelLength = levelLength;
         this.gameOptions = gameOptions;
+        this.start = start;
+    }
+
+    setStartTime(start: Date): void {
+        this.start = start;
     }
 
     getBlinds(): Blinds {
+        // Return initial blinds if start time is not set
+        if (!this.start) {
+            return { smallBlind: this.gameOptions.smallBlind, bigBlind: 0n };
+        }
 
         const timePast = Math.floor((Date.now() - this.start.getTime()) / 1000 / 60);
 

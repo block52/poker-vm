@@ -2,7 +2,7 @@ import { StateManager } from "../stateManager";
 import GameState from "../../schema/gameState";
 import { ethers } from "ethers";
 import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
-import { GameOptions, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, GameType, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../../models";
 import { IGameManagement } from "../interfaces";
 import { createAddress } from "../../utils/crypto";
@@ -86,16 +86,15 @@ export class GameManagement extends StateManager implements IGameManagement {
         return game.gameOptions as GameOptions;
     }
 
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions, timestamp?: string): Promise<string> {
-        // Include timestamp in digest for uniqueness if provided
-        const timestampPart = timestamp ? `-${timestamp}` : "";
-        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}${timestampPart}`;
+    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
+        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
         const address = createAddress(digest);
 
-        // Creating a log to confirm what's happening
-        console.log(`Creating game with digest: ${digest}`);
-        console.log(`Generated address: ${address}`);
-        console.log(`Timestamp used: ${timestamp || "none"}`);
+        // Check if game with this address already exists
+        const existingGame = await GameState.findOne({ address });
+        if (existingGame) {
+            throw new Error(`Game already exists with address: ${address}`);
+        }
 
         // Todo: Add deck
         const deck = new Deck();
@@ -103,7 +102,7 @@ export class GameManagement extends StateManager implements IGameManagement {
         deck.shuffle(seed);
 
         const state: TexasHoldemGameState = {
-            type: "cash",
+            type: gameOptions.type,
             address: address,
             minBuyIn: gameOptions.minBuyIn.toString(),
             maxBuyIn: gameOptions.maxBuyIn.toString(),
@@ -169,28 +168,17 @@ export class GameManagement extends StateManager implements IGameManagement {
     }
 
     public static parseSchema(schema: string): GameOptions {
-
-        // Example schema: "category,name,2,10,1000,2000,50000,1000000,30000"
-        // Ensure the schema is a valid string via a Regular Expression
-        if (!/^[^,]+,[^,]+(?:,\d+)+$/.test(schema)) {
-            throw new Error("Invalid schema format");
-        }
-
-        const args = schema.split(",");
-        if (args.length < 8) {
-            throw new Error("Invalid schema");
-        }
-
-        const timeout = args[8] ? parseInt(args[8]) : 30000; // Default timeout of 30 seconds
+        const urlSearchParams = new URLSearchParams(schema);
 
         const options: GameOptions = {
-            minBuyIn: BigInt(args[6]),
-            maxBuyIn: BigInt(args[7]),
-            minPlayers: parseInt(args[2]),
-            maxPlayers: parseInt(args[3]),
-            smallBlind: BigInt(args[4]),
-            bigBlind: BigInt(args[5]),
-            timeout: timeout
+            minBuyIn: BigInt(urlSearchParams.get("minBuyIn") || "0"),
+            maxBuyIn: BigInt(urlSearchParams.get("maxBuyIn") || "2000"),
+            minPlayers: parseInt(urlSearchParams.get("minPlayers") || "2"),
+            maxPlayers: parseInt(urlSearchParams.get("maxPlayers") || "6"),
+            smallBlind: BigInt(urlSearchParams.get("smallBlind") || "0"),
+            bigBlind: BigInt(urlSearchParams.get("bigBlind") || "0"),
+            timeout: parseInt(urlSearchParams.get("timeout") || "30000"),
+            type: urlSearchParams.get("type") as GameType
         };
 
         return options;
