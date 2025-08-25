@@ -5,7 +5,8 @@ import {
     PlayerActionType,
     NonPlayerActionType,
     GameType,
-    GameStatus
+    GameStatus,
+    LegalActionDTO
 } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN, FIFTY_TOKENS } from "./testConstants";
@@ -134,44 +135,88 @@ describe("Sit and Go - Full Game", () => {
             // For brevity, we'll simulate this by having players leave when their chips get low
 
             let handsPlayed = 0;
+            let index = 16;
             const maxHands = 50; // Prevent infinite loops in test
 
             while (game.getPlayerCount() > 3 && handsPlayed < maxHands) {
+
                 // Simulate a hand by having some players fold and others play
                 try {
                     // Only deal if we're not in the middle of a hand
                     if (game.currentRound === TexasHoldemRound.ANTE) {
-                        game.deal();
+                        // game.deal();
                     }
 
-                    // Get current active players
-                    const activePlayers = game.findLivePlayers();
-                    if (activePlayers.length < 2) break;
+                    // Get next player to act
+                    const nextPlayer = game.getNextPlayerToAct();
+                    
+                    // Get their legal actions
+                    const legalActions = game.getLegalActions(nextPlayer!.address);
 
-                    // Simulate aggressive play to eliminate players faster
-                    // This is a simplified simulation - in reality, showdowns would determine winners
-
-                    // Find players with low chips and simulate their elimination
-                    const playersWithLowChips = activePlayers.filter(p => p.chips < FIFTY_TOKENS);
-
-                    if (playersWithLowChips.length > 0) {
-                        // Simulate elimination by having low-chip players leave
-                        const playerToEliminate = playersWithLowChips[0];
-                        console.log(`Player ${playerToEliminate.address} eliminated with ${playerToEliminate.chips} chips`);
-
-                        // Calculate payout for eliminated player
-                        const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, activePlayers, 6);
-                        const payout = payoutManager.calculateCurrentPayout();
-
-                        game.performAction(playerToEliminate.address, NonPlayerActionType.LEAVE, handsPlayed + 20);
-
-                        console.log(`✓ Player eliminated - ${game.getPlayerCount()} players remaining`);
-
-                        if (game.getPlayerCount() <= 3) {
-                            console.log("✓ Final table reached!");
-                            break;
+                    for (const action of legalActions) {
+                        if (action.action === PlayerActionType.BET) {
+                            const betAmount = BigInt(action.max || 0n);
+                            game.performAction(nextPlayer!.address, PlayerActionType.BET, index, betAmount);
+                            index++;
                         }
                     }
+
+                    // Now get the next player to act
+                    const nextPlayer2 = game.getNextPlayerToAct();
+
+                    // Get their legal actions
+                    const legalActions2 = game.getLegalActions(nextPlayer2!.address);
+
+                    for (const action of legalActions2) {
+                        if (action.action === PlayerActionType.CALL) {
+                            const betAmount = BigInt(action.max || 0n);
+                            game.performAction(nextPlayer2!.address, PlayerActionType.CALL, index, betAmount);
+                            index++;
+                        }
+                    }
+
+                    // Now fold out all remaining players for simplicity
+                    let foldingPlayer = game.getNextPlayerToAct();
+                    while (foldingPlayer) {
+                        game.performAction(foldingPlayer.address, PlayerActionType.FOLD, index);
+                        foldingPlayer = game.getNextPlayerToAct();
+                        index++;
+                    }
+
+
+                    // // Bet their entire stack if they can
+                    // if (legalActions.includes(PlayerActionType.BET)) {
+                    //     game.performAction(nextPlayer!.address, PlayerActionType.BET, handsPlayed + 20, nextPlayer!.chips);
+                    // }
+
+                    // // Get current active players
+                    // const activePlayers = game.findLivePlayers();
+                    // if (activePlayers.length < 2) break;
+
+                    // // Simulate aggressive play to eliminate players faster
+                    // // This is a simplified simulation - in reality, showdowns would determine winners
+
+                    // // Find players with low chips and simulate their elimination
+                    // const playersWithLowChips = activePlayers.filter(p => p.chips < FIFTY_TOKENS);
+
+                    // if (playersWithLowChips.length > 0) {
+                    //     // Simulate elimination by having low-chip players leave
+                    //     const playerToEliminate = playersWithLowChips[0];
+                    //     console.log(`Player ${playerToEliminate.address} eliminated with ${playerToEliminate.chips} chips`);
+
+                    //     // Calculate payout for eliminated player
+                    //     const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, activePlayers, 6);
+                    //     const payout = payoutManager.calculateCurrentPayout();
+
+                    //     game.performAction(playerToEliminate.address, NonPlayerActionType.LEAVE, handsPlayed + 20);
+
+                    //     console.log(`✓ Player eliminated - ${game.getPlayerCount()} players remaining`);
+
+                    //     if (game.getPlayerCount() <= 3) {
+                    //         console.log("✓ Final table reached!");
+                    //         break;
+                    //     }
+                    // }
 
                     handsPlayed++;
                 } catch (error) {
