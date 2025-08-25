@@ -45,6 +45,7 @@ import { ethers } from "ethers";
 import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager, CashGameBlindsManager } from "./managers/index";
 import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager";
+import { PayoutManager } from "./managers/payoutManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
@@ -156,7 +157,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 this.blindsManager = new CashGameBlindsManager(this._gameOptions);
                 break;
         }
-
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -1291,7 +1291,26 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Check all players, if they have no chips left, set them to SITTING_OUT
         for (const player of players) {
             if (player.chips <= 0n) {
-                player.updateStatus(PlayerStatus.SITTING_OUT);
+                // if cash game, set to sitting out
+                if (this.type === GameType.CASH) {
+                    player.updateStatus(PlayerStatus.SITTING_OUT);
+                }
+
+                // if sit and go or tournament, set to busted
+                if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
+                    // Get payouts from the payout manager
+                    const players: Player[] = this.getSeatedPlayers();
+                    const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
+
+                    const payout = payoutManager.calculateCurrentPayout();
+                    if (payout > 0n) {
+                        // Need to do transfer back to player here
+
+                        console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
+                    }
+
+                    player.updateStatus(PlayerStatus.BUSTED);
+                }
             }
         }
     }
