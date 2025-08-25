@@ -292,7 +292,7 @@ describe("Sit and Go - Full Game", () => {
                 new Player(PLAYER_3, undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE)
             ];
 
-            const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, mockPlayers, 6);
+            const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, mockPlayers);
 
             // Test individual place payouts
             const firstPlace = payoutManager.calculatePayout(1);
