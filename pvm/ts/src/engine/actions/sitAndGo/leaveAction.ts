@@ -31,9 +31,7 @@ class LeaveAction extends BaseAction {
         this.game.dealerManager.handlePlayerLeave(seat);
 
         const players = this.game.findLivePlayers();
-
-        const runners = 9;
-        const payoutManager = new PayoutManager(100n, players, runners);
+        const payoutManager = new PayoutManager(100n, players);
         const amount = payoutManager.calculateCurrentPayout();
         console.log(`Player ${player.address} at seat ${seat} leaving with ${amount} amount...`);
 

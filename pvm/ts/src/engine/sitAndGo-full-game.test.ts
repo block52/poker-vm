@@ -5,11 +5,10 @@ import {
     PlayerActionType,
     NonPlayerActionType,
     GameType,
-    GameStatus,
-    LegalActionDTO
+    GameStatus
 } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN, FIFTY_TOKENS } from "./testConstants";
+import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN } from "./testConstants";
 import { Player } from "../models/player";
 import { SitAndGoStatusManager } from "./managers/statusManager";
 import { PayoutManager } from "./managers/payoutManager";
@@ -243,7 +242,7 @@ describe("Sit and Go - Full Game", () => {
                 const thirdPlacePlayer = finalPlayers[0];
                 console.log(`3rd place: ${thirdPlacePlayer.address}`);
 
-                const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, finalPlayers, 6);
+                const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, finalPlayers);
                 const thirdPlacePayout = payoutManager.calculatePayout(3);
                 console.log(`3rd place payout: ${thirdPlacePayout}`);
 
@@ -254,7 +253,7 @@ describe("Sit and Go - Full Game", () => {
 
             if (remainingPlayers.length === 2) {
                 console.log("=== HEADS-UP PLAY ===");
-                const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, remainingPlayers, 6);
+                const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, remainingPlayers);
 
                 // Simulate heads-up completion
                 const secondPlacePlayer = remainingPlayers[0];
