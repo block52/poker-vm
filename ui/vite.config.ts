@@ -16,7 +16,7 @@ export default defineConfig({
             output: {
                 manualChunks: undefined,
             },
-            external: ["unstorage"], // Add 'unstorage' here
+            // external: ["unstorage"], // Add 'unstorage' here
         },
         copyPublicDir: true,
     },
