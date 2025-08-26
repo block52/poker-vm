@@ -45,7 +45,7 @@ DEPOSIT_PRIVATE_KEY=0x... # Your QR deposits wallet private key
 # Other required variables
 RPC_URL=https://mainnet.infura.io/v3/YOUR_KEY
 PORT=8080
-NODE_URL=http://localhost:3000
+NODE_URL=http://localhost:8545
 
 # BTCPay configuration
 BTC_PAY_SERVER=https://btcpay.bitcoinpokertour.com

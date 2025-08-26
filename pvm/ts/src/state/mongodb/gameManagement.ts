@@ -169,29 +169,17 @@ export class GameManagement extends StateManager implements IGameManagement {
     }
 
     public static parseSchema(schema: string): GameOptions {
-
-        // Example schema: "category,name,2,10,1000,2000,50000,1000000,30000"
-        // Ensure the schema is a valid string via a Regular Expression
-        if (!/^[^,]+,[^,]+(?:,\d+)+$/.test(schema)) {
-            throw new Error("Invalid schema format");
-        }
-
-        const args = schema.split(",");
-        if (args.length < 8) {
-            throw new Error("Invalid schema");
-        }
-
-        const timeout = args[8] ? parseInt(args[8]) : 30000; // Default timeout of 30 seconds
+        const urlSearchParams = new URLSearchParams(schema);
 
         const options: GameOptions = {
-            minBuyIn: BigInt(args[6]),
-            maxBuyIn: BigInt(args[7]),
-            minPlayers: parseInt(args[2]),
-            maxPlayers: parseInt(args[3]),
-            smallBlind: BigInt(args[4]),
-            bigBlind: BigInt(args[5]),
-            timeout: timeout,
-            type: args[8] as GameType
+            minBuyIn: BigInt(urlSearchParams.get("minBuyIn") || "0"),
+            maxBuyIn: BigInt(urlSearchParams.get("maxBuyIn") || "2000"),
+            minPlayers: parseInt(urlSearchParams.get("minPlayers") || "2"),
+            maxPlayers: parseInt(urlSearchParams.get("maxPlayers") || "6"),
+            smallBlind: BigInt(urlSearchParams.get("smallBlind") || "0"),
+            bigBlind: BigInt(urlSearchParams.get("bigBlind") || "0"),
+            timeout: parseInt(urlSearchParams.get("timeout") || "30000"),
+            type: urlSearchParams.get("type") as GameType
         };
 
         return options;

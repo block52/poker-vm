@@ -13,7 +13,7 @@ bash 00-purge-mempool.sh
 sleep 1
 
 ## Player 1 joins the table
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -25,7 +25,7 @@ curl --location 'http://localhost:3000' \
 sleep 1
 
 ## Player 2 joins the table
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -37,7 +37,7 @@ curl --location 'http://localhost:3000' \
 sleep 1
 
 ## Player 1 small blind
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -49,7 +49,7 @@ curl --location 'http://localhost:3000' \
 sleep 1
 
 ## Player 2 big blind
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -59,7 +59,7 @@ curl --location 'http://localhost:3000' \
 }'
 
 ## Deal cards
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -71,7 +71,7 @@ curl --location 'http://localhost:3000' \
 sleep 1
 
 # ## Player 1 calls
-# curl --location 'http://localhost:3000' \
+# curl --location 'http://localhost:8545' \
 # --header 'Content-Type: application/json' \
 # --data '{
 #     "method": "perform_action",
@@ -83,7 +83,7 @@ sleep 1
 # sleep 1
 
 # ## Player 2 folds
-# curl --location 'http://localhost:3000' \
+# curl --location 'http://localhost:8545' \
 # --header 'Content-Type: application/json' \
 # --data '{
 #     "method": "perform_action",
