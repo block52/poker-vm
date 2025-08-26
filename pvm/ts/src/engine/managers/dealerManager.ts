@@ -35,9 +35,26 @@ export class DealerPositionManager implements IDealerPositionManager {
         // Fallback: if no next player found, start from first active player
         const firstActivePlayer = activePlayers[0];
         const fallbackSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-        return fallbackSeat;
+        return fallbackSeat;``
     }
 
+    public getPosition(name: string): number {
+        switch (name.toLowerCase()) {
+            case "dealer":
+            case "d":
+                return this.getDealerPosition();
+            case "small blind":
+            case "small-blind":
+            case "sb":
+                return this.getSmallBlindPosition();
+            case "big blind":
+            case "big-blind":
+            case "bb":
+                return this.getBigBlindPosition();
+            default:
+                throw new Error(`Unknown position name: ${name}`);
+        }
+    }
     /**
      * Gets the current dealer position, initializing if necessary
      */

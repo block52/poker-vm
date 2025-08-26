@@ -627,7 +627,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Special logic for ante round - prioritize blind posting order
         if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
-            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
 
             // If small blind hasn't been posted yet, small blind player should act
             if (!hasSmallBlind) {
@@ -636,6 +635,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     return smallBlindPlayer;
                 }
             }
+
+            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
 
             // If small blind posted but big blind hasn't, big blind player should act
             if (hasSmallBlind && !hasBigBlind) {

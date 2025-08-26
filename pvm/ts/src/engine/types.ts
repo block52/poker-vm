@@ -44,6 +44,7 @@ export interface IDealerPositionManager {
     handleNewHand(): number;
     
     // Position getters
+    getPosition(name: string): number;
     getSmallBlindPosition(): number;
     getBigBlindPosition(): number;
     
