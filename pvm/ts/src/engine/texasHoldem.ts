@@ -298,8 +298,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     // Position getters
     get dealerPosition(): number {
-        // get from dealer manager
-        return this.dealerManager.getDealerPosition();
+        // Do not get from the dealer manager, this creates a circular dependency!
+        return this._dealer;
     }
 
     private setDealerPosition(seat: number): void {
