@@ -86,16 +86,15 @@ export class GameManagement extends StateManager implements IGameManagement {
         return game.gameOptions as GameOptions;
     }
 
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions, timestamp?: string): Promise<string> {
-        // Include timestamp in digest for uniqueness if provided
-        const timestampPart = timestamp ? `-${timestamp}` : "";
-        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}${timestampPart}`;
+    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
+        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
         const address = createAddress(digest);
 
-        // Creating a log to confirm what's happening
-        console.log(`Creating game with digest: ${digest}`);
-        console.log(`Generated address: ${address}`);
-        console.log(`Timestamp used: ${timestamp || "none"}`);
+        // Check if game with this address already exists
+        const existingGame = await GameState.findOne({ address });
+        if (existingGame) {
+            throw new Error(`Game already exists with address: ${address}`);
+        }
 
         // Todo: Add deck
         const deck = new Deck();

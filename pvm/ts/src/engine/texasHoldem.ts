@@ -393,6 +393,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Gets a player at a specific seat
      */
     getPlayerAtSeat(seat: number): Player | undefined {
+        console.log(`Getting player at seat ${seat}`);
         return this._playersMap.get(seat) ?? undefined;
     }
 
