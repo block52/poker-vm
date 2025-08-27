@@ -37,10 +37,32 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             };
         }
 
-        const maxFormatted = formatWeiToSimpleDollars(gameOptions.maxBuyIn || "0");
+        // Check if we have valid gameOptions first
+        if (!gameOptions.maxBuyIn) {
+            return {
+                maxBuyInFormatted: "0.00",
+                balanceFormatted: 0,
+                smallBlindFormatted: "0.00",
+                bigBlindFormatted: "0.00"
+            };
+        }
+        
+        // Use actual values from gameOptions
+        const maxBuyInWei = gameOptions.maxBuyIn;
+        // If backend sends "1" Wei, interpret as $1 USD (1e18 Wei)
+        const maxFormatted = maxBuyInWei === "1" 
+            ? "1.00" 
+            : formatWeiToSimpleDollars(maxBuyInWei);
+        
         const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
-        const smallBlind = formatWeiToSimpleDollars(gameOptions.smallBlind || "0");
-        const bigBlind = formatWeiToSimpleDollars(gameOptions.bigBlind || "0");
+        
+        // Use actual blind values from gameOptions if they exist
+        const smallBlind = gameOptions.smallBlind 
+            ? formatWeiToSimpleDollars(gameOptions.smallBlind)
+            : "0.00";
+        const bigBlind = gameOptions.bigBlind 
+            ? formatWeiToSimpleDollars(gameOptions.bigBlind)
+            : "0.00";
 
         return {
             maxBuyInFormatted: maxFormatted,
@@ -100,8 +122,16 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             const randomIndex = Math.floor(Math.random() * emptySeatIndexes.length);
             const selectedSeat = emptySeatIndexes[randomIndex];
 
-            // Convert buy-in to Wei (use max buy-in for Sit & Go)
-            const buyInWei = ethers.parseUnits(maxBuyInFormatted, 18).toString();
+            // Check if we have valid gameOptions
+            if (!gameOptions || !gameOptions.maxBuyIn) {
+                setBuyInError("Game options not available");
+                return;
+            }
+            
+            // If backend expects "1" Wei to mean $1, convert accordingly
+            const buyInWei = gameOptions.maxBuyIn === "1" 
+                ? ethers.parseUnits("1", 18).toString() // Convert $1 to proper Wei (1e18)
+                : gameOptions.maxBuyIn; // Use the raw value from backend
 
             // Join the table with the selected seat
             await joinTable(tableId, {
