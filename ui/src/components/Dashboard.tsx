@@ -25,7 +25,7 @@ import { formatBalance } from "../utils/numberUtils"; // Import formatBalance ut
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
-import { useNewTable } from "../hooks/useNewTable"; // Import useNewTable hook
+import { CreateTableOptions, useNewTable } from "../hooks/useNewTable"; // Import useNewTable hook
 
 // Password protection utils
 import { 
@@ -293,10 +293,14 @@ const Dashboard: React.FC = () => {
             // Build game options from modal selections
             // For Sit & Go/Tournament, use the same value for min and max buy-in
             const isTournamentMode = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
-            const gameOptions = {
+
+            const minBuyInWei = ethers.parseUnits(modalMinBuyIn.toString());
+            const maxBuyInWei = ethers.parseUnits(modalMaxBuyIn.toString());
+
+            const gameOptions: CreateTableOptions = {
                 type: modalGameType,
-                minBuyIn: isTournamentMode ? modalSitAndGoBuyIn : modalMinBuyIn,
-                maxBuyIn: isTournamentMode ? modalSitAndGoBuyIn : modalMaxBuyIn,
+                minBuyIn: isTournamentMode ? minBuyInWei : modalMinBuyIn,
+                maxBuyIn: isTournamentMode ? maxBuyInWei : modalMaxBuyIn,
                 minPlayers: modalPlayerCount,
                 maxPlayers: modalPlayerCount
             };
@@ -778,7 +782,7 @@ const Dashboard: React.FC = () => {
                                     )}
 
                                     <div>
-                                        <label className="block text-white text-sm mb-1">Card Game Contract</label>
+                                        <label className="block text-white text-sm mb-1">Variant</label>
                                         <select
                                             value={selectedContractAddress}
                                             onChange={e => setSelectedContractAddress(e.target.value)}

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { GameType } from "@bitcoinbrisbane/block52";
+import { GameOptionsDTO, GameType } from "@bitcoinbrisbane/block52";
 import { getClient } from "../utils/b52AccountUtils";
 
 // Type for creating new table options
@@ -44,18 +44,15 @@ export const useNewTable = (): UseNewTableReturn => {
             // Calculate blind values based on game type
             let calculatedSmallBlind: number;
             let calculatedBigBlind: number;
-            let startingChips: number = 0;
             
             if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
                 // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in
                 // Buy-in represents tournament entry fee, not chip value
                 calculatedSmallBlind = 10;  // Standard SNG starting small blind
                 calculatedBigBlind = 20;     // Standard SNG starting big blind
-                startingChips = 1500;        // Standard starting stack for SNG
                 
                 console.log("🎮 Sit & Go Tournament Settings:");
                 console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
-                console.log(`  Starting Stack: ${startingChips} chips`);
                 console.log(`  Starting Blinds: ${calculatedSmallBlind}/${calculatedBigBlind}`);
             } else {
                 // For Cash games: blinds are percentage of buy-in
@@ -68,7 +65,7 @@ export const useNewTable = (): UseNewTableReturn => {
             }
             
             // Build game options DTO object for the new API with all required fields
-            const gameOptionsDTO: any = {
+            const gameOptionsDTO: GameOptionsDTO = {
                 type: gameOptions.type,
                 minBuyIn: gameOptions.minBuyIn.toString(),
                 maxBuyIn: gameOptions.maxBuyIn.toString(),
@@ -76,13 +73,8 @@ export const useNewTable = (): UseNewTableReturn => {
                 maxPlayers: gameOptions.maxPlayers,
                 smallBlind: calculatedSmallBlind.toString(),
                 bigBlind: calculatedBigBlind.toString(),
-                timeout: 30 // Standard 30 second timeout for decisions
+                timeout: 300000 // Standard 30,000 millisecond timeout for decisions
             };
-            
-            // Add starting chips for tournament modes
-            if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
-                gameOptionsDTO.startingChips = startingChips.toString();
-            }
             
             console.log("📊 Final game parameters:");
             console.log(`  Game Type: ${gameOptions.type}`);
@@ -92,7 +84,7 @@ export const useNewTable = (): UseNewTableReturn => {
             console.log("🚀 Creating New Table with SDK:");
             console.log(`Owner: ${owner}`);
             console.log(`Nonce: ${nonce}`);
-            console.log(`Game Options:`, gameOptionsDTO);
+            console.log("Game Options:", gameOptionsDTO);
             
             // IMPORTANT: We pass a timestamp instead of the actual account nonce here
             // This ensures each table gets a unique address even if multiple tables are created quickly

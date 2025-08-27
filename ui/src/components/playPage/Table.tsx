@@ -111,7 +111,7 @@ import { handleSitOut, handleSitIn } from "../common/actionHandlers";
 import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
-import { PlayerDTO, PlayerStatus, GameType } from "@bitcoinbrisbane/block52";
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
 // Game Start Countdown
