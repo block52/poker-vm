@@ -77,6 +77,8 @@ export type GameOptionsDTO = {
     smallBlind?: string;
     bigBlind?: string;
     timeout?: number;
+    type?: GameType; // Optional for cash games
+    otherOptions?: Record<string, any>; // Placeholder for future options
 };
 
 // This is the type of the last action of a player

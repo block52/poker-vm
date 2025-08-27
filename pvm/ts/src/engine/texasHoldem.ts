@@ -1411,12 +1411,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             minPlayers: this._gameOptions.minPlayers,
             smallBlind: this.blindsManager.getBlinds().smallBlind.toString(),
             bigBlind: this.blindsManager.getBlinds().bigBlind.toString(),
-            timeout: this._gameOptions.timeout
+            timeout: this._gameOptions.timeout,
+            type: this.type
         };
 
         // Return the complete state DTO
         const state: TexasHoldemStateDTO = {
-            type: "cash",
+            type: this.type, // Todo remove this duplication
             address: this._address,
             gameOptions: gameOptions,
             smallBlindPosition: this.smallBlindPosition,
