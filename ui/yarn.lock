@@ -207,10 +207,10 @@
     viem "^2.31.7"
     zustand "5.0.3"
 
-"@bitcoinbrisbane/block52@1.2.8":
-  version "1.2.8"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.2.8.tgz#3a8dbcc3729f00a7781cb9ae9077f7c0ea70a3a0"
-  integrity sha512-+snDo2YNwJxmDb+TWoTq+4DOcSqdKKd3kbINrpgzzXHltvs8tZunWTMRPqI6Ne5m9b5RN00nsA2jOFvWtQprgA==
+"@bitcoinbrisbane/block52@1.2.10":
+  version "1.2.10"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.2.10.tgz#92b1c6866f38643ec877d5f25a39a926078e2b17"
+  integrity sha512-bvnDBcfTcGQP0WT84ztkbg+W75YfksfzaeHFwSUIK0W8Swvgu5impUZYwPqM4mjmAWuEUxcJ2Fhi2lJCpDtXlA==
   dependencies:
     axios "^1.8.1"
     bigunit "^1.2.5"
