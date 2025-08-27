@@ -784,7 +784,7 @@ const Dashboard: React.FC = () => {
                                     )}
 
                                     <div>
-                                        <label className="block text-white text-sm mb-1">Card Game Contract</label>
+                                        <label className="block text-white text-sm mb-1">Variant</label>
                                         <select
                                             value={selectedContractAddress}
                                             onChange={e => setSelectedContractAddress(e.target.value)}
