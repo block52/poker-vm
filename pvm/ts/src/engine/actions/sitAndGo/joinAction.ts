@@ -27,7 +27,7 @@ class JoinAction extends BaseAction {
     }
 
     // Override execute to handle player joining
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number, amount?: bigint, data?: string): void {
         // First verify the action
         const range = this.verify(player);
 
@@ -40,7 +40,7 @@ class JoinAction extends BaseAction {
         // Todo: convert buyIn to the appropriate amount of chips
 
         // Find an available seat or use the requested one
-        const seat: number = this.getSeat();
+        const seat: number = this.getSeat(data);
         this.game.joinAtSeat(player, seat);
         this.game.dealerManager.handlePlayerJoin(seat);
 
@@ -56,23 +56,27 @@ class JoinAction extends BaseAction {
         );
     }
 
-    private getSeat(): number {
+    private getSeat(data: string = "seat=1"): number {
         // Find an available seat or use the requested one
         let seat: number = 1;
-        // get all available seats
-        const availableSeats = this.game.getAvailableSeats();
 
-        // If all seats are occupied, throw an error
-        if (availableSeats.length === 0)
-            throw new Error("No available seats to join.");
+        // Hack for old unit tests
+        // Check via REGEX if data has the format "seat=1"
+        // Should be anywhere in the string, so we use ^ and $ to match the whole string
+        const seatRegex = /seat=(\d+)/;
+        const match = data.match(seatRegex);
 
-        if (availableSeats.length === 1) {
-            seat = availableSeats[0];
+        if (match && match[1]) {
+            return parseInt(match[1], 10);
         }
 
-        // Choose randomly from the available seats
-        const randomIndex = Math.floor(Math.random() * availableSeats.length);
-        seat = availableSeats[randomIndex];
+        // If it doesn't match the regex, we assume it's a seat number
+        // and parse it directly.  Old unit tests used to pass the seat number directly
+        // without the "seat=" prefix.
+        if (!match) {
+            // If it matches, parse the seat number
+            seat = parseInt(data);
+        }
 
         // Validate the seat number, ensuring it's a valid integer
         if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {
@@ -81,6 +85,32 @@ class JoinAction extends BaseAction {
 
         return seat;
     }
+
+    // private getSeat(): number {
+    //     // Find an available seat or use the requested one
+    //     let seat: number = 1;
+    //     // get all available seats
+    //     const availableSeats = this.game.getAvailableSeats();
+
+    //     // If all seats are occupied, throw an error
+    //     if (availableSeats.length === 0)
+    //         throw new Error("No available seats to join.");
+
+    //     if (availableSeats.length === 1) {
+    //         seat = availableSeats[0];
+    //     }
+
+    //     // Choose randomly from the available seats
+    //     const randomIndex = Math.floor(Math.random() * availableSeats.length);
+    //     seat = availableSeats[randomIndex];
+
+    //     // Validate the seat number, ensuring it's a valid integer
+    //     if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {
+    //         throw new Error(`Invalid seat number: ${seat}`);
+    //     }
+
+    //     return seat;
+    // }
 }
 
 export default JoinAction;

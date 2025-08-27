@@ -376,8 +376,6 @@ export class NodeRpcClient implements IClient {
             throw new Error("Missing required game options");
         }
 
-        const signature = await this.getSignature(nonce);
-
         const urlSearchParams = new URLSearchParams();
         urlSearchParams.set("minBuyIn", gameOptions.minBuyIn.toString());
         urlSearchParams.set("maxBuyIn", gameOptions.maxBuyIn.toString());
@@ -390,17 +388,8 @@ export class NodeRpcClient implements IClient {
             urlSearchParams.set("type", gameOptions.type);
         }
 
-        // const options: GameOptions = {
-        //     minBuyIn: BigInt(urlSearchParams.get("minBuyIn") || "0"),
-        //     maxBuyIn: BigInt(urlSearchParams.get("maxBuyIn") || "2000"),
-        //     minPlayers: parseInt(urlSearchParams.get("minPlayers") || "2"),
-        //     maxPlayers: parseInt(urlSearchParams.get("maxPlayers") || "6"),
-        //     smallBlind: BigInt(urlSearchParams.get("smallBlind") || "0"),
-        //     bigBlind: BigInt(urlSearchParams.get("bigBlind") || "0"),
-        //     timeout: parseInt(urlSearchParams.get("timeout") || "30000"),
-        //     type: urlSearchParams.get("type") as GameType
-        // };
         const gameOptionsString = urlSearchParams.toString();
+        const signature = await this.getSignature(nonce, [gameOptionsString, owner]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),

@@ -21,11 +21,7 @@ export class NewTableCommand implements ISignedCommand<string> {
         console.log(`Owner: ${this.owner}`);
         console.log(`Nonce: ${this.nonce}`);
         
-        // Use the actual contract schema address that was created via RPC
-        // This address was returned from: create_contract_schema RPC call
-        const contractSchemaAddress = "0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7";
-        
-        const address = await this.gameManagement.create(this.nonce, contractSchemaAddress, this.gameOptions);
+        const address = await this.gameManagement.create(this.nonce, this.owner, this.gameOptions);
         
         console.log(`✅ Table created with address: ${address}`);
         return signResult(address, this.privateKey);

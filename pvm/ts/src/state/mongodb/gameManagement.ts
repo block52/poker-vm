@@ -86,8 +86,8 @@ export class GameManagement extends StateManager implements IGameManagement {
         return game.gameOptions as GameOptions;
     }
 
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions): Promise<string> {
-        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
+    public async create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
+        const digest = `${owner}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
         const address = createAddress(digest);
 
         // Check if game with this address already exists

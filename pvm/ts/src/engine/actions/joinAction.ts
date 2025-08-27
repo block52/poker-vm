@@ -49,6 +49,7 @@ class JoinAction extends BaseAction {
         );
     }
 
+    // TODO: Refactor this method to be cleaner and not have randomness for seat assignment
     private getSeat(data?: string): number {
         // Find an available seat or use the requested one
         let seat: number = 1;

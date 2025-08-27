@@ -966,7 +966,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
                 // Hack
                 if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
-                    new JoinActionSitAndGo(this, this._update).execute(player, index, _amount);
+                    new JoinActionSitAndGo(this, this._update).execute(player, index, _amount, data);
                     return;
                 }
                 if (this.type === GameType.CASH) {
