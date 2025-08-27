@@ -370,14 +370,37 @@ export class NodeRpcClient implements IClient {
             nonce = new Date().getTime(); // Use timestamp as nonce if not provided
         }
 
+        if (gameOptions.minBuyIn === undefined || gameOptions.maxBuyIn === undefined ||
+            gameOptions.minPlayers === undefined || gameOptions.maxPlayers === undefined ||
+            gameOptions.smallBlind === undefined || gameOptions.bigBlind === undefined ||
+            gameOptions.timeout === undefined) {
+            throw new Error("Missing required game options");
+        }
+
         const signature = await this.getSignature(nonce);
 
         const urlSearchParams = new URLSearchParams();
-        Object.entries(gameOptions).forEach(([key, value]) => {
-            if (value !== undefined) {
-                urlSearchParams.append(key, value.toString());
-            }
-        });
+        urlSearchParams.set("minBuyIn", gameOptions.minBuyIn.toString());
+        urlSearchParams.set("maxBuyIn", gameOptions.maxBuyIn.toString());
+        urlSearchParams.set("minPlayers", gameOptions.minPlayers.toString());
+        urlSearchParams.set("maxPlayers", gameOptions.maxPlayers.toString());
+        urlSearchParams.set("smallBlind", gameOptions.smallBlind.toString());
+        urlSearchParams.set("bigBlind", gameOptions.bigBlind.toString());
+        urlSearchParams.set("timeout", gameOptions.timeout.toString());
+        if (gameOptions.type) {
+            urlSearchParams.set("type", gameOptions.type);
+        }
+
+        // const options: GameOptions = {
+        //     minBuyIn: BigInt(urlSearchParams.get("minBuyIn") || "0"),
+        //     maxBuyIn: BigInt(urlSearchParams.get("maxBuyIn") || "2000"),
+        //     minPlayers: parseInt(urlSearchParams.get("minPlayers") || "2"),
+        //     maxPlayers: parseInt(urlSearchParams.get("maxPlayers") || "6"),
+        //     smallBlind: BigInt(urlSearchParams.get("smallBlind") || "0"),
+        //     bigBlind: BigInt(urlSearchParams.get("bigBlind") || "0"),
+        //     timeout: parseInt(urlSearchParams.get("timeout") || "30000"),
+        //     type: urlSearchParams.get("type") as GameType
+        // };
         const gameOptionsString = urlSearchParams.toString();
 
         const { data: body } = await axios.post(this.url, {
