@@ -83,11 +83,6 @@ export class NodeRpcClient implements IClient {
     public async findGames(smallBlind?: bigint, bigBlind?: bigint): Promise<GameOptionsResponse[]> {
         const query = "" + (smallBlind ? `sb=${smallBlind}` : "") + (bigBlind ? `,bb=${bigBlind}` : "");
 
-        // If no query is provided, return an empty array
-        if (!query) {
-            return [];
-        }
-
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<GameOptionsResponse[]> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.FIND_CONTRACT,
