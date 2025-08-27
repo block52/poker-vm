@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
     const [modalMinBuyIn, setModalMinBuyIn] = useState(1);
     const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
     const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(10); // Single buy-in for Sit & Go
-    const [modalPlayerCount, setModalPlayerCount] = useState(2);
+    const [modalPlayerCount, setModalPlayerCount] = useState(4);
 
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -487,7 +487,7 @@ const Dashboard: React.FC = () => {
         setModalMinBuyIn(1);
         setModalMaxBuyIn(100);
         setModalSitAndGoBuyIn(10);
-        setModalPlayerCount(2);
+        setModalPlayerCount(4);
         setShowCreateGameModal(true);
     }, []);
     
@@ -728,9 +728,7 @@ const Dashboard: React.FC = () => {
                                             onChange={e => setModalPlayerCount(Number(e.target.value))}
                                             className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                         >
-                                            <option value={2}>2 Players (Heads Up)</option>
-                                            <option value={4}>4 Players</option>
-                                            <option value={6}>6 Players (6 Max)</option>
+                                            <option value={4}>4 Players (Sit & Go)</option>
                                             <option value={9}>9 Players (Full Ring)</option>
                                         </select>
                                     </div>

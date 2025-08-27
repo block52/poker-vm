@@ -148,7 +148,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                 </div>
                 <div className="relative flex flex-col justify-end mt-[-6px] mx-1">
                     <div
-                        style={{ backgroundColor: isWinner ? colors.accent.success : color }}
+                        style={{ backgroundColor: isWinner ? colors.accent.success : (color || "#6b7280") }}
                         className={`b-[0%] mt-[auto] w-full h-[55px] shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${
                             isWinner 
                         }`}

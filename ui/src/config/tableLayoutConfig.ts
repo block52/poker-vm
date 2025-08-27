@@ -37,26 +37,32 @@ export interface ViewportConfig {
     rotation?: number; // For fixing mobile landscape orientation
   };
   players: {
+    four: Position[];
     six: Position[];
     nine: Position[];
   };
   vacantPlayers: {
+    four: Position[];
     six: Position[];
     nine: Position[];
   };
   chips: {
+    four: ChipPosition[];
     six: ChipPosition[];
     nine: ChipPosition[];
   };
   dealers: {
+    four: Position[];
     six: Position[];
     nine: Position[];
   };
   turnAnimations: {
+    four: Position[];
     six: Position[];
     nine: Position[];
   };
   winAnimations: {
+    four: Position[];
     six: Position[];
     nine: Position[];
   };
@@ -98,6 +104,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // PLAYER SEAT POSITIONS (where players sit)
     players: {
+      // 4-PLAYER TABLE POSITIONS (cross pattern)
+      four: [
+        { left: "50%", top: "110%", color: "#4ade80" },    // Seat 1 - Bottom (green)
+        { left: "10%", top: "32%", color: "#f97316" },     // Seat 2 - Left (orange)
+        { left: "450px", top: "-45%", color: "#3b82f6" },    // Seat 3 - Top (blue)
+        { left: "1050px", top: "150px", color: "#ec4899" }      // Seat 4 - Right (pink)
+      ],
+      
       // 6-PLAYER TABLE POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Seat 1 - Bottom left
@@ -124,6 +138,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // VACANT SEAT POSITIONS (empty seat indicators)
     vacantPlayers: {
+      // 4-PLAYER VACANT SEATS
+      four: [
+        { left: "400px", top: "400px" },    // Empty Seat 1
+        { left: "-140px", top: "32%" },     // Empty Seat 2
+        { left: "550px", top: "00px" },    // Empty Seat 3
+        { left: "90%", top: "32%" }      // Empty Seat 4
+      ],
+      
       // 6-PLAYER VACANT SEATS
       six: [
         { left: "40%", top: "100%" },    // Empty Seat 1
@@ -150,6 +172,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // CHIP POSITIONS (betting chips on table)
     chips: {
+      // 4-PLAYER CHIP POSITIONS
+      four: [
+        { left: "450px", bottom: "260px" },  // Chips for Seat 1
+        { left: "200px", bottom: "350px" },  // Chips for Seat 2
+        { left: "450px", bottom: "440px" },  // Chips for Seat 3
+        { left: "700px", bottom: "350px" }   // Chips for Seat 4
+      ],
+      
       // 6-PLAYER CHIP POSITIONS
       six: [
         { left: "40%", bottom: "10px" },    // Chips for Seat 1
@@ -176,6 +206,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // DEALER BUTTON POSITIONS
     dealers: {
+      // 4-PLAYER DEALER POSITIONS
+      four: [
+        { left: "420px", top: "360px" },  // Dealer at Seat 1
+        { left: "-50px", top: "175px" },   // Dealer at Seat 2
+        { left: "420px", top: "-70px" },   // Dealer at Seat 3
+        { left: "920px", top: "175px" }    // Dealer at Seat 4
+      ],
+      
       // 6-PLAYER DEALER POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Dealer at Seat 1
@@ -202,6 +240,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // TURN INDICATOR ANIMATIONS (shows whose turn)
     turnAnimations: {
+      // 4-PLAYER TURN INDICATORS
+      four: [
+        { left: "450px", top: "399px" },   // Turn indicator Seat 1
+        { left: "-110px", top: "175px" },  // Turn indicator Seat 2
+        { left: "450px", top: "-110px" },  // Turn indicator Seat 3
+        { left: "999px", top: "175px" }    // Turn indicator Seat 4
+      ],
+      
       // 6-PLAYER TURN INDICATORS
       six: [
         { left: "40%", top: "100%" },    // Turn indicator at Seat 1
@@ -228,6 +274,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // WIN CELEBRATION ANIMATIONS
     winAnimations: {
+      // 4-PLAYER WIN ANIMATIONS
+      four: [
+        { left: "450px", top: "399px" },   // Win animation Seat 1
+        { left: "-110px", top: "175px" },  // Win animation Seat 2
+        { left: "450px", top: "-110px" },  // Win animation Seat 3
+        { left: "999px", top: "175px" }    // Win animation Seat 4
+      ],
+      
       // 6-PLAYER WIN ANIMATIONS
       six: [
         { left: "40%", top: "100%" },    // Win animation at Seat 1
@@ -270,6 +324,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // PLAYER SEAT POSITIONS
     players: {
+      // 4-PLAYER TABLE POSITIONS
+      four: [
+        { left: "450px", top: "399px", color: "#4ade80" },   // Seat 1 - Bottom (green)
+        { left: "-110px", top: "175px", color: "#f97316" },  // Seat 2 - Left (orange)
+        { left: "450px", top: "-110px", color: "#3b82f6" },  // Seat 3 - Top (blue)
+        { left: "999px", top: "175px", color: "#ec4899" }    // Seat 4 - Right (pink)
+      ],
+      
       // 6-PLAYER TABLE POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Seat 1 - Bottom left
@@ -296,6 +358,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // VACANT SEAT POSITIONS
     vacantPlayers: {
+      // 4-PLAYER VACANT SEATS
+      four: [
+        { left: "450px", top: "399px" },   // Seat 1 - Bottom
+        { left: "-110px", top: "175px" },  // Seat 2 - Left
+        { left: "450px", top: "-110px" },  // Seat 3 - Top
+        { left: "999px", top: "175px" }    // Seat 4 - Right
+      ],
+      
       // 6-PLAYER VACANT SEATS
       six: [
         { left: "40%", top: "100%" },    // Empty Seat 1
@@ -322,6 +392,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // CHIP POSITIONS
     chips: {
+      // 4-PLAYER CHIP POSITIONS
+      four: [
+        { left: "450px", bottom: "260px" },  // Chips for Seat 1
+        { left: "200px", bottom: "350px" },  // Chips for Seat 2
+        { left: "450px", bottom: "440px" },  // Chips for Seat 3
+        { left: "700px", bottom: "350px" }   // Chips for Seat 4
+      ],
+      
       // 6-PLAYER CHIP POSITIONS
       six: [
         { left: "40%", bottom: "10px" },    // Chips for Seat 1
@@ -348,6 +426,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // DEALER BUTTON POSITIONS
     dealers: {
+      // 4-PLAYER DEALER POSITIONS
+      four: [
+        { left: "420px", top: "360px" },  // Dealer at Seat 1
+        { left: "-50px", top: "175px" },   // Dealer at Seat 2
+        { left: "420px", top: "-70px" },   // Dealer at Seat 3
+        { left: "920px", top: "175px" }    // Dealer at Seat 4
+      ],
+      
       // 6-PLAYER DEALER POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Dealer at Seat 1
@@ -374,6 +460,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // TURN INDICATOR ANIMATIONS
     turnAnimations: {
+      // 4-PLAYER TURN INDICATORS
+      four: [
+        { left: "450px", top: "399px" },   // Turn indicator Seat 1
+        { left: "-110px", top: "175px" },  // Turn indicator Seat 2
+        { left: "450px", top: "-20px" },  // Turn indicator Seat 3
+        { left: "999px", top: "175px" }    // Turn indicator Seat 4
+      ],
+      
       // 6-PLAYER TURN INDICATORS
       six: [
         { left: "40%", top: "100%" },    // Turn indicator at Seat 1
@@ -400,6 +494,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // WIN CELEBRATION ANIMATIONS
     winAnimations: {
+      // 4-PLAYER WIN ANIMATIONS
+      four: [
+        { left: "450px", top: "399px" },   // Win animation Seat 1
+        { left: "-110px", top: "175px" },  // Win animation Seat 2
+        { left: "450px", top: "-110px" },  // Win animation Seat 3
+        { left: "999px", top: "175px" }    // Win animation Seat 4
+      ],
+      
       // 6-PLAYER WIN ANIMATIONS
       six: [
         { left: "40%", top: "100%" },    // Win animation at Seat 1
@@ -442,6 +544,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // PLAYER SEAT POSITIONS
     players: {
+      // 4-PLAYER TABLE POSITIONS
+      four: [
+        { left: "450px", top: "399px", color: "#4ade80" },   // Seat 1 - Bottom (green)
+        { left: "-110px", top: "175px", color: "#f97316" },  // Seat 2 - Left (orange)
+        { left: "450px", top: "-110px", color: "#3b82f6" },  // Seat 3 - Top (blue)
+        { left: "999px", top: "175px", color: "#ec4899" }    // Seat 4 - Right (pink)
+      ],
+      
       // 6-PLAYER TABLE POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Seat 1 - Bottom left
@@ -468,6 +578,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // VACANT SEAT POSITIONS
     vacantPlayers: {
+      // 4-PLAYER VACANT SEATS
+      four: [
+        { left: "450px", top: "399px" },   // Seat 1 - Bottom
+        { left: "-110px", top: "175px" },  // Seat 2 - Left
+        { left: "450px", top: "-110px" },  // Seat 3 - Top
+        { left: "999px", top: "175px" }    // Seat 4 - Right
+      ],
+      
       // 6-PLAYER VACANT SEATS
       six: [
         { left: "40%", top: "100%" },    // Empty Seat 1
@@ -494,6 +612,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // CHIP POSITIONS
     chips: {
+      // 4-PLAYER CHIP POSITIONS
+      four: [
+        { left: "450px", bottom: "260px" },  // Chips for Seat 1
+        { left: "200px", bottom: "350px" },  // Chips for Seat 2
+        { left: "450px", bottom: "440px" },  // Chips for Seat 3
+        { left: "700px", bottom: "350px" }   // Chips for Seat 4
+      ],
+      
       // 6-PLAYER CHIP POSITIONS
       six: [
         { left: "40%", bottom: "10px" },    // Chips for Seat 1
@@ -520,6 +646,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // DEALER BUTTON POSITIONS
     dealers: {
+      // 4-PLAYER DEALER POSITIONS
+      four: [
+        { left: "420px", top: "360px" },  // Dealer at Seat 1
+        { left: "-50px", top: "175px" },   // Dealer at Seat 2
+        { left: "420px", top: "-70px" },   // Dealer at Seat 3
+        { left: "920px", top: "175px" }    // Dealer at Seat 4
+      ],
+      
       // 6-PLAYER DEALER POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Dealer at Seat 1
@@ -546,6 +680,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // TURN INDICATOR ANIMATIONS
     turnAnimations: {
+      // 4-PLAYER TURN INDICATORS
+      four: [
+        { left: "450px", top: "399px" },   // Turn indicator Seat 1
+        { left: "-110px", top: "175px" },  // Turn indicator Seat 2
+        { left: "450px", top: "-110px" },  // Turn indicator Seat 3
+        { left: "999px", top: "175px" }    // Turn indicator Seat 4
+      ],
+      
       // 6-PLAYER TURN INDICATORS
       six: [
         { left: "40%", top: "100%" },    // Turn indicator at Seat 1
@@ -572,6 +714,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // WIN CELEBRATION ANIMATIONS
     winAnimations: {
+      // 4-PLAYER WIN ANIMATIONS
+      four: [
+        { left: "450px", top: "399px" },   // Win animation Seat 1
+        { left: "-110px", top: "175px" },  // Win animation Seat 2
+        { left: "450px", top: "-110px" },  // Win animation Seat 3
+        { left: "999px", top: "175px" }    // Win animation Seat 4
+      ],
+      
       // 6-PLAYER WIN ANIMATIONS
       six: [
         { left: "40%", top: "100%" },    // Win animation at Seat 1
@@ -614,6 +764,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // PLAYER SEAT POSITIONS
     players: {
+      // 4-PLAYER TABLE POSITIONS
+      four: [
+        { left: "450px", top: "399px", color: "#4ade80" },   // Seat 1 - Bottom (green)
+        { left: "-110px", top: "175px", color: "#f97316" },  // Seat 2 - Left (orange)
+        { left: "450px", top: "-110px", color: "#3b82f6" },  // Seat 3 - Top (blue)
+        { left: "999px", top: "160px", color: "#ec4899" }    // Seat 4 - Right (pink)
+      ],
+      
       // 6-PLAYER TABLE POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Seat 1 - Bottom left
@@ -640,6 +798,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // VACANT SEAT POSITIONS
     vacantPlayers: {
+      // 4-PLAYER VACANT SEATS
+      four: [
+        { left: "450px", top: "399px" },   // Seat 1 - Bottom
+        { left: "-110px", top: "175px" },  // Seat 2 - Left
+        { left: "450px", top: "-110px" },  // Seat 3 - Top
+        { left: "999px", top: "175px" }    // Seat 4 - Right
+      ],
+      
       // 6-PLAYER VACANT SEATS
       six: [
         { left: "40%", top: "100%" },    // Empty Seat 1
@@ -666,6 +832,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // CHIP POSITIONS
     chips: {
+      // 4-PLAYER CHIP POSITIONS
+      four: [
+        { left: "450px", bottom: "260px" },  // Chips for Seat 1
+        { left: "200px", bottom: "350px" },  // Chips for Seat 2
+        { left: "450px", bottom: "440px" },  // Chips for Seat 3
+        { left: "700px", bottom: "350px" }   // Chips for Seat 4
+      ],
+      
       // 6-PLAYER CHIP POSITIONS
       six: [
         { left: "40%", bottom: "10px" },    // Chips for Seat 1
@@ -692,6 +866,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // DEALER BUTTON POSITIONS
     dealers: {
+      // 4-PLAYER DEALER POSITIONS
+      four: [
+        { left: "420px", top: "360px" },  // Dealer at Seat 1
+        { left: "-50px", top: "175px" },   // Dealer at Seat 2
+        { left: "420px", top: "-70px" },   // Dealer at Seat 3
+        { left: "920px", top: "175px" }    // Dealer at Seat 4
+      ],
+      
       // 6-PLAYER DEALER POSITIONS
       six: [
         { left: "40%", top: "100%" },    // Dealer at Seat 1
@@ -718,6 +900,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // TURN INDICATOR ANIMATIONS
     turnAnimations: {
+      // 4-PLAYER TURN INDICATORS
+      four: [
+        { left: "450px", top: "500px" },   // Turn indicator Seat 1
+        { left: "-110px", top: "175px" },  // Turn indicator Seat 2
+        { left: "450px", top: "-20px" },  // Turn indicator Seat 3
+        { left: "999px", top: "175px" }    // Turn indicator Seat 4
+      ],
+      
       // 6-PLAYER TURN INDICATORS
       six: [
         { left: "40%", top: "100%" },    // Turn indicator at Seat 1
@@ -744,6 +934,14 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // WIN CELEBRATION ANIMATIONS
     winAnimations: {
+      // 4-PLAYER WIN ANIMATIONS
+      four: [
+        { left: "450px", top: "399px" },   // Win animation Seat 1
+        { left: "-110px", top: "175px" },  // Win animation Seat 2
+        { left: "450px", top: "-110px" },  // Win animation Seat 3
+        { left: "999px", top: "175px" }    // Win animation Seat 4
+      ],
+      
       // 6-PLAYER WIN ANIMATIONS
       six: [
         { left: "40%", top: "100%" },    // Win animation at Seat 1
@@ -777,9 +975,9 @@ export const getCurrentConfig = (): ViewportConfig => {
 };
 
 // Helper to get specific position arrays
-export const getPositionArrays = (tableSize: 6 | 9) => {
+export const getPositionArrays = (tableSize: 4 | 6 | 9) => {
   const config = getCurrentConfig();
-  const sizeKey = tableSize === 6 ? 'six' : 'nine';
+  const sizeKey = tableSize === 4 ? 'four' : tableSize === 6 ? 'six' : 'nine';
   
   return {
     players: config.players[sizeKey],

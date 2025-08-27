@@ -18,7 +18,7 @@ export interface UseTableLayoutReturn {
     refreshLayout: () => void;
 }
 
-export const useTableLayout = (tableSize: 6 | 9): UseTableLayoutReturn => {
+export const useTableLayout = (tableSize: 4 | 9): UseTableLayoutReturn => {
     const [viewportMode, setViewportMode] = useState(getViewportMode());
     const [config, setConfig] = useState(getCurrentConfig());
     const [zoom, setZoom] = useState(calculateTableZoom());

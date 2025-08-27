@@ -169,7 +169,7 @@ const Player: React.FC<PlayerProps> = memo(
     // 8) status bar style (no pulse)
     const statusBarStyle = useMemo(
       () => ({
-        backgroundColor: isWinner ? colors.accent.success : color,
+        backgroundColor: isWinner ? colors.accent.success : (color || "#6b7280"),
       }),
       [isWinner, color]
     );

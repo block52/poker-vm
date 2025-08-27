@@ -239,8 +239,9 @@ const Table = React.memo(() => {
     // Add the useTableState hook to get table state properties
     const { formattedTotalPot, tableSize } = useTableState();
 
-    // Use the table layout configuration system
-    const tableLayout = useTableLayout(tableSize as 6 | 9 || 9);
+    // Use the table layout configuration system (only 4 and 9 players supported)
+    // TODO: Add support for 2, 3, 5, 6, 7, 8 player tables - positions need to be configured in tableLayoutConfig.ts
+    const tableLayout = useTableLayout(tableSize as 4 | 9 || 9);
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
@@ -499,7 +500,7 @@ const Table = React.memo(() => {
                 currentIndex,
                 left: position.left,
                 top: position.top,
-                color: position.color,
+                color: position.color || "#6b7280", // Default gray if no color
                 status: tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.seat === seatNumber)?.status,
                 onJoin: updateBalanceOnPlayerJoin
             };
@@ -629,10 +630,7 @@ const Table = React.memo(() => {
                                     Texas Hold'em
                                     {gameOptions.minPlayers && gameOptions.maxPlayers && (
                                         <span className="ml-1" style={{ color: colors.ui.textSecondary }}>
-                                            ({gameOptions.minPlayers === 2 ? "Heads Up" : 
-                                              gameOptions.minPlayers === 6 ? "6-Max" : 
-                                              gameOptions.minPlayers === 9 ? "Full Ring" : 
-                                              `${gameOptions.minPlayers} Players`})
+                                            ({tableActivePlayers.length}/{gameOptions.maxPlayers} Players)
                                         </span>
                                     )}
                                 </span>
@@ -881,10 +879,10 @@ const Table = React.memo(() => {
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
                                                     {/* turn indicator only when no winner yet */}
-                                                    {!hasWinner && <MemoizedTurnAnimation index={positionIndex} />}
+                                                    {!hasWinner && <MemoizedTurnAnimation index={seatNum - 1} />}
 
                                                     {/* winner ripple when hand is over and this seat won */}
-                                                    {isWinnerSeat && <WinAnimation index={positionIndex} />}
+                                                    {isWinnerSeat && <WinAnimation index={seatNum - 1} />}
 
                                                     {componentToRender}
                                                 </div>
