@@ -1,5 +1,6 @@
 import { AccountDTO, BlockDTO, TransactionDTO, WithdrawResponseDTO } from "./types/chain";
 import {
+    GameOptionsDTO,
     GameOptionsResponse,
     LegalActionDTO,
     NonPlayerActionType,
@@ -29,7 +30,7 @@ export interface IClient {
     getTransactions(): Promise<TransactionDTO[]>;
     mint(address: string, amount: string, transactionId: string): Promise<void>;
     newHand(gameAddress: string, nonce?: number): Promise<TransactionResponse>;
-    newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string>;
+    newTable(gameOptions: GameOptionsDTO, owner: string, nonce?: number): Promise<string>;
     playerAction(gameAddress: string, action: PlayerActionType, amount: string, nonce?: number, data?: string): Promise<PerformActionResponse>;
     playerJoin(gameAddress: string, amount: string, seat: number, nonce?: number): Promise<PerformActionResponse>;
     playerJoinAtNextSeat(gameAddress: string, amount: string, nonce?: number): Promise<PerformActionResponse>;
@@ -359,23 +360,30 @@ export class NodeRpcClient implements IClient {
 
     /**
      * Create a new game table on the remote node
-     * @param schemaAddress The address of the schema to use for the table
+     * @param gameOptions The options for the game
      * @param owner The address of the table owner
      * @param nonce The nonce of the transaction
      * @returns A Promise that resolves to the table address
      */
-    public async newTable(schemaAddress: string, owner: string, nonce?: number): Promise<string> {
+    public async newTable(gameOptions: GameOptionsDTO, owner: string, nonce?: number): Promise<string> {
         if (!nonce) {
-            const address = this.getAddress();
-            nonce = await this.getNonce(address);
+            nonce = new Date().getTime(); // Use timestamp as nonce if not provided
         }
 
         const signature = await this.getSignature(nonce);
 
+        const urlSearchParams = new URLSearchParams();
+        Object.entries(gameOptions).forEach(([key, value]) => {
+            if (value !== undefined) {
+                urlSearchParams.append(key, value.toString());
+            }
+        });
+        const gameOptionsString = urlSearchParams.toString();
+
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.NEW_TABLE,
-            params: [schemaAddress, owner, nonce], // [to, from, nonce]
+            params: [gameOptionsString, owner, nonce], // [gameOptions, owner, nonce]
             signature: signature
         });
 
