@@ -144,7 +144,7 @@ export type TexasHoldemGameState = {
 };
 
 export type TexasHoldemStateDTO = {
-    type: "cash";
+    type: GameType;
     address: string;
     gameOptions: GameOptionsDTO;
     smallBlindPosition?: number;

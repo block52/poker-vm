@@ -111,15 +111,17 @@ import { handleSitOut, handleSitIn } from "../common/actionHandlers";
 import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
-import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerDTO, PlayerStatus, GameType } from "@bitcoinbrisbane/block52";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
 // Game Start Countdown
 import GameStartCountdown from "./common/GameStartCountdown";
+import SitAndGoAutoJoinModal from "./SitAndGoAutoJoinModal";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
+import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -173,6 +175,7 @@ const Table = React.memo(() => {
 
     // Update to use the imported hook
     const tableDataValues = useTableData();
+    const { isUserAlreadyPlaying } = useVacantSeatData();
 
     // invoke hook for seat loop
     const { winnerInfo } = useWinnerInfo();
@@ -578,7 +581,7 @@ const Table = React.memo(() => {
     }
 
     // This component manages the subscription:
-    const { subscribeToTable } = useGameStateContext();
+    const { subscribeToTable, gameState } = useGameStateContext();
     useEffect(() => {
         if (id) {
             subscribeToTable(id);
@@ -615,6 +618,26 @@ const Table = React.memo(() => {
                             Lobby
                         </span>
                         <NetworkDisplay isMainnet={false} />
+                        {/* Game Type Display - Desktop Only */}
+                        {gameOptions && (
+                            <div className="hidden md:flex items-center ml-4 px-3 py-1 rounded-lg" 
+                                 style={{ backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5), border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}` }}>
+                                <span className="text-sm font-semibold" style={{ color: colors.brand.primary }}>
+                                    {gameState?.type === "cash" ? "Cash • " : 
+                                     gameState?.type === "tournament" ? "Tournament • " : 
+                                     gameState?.type === "sit-and-go" ? "Sit & Go • " : ""}
+                                    Texas Hold'em
+                                    {gameOptions.minPlayers && gameOptions.maxPlayers && (
+                                        <span className="ml-1" style={{ color: colors.ui.textSecondary }}>
+                                            ({gameOptions.minPlayers === 2 ? "Heads Up" : 
+                                              gameOptions.minPlayers === 6 ? "6-Max" : 
+                                              gameOptions.minPlayers === 9 ? "Full Ring" : 
+                                              `${gameOptions.minPlayers} Players`})
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
@@ -1029,6 +1052,17 @@ const Table = React.memo(() => {
             {/* Game Start Countdown Modal */}
             {showCountdown && gameStartTime && (
                 <GameStartCountdown gameStartTime={gameStartTime} onCountdownComplete={handleCountdownComplete} onSkip={handleSkipCountdown} />
+            )}
+
+            {/* Sit & Go Auto-Join Modal - Shows for Sit & Go games when user is not playing */}
+            {gameState && (gameState.type as string) === "sit-and-go" && !isUserAlreadyPlaying && id && (
+                <SitAndGoAutoJoinModal 
+                    tableId={id}
+                    onJoinSuccess={() => {
+                        // Refresh the page or update state to show the user is now playing
+                        window.location.reload();
+                    }}
+                />
             )}
 
             {/* Club Name at Bottom Center (or Bottom Right in mobile landscape) */}

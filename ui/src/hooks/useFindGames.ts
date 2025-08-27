@@ -28,11 +28,27 @@ export const useFindGames = (): FindGamesReturn => {
         setError(null);
 
         try {
-            // Use hardcoded min/max values as suggested
-            const minBuyIn = BigInt("10000000000000000"); // 0.01 ETH
-            const maxBuyIn = BigInt("1000000000000000000"); // 1 ETH
+            // WORKAROUND: The SDK's findGames has a bug where it returns [] if no params are passed
+            // Instead, we'll make a direct RPC call with an empty query to get ALL games
+            // The backend's FindGameStateCommand will return all games when query is empty
             
-            const availableGames: GameOptionsResponse[] = await client.findGames(minBuyIn, maxBuyIn);
+            // Make direct RPC call to bypass SDK's flawed logic
+            const rpcUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
+            const response = await fetch(rpcUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: Math.random().toString(36).substring(7),
+                    method: "find_contract",
+                    params: [null] // Pass null to trigger the "no filter" case in backend
+                })
+            });
+            
+            const data = await response.json();
+            const availableGames: GameOptionsResponse[] = data.result?.data || [];
+            
             console.log("Available games:", availableGames);
             // Also log stringified version for complete details
             console.log("Available games (stringified):", JSON.stringify(availableGames, null, 2));
