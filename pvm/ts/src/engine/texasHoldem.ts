@@ -220,7 +220,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     // ==================== GAME STATE PROPERTIES ====================
     get type(): GameType {
-        return this._gameOptions.type || GameType.CASH;
+        return this._gameOptions.type;
     }
 
     // Core game state getters
@@ -1454,6 +1454,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             gameOptions.minPlayers = Number(json.gameOptions?.minPlayers);
             gameOptions.smallBlind = BigInt(json.gameOptions?.smallBlind);
             gameOptions.bigBlind = BigInt(json.gameOptions?.bigBlind);
+            gameOptions.type = json.gameOptions?.type;
         }
 
         // Parse players
