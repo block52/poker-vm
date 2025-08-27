@@ -178,6 +178,7 @@ const Dashboard: React.FC = () => {
     const [modalGameType, setModalGameType] = useState<GameType>(GameType.CASH);
     const [modalMinBuyIn, setModalMinBuyIn] = useState(1);
     const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
+    const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(10); // Single buy-in for Sit & Go
     const [modalPlayerCount, setModalPlayerCount] = useState(2);
 
     // Buy In Modal
@@ -290,10 +291,12 @@ const Dashboard: React.FC = () => {
 
         try {
             // Build game options from modal selections
+            // For Sit & Go/Tournament, use the same value for min and max buy-in
+            const isTournamentMode = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
             const gameOptions = {
                 type: modalGameType,
-                minBuyIn: modalMinBuyIn,
-                maxBuyIn: modalMaxBuyIn,
+                minBuyIn: isTournamentMode ? modalSitAndGoBuyIn : modalMinBuyIn,
+                maxBuyIn: isTournamentMode ? modalSitAndGoBuyIn : modalMaxBuyIn,
                 minPlayers: modalPlayerCount,
                 maxPlayers: modalPlayerCount
             };
@@ -483,6 +486,7 @@ const Dashboard: React.FC = () => {
         setModalGameType(GameType.CASH);
         setModalMinBuyIn(1);
         setModalMaxBuyIn(100);
+        setModalSitAndGoBuyIn(10);
         setModalPlayerCount(2);
         setShowCreateGameModal(true);
     }, []);
@@ -731,29 +735,49 @@ const Dashboard: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-white text-sm mb-1">Minimum Buy-In ($)</label>
-                                        <input
-                                            type="number"
-                                            value={modalMinBuyIn}
-                                            onChange={e => setModalMinBuyIn(Number(e.target.value))}
-                                            min="1"
-                                            max="1000"
-                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                        />
-                                    </div>
+                                    {/* Show different fields based on game type */}
+                                    {(modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT) ? (
+                                        // For Sit & Go and Tournament: Single buy-in field
+                                        <div>
+                                            <label className="block text-white text-sm mb-1">Tournament Buy-In ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalSitAndGoBuyIn}
+                                                onChange={e => setModalSitAndGoBuyIn(Number(e.target.value))}
+                                                min="1"
+                                                max="1000"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-1">All players pay the same entry fee</p>
+                                        </div>
+                                    ) : (
+                                        // For Cash games: Min and Max buy-in fields
+                                        <>
+                                            <div>
+                                                <label className="block text-white text-sm mb-1">Minimum Buy-In ($)</label>
+                                                <input
+                                                    type="number"
+                                                    value={modalMinBuyIn}
+                                                    onChange={e => setModalMinBuyIn(Number(e.target.value))}
+                                                    min="1"
+                                                    max="1000"
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
 
-                                    <div>
-                                        <label className="block text-white text-sm mb-1">Maximum Buy-In ($)</label>
-                                        <input
-                                            type="number"
-                                            value={modalMaxBuyIn}
-                                            onChange={e => setModalMaxBuyIn(Number(e.target.value))}
-                                            min="1"
-                                            max="10000"
-                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                        />
-                                    </div>
+                                            <div>
+                                                <label className="block text-white text-sm mb-1">Maximum Buy-In ($)</label>
+                                                <input
+                                                    type="number"
+                                                    value={modalMaxBuyIn}
+                                                    onChange={e => setModalMaxBuyIn(Number(e.target.value))}
+                                                    min="1"
+                                                    max="10000"
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
 
                                     <div>
                                         <label className="block text-white text-sm mb-1">Card Game Contract</label>

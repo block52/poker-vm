@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
+import { useSitAndGoPlayerJoinRandomSeat } from "../../hooks/useSitAndGoPlayerJoinRandomSeat";
 import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, hexToRgba } from "../../utils/colorConfig";
-import { joinTable } from "../../hooks/playerActions/joinTable";
 
 interface SitAndGoAutoJoinModalProps {
     tableId: string;
@@ -16,12 +16,14 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [buyInError, setBuyInError] = useState("");
-    const [isJoining, setIsJoining] = useState(false);
     const [hasJoined, setHasJoined] = useState(false);
 
     // Get game options
     const { gameOptions } = useGameOptions();
     const { emptySeatIndexes, isUserAlreadyPlaying } = useVacantSeatData();
+    
+    // Use the Sit & Go specific join hook with random seat selection
+    const { joinSitAndGo, isJoining, error: joinError } = useSitAndGoPlayerJoinRandomSeat();
     
     // Get publicKey once
     const publicKey = useMemo(() => localStorage.getItem("user_eth_public_key") || undefined, []);
@@ -114,29 +116,30 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             return;
         }
 
-        setIsJoining(true);
         setBuyInError("");
 
         try {
-            // Get random seat
-            const randomIndex = Math.floor(Math.random() * emptySeatIndexes.length);
-            const selectedSeat = emptySeatIndexes[randomIndex];
-
             // Check if we have valid gameOptions
             if (!gameOptions || !gameOptions.maxBuyIn) {
                 setBuyInError("Game options not available");
                 return;
             }
             
-            // If backend expects "1" Wei to mean $1, convert accordingly
-            const buyInWei = gameOptions.maxBuyIn === "1" 
-                ? ethers.parseUnits("1", 18).toString() // Convert $1 to proper Wei (1e18)
-                : gameOptions.maxBuyIn; // Use the raw value from backend
-
-            // Join the table with the selected seat
-            await joinTable(tableId, {
-                amount: buyInWei,
-                seatNumber: selectedSeat
+            console.log("🎰 Sit & Go Join Attempt");
+            console.log(`📊 Game Options maxBuyIn: ${gameOptions.maxBuyIn}`);
+            console.log("🎲 Will use random seat selection");
+            
+            // For Sit & Go, if maxBuyIn is "1", send it as is
+            // The hook will handle the conversion if needed
+            const buyInAmount = gameOptions.maxBuyIn === "1" 
+                ? ethers.parseUnits("1", 18).toString() // Convert to Wei for the hook to detect and convert back
+                : gameOptions.maxBuyIn;
+            
+            // Use the Sit & Go specific join hook with playerJoinRandomSeat
+            await joinSitAndGo({
+                tableId,
+                amount: buyInAmount
+                // No need to specify seat - SDK will pick randomly
             });
             
             // Mark as joined and notify parent
@@ -151,12 +154,10 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                 onJoinSuccess();
             }, 500);
         } catch (error: any) {
-            console.error("Failed to join table:", error);
+            console.error("❌ Failed to join Sit & Go:", error);
             setBuyInError(error.message || "Failed to join table");
-        } finally {
-            setIsJoining(false);
         }
-    }, [publicKey, tableId, isUserAlreadyPlaying, hasJoined, emptySeatIndexes, maxBuyInFormatted, balanceFormatted, onJoinSuccess]);
+    }, [publicKey, tableId, isUserAlreadyPlaying, hasJoined, emptySeatIndexes, maxBuyInFormatted, balanceFormatted, gameOptions, joinSitAndGo, onJoinSuccess]);
 
     // Don't show modal if user is already playing or has joined
     if (isUserAlreadyPlaying || hasJoined) {
