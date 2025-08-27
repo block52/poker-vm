@@ -372,8 +372,7 @@ export class NodeRpcClient implements IClient {
 
         if (gameOptions.minBuyIn === undefined || gameOptions.maxBuyIn === undefined ||
             gameOptions.minPlayers === undefined || gameOptions.maxPlayers === undefined ||
-            gameOptions.smallBlind === undefined || gameOptions.bigBlind === undefined ||
-            gameOptions.timeout === undefined) {
+            gameOptions.smallBlind === undefined || gameOptions.bigBlind === undefined {
             throw new Error("Missing required game options");
         }
 
@@ -386,7 +385,7 @@ export class NodeRpcClient implements IClient {
         urlSearchParams.set("maxPlayers", gameOptions.maxPlayers.toString());
         urlSearchParams.set("smallBlind", gameOptions.smallBlind.toString());
         urlSearchParams.set("bigBlind", gameOptions.bigBlind.toString());
-        urlSearchParams.set("timeout", gameOptions.timeout.toString());
+        urlSearchParams.set("timeout", gameOptions.timeout?.toString() || "30000");
         if (gameOptions.type) {
             urlSearchParams.set("type", gameOptions.type);
         }
