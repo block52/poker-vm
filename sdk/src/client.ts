@@ -372,7 +372,7 @@ export class NodeRpcClient implements IClient {
 
         if (gameOptions.minBuyIn === undefined || gameOptions.maxBuyIn === undefined ||
             gameOptions.minPlayers === undefined || gameOptions.maxPlayers === undefined ||
-            gameOptions.smallBlind === undefined || gameOptions.bigBlind === undefined {
+            gameOptions.smallBlind === undefined || gameOptions.bigBlind === undefined) {
             throw new Error("Missing required game options");
         }
 
