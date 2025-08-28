@@ -392,6 +392,7 @@ const Dashboard: React.FC = () => {
             // Refresh page to update wallet
             window.location.reload();
         } catch (err) {
+            console.error("Failed to import private key:", err);
             setImportError("Invalid private key format");
         }
     };

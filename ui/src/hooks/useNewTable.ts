@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { GameOptionsDTO, GameType } from "@bitcoinbrisbane/block52";
 import { getClient } from "../utils/b52AccountUtils";
+import { ethers } from "ethers";
 
 // Type for creating new table options
 export interface CreateTableOptions {
@@ -40,46 +41,44 @@ export const useNewTable = (): UseNewTableReturn => {
         try {
             // Get the singleton client instance
             const client = getClient();
-            
+
+            const minBuyIn = ethers.parseEther(gameOptions.minBuyIn.toString()).toString();
+            const maxBuyIn = ethers.parseEther(gameOptions.maxBuyIn.toString()).toString();
+
             // Calculate blind values based on game type
-            let calculatedSmallBlind: number;
-            let calculatedBigBlind: number;
-            
+            const calculatedSmallBlind = BigInt(Math.max(1, Math.floor(gameOptions.minBuyIn / 100)));
+            const calculatedBigBlind = BigInt(Math.max(1, Math.floor(gameOptions.minBuyIn / 100)) * 2);
+
+            let smallBlind = calculatedSmallBlind.toString();
+            let bigBlind = calculatedBigBlind.toString();
+
             if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
                 // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in
                 // Buy-in represents tournament entry fee, not chip value
-                calculatedSmallBlind = 10;  // Standard SNG starting small blind
-                calculatedBigBlind = 20;     // Standard SNG starting big blind
-                
+                smallBlind = ethers.parseEther("100").toString();
+                bigBlind = ethers.parseEther("200").toString();
+
                 console.log("🎮 Sit & Go Tournament Settings:");
                 console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
-                console.log(`  Starting Blinds: ${calculatedSmallBlind}/${calculatedBigBlind}`);
-            } else {
-                // For Cash games: blinds are percentage of buy-in
-                calculatedSmallBlind = Math.max(1, Math.floor(gameOptions.minBuyIn / 100));
-                calculatedBigBlind = calculatedSmallBlind * 2;
-                
-                console.log("💵 Cash Game Settings:");
-                console.log(`  Buy-in Range: $${gameOptions.minBuyIn} - $${gameOptions.maxBuyIn}`);
-                console.log(`  Blinds: $${calculatedSmallBlind}/$${calculatedBigBlind}`);
+                console.log(`  Starting Blinds: ${smallBlind}/${bigBlind}`);
             }
-            
+
             // Build game options DTO object for the new API with all required fields
             const gameOptionsDTO: GameOptionsDTO = {
                 type: gameOptions.type,
-                minBuyIn: gameOptions.minBuyIn.toString(),
-                maxBuyIn: gameOptions.maxBuyIn.toString(),
+                minBuyIn,
+                maxBuyIn,
                 minPlayers: gameOptions.minPlayers,
                 maxPlayers: gameOptions.maxPlayers,
-                smallBlind: calculatedSmallBlind.toString(),
-                bigBlind: calculatedBigBlind.toString(),
+                smallBlind,
+                bigBlind,
                 timeout: 300000 // Standard 30,000 millisecond timeout for decisions
             };
             
             console.log("📊 Final game parameters:");
             console.log(`  Game Type: ${gameOptions.type}`);
             console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
-            console.log(`  Timeout: 30 seconds`);
+            console.log("  Timeout: 30 seconds");
             
             console.log("🚀 Creating New Table with SDK:");
             console.log(`Owner: ${owner}`);
