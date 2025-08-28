@@ -10,7 +10,7 @@
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.30",
     "@anthropic-ai/sdk": "^0.54.0",
-    "@bitcoinbrisbane/block52": "^1.0.150",
+    "@bitcoinbrisbane/block52": "^1.2.12",
     "axios": "^1.10.0",
     "chalk": "^4.1.2",
     "dotenv": "^16.0.3",

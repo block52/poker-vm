@@ -151,7 +151,8 @@ export abstract class BaseBot {
             seats = seats.filter(seat => !occupiedSeats.includes(seat));
 
             // Table stakes
-            const defaultBuyIn = BigInt("1000000000000000000"); // BigInt(gameState.gameOptions.minBuyIn || "1000000000000000000"); // minimum buy-in
+            // const defaultBuyIn = BigInt("1000000000000000000"); // BigInt(gameState.gameOptions.minBuyIn || "1000000000000000000"); // minimum buy-in
+            const defaultBuyIn = gameState.gameOptions.minBuyIn || "1000000000000000000"; // minimum buy-in
 
             const result = await this.client.playerJoin(this.tableAddress, defaultBuyIn, seats[0]);
             console.log(chalk.cyan("Join result:", result));
