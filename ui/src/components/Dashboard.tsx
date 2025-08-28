@@ -292,15 +292,12 @@ const Dashboard: React.FC = () => {
         try {
             // Build game options from modal selections
             // For Sit & Go/Tournament, use the same value for min and max buy-in
-            const isTournamentMode = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
-
-            const minBuyInWei = ethers.parseUnits(modalMinBuyIn.toString());
-            const maxBuyInWei = ethers.parseUnits(modalMaxBuyIn.toString());
+            // const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
 
             const gameOptions: CreateTableOptions = {
                 type: modalGameType,
-                minBuyIn: isTournamentMode ? minBuyInWei : modalMinBuyIn,
-                maxBuyIn: isTournamentMode ? maxBuyInWei : modalMaxBuyIn,
+                minBuyIn: modalMinBuyIn,
+                maxBuyIn: modalMaxBuyIn,
                 minPlayers: modalPlayerCount,
                 maxPlayers: modalPlayerCount
             };
