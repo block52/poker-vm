@@ -1,9 +1,9 @@
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
-import { Range } from "../../types";
+import { IAction, Range } from "../../types";
 
-class JoinAction extends BaseAction {
+class JoinAction extends BaseAction implements IAction {
     get type(): NonPlayerActionType {
         return NonPlayerActionType.JOIN;
     }
