@@ -13,7 +13,7 @@ const connectDB = require("./db");
 
 const swaggerSetup = require("./swagger/setup");
 
-// const depositSessionsRouter = require("./routes/depositSessions");
+const depositSessionsRouter = require("./routes/depositSessions");
 const bitcoinWebhooksRouter = require("./bitcoin/webhooks/btcpayWebhook");
 
 // ===================================
@@ -72,7 +72,7 @@ app.get("/", (req, res) => {
 });
 
 // Mount feature-specific routes
-// app.use("/deposit-sessions", depositSessionsRouter);
+app.use("/deposit-sessions", depositSessionsRouter);
 app.use("/bitcoin", bitcoinWebhooksRouter);
 
 // ===================================
