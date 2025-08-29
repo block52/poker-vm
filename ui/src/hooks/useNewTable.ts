@@ -42,12 +42,12 @@ export const useNewTable = (): UseNewTableReturn => {
             // Get the singleton client instance
             const client = getClient();
 
-            const minBuyIn = ethers.parseEther(gameOptions.minBuyIn.toString()).toString();
-            const maxBuyIn = ethers.parseEther(gameOptions.maxBuyIn.toString()).toString();
+            const minBuyIn: bigint = ethers.parseEther(gameOptions.minBuyIn.toString());
+            const maxBuyIn: bigint = ethers.parseEther(gameOptions.maxBuyIn.toString());
 
             // Calculate blind values based on game type
-            const calculatedSmallBlind = BigInt(Math.max(1, Math.floor(gameOptions.minBuyIn / 100)));
-            const calculatedBigBlind = BigInt(Math.max(1, Math.floor(gameOptions.minBuyIn / 100)) * 2);
+            const calculatedSmallBlind: bigint = minBuyIn / 100n; // 1% of min buy-in
+            const calculatedBigBlind: bigint = maxBuyIn / 100n; // 1% of max buy-in
 
             let smallBlind = calculatedSmallBlind.toString();
             let bigBlind = calculatedBigBlind.toString();
@@ -66,8 +66,8 @@ export const useNewTable = (): UseNewTableReturn => {
             // Build game options DTO object for the new API with all required fields
             const gameOptionsDTO: GameOptionsDTO = {
                 type: gameOptions.type,
-                minBuyIn,
-                maxBuyIn,
+                minBuyIn: minBuyIn.toString(),
+                maxBuyIn: maxBuyIn.toString(),
                 minPlayers: gameOptions.minPlayers,
                 maxPlayers: gameOptions.maxPlayers,
                 smallBlind,

@@ -2,7 +2,7 @@ import { StateManager } from "../stateManager";
 import GameState from "../../schema/gameState";
 import { ethers } from "ethers";
 import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
-import { GameOptions, GameType, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, GameOptionsDTO, GameType, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../../models";
 import { IGameManagement } from "../interfaces";
 import { createAddress } from "../../utils/crypto";
@@ -12,35 +12,36 @@ export class GameManagement extends StateManager implements IGameManagement {
         super(connString);
     }
 
+    private toGameStateDocument(gameState: any): IGameStateDocument {
+        return {
+            address: gameState.address,
+            gameOptions: gameState.gameOptions,
+            state: gameState.state
+        };
+    }
+
     public async getByAddress(address: string): Promise<IGameStateDocument | null> {
         const gameState = await GameState.findOne({
             address
         });
 
-        if (gameState) {
-            // this is stored in MongoDB as an object / document
-            const state: IGameStateDocument = {
-                address: gameState.address,
-                gameOptions: gameState.gameOptions,
-                state: gameState.state
-            };
-            return state;
+        if (!gameState) {
+            // Return null instead of throwing an error
+            return null;
         }
 
-        // Return null instead of throwing an error
-        return null;
+        // this is stored in MongoDB as an object / document
+        const state = this.toGameStateDocument(gameState);
+
+        // const state: IGameManagement = this.cast(gameState.address, gameState.gameOptions as GameOptions, gameState.state as TexasHoldemGameState);
+
+        return state;
     }
 
     public async getAll(): Promise<IGameStateDocument[]> {
         const gameStates = await GameState.find({});
         const states = gameStates.map(gameState => {
-            // this is stored in MongoDB as an object / document
-            const state: IGameStateDocument = {
-                address: gameState.address,
-                gameOptions: gameState.gameOptions,
-                state: gameState.state
-            };
-            return state;
+            return this.toGameStateDocument(gameState);
         });
         return states;
     }
@@ -48,13 +49,7 @@ export class GameManagement extends StateManager implements IGameManagement {
     public async getAllBySchemaAddress(schemaAddress: string): Promise<IGameStateDocument[]> {
         const gameStates = await GameState.find({ schemaAddress });
         const states = gameStates.map(gameState => {
-            // this is stored in MongoDB as an object / document
-            const state: IGameStateDocument = {
-                address: gameState.address,
-                gameOptions: gameState.gameOptions,
-                state: gameState.state
-            };
-            return state;
+            return this.toGameStateDocument(gameState);
         });
         return states;
     }
@@ -123,9 +118,21 @@ export class GameManagement extends StateManager implements IGameManagement {
             signature: ethers.ZeroHash
         };
 
+        // Cast gameOptions to GameOptionsDTO
+        const gameOptionsDTO: GameOptionsDTO = {
+            minBuyIn: gameOptions.minBuyIn.toString(),
+            maxBuyIn: gameOptions.maxBuyIn.toString(),
+            minPlayers: gameOptions.minPlayers,
+            maxPlayers: gameOptions.maxPlayers,
+            smallBlind: gameOptions.smallBlind.toString(),
+            bigBlind: gameOptions.bigBlind.toString(),
+            timeout: gameOptions.timeout,
+            type: gameOptions.type
+        }
+
         const game = new GameState({
             address: address,
-            gameOptions: gameOptions,
+            gameOptions: gameOptionsDTO,
             state
         });
 

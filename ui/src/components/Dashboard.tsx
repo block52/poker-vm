@@ -176,7 +176,7 @@ const Dashboard: React.FC = () => {
     const [createGameError, setCreateGameError] = useState("");
     // Modal game options
     const [modalGameType, setModalGameType] = useState<GameType>(GameType.CASH);
-    const [modalMinBuyIn, setModalMinBuyIn] = useState(1);
+    const [modalMinBuyIn, setModalMinBuyIn] = useState(10);
     const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
     const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(10); // Single buy-in for Sit & Go
     const [modalPlayerCount, setModalPlayerCount] = useState(4);
@@ -486,7 +486,7 @@ const Dashboard: React.FC = () => {
     const handleCreateTableClick = useCallback(() => {
         // Reset modal values to defaults when opening
         setModalGameType(GameType.CASH);
-        setModalMinBuyIn(1);
+        setModalMinBuyIn(10);
         setModalMaxBuyIn(100);
         setModalSitAndGoBuyIn(10);
         setModalPlayerCount(4);
@@ -744,8 +744,8 @@ const Dashboard: React.FC = () => {
                                                 type="number"
                                                 value={modalSitAndGoBuyIn}
                                                 onChange={e => setModalSitAndGoBuyIn(Number(e.target.value))}
-                                                min="1"
-                                                max="1000"
+                                                min="10"
+                                                max="10"
                                                 className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                             />
                                             <p className="text-xs text-gray-400 mt-1">All players pay the same entry fee</p>
