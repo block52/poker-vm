@@ -118,7 +118,7 @@ export class GameManagement extends StateManager implements IGameManagement {
             signature: ethers.ZeroHash
         };
 
-        // Cast gameOptions to GameOptionsDTO
+        // Cast gameOptions to GameOptionsDTO, to save in mongo bigints as strings
         const gameOptionsDTO: GameOptionsDTO = {
             minBuyIn: gameOptions.minBuyIn.toString(),
             maxBuyIn: gameOptions.maxBuyIn.toString(),
