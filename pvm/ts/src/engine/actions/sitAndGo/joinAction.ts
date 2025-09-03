@@ -2,6 +2,7 @@ import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
 import { Range } from "../../types";
+import { ethers } from "ethers";
 
 class JoinAction extends BaseAction {
     get type(): NonPlayerActionType {
@@ -44,13 +45,15 @@ class JoinAction extends BaseAction {
         this.game.joinAtSeat(player, seat);
         this.game.dealerManager.handlePlayerJoin(seat);
 
+        const chips = ethers.parseEther("10000");
+
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(
             {
                 playerId: player.address,
                 action: NonPlayerActionType.JOIN,
                 index: index,
-                amount: buyIn
+                amount: chips
             },
             seat.toString()
         );
