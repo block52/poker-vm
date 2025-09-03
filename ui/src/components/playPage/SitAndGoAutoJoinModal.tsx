@@ -1,3 +1,10 @@
+/**
+ * AMOUNT HANDLING PATTERN:
+ * - Components work with numbers (dollars): e.g., amount = 10 means $10
+ * - Hooks convert numbers to wei: ethers.parseEther(amount.toString())
+ * - SDK receives wei as strings: "10000000000000000000"
+ * - Backend expects wei values, not simple numbers
+ */
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useGameOptions } from "../../hooks/useGameOptions";
@@ -6,6 +13,7 @@ import { useSitAndGoPlayerJoinRandomSeat } from "../../hooks/useSitAndGoPlayerJo
 import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, hexToRgba } from "../../utils/colorConfig";
+import { useGameStateContext } from "../../context/GameStateContext";
 
 interface SitAndGoAutoJoinModalProps {
     tableId: string;
@@ -23,7 +31,10 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
     const { emptySeatIndexes, isUserAlreadyPlaying } = useVacantSeatData();
     
     // Use the Sit & Go specific join hook with random seat selection
-    const { joinSitAndGo, isJoining, error: joinError } = useSitAndGoPlayerJoinRandomSeat();
+    const { joinSitAndGo, isJoining } = useSitAndGoPlayerJoinRandomSeat();
+    
+    // Get the game state context to force refresh after joining
+    const { subscribeToTable, gameState } = useGameStateContext();
     
     // Get publicKey once
     const publicKey = useMemo(() => localStorage.getItem("user_eth_public_key") || undefined, []);
@@ -126,21 +137,27 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             }
             
             console.log("🎰 Sit & Go Join Attempt");
-            console.log(`📊 Game Options maxBuyIn: ${gameOptions.maxBuyIn}`);
+            console.log(`📊 Game Options maxBuyIn (wei): ${gameOptions.maxBuyIn}`);
             console.log("🎲 Will use random seat selection");
             
-            // For Sit & Go, if maxBuyIn is "1", send it as is
-            // The hook will handle the conversion if needed
-            const buyInAmount = gameOptions.maxBuyIn === "1" 
-                ? ethers.parseUnits("1", 18).toString() // Convert to Wei for the hook to detect and convert back
-                : gameOptions.maxBuyIn;
+            // STEP 1: Convert wei string from gameOptions back to dollar amount (number)
+            // gameOptions.maxBuyIn is in wei (e.g., "1000000000000000000" for $1)
+            const buyInAmountInWei = gameOptions.maxBuyIn;
+            const buyInAmountInDollars = parseFloat(ethers.formatEther(buyInAmountInWei));
             
-            // Use the Sit & Go specific join hook with playerJoinRandomSeat
+            console.log(`💰 Converting from gameOptions:`);
+            console.log(`   Wei string: "${buyInAmountInWei}"`);
+            console.log(`   Dollar amount: $${buyInAmountInDollars}`);
+            
+            // STEP 2: Pass the dollar amount (number) to the hook
+            // The hook will handle the conversion back to wei internally
             await joinSitAndGo({
                 tableId,
-                amount: buyInAmount
+                amount: buyInAmountInDollars  // Pass as number (dollars), not string (wei)
                 // No need to specify seat - SDK will pick randomly
             });
+            
+            console.log("✅ Join successful - updating UI");
             
             // Mark as joined and notify parent
             setHasJoined(true);
@@ -149,10 +166,25 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             localStorage.setItem("buy_in_amount", maxBuyInFormatted);
             localStorage.setItem("wait_for_big_blind", JSON.stringify(false));
             
-            // Small delay then close
+            // Force a re-subscription to get the latest state
+            console.log("🔄 Re-subscribing to table for fresh state");
+            subscribeToTable(tableId);
+            
+            // Small delay to allow backend to process and state to update
             setTimeout(() => {
+                console.log("🔄 Closing modal and triggering parent refresh");
                 onJoinSuccess();
-            }, 500);
+                
+                // COMMENTED OUT: Fallback refresh after 3 seconds
+                // This was causing unwanted page refreshes even when join was successful
+                // setTimeout(() => {
+                //     // Check if we have players in the game state
+                //     if (!gameState?.players || gameState.players.length === 0) {
+                //         console.log("⚠️ State not updated after 3 seconds, forcing reload");
+                //         window.location.reload();
+                //     }
+                // }, 3000);
+            }, 1500);
         } catch (error: any) {
             console.error("❌ Failed to join Sit & Go:", error);
             setBuyInError(error.message || "Failed to join table");
@@ -216,10 +248,17 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                         
                         <div className="bg-gray-700/80 backdrop-blur-sm rounded-lg p-3 border border-blue-500/30">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400 text-sm">Blinds:</span>
+                                <span className="text-gray-400 text-sm">Starting Blinds:</span>
                                 <span className="text-white font-semibold">
-                                    ${smallBlindFormatted} / ${bigBlindFormatted}
+                                    {parseInt(smallBlindFormatted).toLocaleString()} / {parseInt(bigBlindFormatted).toLocaleString()}
                                 </span>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-gray-700/80 backdrop-blur-sm rounded-lg p-3 border border-green-500/30">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">Starting Stack:</span>
+                                <span className="text-green-400 font-semibold">10,000 tokens</span>
                             </div>
                         </div>
                         
@@ -240,12 +279,12 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                         </div>
                     )}
 
-                    {/* Available Seats */}
+                    {/* Players Joined */}
                     <div className="mb-6 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
                         <div className="text-center">
-                            <div className="text-xs text-blue-300 font-semibold mb-1">SEATS AVAILABLE</div>
+                            <div className="text-xs text-blue-300 font-semibold mb-1">PLAYERS JOINED</div>
                             <div className="text-lg text-white font-bold">
-                                {emptySeatIndexes.length} / {gameOptions?.maxPlayers || 0}
+                                {(gameOptions?.maxPlayers || 0) - emptySeatIndexes.length} / {gameOptions?.maxPlayers || 0} Players
                             </div>
                         </div>
                     </div>

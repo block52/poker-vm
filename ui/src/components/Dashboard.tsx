@@ -26,6 +26,7 @@ import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hoo
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
 import { CreateTableOptions, useNewTable } from "../hooks/useNewTable"; // Import useNewTable hook
+import { useTablePlayerCounts } from "../hooks/useTablePlayerCounts"; // Import useTablePlayerCounts hook
 
 // Password protection utils
 import { 
@@ -158,6 +159,10 @@ const Dashboard: React.FC = () => {
     
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
+    
+    // Get player counts for all games
+    const gameAddresses = useMemo(() => games.map(g => g.address), [games]);
+    const { playerCounts } = useTablePlayerCounts(gameAddresses);
 
     // Add useAccount hook to get account nonce
     const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
@@ -175,10 +180,10 @@ const Dashboard: React.FC = () => {
     const [selectedContractAddress, setSelectedContractAddress] = useState("0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7");
     const [createGameError, setCreateGameError] = useState("");
     // Modal game options
-    const [modalGameType, setModalGameType] = useState<GameType>(GameType.CASH);
-    const [modalMinBuyIn, setModalMinBuyIn] = useState(1);
+    const [modalGameType, setModalGameType] = useState<GameType>(GameType.SIT_AND_GO);
+    const [modalMinBuyIn, setModalMinBuyIn] = useState(10);
     const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
-    const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(10); // Single buy-in for Sit & Go
+    const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
     const [modalPlayerCount, setModalPlayerCount] = useState(4);
 
     // Buy In Modal
@@ -292,15 +297,31 @@ const Dashboard: React.FC = () => {
         try {
             // Build game options from modal selections
             // For Sit & Go/Tournament, use the same value for min and max buy-in
-            // const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
+            const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
+            
+            // Log the modal values before creating game options
+            console.log("🎲 Modal Values:");
+            console.log("  Game Type:", modalGameType);
+            console.log("  Min Buy-In:", modalMinBuyIn);
+            console.log("  Max Buy-In:", modalMaxBuyIn);
+            console.log("  Sit & Go Buy-In:", modalSitAndGoBuyIn);
+            console.log("  Player Count:", modalPlayerCount);
+            console.log("  Is Tournament:", isTournament);
 
             const gameOptions: CreateTableOptions = {
                 type: modalGameType,
-                minBuyIn: modalMinBuyIn,
-                maxBuyIn: modalMaxBuyIn,
+                minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
+                maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
                 minPlayers: modalPlayerCount,
                 maxPlayers: modalPlayerCount
             };
+            
+            console.log("📦 Final CreateTableOptions being sent to SDK:");
+            console.log("  type:", gameOptions.type);
+            console.log("  minBuyIn:", gameOptions.minBuyIn);
+            console.log("  maxBuyIn:", gameOptions.maxBuyIn);
+            console.log("  minPlayers:", gameOptions.minPlayers);
+            console.log("  maxPlayers:", gameOptions.maxPlayers);
             
             // Use the createTable function from the hook
             const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
@@ -485,10 +506,10 @@ const Dashboard: React.FC = () => {
     // Memoized Create Table callback
     const handleCreateTableClick = useCallback(() => {
         // Reset modal values to defaults when opening
-        setModalGameType(GameType.CASH);
-        setModalMinBuyIn(1);
+        setModalGameType(GameType.SIT_AND_GO);
+        setModalMinBuyIn(10);
         setModalMaxBuyIn(100);
-        setModalSitAndGoBuyIn(10);
+        setModalSitAndGoBuyIn(1);
         setModalPlayerCount(4);
         setShowCreateGameModal(true);
     }, []);
@@ -717,9 +738,9 @@ const Dashboard: React.FC = () => {
                                             onChange={e => setModalGameType(e.target.value as GameType)}
                                             className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                         >
+                                            <option value={GameType.SIT_AND_GO}>Sit & Go</option>
                                             <option value={GameType.CASH}>Cash Game</option>
                                             <option value={GameType.TOURNAMENT}>Tournament</option>
-                                            <option value={GameType.SIT_AND_GO}>Sit & Go</option>
                                         </select>
                                     </div>
 
@@ -744,8 +765,8 @@ const Dashboard: React.FC = () => {
                                                 type="number"
                                                 value={modalSitAndGoBuyIn}
                                                 onChange={e => setModalSitAndGoBuyIn(Number(e.target.value))}
-                                                min="1"
-                                                max="1000"
+                                                min="10"
+                                                max="10"
                                                 className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                             />
                                             <p className="text-xs text-gray-400 mt-1">All players pay the same entry fee</p>
@@ -1130,26 +1151,43 @@ const Dashboard: React.FC = () => {
                                                 <div>
                                                     <p className="text-gray-300 text-xs">
                                                         Texas Hold'em 
-                                                        {game.gameOptions?.minPlayers && game.gameOptions?.maxPlayers && (
+                                                        {game.gameOptions?.maxPlayers && (
                                                             <span className="ml-1">
-                                                                ({game.gameOptions.minPlayers === 2 ? "Heads Up" : 
-                                                                  game.gameOptions.minPlayers === 6 ? "6-Max" : 
-                                                                  game.gameOptions.minPlayers === 9 ? "Full Ring" : 
-                                                                  `${game.gameOptions.minPlayers} Players`})
+                                                                ({playerCounts.get(game.address)?.currentPlayers || 0}/{game.gameOptions.maxPlayers} Players)
                                                             </span>
                                                         )}
                                                     </p>
                                                     <p className="text-gray-500 text-xs font-mono mb-1">{formatAddress(game.address)}</p>
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                            Min: ${game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0" ? formatBalance(game.gameOptions.minBuyIn) : "1.00"}
-                                                        </span>
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                            Max: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "100.00"}
-                                                        </span>
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                            Blinds: ${game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0" ? formatBalance(game.gameOptions.smallBlind) : "0.50"}/${game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0" ? formatBalance(game.gameOptions.bigBlind) : "1.00"}
-                                                        </span>
+                                                        {/* Check if it's a Sit & Go (minBuyIn equals maxBuyIn) */}
+                                                        {game.gameOptions?.type === GameType.SIT_AND_GO || 
+                                                         (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn && 
+                                                          game.gameOptions?.smallBlind === "100000000000000000000" && 
+                                                          game.gameOptions?.bigBlind === "200000000000000000000") ? (
+                                                            <>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Buy-in: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "1.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Blinds: 100/200
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.accent.success }}>
+                                                                    10,000 tokens
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Min: ${game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0" ? formatBalance(game.gameOptions.minBuyIn) : "1.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Max: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "100.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Blinds: ${game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0" ? formatBalance(game.gameOptions.smallBlind) : "0.50"}/${game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0" ? formatBalance(game.gameOptions.bigBlind) : "1.00"}
+                                                                </span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

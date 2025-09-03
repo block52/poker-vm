@@ -2,6 +2,7 @@ import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
 import { IAction, Range } from "../../types";
+import { ethers } from "ethers";
 
 class JoinAction extends BaseAction implements IAction {
     get type(): NonPlayerActionType {
@@ -34,10 +35,12 @@ class JoinAction extends BaseAction implements IAction {
         // Check if the amount is within the valid range
         const buyIn = amount || 0n;
         if (buyIn < range.minAmount || buyIn > range.maxAmount) {
-            throw new Error("Player does not have enough or too many chips to join.");
+            throw new Error("Player does not have enough funds to cover the buy-in.");
         }
 
-        // Todo: convert buyIn to the appropriate amount of chips
+        // For testing purposes, we give the player 10,000 chips
+        const chips = ethers.parseEther("10000");
+        player.chips = chips;
 
         // Find an available seat or use the requested one
         const seat: number = this.getSeat(data);
@@ -50,7 +53,7 @@ class JoinAction extends BaseAction implements IAction {
                 playerId: player.address,
                 action: NonPlayerActionType.JOIN,
                 index: index,
-                amount: buyIn
+                amount: chips
             },
             seat.toString()
         );
@@ -85,32 +88,6 @@ class JoinAction extends BaseAction implements IAction {
 
         return seat;
     }
-
-    // private getSeat(): number {
-    //     // Find an available seat or use the requested one
-    //     let seat: number = 1;
-    //     // get all available seats
-    //     const availableSeats = this.game.getAvailableSeats();
-
-    //     // If all seats are occupied, throw an error
-    //     if (availableSeats.length === 0)
-    //         throw new Error("No available seats to join.");
-
-    //     if (availableSeats.length === 1) {
-    //         seat = availableSeats[0];
-    //     }
-
-    //     // Choose randomly from the available seats
-    //     const randomIndex = Math.floor(Math.random() * availableSeats.length);
-    //     seat = availableSeats[randomIndex];
-
-    //     // Validate the seat number, ensuring it's a valid integer
-    //     if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {
-    //         throw new Error(`Invalid seat number: ${seat}`);
-    //     }
-
-    //     return seat;
-    // }
 }
 
 export default JoinAction;
