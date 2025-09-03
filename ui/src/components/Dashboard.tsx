@@ -175,10 +175,10 @@ const Dashboard: React.FC = () => {
     const [selectedContractAddress, setSelectedContractAddress] = useState("0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7");
     const [createGameError, setCreateGameError] = useState("");
     // Modal game options
-    const [modalGameType, setModalGameType] = useState<GameType>(GameType.CASH);
+    const [modalGameType, setModalGameType] = useState<GameType>(GameType.SIT_AND_GO);
     const [modalMinBuyIn, setModalMinBuyIn] = useState(10);
     const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
-    const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(10); // Single buy-in for Sit & Go
+    const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
     const [modalPlayerCount, setModalPlayerCount] = useState(4);
 
     // Buy In Modal
@@ -292,15 +292,31 @@ const Dashboard: React.FC = () => {
         try {
             // Build game options from modal selections
             // For Sit & Go/Tournament, use the same value for min and max buy-in
-            // const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
+            const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
+            
+            // Log the modal values before creating game options
+            console.log("🎲 Modal Values:");
+            console.log("  Game Type:", modalGameType);
+            console.log("  Min Buy-In:", modalMinBuyIn);
+            console.log("  Max Buy-In:", modalMaxBuyIn);
+            console.log("  Sit & Go Buy-In:", modalSitAndGoBuyIn);
+            console.log("  Player Count:", modalPlayerCount);
+            console.log("  Is Tournament:", isTournament);
 
             const gameOptions: CreateTableOptions = {
                 type: modalGameType,
-                minBuyIn: modalMinBuyIn,
-                maxBuyIn: modalMaxBuyIn,
+                minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
+                maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
                 minPlayers: modalPlayerCount,
                 maxPlayers: modalPlayerCount
             };
+            
+            console.log("📦 Final CreateTableOptions being sent to SDK:");
+            console.log("  type:", gameOptions.type);
+            console.log("  minBuyIn:", gameOptions.minBuyIn);
+            console.log("  maxBuyIn:", gameOptions.maxBuyIn);
+            console.log("  minPlayers:", gameOptions.minPlayers);
+            console.log("  maxPlayers:", gameOptions.maxPlayers);
             
             // Use the createTable function from the hook
             const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
@@ -485,10 +501,10 @@ const Dashboard: React.FC = () => {
     // Memoized Create Table callback
     const handleCreateTableClick = useCallback(() => {
         // Reset modal values to defaults when opening
-        setModalGameType(GameType.CASH);
+        setModalGameType(GameType.SIT_AND_GO);
         setModalMinBuyIn(10);
         setModalMaxBuyIn(100);
-        setModalSitAndGoBuyIn(10);
+        setModalSitAndGoBuyIn(1);
         setModalPlayerCount(4);
         setShowCreateGameModal(true);
     }, []);
@@ -717,9 +733,9 @@ const Dashboard: React.FC = () => {
                                             onChange={e => setModalGameType(e.target.value as GameType)}
                                             className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                         >
+                                            <option value={GameType.SIT_AND_GO}>Sit & Go</option>
                                             <option value={GameType.CASH}>Cash Game</option>
                                             <option value={GameType.TOURNAMENT}>Tournament</option>
-                                            <option value={GameType.SIT_AND_GO}>Sit & Go</option>
                                         </select>
                                     </div>
 

@@ -87,6 +87,12 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         const maxFormatted = formatWeiToSimpleDollars(maxBuyInWei);
         const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
 
+        console.log("💵 BuyInModal - Buy-in limits:");
+        console.log("  minBuyInWei:", minBuyInWei);
+        console.log("  maxBuyInWei:", maxBuyInWei);
+        console.log("  minFormatted:", minFormatted);
+        console.log("  maxFormatted:", maxFormatted);
+
         // Calculate stake label
         const bigBlind = parseFloat(maxFormatted) / 100;
         const smallBlind = bigBlind / 2;
@@ -251,6 +257,12 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 amount: buyInWei.toString(),
                 seatNumber: undefined // Let the server handle random seat assignment
             };
+
+            console.log("💰 BuyInModal - Join attempt:");
+            console.log("  buyInAmount (input):", buyInAmount);
+            console.log("  buyInWei (bigint):", buyInWei.toString());
+            console.log("  joinOptions.amount:", joinOptions.amount);
+            console.log("  tableId:", tableId);
 
             joinTable(tableId || ethers.ZeroAddress, joinOptions);
 

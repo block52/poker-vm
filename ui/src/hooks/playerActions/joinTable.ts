@@ -13,8 +13,12 @@ export async function joinTable(tableId: string, options: JoinTableOptions): Pro
     // Get the singleton client instance
     const client = getClient();
 
-    console.log("🎮 Join table attempt");
-    console.log("🎮 Buy-in amount:", options.amount);
+    console.log("🎮 joinTable hook - Full details:");
+    console.log("  tableId:", tableId);
+    console.log("  options.amount (string):", options.amount);
+    console.log("  options.seatNumber:", options.seatNumber);
+    console.log("  amount type:", typeof options.amount);
+    console.log("  amount length:", options.amount.length);
 
     // Use the client's playerJoin method (let SDK handle nonce internally)
     if (!tableId) {
@@ -23,20 +27,33 @@ export async function joinTable(tableId: string, options: JoinTableOptions): Pro
 
     // If seatNumber is not provided, default to 0
     if (options.seatNumber === undefined || options.seatNumber === null) {
+        console.log("🎮 Calling SDK playerJoinRandomSeat with:");
+        console.log("  tableId:", tableId);
+        console.log("  amount:", options.amount);
+        
+        // DEBUG: Let's see what the SDK method looks like
+        console.log("🔍 SDK client methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(client)));
+        console.log("🔍 playerJoinRandomSeat type:", typeof client.playerJoinRandomSeat);
+        
         const response = await client.playerJoinRandomSeat(
             tableId,
             options.amount
         );
-        console.log("🎮 Join table response:", response);
+        console.log("🎮 SDK playerJoinRandomSeat response:", response);
         return response;
     }
 
+    console.log("🎮 Calling SDK playerJoin with:");
+    console.log("  tableId:", tableId);
+    console.log("  amount:", options.amount);
+    console.log("  seatNumber:", options.seatNumber);
+    
     const response = await client.playerJoin(
         tableId,
         options.amount,
         options.seatNumber
     );
 
-    console.log("🎮 Join table response:", response);
+    console.log("🎮 SDK playerJoin response:", response);
     return response;
 }
