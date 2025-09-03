@@ -279,12 +279,12 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                         </div>
                     )}
 
-                    {/* Available Seats */}
+                    {/* Players Joined */}
                     <div className="mb-6 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
                         <div className="text-center">
-                            <div className="text-xs text-blue-300 font-semibold mb-1">SEATS AVAILABLE</div>
+                            <div className="text-xs text-blue-300 font-semibold mb-1">PLAYERS JOINED</div>
                             <div className="text-lg text-white font-bold">
-                                {emptySeatIndexes.length} / {gameOptions?.maxPlayers || 0}
+                                {(gameOptions?.maxPlayers || 0) - emptySeatIndexes.length} / {gameOptions?.maxPlayers || 0} Players
                             </div>
                         </div>
                     </div>
