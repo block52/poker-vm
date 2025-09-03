@@ -13,6 +13,7 @@ import { useSitAndGoPlayerJoinRandomSeat } from "../../hooks/useSitAndGoPlayerJo
 import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, hexToRgba } from "../../utils/colorConfig";
+import { useGameStateContext } from "../../context/GameStateContext";
 
 interface SitAndGoAutoJoinModalProps {
     tableId: string;
@@ -30,7 +31,10 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
     const { emptySeatIndexes, isUserAlreadyPlaying } = useVacantSeatData();
     
     // Use the Sit & Go specific join hook with random seat selection
-    const { joinSitAndGo, isJoining, error: joinError } = useSitAndGoPlayerJoinRandomSeat();
+    const { joinSitAndGo, isJoining } = useSitAndGoPlayerJoinRandomSeat();
+    
+    // Get the game state context to force refresh after joining
+    const { subscribeToTable, gameState } = useGameStateContext();
     
     // Get publicKey once
     const publicKey = useMemo(() => localStorage.getItem("user_eth_public_key") || undefined, []);
@@ -153,24 +157,33 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                 // No need to specify seat - SDK will pick randomly
             });
             
-            console.log("✅ Join successful - NOT refreshing page for debugging");
+            console.log("✅ Join successful - updating UI");
             
-            // TEMPORARILY COMMENTED OUT TO SEE LOGS
             // Mark as joined and notify parent
-            // setHasJoined(true);
+            setHasJoined(true);
             
             // Store buy-in info in localStorage for the table component
             localStorage.setItem("buy_in_amount", maxBuyInFormatted);
             localStorage.setItem("wait_for_big_blind", JSON.stringify(false));
             
-            // TEMPORARILY COMMENTED OUT TO PREVENT REFRESH
-            // Small delay then close
-            // setTimeout(() => {
-            //     onJoinSuccess();
-            // }, 500);
+            // Force a re-subscription to get the latest state
+            console.log("🔄 Re-subscribing to table for fresh state");
+            subscribeToTable(tableId);
             
-            console.log("🔍 Check console for all join attempt logs above");
-            setBuyInError("Join attempted - check console for logs");
+            // Small delay to allow backend to process and state to update
+            setTimeout(() => {
+                console.log("🔄 Closing modal and triggering parent refresh");
+                onJoinSuccess();
+                
+                // Fallback: If state still not updated, force reload
+                setTimeout(() => {
+                    // Check if we have players in the game state
+                    if (!gameState?.players || gameState.players.length === 0) {
+                        console.log("⚠️ State not updated after 3 seconds, forcing reload");
+                        window.location.reload();
+                    }
+                }, 3000);
+            }, 1500);
         } catch (error: any) {
             console.error("❌ Failed to join Sit & Go:", error);
             setBuyInError(error.message || "Failed to join table");
