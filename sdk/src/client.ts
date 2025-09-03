@@ -642,7 +642,6 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
-
     /**
      * Withdraw funds from an account
      * @param amount The amount to withdraw
@@ -757,17 +756,17 @@ export class NodeRpcClient implements IClient {
 
     public static generateRandomSequence(length: number = 52): string {
         // Create an array to store our random digits
-        const digits = Array.from({length: length}, (_, i) => i + 1);
+        const digits = Array.from({ length: length }, (_, i) => i + 1);
 
         // Step 2: Use Fisher-Yates shuffle with crypto.getRandomValues()
         for (let i = digits.length - 1; i > 0; i--) {
             // Generate a cryptographically secure random number
             const randomArray = new Uint32Array(1);
             crypto.getRandomValues(randomArray);
-            
+
             // Convert to index in range [0, i]
-            const j = Math.floor((randomArray[0] / (2**32)) * (i + 1));
-            
+            const j = Math.floor((randomArray[0] / (2 ** 32)) * (i + 1));
+
             // Swap elements
             [digits[i], digits[j]] = [digits[j], digits[i]];
         }

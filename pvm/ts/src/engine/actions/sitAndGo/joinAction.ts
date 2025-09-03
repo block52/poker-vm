@@ -85,32 +85,6 @@ class JoinAction extends BaseAction {
 
         return seat;
     }
-
-    // private getSeat(): number {
-    //     // Find an available seat or use the requested one
-    //     let seat: number = 1;
-    //     // get all available seats
-    //     const availableSeats = this.game.getAvailableSeats();
-
-    //     // If all seats are occupied, throw an error
-    //     if (availableSeats.length === 0)
-    //         throw new Error("No available seats to join.");
-
-    //     if (availableSeats.length === 1) {
-    //         seat = availableSeats[0];
-    //     }
-
-    //     // Choose randomly from the available seats
-    //     const randomIndex = Math.floor(Math.random() * availableSeats.length);
-    //     seat = availableSeats[randomIndex];
-
-    //     // Validate the seat number, ensuring it's a valid integer
-    //     if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {
-    //         throw new Error(`Invalid seat number: ${seat}`);
-    //     }
-
-    //     return seat;
-    // }
 }
 
 export default JoinAction;
