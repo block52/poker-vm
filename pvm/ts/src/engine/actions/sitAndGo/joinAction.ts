@@ -38,15 +38,14 @@ class JoinAction extends BaseAction implements IAction {
             throw new Error("Player does not have enough funds to cover the buy-in.");
         }
 
-        // Todo: convert buyIn to the appropriate amount of chips
+        // For testing purposes, we give the player 10,000 chips
+        const chips = ethers.parseEther("10000");
+        player.chips = chips;
 
         // Find an available seat or use the requested one
         const seat: number = this.getSeat(data);
         this.game.joinAtSeat(player, seat);
         this.game.dealerManager.handlePlayerJoin(seat);
-
-        // For testing purposes, we give the player 10,000 chips
-        const chips = ethers.parseEther("10000");
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(
