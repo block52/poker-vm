@@ -175,14 +175,15 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                 console.log("🔄 Closing modal and triggering parent refresh");
                 onJoinSuccess();
                 
-                // Fallback: If state still not updated, force reload
-                setTimeout(() => {
-                    // Check if we have players in the game state
-                    if (!gameState?.players || gameState.players.length === 0) {
-                        console.log("⚠️ State not updated after 3 seconds, forcing reload");
-                        window.location.reload();
-                    }
-                }, 3000);
+                // COMMENTED OUT: Fallback refresh after 3 seconds
+                // This was causing unwanted page refreshes even when join was successful
+                // setTimeout(() => {
+                //     // Check if we have players in the game state
+                //     if (!gameState?.players || gameState.players.length === 0) {
+                //         console.log("⚠️ State not updated after 3 seconds, forcing reload");
+                //         window.location.reload();
+                //     }
+                // }, 3000);
             }, 1500);
         } catch (error: any) {
             console.error("❌ Failed to join Sit & Go:", error);
@@ -278,12 +279,12 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                         </div>
                     )}
 
-                    {/* Available Seats */}
+                    {/* Players Joined */}
                     <div className="mb-6 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
                         <div className="text-center">
-                            <div className="text-xs text-blue-300 font-semibold mb-1">SEATS AVAILABLE</div>
+                            <div className="text-xs text-blue-300 font-semibold mb-1">PLAYERS JOINED</div>
                             <div className="text-lg text-white font-bold">
-                                {emptySeatIndexes.length} / {gameOptions?.maxPlayers || 0}
+                                {(gameOptions?.maxPlayers || 0) - emptySeatIndexes.length} / {gameOptions?.maxPlayers || 0} Players
                             </div>
                         </div>
                     </div>

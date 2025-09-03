@@ -115,6 +115,28 @@ export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefine
     }
 };
 
+/**
+ * Format stack values for Sit & Go tournaments
+ * Shows whole numbers with comma separators, no dollar sign
+ * @param value The stack value as a number
+ * @returns Formatted string like "10,000" or "1,500"
+ */
+export const formatForSitAndGo = (value: number): string => {
+    // Round to whole number and add comma separators
+    return Math.floor(value).toLocaleString("en-US");
+};
+
+/**
+ * Format stack values for Cash Games
+ * Shows with dollar sign and 2 decimal places
+ * @param value The stack value as a number
+ * @returns Formatted string like "$100.00" or "$25.50"
+ */
+export const formatForCashGame = (value: number): string => {
+    // Format with 2 decimal places and dollar sign
+    return `$${value.toFixed(2)}`;
+};
+
 // Format chip amounts that are stored in Wei format but represent USDC values
 //
 // The poker system stores chip amounts in Wei format (18 decimals) internally,
