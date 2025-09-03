@@ -175,14 +175,15 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                 console.log("🔄 Closing modal and triggering parent refresh");
                 onJoinSuccess();
                 
-                // Fallback: If state still not updated, force reload
-                setTimeout(() => {
-                    // Check if we have players in the game state
-                    if (!gameState?.players || gameState.players.length === 0) {
-                        console.log("⚠️ State not updated after 3 seconds, forcing reload");
-                        window.location.reload();
-                    }
-                }, 3000);
+                // COMMENTED OUT: Fallback refresh after 3 seconds
+                // This was causing unwanted page refreshes even when join was successful
+                // setTimeout(() => {
+                //     // Check if we have players in the game state
+                //     if (!gameState?.players || gameState.players.length === 0) {
+                //         console.log("⚠️ State not updated after 3 seconds, forcing reload");
+                //         window.location.reload();
+                //     }
+                // }, 3000);
             }, 1500);
         } catch (error: any) {
             console.error("❌ Failed to join Sit & Go:", error);
