@@ -1,5 +1,8 @@
 import React from "react";
 import { usePlayerActionDropBox, PlayerActionDisplay } from "../../../hooks/usePlayerActionDropBox";
+import { useGameOptions } from "../../../hooks/useGameOptions";
+import { GameType } from "@bitcoinbrisbane/block52";
+import { formatForSitAndGo, formatForCashGame } from "../../../utils/numberUtils";
 import "./Badge.css";
 
 // Action display component moved into Badge
@@ -55,8 +58,14 @@ type BadgeProps = {
 };
 
 const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend, onExtend }) => {
-    // Format the value to always show 2 decimal places
-    const formattedValue = value.toFixed(2);
+    // Get game options to determine if it's a Sit & Go
+    const { gameOptions } = useGameOptions();
+    const isSitAndGo = gameOptions?.type === GameType.SIT_AND_GO;
+    
+    // Format the value based on game type using clean utility functions
+    const formattedValue = isSitAndGo 
+        ? formatForSitAndGo(value)  // Returns "10,000" format
+        : formatForCashGame(value);  // Returns "$100.00" format
     
     // Get action display data for this player
     const actionDisplay = usePlayerActionDropBox(count);
@@ -66,7 +75,9 @@ const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend
             <div style={{ backgroundColor: color }} className="badge-number">
                 {count}
             </div>
-            <div className="badge-value">${formattedValue}</div>
+            <div className="badge-value">
+                {formattedValue}
+            </div>
 
             {/* Player Action Drop Box - positioned below the price */}
             <ActionDisplay 
