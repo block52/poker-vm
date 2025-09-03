@@ -26,6 +26,7 @@ import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hoo
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
 import { CreateTableOptions, useNewTable } from "../hooks/useNewTable"; // Import useNewTable hook
+import { useTablePlayerCounts } from "../hooks/useTablePlayerCounts"; // Import useTablePlayerCounts hook
 
 // Password protection utils
 import { 
@@ -158,6 +159,10 @@ const Dashboard: React.FC = () => {
     
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
+    
+    // Get player counts for all games
+    const gameAddresses = useMemo(() => games.map(g => g.address), [games]);
+    const { playerCounts } = useTablePlayerCounts(gameAddresses);
 
     // Add useAccount hook to get account nonce
     const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
@@ -1146,26 +1151,43 @@ const Dashboard: React.FC = () => {
                                                 <div>
                                                     <p className="text-gray-300 text-xs">
                                                         Texas Hold'em 
-                                                        {game.gameOptions?.minPlayers && game.gameOptions?.maxPlayers && (
+                                                        {game.gameOptions?.maxPlayers && (
                                                             <span className="ml-1">
-                                                                ({game.gameOptions.minPlayers === 2 ? "Heads Up" : 
-                                                                  game.gameOptions.minPlayers === 6 ? "6-Max" : 
-                                                                  game.gameOptions.minPlayers === 9 ? "Full Ring" : 
-                                                                  `${game.gameOptions.minPlayers} Players`})
+                                                                ({playerCounts.get(game.address)?.currentPlayers || 0}/{game.gameOptions.maxPlayers} Players)
                                                             </span>
                                                         )}
                                                     </p>
                                                     <p className="text-gray-500 text-xs font-mono mb-1">{formatAddress(game.address)}</p>
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                            Min: ${game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0" ? formatBalance(game.gameOptions.minBuyIn) : "1.00"}
-                                                        </span>
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                            Max: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "100.00"}
-                                                        </span>
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                            Blinds: ${game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0" ? formatBalance(game.gameOptions.smallBlind) : "0.50"}/${game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0" ? formatBalance(game.gameOptions.bigBlind) : "1.00"}
-                                                        </span>
+                                                        {/* Check if it's a Sit & Go (minBuyIn equals maxBuyIn) */}
+                                                        {game.gameOptions?.type === GameType.SIT_AND_GO || 
+                                                         (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn && 
+                                                          game.gameOptions?.smallBlind === "100000000000000000000" && 
+                                                          game.gameOptions?.bigBlind === "200000000000000000000") ? (
+                                                            <>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Buy-in: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "1.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Blinds: 100/200
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.accent.success }}>
+                                                                    10,000 tokens
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Min: ${game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0" ? formatBalance(game.gameOptions.minBuyIn) : "1.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Max: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "100.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Blinds: ${game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0" ? formatBalance(game.gameOptions.smallBlind) : "0.50"}/${game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0" ? formatBalance(game.gameOptions.bigBlind) : "1.00"}
+                                                                </span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
