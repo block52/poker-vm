@@ -1,10 +1,10 @@
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
-import { Range } from "../../types";
+import { IAction, Range } from "../../types";
 import { ethers } from "ethers";
 
-class JoinAction extends BaseAction {
+class JoinAction extends BaseAction implements IAction {
     get type(): NonPlayerActionType {
         return NonPlayerActionType.JOIN;
     }
@@ -35,7 +35,7 @@ class JoinAction extends BaseAction {
         // Check if the amount is within the valid range
         const buyIn = amount || 0n;
         if (buyIn < range.minAmount || buyIn > range.maxAmount) {
-            throw new Error("Player does not have enough or too many chips to join.");
+            throw new Error("Player does not have enough funds to cover the buy-in.");
         }
 
         // Todo: convert buyIn to the appropriate amount of chips
@@ -45,6 +45,7 @@ class JoinAction extends BaseAction {
         this.game.joinAtSeat(player, seat);
         this.game.dealerManager.handlePlayerJoin(seat);
 
+        // For testing purposes, we give the player 10,000 chips
         const chips = ethers.parseEther("10000");
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)

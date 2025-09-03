@@ -1,10 +1,10 @@
 import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
-import { Range } from "../../types";
+import { IAction, Range } from "../../types";
 import { PayoutManager } from "../../managers/payoutManager";
 
-class LeaveAction extends BaseAction {
+class LeaveAction extends BaseAction implements IAction {
     get type(): NonPlayerActionType {
         return NonPlayerActionType.LEAVE;
     }
