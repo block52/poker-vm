@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
+import { ethers } from "ethers";
 import { getClient } from "../utils/b52AccountUtils";
 
 interface SitAndGoJoinOptions {
     tableId: string;
-    amount: string;
+    amount: number;  // Changed from string to number - user input as dollars
 }
 
 interface UseSitAndGoPlayerJoinRandomSeatReturn {
@@ -14,6 +15,16 @@ interface UseSitAndGoPlayerJoinRandomSeatReturn {
 
 /**
  * Custom hook for joining Sit & Go games using the SDK's playerJoinRandomSeat method
+ * 
+ * AMOUNT HANDLING PATTERN:
+ * 1. INPUT: User inputs are received as numbers (e.g., 10 = $10 USDC)
+ * 2. CONVERSION IN HOOK: This hook converts the number to wei using ethers.parseEther()
+ *    Example: 10 becomes BigInt(10000000000000000000) 
+ * 3. STRING CONVERSION: BigInt is converted to string at the last moment before SDK call
+ *    Example: "10000000000000000000"
+ * 4. SDK TRANSMISSION: The SDK receives the string and passes it to the backend as-is
+ * 
+ * @param options.amount - The buy-in amount as a number in dollars (e.g., 1 for $1, 10 for $10)
  * @returns Object with joinSitAndGo function, loading state, and error
  */
 export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSeatReturn => {
@@ -30,26 +41,27 @@ export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSe
             
             console.log("🎮 [SIT & GO JOIN] Starting join process with random seat");
             console.log(`📍 Table ID: ${options.tableId}`);
-            console.log(`💰 Amount (raw): ${options.amount}`);
+            console.log(`💰 Amount (input as number): $${options.amount}`);
             
-            // For Sit & Go games, the amount should match exactly what backend expects
-            // If minBuyIn/maxBuyIn is "1", the backend expects exactly "1" not "1000000000000000000"
-            let finalAmount = options.amount;
+            // STEP 1: Receive amount as number (dollars)
+            const amountInDollars: number = options.amount;
+            console.log(`📊 Step 1 - User input: $${amountInDollars}`);
             
-            // Check if amount is in Wei format (18 digits) but backend expects simple "1"
-            if (options.amount === "1000000000000000000") {
-                console.log("⚠️ Detected Wei format for $1, converting to simple '1' for Sit & Go");
-                finalAmount = "1";
-            }
+            // STEP 2: Convert to BigInt with 18 decimals (wei)
+            const amountInWei: bigint = ethers.parseEther(amountInDollars.toString());
+            console.log(`📊 Step 2 - Converted to BigInt: ${amountInWei}n (${amountInWei.toString().length} digits)`);
             
-            console.log(`💸 Final amount to send: ${finalAmount}`);
+            // STEP 3: Convert BigInt to string only at the last moment for SDK
+            const amountAsString: string = amountInWei.toString();
+            console.log(`📊 Step 3 - Final string for SDK: "${amountAsString}"`);
+            console.log(`💸 Is this 1 ETH in wei? ${amountAsString === "1000000000000000000"}`);
             console.log("🎲 Using playerJoinRandomSeat - SDK will select available seat");
             
             // Call playerJoinRandomSeat from SDK - it will find an available seat automatically
             // The SDK method signature: playerJoinRandomSeat(gameAddress: string, amount: string, nonce?: number)
             const response = await client.playerJoinRandomSeat(
                 options.tableId,
-                finalAmount
+                amountAsString  // Pass the string representation of wei amount
                 // nonce is optional - SDK will handle it automatically
             );
             

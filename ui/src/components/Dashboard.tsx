@@ -292,15 +292,31 @@ const Dashboard: React.FC = () => {
         try {
             // Build game options from modal selections
             // For Sit & Go/Tournament, use the same value for min and max buy-in
-            // const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
+            const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
+            
+            // Log the modal values before creating game options
+            console.log("🎲 Modal Values:");
+            console.log("  Game Type:", modalGameType);
+            console.log("  Min Buy-In:", modalMinBuyIn);
+            console.log("  Max Buy-In:", modalMaxBuyIn);
+            console.log("  Sit & Go Buy-In:", modalSitAndGoBuyIn);
+            console.log("  Player Count:", modalPlayerCount);
+            console.log("  Is Tournament:", isTournament);
 
             const gameOptions: CreateTableOptions = {
                 type: modalGameType,
-                minBuyIn: modalMinBuyIn,
-                maxBuyIn: modalMaxBuyIn,
+                minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
+                maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
                 minPlayers: modalPlayerCount,
                 maxPlayers: modalPlayerCount
             };
+            
+            console.log("📦 Final CreateTableOptions being sent to SDK:");
+            console.log("  type:", gameOptions.type);
+            console.log("  minBuyIn:", gameOptions.minBuyIn);
+            console.log("  maxBuyIn:", gameOptions.maxBuyIn);
+            console.log("  minPlayers:", gameOptions.minPlayers);
+            console.log("  maxPlayers:", gameOptions.maxPlayers);
             
             // Use the createTable function from the hook
             const tableAddress = await createTable(publicKey, account.nonce, gameOptions);

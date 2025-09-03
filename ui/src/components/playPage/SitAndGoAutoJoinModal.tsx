@@ -1,3 +1,10 @@
+/**
+ * AMOUNT HANDLING PATTERN:
+ * - Components work with numbers (dollars): e.g., amount = 10 means $10
+ * - Hooks convert numbers to wei: ethers.parseEther(amount.toString())
+ * - SDK receives wei as strings: "10000000000000000000"
+ * - Backend expects wei values, not simple numbers
+ */
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useGameOptions } from "../../hooks/useGameOptions";
@@ -126,33 +133,44 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             }
             
             console.log("🎰 Sit & Go Join Attempt");
-            console.log(`📊 Game Options maxBuyIn: ${gameOptions.maxBuyIn}`);
+            console.log(`📊 Game Options maxBuyIn (wei): ${gameOptions.maxBuyIn}`);
             console.log("🎲 Will use random seat selection");
             
-            // For Sit & Go, if maxBuyIn is "1", send it as is
-            // The hook will handle the conversion if needed
-            const buyInAmount = gameOptions.maxBuyIn === "1" 
-                ? ethers.parseUnits("1", 18).toString() // Convert to Wei for the hook to detect and convert back
-                : gameOptions.maxBuyIn;
+            // STEP 1: Convert wei string from gameOptions back to dollar amount (number)
+            // gameOptions.maxBuyIn is in wei (e.g., "1000000000000000000" for $1)
+            const buyInAmountInWei = gameOptions.maxBuyIn;
+            const buyInAmountInDollars = parseFloat(ethers.formatEther(buyInAmountInWei));
             
-            // Use the Sit & Go specific join hook with playerJoinRandomSeat
+            console.log(`💰 Converting from gameOptions:`);
+            console.log(`   Wei string: "${buyInAmountInWei}"`);
+            console.log(`   Dollar amount: $${buyInAmountInDollars}`);
+            
+            // STEP 2: Pass the dollar amount (number) to the hook
+            // The hook will handle the conversion back to wei internally
             await joinSitAndGo({
                 tableId,
-                amount: buyInAmount
+                amount: buyInAmountInDollars  // Pass as number (dollars), not string (wei)
                 // No need to specify seat - SDK will pick randomly
             });
             
+            console.log("✅ Join successful - NOT refreshing page for debugging");
+            
+            // TEMPORARILY COMMENTED OUT TO SEE LOGS
             // Mark as joined and notify parent
-            setHasJoined(true);
+            // setHasJoined(true);
             
             // Store buy-in info in localStorage for the table component
             localStorage.setItem("buy_in_amount", maxBuyInFormatted);
             localStorage.setItem("wait_for_big_blind", JSON.stringify(false));
             
+            // TEMPORARILY COMMENTED OUT TO PREVENT REFRESH
             // Small delay then close
-            setTimeout(() => {
-                onJoinSuccess();
-            }, 500);
+            // setTimeout(() => {
+            //     onJoinSuccess();
+            // }, 500);
+            
+            console.log("🔍 Check console for all join attempt logs above");
+            setBuyInError("Join attempted - check console for logs");
         } catch (error: any) {
             console.error("❌ Failed to join Sit & Go:", error);
             setBuyInError(error.message || "Failed to join table");
@@ -216,10 +234,17 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                         
                         <div className="bg-gray-700/80 backdrop-blur-sm rounded-lg p-3 border border-blue-500/30">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400 text-sm">Blinds:</span>
+                                <span className="text-gray-400 text-sm">Starting Blinds:</span>
                                 <span className="text-white font-semibold">
-                                    ${smallBlindFormatted} / ${bigBlindFormatted}
+                                    {parseInt(smallBlindFormatted).toLocaleString()} / {parseInt(bigBlindFormatted).toLocaleString()}
                                 </span>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-gray-700/80 backdrop-blur-sm rounded-lg p-3 border border-green-500/30">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400 text-sm">Starting Stack:</span>
+                                <span className="text-green-400 font-semibold">10,000 tokens</span>
                             </div>
                         </div>
                         
