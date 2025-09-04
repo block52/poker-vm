@@ -1011,6 +1011,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             case PlayerActionType.CHECK:
                 new CheckAction(this, this._update).execute(player, index, 0n);
                 break;
+            case PlayerActionType.ALL_IN: // Should use bet from the SDK
+                const amount = player.chips;
+                new BetAction(this, this._update).execute(player, index, amount);
+                break;
             case PlayerActionType.BET:
                 new BetAction(this, this._update).execute(player, index, _amount);
                 break;
