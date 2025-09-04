@@ -237,3 +237,30 @@ describe("Texas Holdem - Winner", () => {
         expect(won).toBeTruthy();
     });
 });
+
+describe("Texas Holdem - Showdown", () => {
+
+    let game: TexasHoldemGame;
+
+    beforeEach(() => {
+        game = fromTestJson(test_json);
+    });
+
+    it("should not win with seven duce", () => {
+        expect(game).toBeDefined();
+
+        const cards = ["7S", "2C"];
+        const won: Boolean = game.findWinners(cards);
+
+        expect(won).toBeFalsy();
+    });
+
+    it("should not win with top set", () => {
+        expect(game).toBeDefined();
+
+        const cards = ["KC", "KD"];
+        const won: Boolean = game.findWinners(cards);
+
+        expect(won).toBeTruthy();
+    });
+});
