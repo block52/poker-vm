@@ -1,7 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import BaseAction from "./baseAction";
-import { Player } from "../../models/player";
-import { IAction, Range } from "../types";
+import BaseAction from "./../baseAction";
+import { Player } from "../../../models/player";
+import { IAction, Range } from "../../types";
 
 class SitOutAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.SIT_OUT }
