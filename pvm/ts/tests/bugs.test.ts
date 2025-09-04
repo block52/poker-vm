@@ -273,12 +273,15 @@ describe("Texas Holdem - Data driven", () => {
         it.only("should test bug 1103", () => {
             game = fromTestJson(test_1103);
 
+            // Player 4
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
-            // expect(nextToAct?.address).toEqual("0x4260E88e81E60113146092Fb9474b61C59f7552e");
+            expect(nextToAct?.address).not.toEqual("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C");
 
             const legalActions = game.getLegalActions("0x4260E88e81E60113146092Fb9474b61C59f7552e");
             expect(legalActions).toBeDefined();
+
+            game.performAction("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C", PlayerActionType.CHECK, 0, ONE_TOKEN);
         });
     });
 });
