@@ -1,8 +1,6 @@
-import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 
-import { ethers } from "ethers";
-import { baseGameConfig, fromTestJson, gameOptions } from "./testConstants";
+import { fromTestJson } from "./testConstants";
 
 const test_json = {
     "id": "1",
