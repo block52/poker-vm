@@ -59,7 +59,7 @@ class JoinAction extends BaseAction implements IAction {
         );
     }
 
-    private getSeat(data: string): number {
+    private getSeat(data?: string): number {
         if (!data) {
             throw new Error("Invalid seat data.");
         }

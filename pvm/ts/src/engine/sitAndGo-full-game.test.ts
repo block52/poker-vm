@@ -121,7 +121,13 @@ describe("Sit and Go - Full Game", () => {
 
             // Simulate some early game action - conservative play
             game.performAction(seatMap[3], PlayerActionType.FOLD, 10);
+            let previousActions = game.getPreviousActions();
+            expect(previousActions.length).toBe(10);
+
             game.performAction(seatMap[4], PlayerActionType.ALL_IN, 11);
+            previousActions = game.getPreviousActions();
+            expect(previousActions.length).toBe(11);
+
             game.performAction(seatMap[5], PlayerActionType.ALL_IN, 12);
             game.performAction(seatMap[6], PlayerActionType.ALL_IN, 13);
             game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14);
