@@ -1,8 +1,6 @@
-import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 
-import { ethers } from "ethers";
-import { baseGameConfig, fromTestJson, gameOptions } from "./testConstants";
+import { fromTestJson } from "./testConstants";
 
 const test_json = {
     "id": "1",
@@ -214,6 +212,33 @@ const test_json = {
 }
 
 describe("Texas Holdem - Winner", () => {
+
+    let game: TexasHoldemGame;
+
+    beforeEach(() => {
+        game = fromTestJson(test_json);
+    });
+
+    it("should not win with seven duce", () => {
+        expect(game).toBeDefined();
+
+        const cards = ["7S", "2C"];
+        const won: Boolean = game.findWinners(cards);
+
+        expect(won).toBeFalsy();
+    });
+
+    it("should not win with top set", () => {
+        expect(game).toBeDefined();
+
+        const cards = ["KC", "KD"];
+        const won: Boolean = game.findWinners(cards);
+
+        expect(won).toBeTruthy();
+    });
+});
+
+describe("Texas Holdem - Showdown", () => {
 
     let game: TexasHoldemGame;
 

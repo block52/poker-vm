@@ -2813,3 +2813,657 @@ export const test_1006 = {
         "signature": "0xbf01f13dd3c0346db8b9ab6f3ea719c05b566f29f5aee12e7cfeb53f944dad2d0ebd6bca8163aa0233c5eb0f471c504c79cfec0cfe08ddab495306e6a25f63fc1b"
     }
 }
+
+export const test_1103 = {
+    "id": "1",
+    "result": {
+        "data": {
+            "type": "sit-and-go",
+            "address": "0x6ccc2890cadc73b1711a60582111f4f05b72dc20",
+            "gameOptions": {
+                "minBuyIn": "1000000000000000000",
+                "maxBuyIn": "1000000000000000000",
+                "maxPlayers": 4,
+                "minPlayers": 4,
+                "smallBlind": "100000000000000000000",
+                "bigBlind": "200000000000000000000",
+                "timeout": 300000,
+                "type": "sit-and-go"
+            },
+            "smallBlindPosition": 2,
+            "bigBlindPosition": 3,
+            "dealer": 1,
+            "players": [
+                {
+                    "address": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "stack": "700000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "holeCards": [
+                        "??",
+                        "??"
+                    ],
+                    "status": "active",
+                    "lastAction": {
+                        "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                        "seat": 4,
+                        "action": "check",
+                        "amount": "0",
+                        "round": "flop",
+                        "index": 48,
+                        "timestamp": 1756872601801
+                    },
+                    "legalActions": [
+                        {
+                            "action": "fold",
+                            "min": "0",
+                            "max": "0",
+                            "index": 49
+                        },
+                        {
+                            "action": "check",
+                            "min": "0",
+                            "max": "0",
+                            "index": 49
+                        },
+                        {
+                            "action": "raise",
+                            "min": "700000000000000000000",
+                            "max": "700000000000000000000",
+                            "index": 49
+                        }
+                    ],
+                    "sumOfBets": "9500000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "stack": "9400000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": true,
+                    "isDealer": false,
+                    "holeCards": [
+                        "JS",
+                        "6C"
+                    ],
+                    "status": "folded",
+                    "lastAction": {
+                        "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                        "seat": 3,
+                        "action": "fold",
+                        "amount": "0",
+                        "round": "flop",
+                        "index": 44,
+                        "timestamp": 1756872556791
+                    },
+                    "legalActions": [
+                        {
+                            "action": "sit-out",
+                            "min": "0",
+                            "max": "0",
+                            "index": 49
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                    "seat": 1,
+                    "stack": "0",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": true,
+                    "holeCards": [
+                        "??",
+                        "??"
+                    ],
+                    "status": "all-in",
+                    "lastAction": {
+                        "playerId": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                        "seat": 1,
+                        "action": "all-in",
+                        "amount": "10200000000000000000000",
+                        "round": "flop",
+                        "index": 42,
+                        "timestamp": 1756872511770
+                    },
+                    "legalActions": [],
+                    "sumOfBets": "10200000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "stack": "0",
+                    "isSmallBlind": true,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "holeCards": [
+                        "??",
+                        "??"
+                    ],
+                    "status": "all-in",
+                    "lastAction": {
+                        "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                        "seat": 2,
+                        "action": "all-in",
+                        "amount": "9500000000000000000000",
+                        "round": "flop",
+                        "index": 43,
+                        "timestamp": 1756872511770
+                    },
+                    "legalActions": [],
+                    "sumOfBets": "9500000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ],
+            "communityCards": [
+                "QH",
+                "2S",
+                "KH"
+            ],
+            "deck": "7H-JS-KS-KD-5S-6C-8S-JH-9S-7S-9D-QH-2S-KH-[7D]-TS-AH-4S-4C-AS-6S-8H-3D-JD-AD-QS-2D-8D-5D-6H-5C-3S-QC-3H-2H-QD-TH-6D-TD-9H-KC-TC-2C-7C-8C-4H-9C-JC-5H-AC-4D-3C",
+            "pots": [
+                "29900000000000000000000"
+            ],
+            "lastActedSeat": 4,
+            "actionCount": 31,
+            "handNumber": 2,
+            "nextToAct": 4,
+            "previousActions": [
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "post-small-blind",
+                    "amount": "100000000000000000000",
+                    "round": "ante",
+                    "index": 32,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "post-big-blind",
+                    "amount": "200000000000000000000",
+                    "round": "ante",
+                    "index": 33,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "deal",
+                    "amount": "",
+                    "round": "ante",
+                    "index": 34,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "preflop",
+                    "index": 35,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                    "seat": 1,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "preflop",
+                    "index": 36,
+                    "timestamp": 1756872466782
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "fold",
+                    "amount": "",
+                    "round": "preflop",
+                    "index": 37,
+                    "timestamp": 1756872466782
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "check",
+                    "amount": "",
+                    "round": "preflop",
+                    "index": 38,
+                    "timestamp": 1756872481776
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 39,
+                    "timestamp": 1756872481776
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 40,
+                    "timestamp": 1756872496755
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 41,
+                    "timestamp": 1756872511770
+                },
+                {
+                    "playerId": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                    "seat": 1,
+                    "action": "all-in",
+                    "amount": "10200000000000000000000",
+                    "round": "flop",
+                    "index": 42,
+                    "timestamp": 1756872511770
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "all-in",
+                    "amount": "9500000000000000000000",
+                    "round": "flop",
+                    "index": 43,
+                    "timestamp": 1756872511770
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "fold",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 44,
+                    "timestamp": 1756872556791
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "call",
+                    "amount": "9500000000000000000000",
+                    "round": "flop",
+                    "index": 45,
+                    "timestamp": 1756872571770
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 46,
+                    "timestamp": 1756872571770
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 47,
+                    "timestamp": 1756872586766
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 48,
+                    "timestamp": 1756872601801
+                }
+            ],
+            "round": "flop",
+            "winners": [],
+            "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "signature": "0xe9a138076d48264c498393bcf62d6cc43d2ae788fbeafebd1dba2fe84f4d5ebf42ed4f6067a92a03a79a491cedcaae77c38ed28e59b841ea8d91067b7f4d81dc1c"
+    }
+}
+
+export const test_1103_modified = {
+    "id": "1",
+    "result": {
+        "data": {
+            "type": "sit-and-go",
+            "address": "0x6ccc2890cadc73b1711a60582111f4f05b72dc20",
+            "gameOptions": {
+                "minBuyIn": "1000000000000000000",
+                "maxBuyIn": "1000000000000000000",
+                "maxPlayers": 4,
+                "minPlayers": 4,
+                "smallBlind": "100000000000000000000",
+                "bigBlind": "200000000000000000000",
+                "timeout": 300000,
+                "type": "sit-and-go"
+            },
+            "smallBlindPosition": 2,
+            "bigBlindPosition": 3,
+            "dealer": 1,
+            "players": [
+                {
+                    "address": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "stack": "700000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "holeCards": [
+                        "??",
+                        "??"
+                    ],
+                    "status": "active",
+                    "lastAction": {
+                        "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                        "seat": 4,
+                        "action": "check",
+                        "amount": "0",
+                        "round": "flop",
+                        "index": 48,
+                        "timestamp": 1756872601801
+                    },
+                    "legalActions": [
+                        {
+                            "action": "fold",
+                            "min": "0",
+                            "max": "0",
+                            "index": 49
+                        },
+                        {
+                            "action": "check",
+                            "min": "0",
+                            "max": "0",
+                            "index": 49
+                        },
+                        {
+                            "action": "raise",
+                            "min": "700000000000000000000",
+                            "max": "700000000000000000000",
+                            "index": 49
+                        }
+                    ],
+                    "sumOfBets": "9500000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "stack": "9400000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": true,
+                    "isDealer": false,
+                    "holeCards": [
+                        "JS",
+                        "6C"
+                    ],
+                    "status": "folded",
+                    "lastAction": {
+                        "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                        "seat": 3,
+                        "action": "fold",
+                        "amount": "0",
+                        "round": "flop",
+                        "index": 44,
+                        "timestamp": 1756872556791
+                    },
+                    "legalActions": [
+                        {
+                            "action": "sit-out",
+                            "min": "0",
+                            "max": "0",
+                            "index": 49
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                    "seat": 1,
+                    "stack": "0",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": true,
+                    "holeCards": [
+                        "??",
+                        "??"
+                    ],
+                    "status": "all-in",
+                    "lastAction": {
+                        "playerId": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                        "seat": 1,
+                        "action": "all-in",
+                        "amount": "10200000000000000000000",
+                        "round": "flop",
+                        "index": 42,
+                        "timestamp": 1756872511770
+                    },
+                    "legalActions": [],
+                    "sumOfBets": "10200000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "stack": "0",
+                    "isSmallBlind": true,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "holeCards": [
+                        "??",
+                        "??"
+                    ],
+                    "status": "all-in",
+                    "lastAction": {
+                        "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                        "seat": 2,
+                        "action": "all-in",
+                        "amount": "9500000000000000000000",
+                        "round": "flop",
+                        "index": 43,
+                        "timestamp": 1756872511770
+                    },
+                    "legalActions": [],
+                    "sumOfBets": "9500000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ],
+            "communityCards": [
+                "QH",
+                "2S",
+                "KH"
+            ],
+            "deck": "7H-JS-KS-KD-5S-6C-8S-JH-9S-7S-9D-QH-2S-KH-[7D]-TS-AH-4S-4C-AS-6S-8H-3D-JD-AD-QS-2D-8D-5D-6H-5C-3S-QC-3H-2H-QD-TH-6D-TD-9H-KC-TC-2C-7C-8C-4H-9C-JC-5H-AC-4D-3C",
+            "pots": [
+                "29900000000000000000000"
+            ],
+            "lastActedSeat": 4,
+            "actionCount": 31,
+            "handNumber": 2,
+            "nextToAct": 4,
+            "previousActions": [
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "post-small-blind",
+                    "amount": "100000000000000000000",
+                    "round": "ante",
+                    "index": 32,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "post-big-blind",
+                    "amount": "200000000000000000000",
+                    "round": "ante",
+                    "index": 33,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "deal",
+                    "amount": "",
+                    "round": "ante",
+                    "index": 34,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "preflop",
+                    "index": 35,
+                    "timestamp": 1756872451787
+                },
+                {
+                    "playerId": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                    "seat": 1,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "preflop",
+                    "index": 36,
+                    "timestamp": 1756872466782
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "fold",
+                    "amount": "",
+                    "round": "preflop",
+                    "index": 37,
+                    "timestamp": 1756872466782
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "check",
+                    "amount": "",
+                    "round": "preflop",
+                    "index": 38,
+                    "timestamp": 1756872481776
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 39,
+                    "timestamp": 1756872481776
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 40,
+                    "timestamp": 1756872496755
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 41,
+                    "timestamp": 1756872511770
+                },
+                {
+                    "playerId": "0xc264FEDe83B081C089530BA0b8770C98266d058a",
+                    "seat": 1,
+                    "action": "all-in",
+                    "amount": "10200000000000000000000",
+                    "round": "flop",
+                    "index": 42,
+                    "timestamp": 1756872511770
+                },
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 2,
+                    "action": "all-in",
+                    "amount": "9500000000000000000000",
+                    "round": "flop",
+                    "index": 43,
+                    "timestamp": 1756872511770
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 3,
+                    "action": "fold",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 44,
+                    "timestamp": 1756872556791
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "call",
+                    "amount": "9500000000000000000000",
+                    "round": "flop",
+                    "index": 45,
+                    "timestamp": 1756872571770
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 46,
+                    "timestamp": 1756872571770
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 47,
+                    "timestamp": 1756872586766
+                },
+                {
+                    "playerId": "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 48,
+                    "timestamp": 1756872601801
+                }
+            ],
+            "round": "flop",
+            "winners": [],
+            "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "signature": "0xe9a138076d48264c498393bcf62d6cc43d2ae788fbeafebd1dba2fe84f4d5ebf42ed4f6067a92a03a79a491cedcaae77c38ed28e59b841ea8d91067b7f4d81dc1c"
+    }
+}

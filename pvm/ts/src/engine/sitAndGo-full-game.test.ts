@@ -62,6 +62,109 @@ describe("Sit and Go - Full Game", () => {
             console.log("=== PHASE 1: PLAYER REGISTRATION ===");
 
             // Players join the tournament
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
+            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5");
+
+            // Verify we're waiting for the last player
+            expect(game.getPlayerCount()).toBe(5);
+            const livePlayers = game.findLivePlayers();
+            const statusManager = new SitAndGoStatusManager(livePlayers, gameOptions);
+            expect(statusManager.getState()).toBe(GameStatus.WAITING_FOR_PLAYERS);
+
+            // Last player joins - tournament should be ready to start
+            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6");
+            expect(game.getPlayerCount()).toBe(6);
+
+            const finalLivePlayers = game.findLivePlayers();
+            const finalStatusManager = new SitAndGoStatusManager(finalLivePlayers, gameOptions);
+            expect(finalStatusManager.getState()).toBe(GameStatus.IN_PROGRESS);
+
+            // Verify all players have correct starting chips
+            const allPlayers = game.findLivePlayers();
+            allPlayers.forEach((player: Player) => {
+                expect(player.chips).toBe(10000000000000000000000n); // Chips not cash
+                expect(player.status).toBe(PlayerStatus.ACTIVE);
+            });
+
+            // As sit and go players are randomly seated, we need to create a mapping of player addresses to their seats
+            const seatMap: Record<number, string> = {};
+            for (let i = 1; i <= allPlayers.length; i++) {
+                const player = game.getPlayerAtSeat(i);
+                player && (seatMap[i] = player.address);
+            }
+
+            // Sanity check
+            expect(Object.keys(seatMap).length).toBe(6);
+
+            console.log("✓ All 6 players registered successfully");
+
+            // Phase 2: First Hand - Early Tournament Play
+            console.log("\n=== PHASE 2: EARLY TOURNAMENT PLAY ===");
+
+            // Start first hand
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+
+            // Post blinds (Player 1 = small blind, Player 2 = big blind)
+            game.performAction(seatMap[1], PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
+            game.performAction(seatMap[2], PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
+
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+            game.performAction(seatMap[3], NonPlayerActionType.DEAL, 9);
+            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+
+            // Action starts with Player 3 (UTG)
+            let nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct?.address).toBe(seatMap[3]);
+
+            // Simulate some early game action - conservative play
+            game.performAction(seatMap[3], PlayerActionType.FOLD, 10);
+            let previousActions = game.getPreviousActions();
+            expect(previousActions.length).toBe(10);
+
+            game.performAction(seatMap[4], PlayerActionType.ALL_IN, 11);
+            previousActions = game.getPreviousActions();
+            expect(previousActions.length).toBe(11);
+
+            game.performAction(seatMap[5], PlayerActionType.ALL_IN, 12);
+            game.performAction(seatMap[6], PlayerActionType.ALL_IN, 13);
+            game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14);
+            game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
+
+            // Verify pot size
+            expect(game.pot).toBeGreaterThan(0n);
+
+            // Round should be at show down
+            expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
+
+            const finalPlayers = game.findLivePlayers();
+            expect(finalPlayers.length).toBeLessThanOrEqual(3);
+            expect(finalPlayers.length).toBeGreaterThanOrEqual(1);
+
+            // Final verification
+            const winner = game.findLivePlayers();
+            expect(winner.length).toBe(1);
+
+            console.log(`\n🏆 TOURNAMENT WINNER: ${winner[0].address}`);
+            console.log("✓ Sit and Go tournament completed successfully!");
+
+            // Verify tournament integrity
+            expect(game.getPlayerCount()).toBe(1); // Only winner remains
+            expect(winner[0].status).toBe(PlayerStatus.ACTIVE);
+        });
+
+        it("should run a complete 6-player sit and go tournament", () => {
+            // Sanity checks
+            expect(game.getPlayerCount()).toBe(0);
+            expect(game.findLivePlayers().length).toBe(0);
+            expect(game.type).toBe(GameType.SIT_AND_GO);
+
+            // Phase 1: Player Registration
+            console.log("=== PHASE 1: PLAYER REGISTRATION ===");
+
+            // Players join the tournament
             game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
             game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
             game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS);
