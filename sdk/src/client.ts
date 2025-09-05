@@ -544,11 +544,10 @@ export class NodeRpcClient implements IClient {
                 throw new Error(`Illegal action: ${action}`);
             }
 
-            const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
+            const index = await this.getNextActionIndex(gameAddress, address);
 
             // Generate URLSearchParams formatted data
             const params = new URLSearchParams();
-            const encodedData = params.toString();
 
             // If data is provided, append it to the params
             if (data) {
@@ -557,6 +556,9 @@ export class NodeRpcClient implements IClient {
                     params.set(key, value);
                 }
             }
+
+            const encodedData = params.toString();
+            const signature = await this.getSignature(nonce, [address, gameAddress, action, amount, index, encodedData]);
 
             const { data: body } = await axios.post(this.url, {
                 id: this.getRequestId(),
@@ -586,7 +588,7 @@ export class NodeRpcClient implements IClient {
             nonce = await this.getNonce(gameAddress);
         }
 
-        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
+        const index = await this.getNextActionIndex(gameAddress, address);
 
         // Generate URLSearchParams formatted data
         const params = new URLSearchParams();
@@ -599,6 +601,7 @@ export class NodeRpcClient implements IClient {
         // If this is a tournament, the amount may be different than the value.
         // For example, a player may leave with 100 chips but the value is 50
         const amount = value; // The amount to leave with is the same as the value
+        const signature = await this.getSignature(nonce, [gameAddress, address, amount, encodedData]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -623,7 +626,7 @@ export class NodeRpcClient implements IClient {
             nonce = await this.getNonce(address);
         }
 
-        const [signature, index] = await Promise.all([this.getSignature(nonce), this.getNextActionIndex(gameAddress, address)]);
+        const index = await this.getNextActionIndex(gameAddress, address);
 
         // Generate URLSearchParams formatted data with publicKey information
         const params = new URLSearchParams();
@@ -631,6 +634,8 @@ export class NodeRpcClient implements IClient {
         params.set(KEYS.SEED, seed);
         params.set(KEYS.PUBLIC_KEY, publicKey);
         const encodedData = params.toString();
+
+        const signature = await this.getSignature(nonce, [address, gameAddress, NonPlayerActionType.DEAL, encodedData]);
 
         const { data: body } = await axios.post(this.url, {
             id: this.getRequestId(),
@@ -672,14 +677,31 @@ export class NodeRpcClient implements IClient {
         return body.result.data;
     }
 
-    public async getSignature(nonce: number, args?: string[]): Promise<string> {
+    public async getSignature(nonce: number, args?: unknown[]): Promise<string> {
         if (!this.wallet) {
             throw new Error("Cannot sign without a private key");
         }
 
         const timestamp = Math.floor(Date.now());
-        const paramsString = args ? args.join("-") : "";
+        const paramsString = args?.map((arg) => {
+            return String(arg);
+        }).join("-");
         const message = `${timestamp}-${nonce}-${paramsString}`;
+        const signature = await this.wallet.signMessage(message);
+        return signature;
+    }
+
+    public async signArguments(args?: unknown[]): Promise<string> {
+        if (!this.wallet) {
+            throw new Error("Cannot sign without a private key");
+        }
+
+        const timestamp = Math.floor(Date.now());
+        const paramsString = args?.map((arg) => {
+            return String(arg);
+        }).join("-");
+
+        const message = `${timestamp}-${paramsString}`;
         const signature = await this.wallet.signMessage(message);
         return signature;
     }
