@@ -22,8 +22,8 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
 
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("should enforce correct showdown behavior - first to act must show", () => {
@@ -68,8 +68,8 @@ describe("Texas Holdem - Call raise preflop", () => {
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         // Add minimum required players
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
 
         // Post blinds
         game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);

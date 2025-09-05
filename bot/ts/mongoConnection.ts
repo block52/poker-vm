@@ -14,13 +14,13 @@ class MongoDatabaseConnection {
     }
 
     public async connect(uri: string): Promise<void> {
-        // if (this.isConnected) {
-        //     return;
-        // }
+        if (this.isConnected) {
+            return;
+        }
 
         if (!uri) {
             console.error("No database connection string provided. Please set the DB_URL environment variable.");
-            process.exit(1);
+            return;
         }
 
         try {
@@ -29,7 +29,7 @@ class MongoDatabaseConnection {
             console.log(`MongoDB connected to ${uri}`);
         } catch (error) {
             console.error("Error connecting to database:", error);
-            process.exit(1);
+            return;
         }
 
         // Handle connection events

@@ -1,6 +1,6 @@
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
-import { Player } from "../models/player";
-import { IDealerGameInterface, IDealerPositionManager } from "./types";
+import { Player } from "../../models/player";
+import { IDealerGameInterface, IDealerPositionManager } from "../types";
 
 /**
  * Standalone dealer position manager that works with TexasHoldemGame instances
@@ -35,9 +35,26 @@ export class DealerPositionManager implements IDealerPositionManager {
         // Fallback: if no next player found, start from first active player
         const firstActivePlayer = activePlayers[0];
         const fallbackSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-        return fallbackSeat;
+        return fallbackSeat;``
     }
 
+    public getPosition(name: string): number {
+        switch (name.toLowerCase()) {
+            case "dealer":
+            case "d":
+                return this.getDealerPosition();
+            case "small blind":
+            case "small-blind":
+            case "sb":
+                return this.getSmallBlindPosition();
+            case "big blind":
+            case "big-blind":
+            case "bb":
+                return this.getBigBlindPosition();
+            default:
+                throw new Error(`Unknown position name: ${name}`);
+        }
+    }
     /**
      * Gets the current dealer position, initializing if necessary
      */
@@ -132,15 +149,15 @@ export class DealerPositionManager implements IDealerPositionManager {
      * Handles dealer position when a new player joins
      */
     public handlePlayerJoin(seat: number): void {
-        const activePlayers = this.game.findActivePlayers();
+        // const activePlayers = this.game.findActivePlayers();
 
-        if (activePlayers.length === 1) {
-            // First player becomes dealer by default
-            // this.setDealerPosition(newPlayerSeat);
-        } else if (activePlayers.length === this.game.minPlayers && !this.getCurrentDealerSeat()) {
-            // If somehow dealer wasn't set, initialize it
-        }
-        // For more players, dealer position doesn't change when someone joins
+        // if (activePlayers.length === 1) {
+        //     // First player becomes dealer by default
+        //     // this.setDealerPosition(newPlayerSeat);
+        // } else if (activePlayers.length === this.game.minPlayers && !this.getCurrentDealerSeat()) {
+        //     // If somehow dealer wasn't set, initialize it
+        // }
+        // // For more players, dealer position doesn't change when someone joins
     }
 
     /**

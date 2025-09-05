@@ -4,7 +4,7 @@
   "private": true,
   "proxy": "=https://paymentservice.texashodl.net",
   "dependencies": {
-    "@bitcoinbrisbane/block52": "1.0.150",
+    "@bitcoinbrisbane/block52": "1.2.12",
     "@reown/appkit": "1.6.7",
     "@reown/appkit-adapter-ethers": "1.6.7",
     "@reown/appkit-adapter-wagmi": "1.6.7",
@@ -25,11 +25,12 @@
     "react-devtools": "^6.1.2",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
-    "react-router-dom": "^7.0.2",
+    "react-router-dom": "^7.7.0",
     "react-toastify": "^10.0.6",
-    "swr": "^2.3.3",
+    "swr": "^2.3.4",
     "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss": "^3.4.14",
+    "unstorage": "^1.17.0",
     "uuid": "^11.1.0",
     "viem": "2.x",
     "wagmi": "^2.14.7"

@@ -3,6 +3,8 @@ import {
     Card,
     GameOptions,
     GameOptionsDTO,
+    GameStatus,
+    GameType,
     LegalActionDTO,
     NonPlayerActionType,
     PlayerActionType,
@@ -15,33 +17,40 @@ import {
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 
-// Import all action types
-import BetAction from "./actions/betAction";
-import BigBlindAction from "./actions/bigBlindAction";
-import CallAction from "./actions/callAction";
-import CheckAction from "./actions/checkAction";
-import DealAction from "./actions/dealAction";
-import FoldAction from "./actions/foldAction";
-import JoinAction from "./actions/joinAction";
-import LeaveAction from "./actions/leaveAction";
-import MuckAction from "./actions/muckAction";
-import RaiseAction from "./actions/raiseAction";
-import ShowAction from "./actions/showAction";
-import SmallBlindAction from "./actions/smallBlindAction";
-import SitOutAction from "./actions/sitOutAction";
+// Import all action types from the actions index
+import {
+    BetAction,
+    BigBlindAction,
+    CallAction,
+    CheckAction,
+    DealAction,
+    FoldAction,
+    JoinAction,
+    LeaveAction,
+    MuckAction,
+    NewHandAction,
+    RaiseAction,
+    ShowAction,
+    SmallBlindAction,
+    SitOutAction,
+    SitInAction
+} from "./actions";
+
+import JoinActionSitAndGo from "./actions/sitAndGo/joinAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
 import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
-import NewHandAction from "./actions/newHandAction";
-import { DealerPositionManager } from "./dealerManager";
-import { BetManager } from "./managers/betManager";
-
+import { DealerPositionManager } from "./managers/dealerManager";
+import { BetManager, CashGameBlindsManager } from "./managers/index";
+import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager";
+import { PayoutManager } from "./managers/payoutManager";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
     public readonly dealerManager: IDealerPositionManager;
+    private blindsManager: IBlindsManager;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
@@ -131,9 +140,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, ""),
             new SitOutAction(this, this._update),
+            new SitInAction(this, this._update),
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
+
+        switch (this.type) {
+            case GameType.SIT_AND_GO:
+            case GameType.TOURNAMENT: // Change once sit and go package is published
+                // Initialize Sit and Go specific managers if needed
+                // this.statusManager = new SitAndGoStatusManager(this.getSeatedPlayers(), this._gameOptions);
+                this.blindsManager = new SitAndGoBlindsManager(10, this._gameOptions);
+                break;
+            case GameType.CASH:
+            default:
+                this.blindsManager = new CashGameBlindsManager(this._gameOptions);
+                break;
+        }
     }
 
     // ==================== INITIALIZATION METHODS ====================
@@ -196,6 +219,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     // ==================== GAME STATE PROPERTIES ====================
+    get type(): GameType {
+        return this._gameOptions.type;
+    }
 
     // Core game state getters
     get players(): Map<number, Player | null> {
@@ -261,16 +287,18 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     get bigBlind(): bigint {
-        return this._gameOptions.bigBlind;
+        const { bigBlind } = this.blindsManager.getBlinds();
+        return bigBlind;
     }
 
     get smallBlind(): bigint {
-        return this._gameOptions.smallBlind;
+        const { smallBlind } = this.blindsManager.getBlinds();
+        return smallBlind;
     }
 
     // Position getters
     get dealerPosition(): number {
-        // get form dealer manager
+        // Do not get from the dealer manager, this creates a circular dependency!
         return this._dealer;
     }
 
@@ -365,6 +393,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Gets a player at a specific seat
      */
     getPlayerAtSeat(seat: number): Player | undefined {
+        console.log(`Getting player at seat ${seat}`);
         return this._playersMap.get(seat) ?? undefined;
     }
 
@@ -424,24 +453,26 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Adds a player to the game at a specific seat
      */
     joinAtSeat(player: Player, seat: number): void {
-        // Check if the player is already in the game
-        if (this.exists(player.address)) {
-            throw new Error("Player already joined.");
-        }
-
         // Ensure the seat is valid
         if (seat === -1) {
             throw new Error("Table full.");
         }
 
-        // Check buy-in limits
-        if (player.chips < this.minBuyIn || player.chips > this.maxBuyIn) {
-            throw new Error("Player does not have enough or too many chips to join.");
-        }
-
         // Add player to the table
         this._playersMap.set(seat, player);
         player.updateStatus(PlayerStatus.ACTIVE);
+    }
+
+    /**
+     * Removes a player from the game
+     */
+    removePlayer(playerAddress: string): void {
+        const seat = this.getPlayerSeatNumber(playerAddress);
+        if (seat === -1) {
+            throw new Error("Player not found.");
+        }
+
+        this._playersMap.delete(seat);
     }
 
     /**
@@ -467,21 +498,30 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Deals cards to all players
      */
     deal(): void {
-        // Check minimum players
-        if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
-            throw new Error("Not enough active players");
-        }
+        // // Check minimum players: TODO change this to use gameStatus
+        // if (this.getActivePlayerCount() < this._gameOptions.minPlayers) {
+        //     throw new Error("Not enough active players");
+        // }
+
+
+        // This is all done in the verify method of DealAction
 
         // Validate current round
         if (this.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Can only deal in preflop round.");
+            throw new Error("Can only deal in ante round.");
         }
 
-        // Check if cards have already been dealt
-        const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
-        if (anyPlayerHasCards) {
-            throw new Error("Cards have already been dealt for this hand.");
+        // Initialize blinds manager for Sit and Go
+        // Bit of a hack.  Another option would be to get the last join action timestamp
+        if (this.type === GameType.SIT_AND_GO) {
+            this.blindsManager = new SitAndGoBlindsManager(10, this._gameOptions, new Date());
         }
+
+        // // Check if cards have already been dealt
+        // const anyPlayerHasCards = this.getSeatedPlayers().some(p => p.holeCards !== undefined);
+        // if (anyPlayerHasCards) {
+        //     throw new Error("Cards have already been dealt for this hand.");
+        // }
 
         const players = this.getSeatedPlayers();
 
@@ -585,9 +625,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         actions.push(...this._rounds.get(round) || []);
 
         // Special logic for ante round - prioritize blind posting order
-        if (round === TexasHoldemRound.ANTE) { 
+        if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
-            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
 
             // If small blind hasn't been posted yet, small blind player should act
             if (!hasSmallBlind) {
@@ -596,6 +635,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     return smallBlindPlayer;
                 }
             }
+
+            const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
 
             // If small blind posted but big blind hasn't, big blind player should act
             if (hasSmallBlind && !hasBigBlind) {
@@ -923,7 +964,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         switch (action) {
             case NonPlayerActionType.JOIN:
                 const player = new Player(address, undefined, _amount, undefined, PlayerStatus.SITTING_OUT);
-                new JoinAction(this, this._update).execute(player, index, _amount, data);
+                // Hack
+                if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
+                    new JoinActionSitAndGo(this, this._update).execute(player, index, _amount, data);
+                    return;
+                }
+                if (this.type === GameType.CASH) {
+                    new JoinAction(this, this._update).execute(player, index, _amount, data);
+                }
                 return;
             case NonPlayerActionType.LEAVE:
                 new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
@@ -1011,18 +1059,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Adds a non-player action to the game state
      */
     addNonPlayerAction(turn: Turn, data?: string): void {
-        // For LEAVE action, we still want to record it before the player is removed
-        const isLeaveAction = turn.action === NonPlayerActionType.LEAVE;
-
-        // Only check if player exists for non-LEAVE actions
-        if (!isLeaveAction) {
-            const playerExists = this.exists(turn.playerId);
-            if (!playerExists) {
-                console.log(`Skipping non-player action for player ${turn.playerId} who has left the game`);
-                return;
-            }
-        }
-
         const timestamp = Date.now();
         const seat = data ? Number(data) : this.getPlayerSeatNumber(turn.playerId);
         const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
@@ -1041,12 +1077,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             this._rounds.set(round, actions);
         } else {
             this._rounds.set(round, [turn]);
-        }
-
-        // If this is a LEAVE action, remove the player from the game
-        if (turn.action === NonPlayerActionType.LEAVE) {
-            console.log(`Removing player ${turn.playerId} from seat ${turn.seat}`);
-            this._playersMap.delete(turn.seat);
         }
     }
 
@@ -1263,7 +1293,26 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Check all players, if they have no chips left, set them to SITTING_OUT
         for (const player of players) {
             if (player.chips <= 0n) {
-                player.updateStatus(PlayerStatus.SITTING_OUT);
+                // if cash game, set to sitting out
+                if (this.type === GameType.CASH) {
+                    player.updateStatus(PlayerStatus.SITTING_OUT);
+                }
+
+                // if sit and go or tournament, set to busted
+                if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
+                    // Get payouts from the payout manager
+                    const players: Player[] = this.getSeatedPlayers();
+                    const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
+
+                    const payout = payoutManager.calculateCurrentPayout();
+                    if (payout > 0n) {
+                        // Need to do transfer back to player here
+
+                        console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
+                    }
+
+                    player.updateStatus(PlayerStatus.BUSTED);
+                }
             }
         }
     }
@@ -1360,14 +1409,15 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             maxBuyIn: this._gameOptions.maxBuyIn.toString(),
             maxPlayers: this._gameOptions.maxPlayers,
             minPlayers: this._gameOptions.minPlayers,
-            smallBlind: this._gameOptions.smallBlind.toString(),
-            bigBlind: this._gameOptions.bigBlind.toString(),
-            timeout: this._gameOptions.timeout
+            smallBlind: this.blindsManager.getBlinds().smallBlind.toString(),
+            bigBlind: this.blindsManager.getBlinds().bigBlind.toString(),
+            timeout: this._gameOptions.timeout,
+            type: this.type
         };
 
         // Return the complete state DTO
         const state: TexasHoldemStateDTO = {
-            type: "cash",
+            type: this.type, // Todo remove this duplication
             address: this._address,
             gameOptions: gameOptions,
             smallBlindPosition: this.smallBlindPosition,
@@ -1404,6 +1454,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             gameOptions.minPlayers = Number(json.gameOptions?.minPlayers);
             gameOptions.smallBlind = BigInt(json.gameOptions?.smallBlind);
             gameOptions.bigBlind = BigInt(json.gameOptions?.bigBlind);
+            gameOptions.type = json.gameOptions?.type;
         }
 
         // Parse players

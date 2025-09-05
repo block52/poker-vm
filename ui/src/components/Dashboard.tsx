@@ -1,23 +1,32 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"; // Import React, useEffect, and useRef
-import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
 import "./Dashboard.css"; // Import the CSS file with animations
 
 // Web3 Wallet Imports
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; //  Keep for Web3 wallet
-import { Wallet } from "ethers";
+import { Wallet, ethers } from "ethers";
+import { TOKEN_ADDRESS } from "../config/constants";
+
+const RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL || "https://eth.llamarpc.com";
+const USDC_ABI = [
+    "function balanceOf(address account) view returns (uint256)"
+];
 
 import BuyInModal from "./playPage/BuyInModal";
+import WithdrawalModal from "./WithdrawalModal";
 
 // game wallet and SDK imports
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
-import { GameType, Variant } from "./types";
+import { Variant } from "./types";
 import { formatAddress } from "./common/utils";
+import { GameType } from "@bitcoinbrisbane/block52";
 import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
-import { useNewTable } from "../rpc_calls/useNewTable"; // Import useNewTable hook
+import { CreateTableOptions, useNewTable } from "../hooks/useNewTable"; // Import useNewTable hook
+import { useTablePlayerCounts } from "../hooks/useTablePlayerCounts"; // Import useTablePlayerCounts hook
 
 // Password protection utils
 import { 
@@ -50,20 +59,47 @@ const NetworkDisplay = React.memo(({ isMainnet = false }: { isMainnet?: boolean 
     );
 });
 
-// Memoized Deposit button component
-const DepositButton = React.memo(() => {
+// Memoized Deposit button component  
+const DepositButton = React.memo(({ onClick }: { onClick: () => void }) => {
     const buttonStyle = useMemo(() => ({ 
         background: `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)` 
     }), []);
     
+    const handleClick = useCallback(() => {
+        onClick();
+    }, [onClick]);
+    
     return (
-        <Link
-            to="/qr-deposit"
-            className="block flex-1 text-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+        <button
+            type="button"
+            onClick={handleClick}
+            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
             style={buttonStyle}
         >
             Deposit
-        </Link>
+        </button>
+    );
+});
+
+// Memoized Withdraw button component
+const WithdrawButton = React.memo(({ onClick }: { onClick: () => void }) => {
+    const buttonStyle = useMemo(() => ({ 
+        background: `linear-gradient(135deg, ${colors.accent.withdraw} 0%, ${hexToRgba(colors.accent.withdraw, 0.8)} 100%)` 
+    }), []);
+    
+    const handleClick = useCallback(() => {
+        onClick();
+    }, [onClick]);
+    
+    return (
+        <button
+            type="button"
+            onClick={handleClick}
+            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            style={buttonStyle}
+        >
+            Withdraw
+        </button>
     );
 });
 
@@ -79,8 +115,9 @@ const CreateTableButton = React.memo(({ onClick }: { onClick: () => void }) => {
     
     return (
         <button
+            type="button"
             onClick={handleClick}
-            className="block flex-1 text-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
             style={buttonStyle}
         >
             Create New Table
@@ -122,11 +159,15 @@ const Dashboard: React.FC = () => {
     
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
+    
+    // Get player counts for all games
+    const gameAddresses = useMemo(() => games.map(g => g.address), [games]);
+    const { playerCounts } = useTablePlayerCounts(gameAddresses);
 
     // Add useAccount hook to get account nonce
     const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
     
-    // Add useNewTable hook for creating tables
+    // Use the new useNewTable hook from hooks directory
     const { createTable, isCreating: isCreatingTable, error: createTableError } = useNewTable();
 
     const [showImportModal, setShowImportModal] = useState(false);
@@ -138,13 +179,55 @@ const Dashboard: React.FC = () => {
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
     const [selectedContractAddress, setSelectedContractAddress] = useState("0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7");
     const [createGameError, setCreateGameError] = useState("");
+    // Modal game options
+    const [modalGameType, setModalGameType] = useState<GameType>(GameType.SIT_AND_GO);
+    const [modalMinBuyIn, setModalMinBuyIn] = useState(10);
+    const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
+    const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
+    const [modalPlayerCount, setModalPlayerCount] = useState(4);
 
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
     const [buyInTableId, setBuyInTableId] = useState(""); // Optional, if needed later
+    
+    // Withdrawal Modal
+    const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+    
+    // State for showing all tables
+    const [showAllTables, setShowAllTables] = useState(false);
+    
+    // State for copy notification
+    const [copiedTableId, setCopiedTableId] = useState<string | null>(null);
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    
+    // Web3 wallet balance state
+    const [web3Balance, setWeb3Balance] = useState<string>("0.00");
+    
+    // Function to get USDC balance of connected wallet
+    const fetchWeb3Balance = useCallback(async () => {
+        if (!address) return;
+
+        try {
+            const provider = new ethers.JsonRpcProvider(RPC_URL);
+            const usdcContract = new ethers.Contract(TOKEN_ADDRESS, USDC_ABI, provider);
+            const balance = await usdcContract.balanceOf(address);
+            const formattedBalance = ethers.formatUnits(balance, 6); // USDC has 6 decimals
+            const roundedBalance = parseFloat(formattedBalance).toFixed(2);
+            setWeb3Balance(roundedBalance);
+        } catch (error) {
+            console.error("Error fetching USDC balance:", error);
+            setWeb3Balance("0.00");
+        }
+    }, [address]);
+
+    // Fetch balance when wallet connects
+    useEffect(() => {
+        if (address) {
+            fetchWeb3Balance();
+        }
+    }, [fetchWeb3Balance, address]);
 
     // Add a ref for the animation frame ID
     const animationFrameRef = useRef<number | undefined>(undefined);
@@ -197,7 +280,7 @@ const Dashboard: React.FC = () => {
 
     const DEFAULT_GAME_CONTRACT = "0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7"; // Example address
 
-    // Function to handle creating a new game using NodeRpcClient directly
+    // Function to handle creating a new game using the new hook
     const handleCreateNewGame = async () => {
         if (!publicKey) {
             setCreateGameError("No wallet address available. Please create or import a wallet first.");
@@ -212,8 +295,36 @@ const Dashboard: React.FC = () => {
         setCreateGameError("");
 
         try {
-            // Use the createTable function from useNewTable hook
-            const tableAddress = await createTable(publicKey, account.nonce);
+            // Build game options from modal selections
+            // For Sit & Go/Tournament, use the same value for min and max buy-in
+            const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
+            
+            // Log the modal values before creating game options
+            console.log("🎲 Modal Values:");
+            console.log("  Game Type:", modalGameType);
+            console.log("  Min Buy-In:", modalMinBuyIn);
+            console.log("  Max Buy-In:", modalMaxBuyIn);
+            console.log("  Sit & Go Buy-In:", modalSitAndGoBuyIn);
+            console.log("  Player Count:", modalPlayerCount);
+            console.log("  Is Tournament:", isTournament);
+
+            const gameOptions: CreateTableOptions = {
+                type: modalGameType,
+                minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
+                maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
+                minPlayers: modalPlayerCount,
+                maxPlayers: modalPlayerCount
+            };
+            
+            console.log("📦 Final CreateTableOptions being sent to SDK:");
+            console.log("  type:", gameOptions.type);
+            console.log("  minBuyIn:", gameOptions.minBuyIn);
+            console.log("  maxBuyIn:", gameOptions.maxBuyIn);
+            console.log("  minPlayers:", gameOptions.minPlayers);
+            console.log("  maxPlayers:", gameOptions.maxPlayers);
+            
+            // Use the createTable function from the hook
+            const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
             
             if (tableAddress) {
                 setShowCreateGameModal(false);
@@ -299,6 +410,7 @@ const Dashboard: React.FC = () => {
             // Refresh page to update wallet
             window.location.reload();
         } catch (err) {
+            console.error("Failed to import private key:", err);
             setImportError("Invalid private key format");
         }
     };
@@ -362,7 +474,7 @@ const Dashboard: React.FC = () => {
         setLimitTypeSelected("no-limit"); // Default when changing variant
     }, [variantSelected]);
 
-    const handleGameType = (type: GameType) => {
+    const handleGameType = (type: string) => {
         if (type === GameType.CASH) {
             setTypeSelected("cash");
         } 
@@ -393,7 +505,23 @@ const Dashboard: React.FC = () => {
     
     // Memoized Create Table callback
     const handleCreateTableClick = useCallback(() => {
+        // Reset modal values to defaults when opening
+        setModalGameType(GameType.SIT_AND_GO);
+        setModalMinBuyIn(10);
+        setModalMaxBuyIn(100);
+        setModalSitAndGoBuyIn(1);
+        setModalPlayerCount(4);
         setShowCreateGameModal(true);
+    }, []);
+    
+    // Memoized Deposit callback
+    const handleDepositClick = useCallback(() => {
+        navigate("/qr-deposit");
+    }, [navigate]);
+    
+    // Memoized Withdrawal callback
+    const handleWithdrawClick = useCallback(() => {
+        setShowWithdrawalModal(true);
     }, []);
     
     // Memoized Import Modal callback
@@ -604,7 +732,76 @@ const Dashboard: React.FC = () => {
                                 <h3 className="text-xl font-bold text-white mb-4">Create New Table</h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-white text-sm mb-1">Card Game Contract</label>
+                                        <label className="block text-white text-sm mb-1">Game Type</label>
+                                        <select
+                                            value={modalGameType}
+                                            onChange={e => setModalGameType(e.target.value as GameType)}
+                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                        >
+                                            <option value={GameType.SIT_AND_GO}>Sit & Go</option>
+                                            <option value={GameType.CASH}>Cash Game</option>
+                                            <option value={GameType.TOURNAMENT}>Tournament</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-white text-sm mb-1">Number of Players</label>
+                                        <select
+                                            value={modalPlayerCount}
+                                            onChange={e => setModalPlayerCount(Number(e.target.value))}
+                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                        >
+                                            <option value={4}>4 Players (Sit & Go)</option>
+                                            <option value={9}>9 Players (Full Ring)</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Show different fields based on game type */}
+                                    {(modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT) ? (
+                                        // For Sit & Go and Tournament: Single buy-in field
+                                        <div>
+                                            <label className="block text-white text-sm mb-1">Tournament Buy-In ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalSitAndGoBuyIn}
+                                                onChange={e => setModalSitAndGoBuyIn(Number(e.target.value))}
+                                                min="10"
+                                                max="10"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                            <p className="text-xs text-gray-400 mt-1">All players pay the same entry fee</p>
+                                        </div>
+                                    ) : (
+                                        // For Cash games: Min and Max buy-in fields
+                                        <>
+                                            <div>
+                                                <label className="block text-white text-sm mb-1">Minimum Buy-In ($)</label>
+                                                <input
+                                                    type="number"
+                                                    value={modalMinBuyIn}
+                                                    onChange={e => setModalMinBuyIn(Number(e.target.value))}
+                                                    min="1"
+                                                    max="1000"
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-white text-sm mb-1">Maximum Buy-In ($)</label>
+                                                <input
+                                                    type="number"
+                                                    value={modalMaxBuyIn}
+                                                    onChange={e => setModalMaxBuyIn(Number(e.target.value))}
+                                                    min="1"
+                                                    max="10000"
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-white text-sm mb-1">Variant</label>
                                         <select
                                             value={selectedContractAddress}
                                             onChange={e => setSelectedContractAddress(e.target.value)}
@@ -670,16 +867,13 @@ const Dashboard: React.FC = () => {
                     )}
 
                     <div className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border z-10 transition-all duration-300 hover:shadow-blue-500/10" style={mainCardStyle}>
-                        {/* Club Logo and Name */}
+                        {/* Club Logo */}
                         <div className="flex flex-col items-center mb-6">
                             <img 
                                 src={import.meta.env.VITE_CLUB_LOGO || defaultLogo} 
                                 alt="Club Logo" 
-                                className="w-24 h-24 object-contain mb-2"
+                                className="w-32 h-32 object-contain"
                             />
-                            <h2 className="text-2xl font-bold text-white opacity-90">
-                                {import.meta.env.VITE_CLUB_NAME || "Block 52"}
-                            </h2>
                         </div>
                         
                         <div className="flex justify-between items-center mb-6">
@@ -732,7 +926,8 @@ const Dashboard: React.FC = () => {
                                             backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
                                             border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
                                         }}>
-                                            <p className="font-mono text-sm tracking-wider" style={{ color: colors.brand.primary }}>{formatAddress(publicKey)}</p>
+                                            <p className="font-mono text-xs tracking-wider break-all hidden md:block" style={{ color: colors.brand.primary }}>{publicKey}</p>
+                                            <p className="font-mono text-xs tracking-wider md:hidden" style={{ color: colors.brand.primary }}>{formatAddress(publicKey)}</p>
                                             <div className="flex items-center">
                                                 <button
                                                     onClick={() => {
@@ -809,8 +1004,9 @@ const Dashboard: React.FC = () => {
                                             </div>
                                         </div>
                                     )}
-                                    <div className="flex gap-2 pt-2">
-                                        <DepositButton />
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <DepositButton onClick={handleDepositClick} />
+                                        <WithdrawButton onClick={handleWithdrawClick} />
                                         <CreateTableButton onClick={handleCreateTableClick} />
                                     </div>
                                     <div className="mt-2 flex justify-center">
@@ -827,8 +1023,18 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Web3 Wallet Section */}
-                        <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:hexToRgba(colors.brand.primary, 0.2) transition-all duration-300 opacity-80">
-                            <div className="flex items-center gap-2 mb-2">
+                        <div className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300" 
+                             style={{
+                                 backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
+                                 border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                             }}
+                             onMouseEnter={(e) => {
+                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
+                             }}
+                             onMouseLeave={(e) => {
+                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
+                             }}>
+                            <div className="flex items-center gap-2 mb-4">
                                 <h2 className="text-xl font-bold text-white">
                                     Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
                                 </h2>
@@ -846,7 +1052,10 @@ const Dashboard: React.FC = () => {
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 border hexToRgba(colors.brand.primary, 0.2)">
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20" style={{
+                                        backgroundColor: colors.ui.bgDark,
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                    }}>
                                         <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>External Web3 Wallet</h3>
                                         <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
                                         <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
@@ -856,74 +1065,69 @@ const Dashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-gray-400 text-sm">Status:</span>
-                                        <span
-                                            className="text-xs px-2 py-0.5 rounded-full"
-                                            style={{
-                                                backgroundColor: isConnected ? hexToRgba(colors.accent.success, 0.2) : hexToRgba(colors.brand.primary, 0.1),
-                                                color: isConnected ? colors.accent.success : colors.brand.primary
-                                            }}
-                                        >
-                                            {isConnected ? "Connected" : "Not Connected"}
-                                        </span>
+                            {!isConnected ? (
+                                <button
+                                    onClick={open}
+                                    className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md hover:opacity-90"
+                                    style={{ 
+                                        background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)` 
+                                    }}
+                                >
+                                    <div className="flex items-center justify-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        <span className="text-white">Connect Wallet</span>
                                     </div>
-                                    {isConnected && address && (
-                                        <div className="flex items-center mt-2 rounded p-1.5" style={{
-                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                        }}>
-                                            <span className="font-mono text-xs" style={{ color: colors.brand.primary }}>{formatAddress(address)}</span>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(address || "");
-                                                }}
-                                                className="ml-2 p-0.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                                            >
-                                                <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth="2"
-                                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                                <div>
-                                    {!isConnected ? (
-                                        <button
-                                            onClick={open}
-                                            className="flex items-center gap-1.5 px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                            style={{ background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)` }}
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                            </svg>
-                                            Connect
-                                        </button>
-                                    ) : (
+                                </button>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center" style={{ color: "white" }}>
+                                        <span>
+                                            Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                                        </span>
                                         <button
                                             onClick={disconnect}
-                                            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
+                                            className="text-xs px-3 py-1 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                                                />
-                                            </svg>
                                             Disconnect
                                         </button>
-                                    )}
+                                    </div>
+                                    
+                                    <div className="p-3 rounded-lg" style={{
+                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                    }}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
+                                                    <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>$</span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold" style={{ color: "white" }}>Web3 Wallet USDC Balance</p>
+                                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>Available on Ethereum Mainnet</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-right">
+                                                    <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
+                                                        ${web3Balance}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => fetchWeb3Balance()}
+                                                    className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                                    title="Refresh balance"
+                                                >
+                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Available Games Section */}
@@ -931,7 +1135,7 @@ const Dashboard: React.FC = () => {
                             <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:hexToRgba(colors.brand.primary, 0.2) transition-all duration-300">
                                 <h3 className="text-lg font-bold text-white mb-2">Available Tables</h3>
                                 <div className="space-y-3">
-                                    {games.slice(0, 3).map((game, index) => (
+                                    {games.slice(0, showAllTables ? undefined : 3).map((game, index) => (
                                         <div key={index} className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
@@ -945,26 +1149,90 @@ const Dashboard: React.FC = () => {
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <p className="text-gray-300 text-xs">Texas Hold'em</p>
+                                                    <p className="text-gray-300 text-xs">
+                                                        Texas Hold'em 
+                                                        {game.gameOptions?.maxPlayers && (
+                                                            <span className="ml-1">
+                                                                ({playerCounts.get(game.address)?.currentPlayers || 0}/{game.gameOptions.maxPlayers} Players)
+                                                            </span>
+                                                        )}
+                                                    </p>
                                                     <p className="text-gray-500 text-xs font-mono mb-1">{formatAddress(game.address)}</p>
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>Min: ${game.gameOptions?.minBuyIn ? formatBalance(game.gameOptions.minBuyIn) : "0.01"}</span>
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>Max: ${game.gameOptions?.maxBuyIn ? formatBalance(game.gameOptions.maxBuyIn) : "1.0"}</span>
-                                                        <span className="text-xs" style={{ color: colors.brand.primary }}>Blinds: ${game.gameOptions?.smallBlind ? formatBalance(game.gameOptions.smallBlind) : "0.01"}/${game.gameOptions?.bigBlind ? formatBalance(game.gameOptions.bigBlind) : "0.02"}</span>
+                                                        {/* Check if it's a Sit & Go (minBuyIn equals maxBuyIn) */}
+                                                        {game.gameOptions?.type === GameType.SIT_AND_GO || 
+                                                         (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn && 
+                                                          game.gameOptions?.smallBlind === "100000000000000000000" && 
+                                                          game.gameOptions?.bigBlind === "200000000000000000000") ? (
+                                                            <>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Buy-in: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "1.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Blinds: 100/200
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.accent.success }}>
+                                                                    10,000 tokens
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Min: ${game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0" ? formatBalance(game.gameOptions.minBuyIn) : "1.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Max: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "100.00"}
+                                                                </span>
+                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
+                                                                    Blinds: ${game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0" ? formatBalance(game.gameOptions.smallBlind) : "0.50"}/${game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0" ? formatBalance(game.gameOptions.bigBlind) : "1.00"}
+                                                                </span>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => {
-                                                    setShowBuyInModal(true);
-                                                    setBuyInTableId(game.address);
-                                                }}
-                                                title="Join this table"
-                                                className="px-3 py-1 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                                style={{ backgroundColor: colors.brand.primary }}
-                                            >
-                                                Join Table
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => {
+                                                            const tableUrl = `${window.location.origin}/table/${game.address}`;
+                                                            navigator.clipboard.writeText(tableUrl);
+                                                            setCopiedTableId(game.address);
+                                                            setTimeout(() => setCopiedTableId(null), 2000);
+                                                        }}
+                                                        title="Copy table URL"
+                                                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth="2"
+                                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                    {copiedTableId === game.address && (
+                                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white rounded shadow-lg whitespace-nowrap z-10" 
+                                                             style={{ backgroundColor: colors.accent.success }}>
+                                                            Table link copied!
+                                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent" 
+                                                                 style={{ borderTopColor: colors.accent.success }}></div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowBuyInModal(true);
+                                                        setBuyInTableId(game.address);
+                                                    }}
+                                                    title="Join this table"
+                                                    className="px-3 py-1 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
+                                                    style={{ backgroundColor: colors.brand.primary }}
+                                                >
+                                                    Join Table
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -980,8 +1248,12 @@ const Dashboard: React.FC = () => {
                                 )}
                                 {games.length > 3 && (
                                     <div className="mt-2 flex justify-center">
-                                        <button className="text-sm transition duration-300 hover:opacity-80" style={{ color: colors.brand.primary }}>
-                                            View more tables ({games.length - 3} more)
+                                        <button 
+                                            onClick={() => setShowAllTables(!showAllTables)}
+                                            className="text-sm transition duration-300 hover:opacity-80" 
+                                            style={{ color: colors.brand.primary }}
+                                        >
+                                            {showAllTables ? "Show less" : `View more tables (${games.length - 3} more)`}
                                         </button>
                                     </div>
                                 )}
@@ -1165,6 +1437,16 @@ const Dashboard: React.FC = () => {
                             tableId={buyInTableId}
                             onClose={handleBuyInModalClose}
                             onJoin={handleBuyInModalJoin}
+                        />
+                    )}
+                    {showWithdrawalModal && (
+                        <WithdrawalModal
+                            isOpen={showWithdrawalModal}
+                            onClose={() => setShowWithdrawalModal(false)}
+                            onSuccess={() => {
+                                // Refresh account balance after successful withdrawal
+                                refetchAccount();
+                            }}
                         />
                     )}
                 </>

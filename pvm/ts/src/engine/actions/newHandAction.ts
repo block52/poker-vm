@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { KEYS, NonPlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, IUpdate, Range, Turn } from "../types";
@@ -26,7 +26,17 @@ class NewHandAction extends BaseAction implements IAction {
         // First verify the action
         this.verify(player);
         const deck = new Deck();
-        const _seed: string[] = this.data.split("-");
+        if (!this.data || this.data.trim() === "") {
+            throw new Error("Seed data is required to create a new hand.");
+        }
+
+        const urlSearchParams = new URLSearchParams(this.data);
+        if (!urlSearchParams.has(KEYS.SEED)) {
+            throw new Error("Seed parameter is required in the data.");
+        }
+
+        const seedStr = urlSearchParams.get(KEYS.SEED) || "";
+        const _seed: string[] = seedStr.split("-");
 
         console.log(`New hand action with seed: ${_seed}`);
         

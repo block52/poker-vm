@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitOut, startNewHand } from "../../hooks/playerActions";
+import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
 import { LegalActionDTO } from "@bitcoinbrisbane/block52";
 
 const handleCheck = async (tableId?: string) => {
@@ -105,6 +105,18 @@ const handleSitOut = async (tableId?: string) => {
     }
 };
 
+// Handler for sit in action
+const handleSitIn = async (tableId?: string) => {
+    if (!tableId) return;
+
+    try {
+        await sitIn(tableId);
+        console.log("Sit in completed successfully");
+    } catch (error: any) {
+        console.error("Failed to sit in:", error);
+    }
+};
+
 export {
     handleBet,
     handleCall,
@@ -113,6 +125,7 @@ export {
     handleFold,
     handleMuck,
     handleShow,
+    handleSitIn,
     handleSitOut,
     handleStartNewHand,
 };

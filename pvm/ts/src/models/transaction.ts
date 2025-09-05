@@ -15,7 +15,7 @@ export class Transaction implements ITransaction, ICryptoModel, IJSONModel {
         readonly signature: string,
         readonly timestamp: number,
         readonly nonce: bigint,
-        readonly index?: number,
+        public index?: number,
         readonly data?: string
     ) {
         // If the index is not provided, set it to 0 or look for the last index in the blockchain
@@ -55,14 +55,12 @@ export class Transaction implements ITransaction, ICryptoModel, IJSONModel {
 
     public static async create(to: string, from: string, value: bigint, nonce: bigint, privateKey: string, data: string): Promise<Transaction> {
         const timestamp = Date.now();
-        // const _data = `${to}${from}${value}${nonce}${data}`;
-        // const signature = await signData(privateKey, _data);
-        // const hash = createHash("sha256").update(_data).digest("hex");
-
+        const params = new URLSearchParams(data);
+        const index = params.get("index") ? Number(params.get("index")) : undefined;
         const hash = createHash("sha256").update(`${to}${from}${value}${nonce}${timestamp}${data}`).digest("hex");
         const signature = await signData(privateKey, hash);
 
-        return new Transaction(to, from, value, hash, signature, timestamp, nonce, undefined, data);
+        return new Transaction(to, from, value, hash, signature, timestamp, nonce, index, data);
     }
 
     public toJson(): TransactionDTO {

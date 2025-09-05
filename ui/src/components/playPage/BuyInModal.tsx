@@ -7,6 +7,7 @@ import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { joinTable } from "../../hooks/playerActions/joinTable";
+import { JoinTableOptions } from "../../hooks/playerActions/types";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {
@@ -62,7 +63,7 @@ const HexagonPattern = React.memo(() => (
 interface BuyInModalProps {
     tableId?: string; // Optional tableId for joining specific table
     onClose: () => void;
-    onJoin: (buyInAmount: string, waitForBigBlind: boolean) => void;
+    onJoin: (amount: string, waitForBigBlind: boolean) => void;
 }
 
 const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tableId }) => {
@@ -85,6 +86,12 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         const minFormatted = formatWeiToSimpleDollars(minBuyInWei);
         const maxFormatted = formatWeiToSimpleDollars(maxBuyInWei);
         const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
+
+        console.log("💵 BuyInModal - Buy-in limits:");
+        console.log("  minBuyInWei:", minBuyInWei);
+        console.log("  maxBuyInWei:", maxBuyInWei);
+        console.log("  minFormatted:", minFormatted);
+        console.log("  maxFormatted:", maxFormatted);
 
         // Calculate stake label
         const bigBlind = parseFloat(maxFormatted) / 100;
@@ -191,14 +198,14 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
     const handleJoinClick = useCallback(() => {
         try {
-            const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+            const buyInWei = ethers.parseUnits(buyInAmount, 18);
 
-            if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
+            if (buyInWei < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is $${minBuyInFormatted}`);
                 return;
             }
 
-            if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
+            if (buyInWei > BigInt(maxBuyInWei)) {
                 setBuyInError(`Maximum buy-in is $${maxBuyInFormatted}`);
                 return;
             }
@@ -223,14 +230,14 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             setIsJoiningRandomSeat(true);
 
             // Validate buy-in amount first
-            const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
+            const buyInWei = ethers.parseUnits(buyInAmount, 18);
 
-            if (BigInt(buyInWei) < BigInt(minBuyInWei)) {
+            if (buyInWei < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is ${minBuyInFormatted}`);
                 return;
             }
 
-            if (BigInt(buyInWei) > BigInt(maxBuyInWei)) {
+            if (buyInWei > BigInt(maxBuyInWei)) {
                 setBuyInError(`Maximum buy-in is ${maxBuyInFormatted}`);
                 return;
             }
@@ -246,10 +253,16 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 return;
             }
 
-            const joinOptions = {
-                buyInAmount: buyInWei,
+            const joinOptions: JoinTableOptions = {
+                amount: buyInWei.toString(),
                 seatNumber: undefined // Let the server handle random seat assignment
             };
+
+            console.log("💰 BuyInModal - Join attempt:");
+            console.log("  buyInAmount (input):", buyInAmount);
+            console.log("  buyInWei (bigint):", buyInWei.toString());
+            console.log("  joinOptions.amount:", joinOptions.amount);
+            console.log("  tableId:", tableId);
 
             joinTable(tableId || ethers.ZeroAddress, joinOptions);
 
@@ -261,7 +274,18 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         } finally {
             setIsJoiningRandomSeat(false);
         }
-    }, [buyInAmount, minBuyInWei, maxBuyInWei, balanceFormatted, minBuyInNumber, emptySeatIndexes.length, navigate, tableId, minBuyInFormatted, maxBuyInFormatted]);
+    }, [
+        buyInAmount,
+        minBuyInWei,
+        maxBuyInWei,
+        balanceFormatted,
+        minBuyInNumber,
+        emptySeatIndexes.length,
+        navigate,
+        tableId,
+        minBuyInFormatted,
+        maxBuyInFormatted
+    ]);
 
     return (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
@@ -380,51 +404,24 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                     </button>
                     <button
                         onClick={handleJoinClick}
-                        disabled={isDisabled}
-                        className="px-5 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200"
+                        className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: isDisabled ? colors.ui.textSecondary : STATIC_STYLES.joinButtonGradient,
-                            cursor: isDisabled ? "not-allowed" : "pointer"
-                        }}
-                        onMouseEnter={e => {
-                            if (!isDisabled) {
-                                e.currentTarget.style.transform = "scale(1.02)";
-                                e.currentTarget.style.background = STATIC_STYLES.joinButtonGradientHover;
-                            }
-                        }}
-                        onMouseLeave={e => {
-                            if (!isDisabled) {
-                                e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.background = STATIC_STYLES.joinButtonGradient;
-                            }
+                            background: `${colors.brand.primary}`,
+                            cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
                         }}
                     >
-                        Take My Seat
+                        View Table
                     </button>
                     <button
                         onClick={handleRandomSeatJoin}
                         disabled={!canJoinRandomSeat}
-                        className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200 text-sm"
+                        className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: !canJoinRandomSeat
-                                ? colors.ui.textSecondary
-                                : `linear-gradient(to bottom right, ${colors.brand.secondary}, ${colors.brand.primary})`,
+                            background: !canJoinRandomSeat ? `${colors.brand.primary}`: `${colors.brand.secondary}, ${colors.brand.primary}`,
                             cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
                         }}
-                        onMouseEnter={e => {
-                            if (canJoinRandomSeat) {
-                                e.currentTarget.style.transform = "scale(1.02)";
-                                e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.secondary}aa, ${colors.brand.primary}aa)`;
-                            }
-                        }}
-                        onMouseLeave={e => {
-                            if (canJoinRandomSeat) {
-                                e.currentTarget.style.transform = "scale(1)";
-                                e.currentTarget.style.background = `linear-gradient(to bottom right, ${colors.brand.secondary}, ${colors.brand.primary})`;
-                            }
-                        }}
                     >
-                        {isJoiningRandomSeat ? "Joining..." : "Join Random Seat"}
+                        {isJoiningRandomSeat ? "Joining..." : "Take My Seat"}
                     </button>
                 </div>
 

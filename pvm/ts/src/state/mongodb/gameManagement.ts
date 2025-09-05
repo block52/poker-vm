@@ -2,7 +2,7 @@ import { StateManager } from "../stateManager";
 import GameState from "../../schema/gameState";
 import { ethers } from "ethers";
 import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
-import { GameOptions, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, GameOptionsDTO, GameType, NodeRpcClient, TexasHoldemGameState, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Deck } from "../../models";
 import { IGameManagement } from "../interfaces";
 import { createAddress } from "../../utils/crypto";
@@ -12,35 +12,36 @@ export class GameManagement extends StateManager implements IGameManagement {
         super(connString);
     }
 
+    private toGameStateDocument(gameState: any): IGameStateDocument {
+        return {
+            address: gameState.address,
+            gameOptions: gameState.gameOptions,
+            state: gameState.state
+        };
+    }
+
     public async getByAddress(address: string): Promise<IGameStateDocument | null> {
         const gameState = await GameState.findOne({
             address
         });
 
-        if (gameState) {
-            // this is stored in MongoDB as an object / document
-            const state: IGameStateDocument = {
-                address: gameState.address,
-                gameOptions: gameState.gameOptions,
-                state: gameState.state
-            };
-            return state;
+        if (!gameState) {
+            // Return null instead of throwing an error
+            return null;
         }
 
-        // Return null instead of throwing an error
-        return null;
+        // this is stored in MongoDB as an object / document
+        const state = this.toGameStateDocument(gameState);
+
+        // const state: IGameManagement = this.cast(gameState.address, gameState.gameOptions as GameOptions, gameState.state as TexasHoldemGameState);
+
+        return state;
     }
 
     public async getAll(): Promise<IGameStateDocument[]> {
         const gameStates = await GameState.find({});
         const states = gameStates.map(gameState => {
-            // this is stored in MongoDB as an object / document
-            const state: IGameStateDocument = {
-                address: gameState.address,
-                gameOptions: gameState.gameOptions,
-                state: gameState.state
-            };
-            return state;
+            return this.toGameStateDocument(gameState);
         });
         return states;
     }
@@ -48,13 +49,7 @@ export class GameManagement extends StateManager implements IGameManagement {
     public async getAllBySchemaAddress(schemaAddress: string): Promise<IGameStateDocument[]> {
         const gameStates = await GameState.find({ schemaAddress });
         const states = gameStates.map(gameState => {
-            // this is stored in MongoDB as an object / document
-            const state: IGameStateDocument = {
-                address: gameState.address,
-                gameOptions: gameState.gameOptions,
-                state: gameState.state
-            };
-            return state;
+            return this.toGameStateDocument(gameState);
         });
         return states;
     }
@@ -86,16 +81,15 @@ export class GameManagement extends StateManager implements IGameManagement {
         return game.gameOptions as GameOptions;
     }
 
-    public async create(nonce: bigint, contractSchemaAddress: string, gameOptions: GameOptions, timestamp?: string): Promise<string> {
-        // Include timestamp in digest for uniqueness if provided
-        const timestampPart = timestamp ? `-${timestamp}` : "";
-        const digest = `${contractSchemaAddress}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}${timestampPart}`;
+    public async create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {
+        const digest = `${owner}-${nonce}-${gameOptions.minBuyIn}-${gameOptions.maxBuyIn}-${gameOptions.minPlayers}-${gameOptions.maxPlayers}-${gameOptions.smallBlind}-${gameOptions.bigBlind}`;
         const address = createAddress(digest);
 
-        // Creating a log to confirm what's happening
-        console.log(`Creating game with digest: ${digest}`);
-        console.log(`Generated address: ${address}`);
-        console.log(`Timestamp used: ${timestamp || "none"}`);
+        // Check if game with this address already exists
+        const existingGame = await GameState.findOne({ address });
+        if (existingGame) {
+            throw new Error(`Game already exists with address: ${address}`);
+        }
 
         // Todo: Add deck
         const deck = new Deck();
@@ -103,7 +97,7 @@ export class GameManagement extends StateManager implements IGameManagement {
         deck.shuffle(seed);
 
         const state: TexasHoldemGameState = {
-            type: "cash",
+            type: gameOptions.type,
             address: address,
             minBuyIn: gameOptions.minBuyIn.toString(),
             maxBuyIn: gameOptions.maxBuyIn.toString(),
@@ -124,9 +118,21 @@ export class GameManagement extends StateManager implements IGameManagement {
             signature: ethers.ZeroHash
         };
 
+        // Cast gameOptions to GameOptionsDTO, to save in mongo bigints as strings
+        const gameOptionsDTO: GameOptionsDTO = {
+            minBuyIn: gameOptions.minBuyIn.toString(),
+            maxBuyIn: gameOptions.maxBuyIn.toString(),
+            minPlayers: gameOptions.minPlayers,
+            maxPlayers: gameOptions.maxPlayers,
+            smallBlind: gameOptions.smallBlind.toString(),
+            bigBlind: gameOptions.bigBlind.toString(),
+            timeout: gameOptions.timeout,
+            type: gameOptions.type
+        }
+
         const game = new GameState({
             address: address,
-            gameOptions: gameOptions,
+            gameOptions: gameOptionsDTO,
             state
         });
 
@@ -169,28 +175,17 @@ export class GameManagement extends StateManager implements IGameManagement {
     }
 
     public static parseSchema(schema: string): GameOptions {
-
-        // Example schema: "category,name,2,10,1000,2000,50000,1000000,30000"
-        // Ensure the schema is a valid string via a Regular Expression
-        if (!/^[^,]+,[^,]+(?:,\d+)+$/.test(schema)) {
-            throw new Error("Invalid schema format");
-        }
-
-        const args = schema.split(",");
-        if (args.length < 8) {
-            throw new Error("Invalid schema");
-        }
-
-        const timeout = args[8] ? parseInt(args[8]) : 30000; // Default timeout of 30 seconds
+        const urlSearchParams = new URLSearchParams(schema);
 
         const options: GameOptions = {
-            minBuyIn: BigInt(args[6]),
-            maxBuyIn: BigInt(args[7]),
-            minPlayers: parseInt(args[2]),
-            maxPlayers: parseInt(args[3]),
-            smallBlind: BigInt(args[4]),
-            bigBlind: BigInt(args[5]),
-            timeout: timeout
+            minBuyIn: BigInt(urlSearchParams.get("minBuyIn") || "0"),
+            maxBuyIn: BigInt(urlSearchParams.get("maxBuyIn") || "2000"),
+            minPlayers: parseInt(urlSearchParams.get("minPlayers") || "2"),
+            maxPlayers: parseInt(urlSearchParams.get("maxPlayers") || "6"),
+            smallBlind: BigInt(urlSearchParams.get("smallBlind") || "0"),
+            bigBlind: BigInt(urlSearchParams.get("bigBlind") || "0"),
+            timeout: parseInt(urlSearchParams.get("timeout") || "30000"),
+            type: urlSearchParams.get("type") as GameType
         };
 
         return options;
@@ -200,8 +195,11 @@ export class GameManagement extends StateManager implements IGameManagement {
 let instance: GameManagement;
 export const getGameManagementInstance = (): IGameManagement => {
     if (!instance) {
-        const connString = process.env.DB_URL || "mongodb://localhost:27017/pvm";
-        instance = new GameManagement(connString);
+        const connString = process.env.DB_URL;
+        if (!connString) {
+            throw new Error("No database connection string provided. Please set the DB_URL environment variable.");
+        }
+        instance = new GameManagement(connString!);
     }
     return instance;
 };

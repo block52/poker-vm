@@ -12,7 +12,7 @@ dotenv.config();
 
 // Default contract address on L2
 let defaultTableAddress = "0x5beefcc4e98e5f876ef6e94a2291cde322e38d03";
-let node = "http://localhost:3000"; // "
+let node = "http://localhost:8545"; // "
 let nonce: number = 0;
 
 let _node: NodeRpcClient;
@@ -554,7 +554,7 @@ const interactiveAction = async () => {
 
                     console.log(chalk.yellow(`Attempting to leave game...`));
                     const result = await leave(defaultTableAddress);
-                    
+
                     if (result) {
                         console.log(chalk.green("Successfully left the game"));
                         console.log(chalk.cyan("Response:"), result);
@@ -716,20 +716,20 @@ const pokerInteractiveAction = async (tableAddress: string, address: string) => 
 
 const leave = async (tableAddress: string): Promise<string> => {
     const rpcClient = getClient();
-    
+
     // First get the game state to check player's stack
     const state = await getGameState(tableAddress);
     const address = getAddress();
     const player = state.players.find(p => p.address === address);
-    
+
     if (!player) {
         throw new Error("Player not found at table");
     }
-    
+
     const stack = BigInt(player.stack);
     const response = await rpcClient.playerLeave(tableAddress, stack, nonce);
     console.log(chalk.green("Leave response:"), response);
-    
+
     return response?.hash;
 };
 

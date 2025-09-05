@@ -66,7 +66,7 @@ type OppositePlayerProps = {
 };
 
 const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
-    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
+    const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
     const { showingPlayers } = useShowingCardsByAddress();
     const { dealerSeat } = useDealerPosition();
@@ -84,7 +84,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
     }, [winnerInfo, index]);
 
     // 2) dim non-winners when someone has won
-    const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : isFolded ? "opacity-60" : "opacity-100";
+    const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : isSittingOut ? "opacity-50" : isFolded ? "opacity-60" : "opacity-100";
 
     // Get winner amount if this player is a winner
     const winnerAmount = React.useMemo(() => {
@@ -148,13 +148,16 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                 </div>
                 <div className="relative flex flex-col justify-end mt-[-6px] mx-1">
                     <div
-                        style={{ backgroundColor: isWinner ? colors.accent.success : color }}
+                        style={{ backgroundColor: isWinner ? colors.accent.success : (color || "#6b7280") }}
                         className={`b-[0%] mt-[auto] w-full h-[55px] shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${
                             isWinner 
                         }`}
                     >
                         {/* Progress bar is not shown in showdown */}
                         {!isWinner && round !== "showdown" && <ProgressBar index={index} />}
+                        {!isWinner && isSittingOut && (
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "#ff9800" }}>SITTING OUT</span>
+                        )}
                         {!isWinner && isFolded && (
                             <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>FOLD</span>
                         )}

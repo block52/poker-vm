@@ -1,7 +1,7 @@
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
-import { Range, TurnWithSeat } from "../types";
+import { Range } from "../types";
 
 class JoinAction extends BaseAction {
     get type(): NonPlayerActionType {
@@ -33,34 +33,9 @@ class JoinAction extends BaseAction {
         }
 
         // Find an available seat or use the requested one
-        let seat: number;
-        if (requestedSeat === undefined || requestedSeat === "") {
-
-            // get all available seats
-            const availableSeats = this.game.getAvailableSeats();
-
-            // If all seats are occupied, throw an error
-            if (availableSeats.length === 0)
-                throw new Error("No available seats to join.");
-
-            // Choose randomly from the available seats
-            seat = Math.floor(Math.random() * availableSeats.length);
-        } else {
-            // Validate the requested seat
-            const seatRegex = /^\d+$/;
-            const seatMatch = requestedSeat.toString().match(seatRegex);
-            if (!seatMatch) {
-                throw new Error("Invalid seat number.");
-            }
-            seat = parseInt(seatMatch[0]);
-        }
-
+        const seat: number = this.getSeat(requestedSeat);
         this.game.joinAtSeat(player, seat);
-
         this.game.dealerManager.handlePlayerJoin(seat);
-
-        // Set this seat as the last acted seat to help determine next player
-        // this.game.setLastActedSeat(seat);
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(
@@ -72,6 +47,49 @@ class JoinAction extends BaseAction {
             },
             seat.toString()
         );
+    }
+
+    // TODO: Refactor this method to be cleaner and not have randomness for seat assignment
+    private getSeat(data?: string): number {
+        // Find an available seat or use the requested one
+        let seat: number = 1;
+        if (data === undefined || data === "" || data === null) {
+            // get all available seats
+            const availableSeats = this.game.getAvailableSeats();
+
+            // If all seats are occupied, throw an error
+            if (availableSeats.length === 0)
+                throw new Error("No available seats to join.");
+
+            // Choose randomly from the available seats
+            const randomIndex = Math.floor(Math.random() * availableSeats.length);
+            seat = availableSeats[randomIndex];
+        } else {
+            // Hack for old unit tests
+            // Check via REGEX if data has the format "seat=1"
+            // Should be anywhere in the string, so we use ^ and $ to match the whole string
+            const seatRegex = /seat=(\d+)/;
+            const match = data.match(seatRegex);
+            
+            if (match && match[1]) {
+                return parseInt(match[1], 10);
+            }
+
+            // If it doesn't match the regex, we assume it's a seat number
+            // and parse it directly.  Old unit tests used to pass the seat number directly
+            // without the "seat=" prefix.
+            if (!match) {
+                // If it matches, parse the seat number
+                seat = parseInt(data);
+            }
+        }
+
+        // Validate the seat number, ensuring it's a valid integer
+        if (!seat || isNaN(seat) || seat < 1 || seat === undefined) {
+            throw new Error(`Invalid seat number: ${seat}`);
+        }
+
+        return seat;
     }
 }
 

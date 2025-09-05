@@ -1,0 +1,75 @@
+name: poker-vm
+
+services:
+  mongo:
+    image: mongo:8.0.9-noble
+    container_name: pvm-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: pvm
+      # No auth for now
+      MONGO_INITDB_ROOT_USERNAME: node1
+      MONGO_INITDB_ROOT_PASSWORD: Passw0rd123
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - poker-network
+
+  # TypeScript Backend
+  # backend:
+  #   build:
+  #     context: ./pvm/ts
+  #     dockerfile: Dockerfile
+  #     target: ${NODE_ENV:-dev}
+  #   container_name: poker-backend
+  #   restart: unless-stopped
+  #   environment:
+  #     NODE_ENV: ${NODE_ENV:-development}
+  #     PORT: 8545
+  #     MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${MONGO_DB_NAME:-poker_db}?authSource=admin
+  #     JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+  #     CORS_ORIGIN: http://localhost:5173
+  #   ports:
+  #     - "8545:8545"
+  #   depends_on:
+  #     - mongo
+  #   volumes:
+  #     # For development hot reload
+  #     - ./pvm/ts:/app:delegated
+  #     - /app/node_modules
+  #   networks:
+  #     - poker-network
+
+  # # React + Vite Frontend
+  # frontend:
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile
+  #     target: ${NODE_ENV:-dev}
+  #   container_name: poker-frontend
+  #   restart: unless-stopped
+  #   environment:
+  #     NODE_ENV: ${NODE_ENV:-development}
+  #     VITE_API_URL: http://localhost:3001/api
+  #   ports:
+  #     - "5173:5173"  # Vite dev server port
+  #     - "80:80"      # Nginx production port
+  #   depends_on:
+  #     - backend
+  #   volumes:
+  #     # For development hot reload
+  #     - ./ui:/app:delegated
+  #     - /app/node_modules
+  #   networks:
+  #     - poker-network
+
+# networks:
+#   poker-network:
+#     driver: bridge
+
+# volumes:
+#   mongodb_data:
+#     driver: local

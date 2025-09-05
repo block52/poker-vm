@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 # MongoDB Collection Drop Script
 # Drops the 'transactions' collection from a specified database

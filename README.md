@@ -6,7 +6,6 @@ The Layer 2 poker game virtual machine.
 
 ![image](https://github.com/user-attachments/assets/29412b57-3419-4177-b265-1e74e7c7c2e9)
 
-
 ## CVM
 
 The CVM is a virtual card game machine that runs on the Block52 network. It is responsible for executing the card game logic.
@@ -19,26 +18,28 @@ The PVM is a virtual poker game machine that runs inside the CVM. It is responsi
 
 ### Prerequisites
 
-- Docker and Docker Compose installed on your machine
-- Git
+-   Docker and Docker Compose installed on your machine
+-   Git
 
 ### Setup and Running
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/block52/poker-vm.git
-   cd block52-proxy
-   ```
 
-3. Start the services:
-   ```bash
-   docker compose up
-   ```
+    ```bash
+    git clone https://github.com/block52/poker-vm.git
+    cd block52-proxy
+    ```
 
-4. The services will be available at:
-   - PVM RPC: http://localhost:3000
-   - API Documentation: http://localhost:3000/docs
-   - MongoDB: localhost:27017
+2. Start the services:
+
+    ```bash
+    docker compose up
+    ```
+
+3. The services will be available at:
+    - PVM RPC: http://localhost:8545
+    - API Documentation: http://localhost:8545/docs
+    - MongoDB: localhost:27017
 
 ### Development
 
@@ -51,39 +52,42 @@ To run only specific services:
 To run the PVM locally for development and testing:
 
 1. Navigate to the PVM directory:
-   ```bash
-   cd pvm/ts
-   ```
+
+    ```bash
+    cd pvm/ts
+    ```
 
 2. Start the local MongoDB instance using the local Docker Compose file:
-   ```bash
-   docker compose up
-   ```
+
+    ```bash
+    docker compose up
+    ```
 
 3. Connect to the local MongoDB database:
-   - **Connection string**: `DB_URL=mongodb://node1:Passw0rd123@localhost:27017`
-   - **For GUI tools** (like DataGrip, MongoDB Compass):
-     - Host: `localhost`
-     - Port: `27019`
-     - Database: `pvm`
-     - Authentication: None (or as configured)
+
+    - **Connection string**: `DB_URL=mongodb://node1:Passw0rd123@localhost:27017`
+    - **For GUI tools** (like DataGrip, MongoDB Compass):
+        - Host: `localhost`
+        - Port: `27019`
+        - Database: `pvm`
+        - Authentication: None (or as configured)
 
 4. Start the PVM application:
-   ```bash
-   yarn run dev
-   ```
-   
+    ```bash
+    yarn run dev
+    ```
 5. The local PVM will be available at:
-   - API: http://localhost:3000
+
+    - API: http://localhost:8545
 
 6. To stop the local MongoDB instance:
-   ```bash
-   docker compose down
-   ```
+    ```bash
+    docker compose down
+    ```
 
 ## Running in Production
 
-*[Production deployment instructions and connection to Block52 network will be added in the future]*
+_[Production deployment instructions and connection to Block52 network will be added in the future]_
 
 ## Game Start Countdown
 
@@ -94,7 +98,7 @@ The poker table includes a countdown timer feature for coordinating synchronized
 Add the `gameStart` URL parameter to any table link to automatically display a countdown modal:
 
 ```
-http://localhost:3000/table/0x123abc?gameStart=2025-06-16T15:30:00
+http://localhost:8545/table/0x123abc?gameStart=2025-06-16T15:30:00
 ```
 
 ### URL Parameter Format
@@ -110,7 +114,7 @@ http://localhost:3000/table/0x123abc?gameStart=2025-06-16T15:30:00
 # Simple format (no timezone issues)
 ?gameStart=2025-06-16T15:30:00
 
-# With UTC timezone 
+# With UTC timezone
 ?gameStart=2025-06-16T15:30:00Z
 
 # Brisbane timezone (URL encoded + sign)
@@ -134,6 +138,7 @@ console.log(`/table/YOUR_TABLE_ID?gameStart=${futureTime}`);
 ```
 
 #### Simple Test Examples:
+
 ```bash
 # 5 minutes from now (no timezone issues)
 ?gameStart=2025-06-16T15:35:00
@@ -156,20 +161,18 @@ console.log(`/table/YOUR_TABLE_ID?gameStart=${futureTime}`);
 
 ### Features
 
-- ✅ **Screen lock** until countdown completes
-- ✅ **Brisbane timezone** calculation and display  
-- ✅ **Live countdown** with days, hours, minutes, seconds
-- ✅ **Auto-cleanup** - removes URL parameter when done
-- ✅ **Dev skip button** - only shows in development mode
-- ✅ **Graceful fallback** - invalid dates are ignored
-
+-   ✅ **Screen lock** until countdown completes
+-   ✅ **Brisbane timezone** calculation and display
+-   ✅ **Live countdown** with days, hours, minutes, seconds
+-   ✅ **Auto-cleanup** - removes URL parameter when done
+-   ✅ **Dev skip button** - only shows in development mode
+-   ✅ **Graceful fallback** - invalid dates are ignored
 
 ### Enable Bitcoin Payments
 
 From the .env
 
-* BTC_PAY_SERVER_URL=http://localhost:3001
-
+-   BTC_PAY_SERVER_URL=http://localhost:3001
 
 # SDK
 
@@ -182,6 +185,7 @@ yarn prepare && yarn publish
 ```
 
 # Node
+
 ## Creating the transaction
 
 -   Transactions are sent to the node
@@ -212,14 +216,13 @@ yarn prepare && yarn publish
 Alice `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 Bob `0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8`
 
-
 ### Tokens and contracts
 
-| Contract | Description                            | Address                                      | Network |
-| -------- | -------------------------------------- | -------------------------------------------- | ------- |
-| `Token`  | The token used for the poker game      | ``                                           | ``      |
-| `Bridge` | The bridge contract to deposit stables to the poker VM | `0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d` | `mainnet`  |
-| `Vault`  | The vault contract for validators to stake | `0x893c26846d7cE76445230B2b6285a663BF4C3BF5` | `mainnet`  |
+| Contract | Description                                            | Address                                      | Network   |
+| -------- | ------------------------------------------------------ | -------------------------------------------- | --------- |
+| `Token`  | The token used for the poker game                      | ``                                           | ``        |
+| `Bridge` | The bridge contract to deposit stables to the poker VM | `0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d` | `mainnet` |
+| `Vault`  | The vault contract for validators to stake             | `0x893c26846d7cE76445230B2b6285a663BF4C3BF5` | `mainnet` |
 
 ## Genesis block
 
@@ -248,6 +251,15 @@ Genesis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 }
 ```
 
+## Docker notes
+
+### Dockerfile
+
+```bash
+cd pvm/ts
+docker build -t poker-vm .
+docker run -p 8545:8545 poker-vm
+```
 
 ## Notes
 

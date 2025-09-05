@@ -24,13 +24,22 @@ export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
 
 export enum GameType {
     CASH = "cash",
+    SIT_AND_GO = "sit-and-go",
     TOURNAMENT = "tournament"
+}
+
+export enum GameStatus {
+    WAITING_FOR_PLAYERS = "waiting-for-players",
+    REGISTRATION = "registration",
+    IN_PROGRESS = "in-progress",
+    FINISHED = "finished"
 }
 
 export enum PlayerStatus {
     NOT_ACTED = "not-acted",
     TURN = "turn",
     ACTIVE = "active",
+    BUSTED = "busted",
     FOLDED = "folded",
     ALL_IN = "all-in",
     SITTING_OUT = "sitting-out",
@@ -56,6 +65,8 @@ export type GameOptions = {
     smallBlind: bigint;
     bigBlind: bigint;
     timeout: number;
+    type: GameType; // Optional for cash games
+    otherOptions?: Record<string, any>; // Placeholder for future options
 };
 
 export type GameOptionsDTO = {
@@ -66,6 +77,8 @@ export type GameOptionsDTO = {
     smallBlind?: string;
     bigBlind?: string;
     timeout?: number;
+    type?: GameType; // Optional for cash games
+    otherOptions?: Record<string, any>; // Placeholder for future options
 };
 
 // This is the type of the last action of a player
@@ -133,7 +146,7 @@ export type TexasHoldemGameState = {
 };
 
 export type TexasHoldemStateDTO = {
-    type: "cash";
+    type: GameType;
     address: string;
     gameOptions: GameOptionsDTO;
     smallBlindPosition?: number;
@@ -187,7 +200,7 @@ export type GameStateResponse = {
     state: TexasHoldemStateDTO;
 }
 
-export type PerformActionResponse= {
+export type PerformActionResponse = {
     state: TexasHoldemStateDTO;
     nonce: string;
     to: string;

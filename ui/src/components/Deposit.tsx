@@ -91,7 +91,7 @@ const Deposit: React.FC = () => {
 
         try {
             const amountInBigInt = convertAmountToBigInt(amount, decimals);
-            const tx = await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInBigInt);
+            await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInBigInt);
             setTmpWalletAllowance(amountInBigInt);
         } catch (err) {
             console.error("Approval failed:", err);

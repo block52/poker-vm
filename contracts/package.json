@@ -18,7 +18,11 @@
         "hh:wipe:vault": "npx hardhat ignition wipe chain-8453 VaultModule#Vault",
         "hh:wipe:bridge": "npx hardhat ignition wipe chain-1 BridgeModule#Bridge",
         "hh:deploy:hello": "npx hardhat ignition deploy ./ignition/modules/HelloWorld.ts --network sepolia --verify",
-        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify"
+        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify",
+        "hh:deploy:validatornft:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorNFT.ts --network base --verify",
+        "hh:deploy:validatorsale:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorSale.ts --network base --verify",
+        "hh:deploy:validatornft1usdc:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorNFTBase.ts --network base --verify",
+        "hh:deploy:validatorsale1usdc:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorSale1USDC.ts --network base --verify"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
@@ -44,7 +48,7 @@
         "typescript": ">=4.5.0"
     },
     "dependencies": {
-        "@openzeppelin/contracts": "^5.0.2",
+        "@openzeppelin/contracts": "^5.4.0",
         "@uniswap/v3-periphery": "^1.4.4"
     }
 }

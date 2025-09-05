@@ -3,7 +3,8 @@ export enum FunctionName {
     Approve = "approve",
     Allowance = "allowance",
     Decimals = "decimals",
-    Balance = "balanceOf"
+    Balance = "balanceOf",
+    Withdraw = "withdraw"
 }
 
 export interface GameType {

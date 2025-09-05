@@ -13,7 +13,7 @@ const connectDB = require("./db");
 
 const swaggerSetup = require("./swagger/setup");
 
-// const depositSessionsRouter = require("./routes/depositSessions");
+const depositSessionsRouter = require("./routes/depositSessions");
 const bitcoinWebhooksRouter = require("./bitcoin/webhooks/btcpayWebhook");
 
 // ===================================
@@ -37,7 +37,7 @@ const app = express();
 // Enable CORS for all routes
 app.use(
     cors({
-        origin: ["https://app.block52.xyz", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+        origin: ["https://app.block52.xyz", "http://localhost:8545", "http://localhost:3001", "http://localhost:3002"],
         methods: ["GET", "POST", "OPTIONS", "PUT"],
         credentials: true,
         allowedHeaders: ["Content-Type", "Authorization"]
@@ -72,7 +72,7 @@ app.get("/", (req, res) => {
 });
 
 // Mount feature-specific routes
-// app.use("/deposit-sessions", depositSessionsRouter);
+app.use("/deposit-sessions", depositSessionsRouter);
 app.use("/bitcoin", bitcoinWebhooksRouter);
 
 // ===================================

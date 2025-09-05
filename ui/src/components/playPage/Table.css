@@ -263,7 +263,7 @@
     left: 1rem;
     display: flex;
     align-items: center;
-    z-index: 5;
+    z-index: 50;
     opacity: 0.3;
 }
 
@@ -454,4 +454,33 @@
     .background-base-static {
         filter: blur(30px); /* Less blur = better performance */
     }
+}
+
+/* Professional Sit Out Toggle for Mobile */
+.sit-out-toggle {
+    user-select: none;
+    cursor: pointer;
+}
+
+.sit-out-toggle input[type="checkbox"]:checked ~ div > div:first-child {
+    background-color: #f97316; /* Orange when active */
+}
+
+.sit-out-toggle input[type="checkbox"]:checked ~ div > div:last-child {
+    transform: translateX(20px);
+}
+
+/* Smooth transitions for toggle */
+.sit-out-toggle div > div {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover effect for toggle container */
+.sit-out-toggle:hover {
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+/* Active state indicator */
+.sit-out-toggle input[type="checkbox"]:checked ~ span {
+    color: #fb923c; /* Lighter orange for text when active */
 } 

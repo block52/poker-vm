@@ -45,7 +45,7 @@ export class MineCommand implements ISignedCommand<Block | null> {
                     from: tx.from,
                     to: tx.to,
                     value: tx.value.toString(),
-                    data: tx.data ? tx.data.substring(0, 30) + (tx.data.length > 30 ? "..." : "") : "undefined"
+                    data: tx.data
                 });
             });
 

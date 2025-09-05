@@ -1,29 +1,32 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useTableAnimations } from "../../../hooks/useTableAnimations";
 import { useNextToActInfo } from "../../../hooks/useNextToActInfo";
-import { turnAnimationPosition } from "../../../utils/PositionArray";
+import { useTableLayout } from "../../../hooks/useTableLayout";
 import { TurnAnimationProps } from "../../../types/index";
 import "./TurnAnimation.css";
 
 const TurnAnimation: React.FC<TurnAnimationProps> = React.memo(({ index }) => {
     const { tableSize } = useTableAnimations();
-    const { seat: nextToActSeat, player: nextToActPlayer, isCurrentUserTurn, availableActions: nextToActAvailableActions, timeRemaining } = useNextToActInfo();
+    const { seat: nextToActSeat } = useNextToActInfo();
     const [isCurrentPlayersTurn, setIsCurrentPlayersTurn] = useState(false);
     
-    // Memoize position to avoid unnecessary calculations
-    const position = useMemo(() => {
-        if (tableSize === 9) {
-            return turnAnimationPosition.nine[index];
-        } else {
-            return turnAnimationPosition.six[index];
-        }
-    }, [tableSize, index]);
+    // Use the table layout hook to get proper positions for 4 or 9 players only
+    const tableLayout = useTableLayout(tableSize as 4 | 9 || 9);
+    
+    // Get position directly without memoization to ensure updates are reflected
+    const positions = tableLayout.positions.turnAnimations;
+    const position = positions?.[index];
 
     // Check if it's the current player's turn with useEffect
     useEffect(() => {
         const isTurn = nextToActSeat === index + 1;
         setIsCurrentPlayersTurn(isTurn);
-    }, [nextToActSeat, index]);
+        
+        // Debug logging
+        if (isTurn) {
+            console.log(`Turn indicator active for seat ${index + 1}:`, position);
+        }
+    }, [nextToActSeat, index, position]);
 
     // Don't render anything if it's not this player's turn or position isn't available
     if (!isCurrentPlayersTurn || !position) {

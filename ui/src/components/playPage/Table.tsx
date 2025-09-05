@@ -45,7 +45,9 @@
 
 import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
+// Position arrays now come from useTableLayout hook
+// // Position arrays now come from useTableLayout hook
+// import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
 import PokerActionPanel from "../Footer";
 import ActionsLog from "../ActionsLog";
 import OppositePlayerCards from "./Card/OppositePlayerCards";
@@ -105,16 +107,21 @@ import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner in
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { getAccountBalance, getPublicKey, getFormattedAddress } from "../../utils/b52AccountUtils";
-import { handleSitOut } from "../common/actionHandlers";
+import { handleSitOut, handleSitIn } from "../common/actionHandlers";
 import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
-import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
 // Game Start Countdown
 import GameStartCountdown from "./common/GameStartCountdown";
+import SitAndGoAutoJoinModal from "./SitAndGoAutoJoinModal";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
+
+// Table Layout Configuration
+import { useTableLayout } from "../../hooks/useTableLayout";
+import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -168,25 +175,13 @@ const Table = React.memo(() => {
 
     // Update to use the imported hook
     const tableDataValues = useTableData();
+    const { isUserAlreadyPlaying } = useVacantSeatData();
 
     // invoke hook for seat loop
     const { winnerInfo } = useWinnerInfo();
 
-    // Define calculateZoom first, before any usage
-    const calculateZoom = useCallback(() => {
-        const baseWidth = 2000;
-        const baseHeight = 850;
-        const headerFooterHeight = 550;
-
-        const availableHeight = window.innerHeight - headerFooterHeight;
-        const scaleWidth = window.innerWidth / baseWidth;
-        const scaleHeight = availableHeight / baseHeight;
-
-        // Conservative scaling to prevent player cutoff
-        const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
-
-        return Math.min(calculatedScale, 2);
-    }, []);
+    // Zoom is now handled by the table layout configuration
+    // const calculateZoom = useCallback(() => { ... }, []);
 
     // Function to fetch account balance
     const fetchAccountBalance = useCallback(async () => {
@@ -218,16 +213,16 @@ const Table = React.memo(() => {
         }
     }, [publicKey, fetchAccountBalance]);
 
-    // Now we can use calculateZoom in useState
-    const [zoom, setZoom] = useState(calculateZoom());
+    // Zoom is now managed by useTableLayout hook
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
     
-    // Check if sit out action is available
+    // Check if sit out/sit in actions are available
     const hasSitOutAction = hasAction(playerLegalActions, PlayerActionType.SIT_OUT);
+    const hasSitInAction = hasAction(playerLegalActions, PlayerActionType.SIT_IN);
 
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat } = usePlayerSeatInfo();
@@ -243,6 +238,10 @@ const Table = React.memo(() => {
 
     // Add the useTableState hook to get table state properties
     const { formattedTotalPot, tableSize } = useTableState();
+
+    // Use the table layout configuration system (only 4 and 9 players supported)
+    // TODO: Add support for 2, 3, 5, 6, 7, 8 player tables - positions need to be configured in tableLayoutConfig.ts
+    const tableLayout = useTableLayout(tableSize as 4 | 9 || 9);
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
@@ -327,8 +326,6 @@ const Table = React.memo(() => {
     const [startIndex, setStartIndex] = useState<number>(0);
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
-    const [playerPositionArray, setPlayerPositionArray] = useState<PositionArray[]>([]);
-    const [dealerPositionArray, setDealerPositionArray] = useState<PositionArray[]>([]);
 
     // Add the useChipPositions hook AFTER startIndex is defined
     const { chipPositionArray } = useChipPositions(startIndex);
@@ -353,6 +350,9 @@ const Table = React.memo(() => {
 
     // Optimize window width detection - only check on resize
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 414);
+    const [isMobileLandscape, setIsMobileLandscape] = useState(
+        window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600
+    );
 
     // 🔧 PERFORMANCE FIX: Disabled mouse tracking to prevent hundreds of re-renders
     // Mouse tracking was causing setMousePosition({ x, y }) on every mouse move
@@ -363,15 +363,21 @@ const Table = React.memo(() => {
 
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
 
-    // Memoize reordered arrays
+    // Memoize reordered arrays using positions from tableLayout
     const reorderedPlayerArray = useMemo(
-        () => [...playerPositionArray.slice(startIndex), ...playerPositionArray.slice(0, startIndex)],
-        [playerPositionArray, startIndex]
+        () => {
+            const positions = tableLayout.positions.players || [];
+            return [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
+        },
+        [tableLayout.positions.players, startIndex]
     );
 
     const reorderedDealerArray = useMemo(
-        () => [...dealerPositionArray.slice(startIndex), ...dealerPositionArray.slice(0, startIndex)],
-        [dealerPositionArray, startIndex]
+        () => {
+            const positions = tableLayout.positions.dealers || [];
+            return [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
+        },
+        [tableLayout.positions.dealers, startIndex]
     );
 
     // Winner animations
@@ -405,31 +411,34 @@ const Table = React.memo(() => {
 
     // Memoize handlers
     const handleResize = useCallback(() => {
-        setZoom(calculateZoom());
-        setIsMobile(window.innerWidth <= 414);
-    }, [calculateZoom]);
+        // Add a small delay for orientation changes to ensure dimensions are updated
+        setTimeout(() => {
+            tableLayout.refreshLayout();
+            setIsMobile(window.innerWidth <= 414);
+            setIsMobileLandscape(window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600);
+        }, 100);
+    }, [tableLayout]);
 
     useEffect(() => {
         window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
+        window.addEventListener("orientationchange", handleResize);
+        
+        // Also listen for the modern screen orientation API
+        if (screen.orientation) {
+            screen.orientation.addEventListener("change", handleResize);
+        }
+        
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            window.removeEventListener("orientationchange", handleResize);
+            if (screen.orientation) {
+                screen.orientation.removeEventListener("change", handleResize);
+            }
+        };
     }, [handleResize]);
 
-    useEffect(() => {
-        //* set the number of players
-        switch (tableSize) {
-            case 6:
-                setPlayerPositionArray(playerPosition.six);
-                setDealerPositionArray(dealerPosition.six);
-                break;
-            case 9:
-                setPlayerPositionArray(playerPosition.nine);
-                setDealerPositionArray(dealerPosition.nine);
-                break;
-            default:
-                setPlayerPositionArray([]);
-                setDealerPositionArray([]);
-        }
-    }, [tableSize, id]);
+    // Position arrays are now managed by useTableLayout hook
+    // useEffect(() => { ... }, [tableSize, id]);
 
     const onCloseSideBar = useCallback(() => {
         setOpenSidebar(!openSidebar);
@@ -491,7 +500,7 @@ const Table = React.memo(() => {
                 currentIndex,
                 left: position.left,
                 top: position.top,
-                color: position.color,
+                color: position.color || "#6b7280", // Default gray if no color
                 status: tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.seat === seatNumber)?.status,
                 onJoin: updateBalanceOnPlayerJoin
             };
@@ -501,8 +510,8 @@ const Table = React.memo(() => {
                 return (
                     <VacantPlayer
                         index={seatNumber}
-                        left={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].left : vacantPlayerPosition.nine[positionIndex].left}
-                        top={tableSize === 6 ? vacantPlayerPosition.six[positionIndex].top : vacantPlayerPosition.nine[positionIndex].top}
+                        left={tableLayout.positions.vacantPlayers[positionIndex]?.left || "0px"}
+                        top={tableLayout.positions.vacantPlayers[positionIndex]?.top || "0px"}
                         onJoin={updateBalanceOnPlayerJoin}
                     />
                 );
@@ -573,7 +582,7 @@ const Table = React.memo(() => {
     }
 
     // This component manages the subscription:
-    const { subscribeToTable } = useGameStateContext();
+    const { subscribeToTable, gameState } = useGameStateContext();
     useEffect(() => {
         if (id) {
             subscribeToTable(id);
@@ -585,7 +594,8 @@ const Table = React.memo(() => {
             {/* Temporary Color Debug Component */}
             {/* <ColorDebug /> */}
 
-            {/*//! HEADER - CASINO STYLE */}
+            {/*//! HEADER - CASINO STYLE - Hidden in mobile landscape */}
+            {!isMobileLandscape && (
             <div className="flex-shrink-0">
                 <div
                     className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2"
@@ -609,18 +619,35 @@ const Table = React.memo(() => {
                             Lobby
                         </span>
                         <NetworkDisplay isMainnet={false} />
+                        {/* Game Type Display - Desktop Only */}
+                        {gameOptions && (
+                            <div className="hidden md:flex items-center ml-4 px-3 py-1 rounded-lg" 
+                                 style={{ backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5), border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}` }}>
+                                <span className="text-sm font-semibold" style={{ color: colors.brand.primary }}>
+                                    {gameState?.type === "cash" ? "Cash • " : 
+                                     gameState?.type === "tournament" ? "Tournament • " : 
+                                     gameState?.type === "sit-and-go" ? "Sit & Go • " : ""}
+                                    Texas Hold'em
+                                    {gameOptions.minPlayers && gameOptions.maxPlayers && (
+                                        <span className="ml-1" style={{ color: colors.ui.textSecondary }}>
+                                            ({tableActivePlayers.length}/{gameOptions.maxPlayers} Players)
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
-                    <div className="flex items-center z-10">
-                        <div className="flex items-center rounded-lg py-1 px-1 sm:px-2 mr-2 sm:mr-3" style={walletInfoStyle}>
+                    <div className="flex items-center z-10 min-w-0">
+                        <div className="flex items-center rounded-lg py-1 px-1 sm:px-2 mr-1 sm:mr-3 min-w-0" style={walletInfoStyle}>
                             {isBalanceLoading ? (
                                 <span className="text-xs sm:text-sm">Loading...</span>
                             ) : (
                                 <>
                                     {/* Address */}
-                                    <div className="flex items-center mr-2 sm:mr-4">
-                                        <span className="font-mono text-[10px] sm:text-xs" style={{ color: colors.brand.primary }}>
+                                    <div className="flex items-center mr-1 sm:mr-4 min-w-0">
+                                        <span className="font-mono text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-none" style={{ color: colors.brand.primary }}>
                                             {formattedAddress}
                                         </span>
                                         <FaCopy
@@ -633,9 +660,9 @@ const Table = React.memo(() => {
                                     </div>
 
                                     {/* Balance - UPDATED to use direct utility */}
-                                    <div className="flex items-center">
+                                    <div className="flex items-center flex-shrink-0">
                                         <div
-                                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center mr-1 sm:mr-1.5"
+                                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center mr-0.5 sm:mr-1.5"
                                             style={balanceIconStyle}
                                         >
                                             <span className="font-bold text-[8px] sm:text-[10px]" style={{ color: colors.brand.primary }}>
@@ -664,7 +691,7 @@ const Table = React.memo(() => {
                         </div>
 
                         <div
-                            className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 cursor-pointer rounded-full shadow-md border transition-all duration-300"
+                            className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 cursor-pointer rounded-full shadow-md border transition-all duration-300 flex-shrink-0"
                             style={depositButtonStyle}
                             onClick={handleDepositClick}
                             onMouseEnter={handleDepositMouseEnter}
@@ -734,6 +761,37 @@ const Table = React.memo(() => {
                     </div>
                 </div>
             </div>
+            )}
+
+            {/* Mobile Landscape Floating Controls */}
+            {isMobileLandscape && (
+                <div className="fixed top-2 left-2 right-2 flex justify-between items-center z-50">
+                    {/* Left: Essential Info */}
+                    <div className="flex items-center gap-2 bg-black bg-opacity-70 px-2 py-1 rounded-lg">
+                        <span className="text-white text-xs font-bold cursor-pointer" onClick={handleLobbyClick}>
+                            Lobby
+                        </span>
+                        <span className="text-gray-300 text-xs">|</span>
+                        <span className="text-white text-xs">
+                            ${formattedValues.smallBlindFormatted}/{formattedValues.bigBlindFormatted}
+                        </span>
+                    </div>
+                    
+                    {/* Right: Balance & Leave */}
+                    <div className="flex items-center gap-2 bg-black bg-opacity-70 px-2 py-1 rounded-lg">
+                        <span className="text-white text-xs font-mono">
+                            ${balanceFormatted}
+                        </span>
+                        <span className="text-gray-300 text-xs">|</span>
+                        <span 
+                            className="text-white text-xs cursor-pointer flex items-center gap-1"
+                            onClick={handleLeaveTableClick}
+                        >
+                            Leave <RxExit size={10} />
+                        </span>
+                    </div>
+                </div>
+            )}
 
             {/*//! BODY */}
             <div className="flex w-full flex-grow overflow-visible">
@@ -767,7 +825,7 @@ const Table = React.memo(() => {
                         <div
                             className={`${isMobile ? "zoom-wrapper-mobile" : "zoom-wrapper-desktop"}`}
                             style={{
-                                transform: `translate(-50%, -50%) scale(${zoom})`
+                                transform: tableLayout.tableTransform
                             }}
                         >
                             <div className="flex-grow scrollbar-none bg-custom-table h-full flex flex-col justify-center items-center relative">
@@ -794,7 +852,7 @@ const Table = React.memo(() => {
                                             </div>
 
                                             {/*//! CHIP */}
-                                            {chipPositionArray.map((position, index) => {
+                                            {tableLayout.positions.chips.map((position, index) => {
                                                 const chipAmount = getChipAmount(index + 1);
 
                                                 return (
@@ -821,10 +879,10 @@ const Table = React.memo(() => {
                                             return (
                                                 <div key={positionIndex} className="z-[10]">
                                                     {/* turn indicator only when no winner yet */}
-                                                    {!hasWinner && <MemoizedTurnAnimation index={positionIndex} />}
+                                                    {!hasWinner && <MemoizedTurnAnimation index={seatNum - 1} />}
 
                                                     {/* winner ripple when hand is over and this seat won */}
-                                                    {isWinnerSeat && <WinAnimation index={positionIndex} />}
+                                                    {isWinnerSeat && <WinAnimation index={seatNum - 1} />}
 
                                                     {componentToRender}
                                                 </div>
@@ -842,9 +900,15 @@ const Table = React.memo(() => {
                     {/* Live Hand Strength Display */}
                     <LiveHandStrengthDisplay />
 
-                    {/*//! FOOTER */}
-                    <div className="w-full flex justify-center items-center h-[200px] sm:h-[250px] bg-transparent z-[10]">
-                        <div className="max-w-[700px] w-full flex justify-center items-center h-full">
+                    {/*//! FOOTER - Adjusted for mobile landscape */}
+                    <div className={`w-full flex justify-center items-center z-[10] ${
+                        isMobileLandscape 
+                            ? 'h-[80px] fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm' 
+                            : 'h-[200px] sm:h-[250px] bg-transparent'
+                    }`}>
+                        <div className={`w-full flex justify-center items-center h-full ${
+                            isMobileLandscape ? 'max-w-[500px] px-2' : 'max-w-[700px]'
+                        }`}>
                             <PokerActionPanel />
                         </div>
                         {/* <div className="w-full h-[400px] flex justify-center overflow-y-auto">
@@ -859,17 +923,25 @@ const Table = React.memo(() => {
             </div>
 
             {/* Status Messages Container - Stacked properly to avoid overlap */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2 z-50" style={{ top: "6.25rem" }}>
+            <div className={`flex flex-col space-y-2 z-50 ${
+                isMobileLandscape 
+                    ? 'absolute left-2 items-start max-w-[150px]'
+                    : 'absolute left-1/2 transform -translate-x-1/2 items-center'
+            }`} style={{ top: isMobileLandscape ? '3rem' : '6.25rem' }}>
                 {/* Add a message for the current user's seat */}
                 {currentUserSeat >= 0 && (
-                    <div className="text-white bg-black bg-opacity-50 px-2 py-1 rounded text-xs sm:text-sm text-center">
+                    <div className={`text-white bg-black bg-opacity-50 px-2 py-1 rounded text-xs sm:text-sm ${
+                        isMobileLandscape ? 'text-left break-words' : 'text-center'
+                    }`}>
                         You are seated at position {currentUserSeat}
                     </div>
                 )}
 
                 {/* Add an indicator for whose turn it is */}
                 {nextToActSeat && isGameInProgress && (
-                    <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
+                    <div className={`text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm ${
+                        isMobileLandscape ? 'text-left break-words' : 'text-center'
+                    }`}>
                         {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                             <span className="text-white">Your turn to act!</span>
                         ) : (
@@ -883,7 +955,9 @@ const Table = React.memo(() => {
 
                 {/* Show a message when the hand is over */}
                 {!isGameInProgress && tableActivePlayers.length > 0 && (
-                    <div className="text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm text-center">
+                    <div className={`text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm ${
+                        isMobileLandscape ? 'text-left break-words' : 'text-center'
+                    }`}>
                         <span>Hand complete - waiting for next hand</span>
                     </div>
                 )}
@@ -891,24 +965,74 @@ const Table = React.memo(() => {
 
             {/* Add a message for empty table if needed */}
             {tableActivePlayers.length === 0 && (
-                <div className="absolute top-28 right-4 text-white bg-black bg-opacity-50 p-2 sm:p-4 rounded text-xs sm:text-sm">
+                <div className={`text-white bg-black bg-opacity-50 rounded text-xs sm:text-sm ${
+                    isMobileLandscape 
+                        ? 'absolute left-2 top-24 p-2 max-w-[150px] text-left break-words'
+                        : 'absolute top-28 right-4 p-2 sm:p-4 text-center'
+                }`}>
                     Waiting for players to join...
                 </div>
             )}
 
-            {/* Sit Out Button - Bottom Left */}
+            {/* Sit Out Toggle - Professional Mobile Design */}
             {hasSitOutAction && (
-                <div className="fixed bottom-20 left-4 z-30">
+                <div className={`fixed z-30 ${
+                    isMobileLandscape 
+                        ? 'bottom-2 left-2' 
+                        : isMobile
+                            ? 'bottom-[260px] right-4' // Moved to right side on mobile portrait to avoid blind button overlap
+                            : 'bottom-20 left-4'
+                }`}>
+                    {/* Mobile: Compact Button Design */}
+                    {(isMobile || isMobileLandscape) ? (
+                        <button
+                            onClick={() => handleSitOut(id)}
+                            className="btn-sit-out text-white font-medium py-1.5 px-3 rounded-lg shadow-md text-xs
+                            backdrop-blur-sm transition-all duration-300 border
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            SIT OUT
+                        </button>
+                    ) : (
+                        /* Desktop: Original Button Design */
+                        <button
+                            onClick={() => handleSitOut(id)}
+                            className="btn-sit-out text-white font-medium py-2 px-4 rounded-lg shadow-md text-sm
+                            backdrop-blur-sm transition-all duration-300 border
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            SIT OUT
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Sit In Button - Shows when player is sitting out */}
+            {hasSitInAction && (
+                <div className={`fixed z-30 ${
+                    isMobileLandscape 
+                        ? 'bottom-2 left-2' 
+                        : isMobile
+                            ? 'bottom-[260px] right-4'
+                            : 'bottom-20 left-4'
+                }`}>
                     <button
-                        onClick={() => handleSitOut(id)}
-                        className="btn-sit-out text-white font-medium py-2 px-4 rounded-lg shadow-md text-sm
-                        backdrop-blur-sm transition-all duration-300 border
-                        flex items-center justify-center gap-2 transform hover:scale-105"
+                        onClick={() => handleSitIn(id)}
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600
+                            text-white font-bold py-2 px-4 rounded-lg shadow-lg border-2 border-green-600
+                            transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105
+                            animate-pulse text-sm"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        SIT OUT
+                        SIT IN
                     </button>
                 </div>
             )}
@@ -928,9 +1052,24 @@ const Table = React.memo(() => {
                 <GameStartCountdown gameStartTime={gameStartTime} onCountdownComplete={handleCountdownComplete} onSkip={handleSkipCountdown} />
             )}
 
-            {/* Club Name at Bottom Center */}
-            <div className="fixed bottom-1 left-1/2 transform -translate-x-1/2 z-10">
-                <div className="text-xs opacity-60" style={{ color: colors.ui.textSecondary, fontSize: "20px" }}>
+            {/* Sit & Go Auto-Join Modal - Shows for Sit & Go games when user is not playing */}
+            {gameState && (gameState.type as string) === "sit-and-go" && !isUserAlreadyPlaying && id && (
+                <SitAndGoAutoJoinModal 
+                    tableId={id}
+                    onJoinSuccess={() => {
+                        // Refresh the page or update state to show the user is now playing
+                        window.location.reload();
+                    }}
+                />
+            )}
+
+            {/* Club Name at Bottom Center (or Bottom Right in mobile landscape) */}
+            <div className={`fixed z-40 ${
+                isMobileLandscape 
+                    ? 'bottom-4 right-4 opacity-30' 
+                    : 'bottom-1 left-1/2 transform -translate-x-1/2 opacity-60'
+            }`}>
+                <div className="text-xs" style={{ color: colors.ui.textSecondary, fontSize: isMobileLandscape ? "14px" : "20px" }}>
                     {clubName}
                 </div>
             </div>

@@ -25,21 +25,40 @@ export const useGameOptions = (): GameOptionsReturn => {
         try {
             const options = gameState.gameOptions;
             
-            // Only return options if we have the required fields
+            // Check for missing fields and log errors
+            const missingFields = [];
+            if (!options.smallBlind) missingFields.push("smallBlind");
+            if (!options.bigBlind) missingFields.push("bigBlind");
+            if (options.timeout === undefined || options.timeout === null) missingFields.push("timeout");
+            if (!options.minBuyIn) missingFields.push("minBuyIn");
+            if (!options.maxBuyIn) missingFields.push("maxBuyIn");
+            if (!options.maxPlayers) missingFields.push("maxPlayers");
+            if (!options.minPlayers) missingFields.push("minPlayers");
+            if (!options.type) missingFields.push("type");
+            
+            if (missingFields.length > 0) {
+                console.error("⚠️ Missing game options fields from server:", missingFields);
+            }
+            
+            // Only return options if we have the critical required fields
             if (!options.smallBlind || !options.bigBlind || options.timeout === undefined || options.timeout === null) {
+                console.error("⚠️ Cannot display game options: missing critical fields (smallBlind, bigBlind, or timeout)");
                 return null; // Return null during loading or when data is incomplete
             }
             
-            // Return the actual game options from the server
+            // Return the actual game options from the server without defaults
+            // Cast as Required<GameOptionsDTO> since we've already checked critical fields exist
             return {
-                minBuyIn: options.minBuyIn || "0",
-                maxBuyIn: options.maxBuyIn || "0", 
-                maxPlayers: options.maxPlayers || 9,
-                minPlayers: options.minPlayers || 2,
+                minBuyIn: options.minBuyIn!,
+                maxBuyIn: options.maxBuyIn!, 
+                maxPlayers: options.maxPlayers!,
+                minPlayers: options.minPlayers!,
                 smallBlind: options.smallBlind,
                 bigBlind: options.bigBlind,
-                timeout: options.timeout
-            };
+                timeout: options.timeout,
+                type: options.type!,
+                otherOptions: options.otherOptions!
+            } as Required<GameOptionsDTO>;
         } catch (err) {
             console.error("Error parsing game options:", err);
             return null;

@@ -10,7 +10,7 @@ jest.mock("ethers", () => ({
     ZeroHash: "0x0000000000000000000000000000000000000000000000000000000000000000"
 }));
 
-describe.skip("GameManagement", () => {
+describe("GameManagement", () => {
     let gameManagement: GameManagement;
 
     beforeEach(() => {
@@ -24,7 +24,7 @@ describe.skip("GameManagement", () => {
         gameManagement = new GameManagement("mock");
     });
 
-    describe("get", () => {
+    describe.skip("get", () => {
         it("should return default state for zero address", async () => {
             const result = await gameManagement.getState(ethers.ZeroAddress);
 
@@ -95,8 +95,8 @@ describe.skip("GameManagement", () => {
         });
     });
 
-    describe("save", () => {
-        it.skip("should update existing game state", async () => {
+    describe.skip("save", () => {
+        it("should update existing game state", async () => {
             const mockSave = jest.fn();
             const mockExistingState = {
                 address: "0x1234567890123456789012345678901234567890",
@@ -136,7 +136,7 @@ describe.skip("GameManagement", () => {
         });
     });
 
-    describe("saveFromJSON", () => {
+    describe.skip("saveFromJSON", () => {
         it("should update existing game state from JSON", async () => {
             const mockSave = jest.fn();
             const mockExistingState = {

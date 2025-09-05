@@ -36,6 +36,7 @@ export const colors = {
     glow: import.meta.env.VITE_ACCENT_COLOR_GLOW || "#64ffda",
     success: import.meta.env.VITE_ACCENT_COLOR_SUCCESS || "#10b981",
     danger: import.meta.env.VITE_ACCENT_COLOR_DANGER || "#ef4444",
+    withdraw: import.meta.env.VITE_ACCENT_COLOR_WITHDRAW || (import.meta.env.VITE_BRAND_COLOR_SECONDARY || "#1a2639"),
   },
 
   // UI Element Colors

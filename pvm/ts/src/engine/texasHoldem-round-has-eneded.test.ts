@@ -1,36 +1,37 @@
 import TexasHoldemGame from "../engine/texasHoldem";
-import { GameOptions, PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
-import { ONE_TOKEN, TWO_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 import { ethers } from "ethers";
 
 describe("hasRoundEnded", () => {
     let game: TexasHoldemGame;
-    let gameOptions: GameOptions;
 
     const PLAYER_1 = "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac";
     const PLAYER_2 = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
 
     beforeEach(() => {
-        gameOptions = {
-            minBuyIn: 100n * ONE_TOKEN,
-            maxBuyIn: 1000n * ONE_TOKEN,
-            maxPlayers: 9,
-            minPlayers: 2,
-            smallBlind: ONE_TOKEN,
-            bigBlind: TWO_TOKENS,
-            timeout: 30000
-        };
+        // gameOptions = {
+        //     minBuyIn: 100n * ONE_TOKEN,
+        //     maxBuyIn: 1000n * ONE_TOKEN,
+        //     maxPlayers: 9,
+        //     minPlayers: 2,
+        //     smallBlind: ONE_TOKEN,
+        //     bigBlind: TWO_TOKENS,
+        //     timeout: 30000
+        // };
 
-        game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            1, // dealer position
-            [], // previous actions
-            1, // hand number
-            0, // action count
-            TexasHoldemRound.ANTE
-        );
+        // game = new TexasHoldemGame(
+        //     ethers.ZeroAddress,
+        //     gameOptions,
+        //     1, // dealer position
+        //     [], // previous actions
+        //     1, // hand number
+        //     0, // action count
+        //     TexasHoldemRound.ANTE
+        // );
+
+        game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
 
         // Add two players
         const player1 = new Player(PLAYER_1, undefined, 100n * ONE_TOKEN, undefined, PlayerStatus.ACTIVE);

@@ -16,7 +16,7 @@ bash 01-blinds-deal.sh
 sleep 1
 
 ## Player 1 calls
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -28,7 +28,7 @@ curl --location 'http://localhost:3000' \
 sleep 1
 
 ## Player 1 checks
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -40,7 +40,7 @@ curl --location 'http://localhost:3000' \
 sleep 1
 
 ## Player 2 bets
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",
@@ -52,7 +52,7 @@ curl --location 'http://localhost:3000' \
 sleep 1
 
 ## Player 1 folds
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",

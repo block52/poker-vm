@@ -1,15 +1,13 @@
 import { connectDB } from "../data/mongoConnection";
 
 export abstract class StateManager {
-    private readonly connectionString: string;
 
-    constructor(connectionString: string = "mongodb://localhost:27017/pvm") {
-        this.connectionString = connectionString;
+    constructor(protected readonly connString: string) {
     }
 
     async connect() {
         try {
-            await connectDB.connect(this.connectionString);
+            await connectDB.connect(this.connString);
         } catch (error) {
             console.error(error);
             process.exit(1);

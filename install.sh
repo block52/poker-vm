@@ -8,6 +8,9 @@ rm -R dist
 docker compose down
 git stash
 git pull
+
+bash nginx.sh
+
 yarn install
 yarn build
 cp .env dist/src
