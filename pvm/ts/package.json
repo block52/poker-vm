@@ -15,7 +15,7 @@
     "dependencies": {
         "@bitcoinbrisbane/block52": "1.2.12",
         "@types/cors": "^2.8.19",
-        "@types/node": "^22.15.30",
+        "@types/node": "^22.16.4",
         "@types/ws": "^8.18.1",
         "axios": "^1.8.3",
         "cors": "^2.8.5",
