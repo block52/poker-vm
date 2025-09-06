@@ -99,11 +99,6 @@ describe("Sit and Go - Full Game", () => {
             // Sanity check
             expect(Object.keys(seatMap).length).toBe(6);
 
-            console.log("✓ All 6 players registered successfully");
-
-            // Phase 2: First Hand - Early Tournament Play
-            console.log("\n=== PHASE 2: EARLY TOURNAMENT PLAY ===");
-
             // Start first hand
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
 
@@ -131,6 +126,8 @@ describe("Sit and Go - Full Game", () => {
             game.performAction(seatMap[5], PlayerActionType.ALL_IN, 12);
             game.performAction(seatMap[6], PlayerActionType.ALL_IN, 13);
             game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14);
+            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+
             game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
 
             // Verify pot size
