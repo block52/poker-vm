@@ -126,7 +126,7 @@ describe("Sit and Go - Full Game", () => {
             game.performAction(seatMap[5], PlayerActionType.ALL_IN, 12);
             game.performAction(seatMap[6], PlayerActionType.ALL_IN, 13);
             game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14);
-            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
+            expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP); // Should still be preflop
 
             game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
 

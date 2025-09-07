@@ -50,7 +50,7 @@ import { PayoutManager } from "./managers/payoutManager";
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
     public readonly dealerManager: IDealerPositionManager;
-    private blindsManager: IBlindsManager;
+    private readonly blindsManager: IBlindsManager;
 
     private readonly _update: IUpdate;
     private readonly _playersMap: Map<number, Player | null>;
@@ -760,7 +760,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Step 2: If only one live player remains, they win - move to showdown
         if (livePlayers.length <= 1) {
             if (this.currentRound !== TexasHoldemRound.ANTE && livePlayers.length === 1) {
+                // Check community cards, deal the remaining
                 this._currentRound = TexasHoldemRound.SHOWDOWN;
+                this.dealCommunityCards();
                 this.calculateWinner();
             }
             return true;
@@ -771,6 +773,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (activePlayers.length === 0) {
             // No active players remain, round ends
             this._currentRound = TexasHoldemRound.SHOWDOWN;
+            this.dealCommunityCards();
             this.calculateWinner();
             return true;
         }
@@ -1280,21 +1283,21 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         const hands = new Map<string, any>(players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic))]));
 
-        const activePlayers = this.findLivePlayers();
+        const livePlayers = this.findLivePlayers();
 
         // If only one player is active, they win the pot
-        if (activePlayers.length === 1) {
-            const hand = hands.get(activePlayers[0].id);
+        if (livePlayers.length === 1) {
+            const hand = hands.get(livePlayers[0].id);
             const _winner: Winner = {
                 amount: this.getPot(),
-                cards: activePlayers[0].holeCards?.map(card => card.mnemonic),
+                cards: livePlayers[0].holeCards?.map(card => card.mnemonic),
                 name: hand.name,
                 description: hand.descr // Roll these back when description is available from PokerSolver
             };
 
             this._winners = new Map<string, Winner>();
-            this._winners.set(activePlayers[0].id, _winner);
-            activePlayers[0].chips += this.getPot();
+            this._winners.set(livePlayers[0].id, _winner);
+            livePlayers[0].chips += this.getPot();
             return;
         }
 
