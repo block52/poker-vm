@@ -746,7 +746,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Step 3: Get active players (can still act - excludes all-in players)
-        const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED);
+        const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
+        if (activePlayers.length === 0) {
+            // No active players remain, round ends
+            this._currentRound = TexasHoldemRound.SHOWDOWN;
+            this.calculateWinner();
+            return true;
+        }
 
         // Get actions for this round
         const actions = this._rounds.get(round) || [];
