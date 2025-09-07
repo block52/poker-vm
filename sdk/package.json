@@ -1,6 +1,6 @@
 {
     "name": "@bitcoinbrisbane/block52",
-    "version": "1.2.12",
+    "version": "1.2.13",
     "author": "@bitcoinbrisbane",
     "license": "MIT",
     "description": "SDK for interacting with the Block52 Node",
@@ -12,7 +12,6 @@
         "prepare": "rm -rf dist && npm run build",
         "test:old": "npx ts-node test.ts",
         "test": "jest"
-
     },
     "files": [
         "dist"
