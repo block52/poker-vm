@@ -11,10 +11,10 @@
     "@anthropic-ai/claude-code": "^1.0.30",
     "@anthropic-ai/sdk": "^0.54.0",
     "@bitcoinbrisbane/block52": "^1.2.12",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "chalk": "^4.1.2",
     "dotenv": "^16.0.3",
-    "ethers": "^6.14.3",
+    "ethers": "^6.15.0",
     "mongoose": "^8.15.1"
   },
   "devDependencies": {

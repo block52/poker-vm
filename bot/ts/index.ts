@@ -7,12 +7,15 @@ import Bots from "./schema/bots";
 import { RaiseOrCallBot } from "./RaiseOrCallBot";
 import { RandomBot } from "./RandomBot";
 import { ClaudeBot } from "./ClaudBot";
+import { NodeRpcClient, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { ethers } from "ethers";
 
 dotenv.config();
 
 // Add nonce tracking
 let play = true;
 const allBots: Record<string, IBot> = {};
+let client;
 
 // Modify the main loop to include small blind posting
 async function main() {
@@ -26,11 +29,13 @@ async function main() {
     console.log(chalk.green("Connected to MongoDB database."));
     console.log(chalk.green("Using DB: " + connectionString));
 
-    const NODE_URL = process.env.NODE_URL || "https://node1.block52.xzy"; // Replace with your Ethereum node URL
+    const NODE_URL = process.env.NODE_URL;
     if (!NODE_URL) {
         console.error(chalk.red("No Ethereum node URL provided. Please set the NODE_URL environment variable."));
         process.exit(1);
     }
+
+    client = new NodeRpcClient(NODE_URL, "");
 
     const bots = await Bots.find({ enabled: true });
 
@@ -72,43 +77,29 @@ async function main() {
     for (const bot of bots) {
         if (bot.privateKey) {
             console.log(chalk.green(`Found bot with address: ${bot.address}`));
-            if (bot.type === "check") {
-                const checkBot: IBot = new CheckBot(bot.tableAddress, NODE_URL, bot.privateKey);
+            let botInstance: IBot | null = null;
 
-                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
-                const joined = await checkBot.joinGame();
-                if (joined) {
-                    allBots[bot.address] = checkBot;
-                }
+            // Make this a switch statement
+            switch (bot.type) {
+                case "check":
+                    botInstance = new CheckBot(bot.tableAddress, NODE_URL, bot.privateKey);
+                    break;
+                case "raiseOrCall":
+                    botInstance = new RaiseOrCallBot(bot.tableAddress, NODE_URL, bot.privateKey);
+                    break;
+                case "random":
+                    botInstance = new RandomBot(bot.tableAddress, NODE_URL, bot.privateKey);
+                    break;
+                case "claude":
+                    botInstance = new ClaudeBot(bot.tableAddress, NODE_URL, bot.privateKey, process.env.API_KEY || "");
+                    break;
             }
 
-            if (bot.type === "raiseOrCall") {
-                const raiseOrCallBot: IBot = new RaiseOrCallBot(bot.tableAddress, NODE_URL, bot.privateKey);
-
+            if (botInstance) {
                 console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
-                const joined = await raiseOrCallBot.joinGame();
+                const joined = await botInstance.joinGame();
                 if (joined) {
-                    allBots[bot.address] = raiseOrCallBot;
-                }
-            }
-
-            if (bot.type === "random") {
-                const randomBot: IBot = new RandomBot(bot.tableAddress, NODE_URL, bot.privateKey);
-
-                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
-                const joined = await randomBot.joinGame();
-                if (joined) {
-                    allBots[bot.address] = randomBot;
-                }
-            }
-
-            if (bot.type === "claude") {
-                const claudeBot: IBot = new ClaudeBot(bot.tableAddress, NODE_URL, bot.privateKey, process.env.API_KEY || "");
-
-                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
-                const joined = await claudeBot.joinGame();
-                if (joined) {
-                    allBots[bot.address] = claudeBot;
+                    allBots[bot.address] = botInstance;
                 }
             }
         }
@@ -117,6 +108,16 @@ async function main() {
     // Continuous monitoring loop
     console.log(chalk.yellow("\nStarting continuous monitoring (checking every 10 seconds)..."));
     while (play) {
+
+        // const game: TexasHoldemStateDTO = await client.getGameState("0xeb563377d3f7805ff663bd78770acec870cf9c33", ethers.ZeroAddress);
+        // console.log(chalk.cyan("Next player to act:"), game.nextToAct);
+
+        // const playerAddress = game.players.find(p => p.seat === game.nextToAct)?.address;
+        // if (playerAddress && allBots[playerAddress]) {
+        //     const bot = allBots[playerAddress];
+        //     await bot.performAction();
+        // }
+
         for (const bot of Object.values(allBots)) {
             console.log(chalk.cyan("Time: " + new Date().toLocaleTimeString()));
 

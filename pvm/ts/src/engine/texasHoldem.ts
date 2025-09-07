@@ -87,7 +87,18 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this._playersMap = new Map<number, Player | null>(playerStates);
         this._deck = new Deck(deck);
         this._currentRound = currentRound;
-        this._gameOptions = gameOptions;
+        
+        // Force casting
+        this._gameOptions = {
+            minBuyIn: BigInt(gameOptions.minBuyIn),
+            maxBuyIn: BigInt(gameOptions.maxBuyIn),
+            minPlayers: gameOptions.minPlayers,
+            maxPlayers: gameOptions.maxPlayers,
+            smallBlind: BigInt(gameOptions.smallBlind),
+            bigBlind: BigInt(gameOptions.bigBlind),
+            timeout: gameOptions.timeout,
+            type: gameOptions.type
+        };
 
         // Hack for old test data
         if (this.handNumber === 0) this._handNumber = 1;
@@ -150,7 +161,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             case GameType.TOURNAMENT: // Change once sit and go package is published
                 // Initialize Sit and Go specific managers if needed
                 // this.statusManager = new SitAndGoStatusManager(this.getSeatedPlayers(), this._gameOptions);
-                this.blindsManager = new SitAndGoBlindsManager(10, this._gameOptions);
+                const gameOptions: GameOptions = {
+                    minBuyIn: BigInt(this._gameOptions.minBuyIn),
+                    maxBuyIn: BigInt(this._gameOptions.maxBuyIn),
+                    minPlayers: this._gameOptions.minPlayers,
+                    maxPlayers: this._gameOptions.maxPlayers,
+                    smallBlind: BigInt(this._gameOptions.smallBlind),
+                    bigBlind: BigInt(this._gameOptions.bigBlind),
+                    timeout: this._gameOptions.timeout,
+                    type: this._gameOptions.type
+                };
+                this.blindsManager = new SitAndGoBlindsManager(10, gameOptions);
                 break;
             case GameType.CASH:
             default:
@@ -962,7 +983,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Convert amount to BigInt if provided
-        const _amount = amount ? BigInt(amount) : 0n;
+        const _amount: bigint = amount ? BigInt(amount) : 0n;
 
         // Handle non-player actions first
         switch (action) {
