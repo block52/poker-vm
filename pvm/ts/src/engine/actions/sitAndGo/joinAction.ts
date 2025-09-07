@@ -39,7 +39,7 @@ class JoinAction extends BaseAction implements IAction {
         }
 
         // For testing purposes, we give the player 10,000 chips
-        const chips = ethers.parseEther("10000");
+        const chips: bigint = ethers.parseEther("10000");
         player.chips = chips;
 
         // Find an available seat or use the requested one

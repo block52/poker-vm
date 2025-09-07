@@ -49,8 +49,8 @@ export class NodeRpcClient implements IClient {
     private readonly wallet: Wallet | undefined;
     private requestId: number = 0;
 
-    constructor(private url: string, private privateKey: string) {
-        if (privateKey.length === 66) {
+    constructor(private url: string, privateKey?: string) {
+        if (privateKey && privateKey.length === 66) {
             this.wallet = new Wallet(privateKey);
         }
     }

@@ -78,7 +78,19 @@ export class GameManagement extends StateManager implements IGameManagement {
             throw new Error(`Game not found for address: ${address}`);
         }
 
-        return game.gameOptions as GameOptions;
+        // Force string conversion for BigInt fields
+        const gameOptions: GameOptions = {
+            minBuyIn: BigInt(game.gameOptions.minBuyIn),
+            maxBuyIn: BigInt(game.gameOptions.maxBuyIn),
+            minPlayers: game.gameOptions.minPlayers,
+            maxPlayers: game.gameOptions.maxPlayers,
+            smallBlind: BigInt(game.gameOptions.smallBlind),
+            bigBlind: BigInt(game.gameOptions.bigBlind),
+            timeout: game.gameOptions.timeout,
+            type: game.gameOptions.type
+        }
+
+        return gameOptions;
     }
 
     public async create(nonce: bigint, owner: string, gameOptions: GameOptions): Promise<string> {

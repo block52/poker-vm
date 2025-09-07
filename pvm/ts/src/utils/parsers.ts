@@ -45,7 +45,7 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
             throw new Error(`Invalid index in transaction data: ${indexStr}`);
         }
 
-        return {
+        const result: OrderedTransaction = {
             from: tx.from,
             to: tx.to,
             value: valueStr ? BigInt(valueStr) : BigInt(0), // Default to 0 if value is not provided
@@ -53,6 +53,8 @@ export const toOrderedTransaction = (tx: ITransaction): OrderedTransaction => {
             index: index,
             data: tx.data
         };
+
+        return result;
     } catch (error) {
         throw new Error(`Error parsing transaction data: ${error}. Data: ${tx.data}`);
     }
