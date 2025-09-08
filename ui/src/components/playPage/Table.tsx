@@ -947,7 +947,7 @@ const Table = React.memo(() => {
                         ) : (
                             <span>
                                 Waiting for{" "}
-                                {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at position ${nextToActSeat + 1}`} to act
+                                {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at seat ${nextToActSeat}`} to act
                             </span>
                         )}
                     </div>

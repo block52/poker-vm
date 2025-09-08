@@ -533,8 +533,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Initialize blinds manager for Sit and Go
         // Bit of a hack.  Another option would be to get the last join action timestamp
-        if (this.type === GameType.SIT_AND_GO) {
-            this.blindsManager = new SitAndGoBlindsManager(10, this._gameOptions, new Date());
+        if (this.type === GameType.SIT_AND_GO && this.blindsManager instanceof SitAndGoBlindsManager) {
+            this.blindsManager.setStartTime(new Date());
         }
 
         // // Check if cards have already been dealt

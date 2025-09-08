@@ -28,8 +28,8 @@ export const usePlayerChipData = (): PlayerChipDataReturn => {
         gameState.players.forEach(player => {
             if (!player.seat || !player.address) return;
             
-            // Use the sumOfBets value directly from the backend
-            amounts[player.seat] = player.sumOfBets || "0";
+            // Use the sumOfBets value directly from the backend - no fallback
+            amounts[player.seat] = player.sumOfBets;
         });
         
         return amounts;
@@ -37,19 +37,13 @@ export const usePlayerChipData = (): PlayerChipDataReturn => {
 
     // Simplified function to get chip amount for a given seat
     const getChipAmount = (seatIndex: number): string => {
-        // Input validation
-        if (!Number.isInteger(seatIndex) || seatIndex < 1) {
-            console.warn(`[usePlayerChipData] Invalid seat index: ${seatIndex}`);
-            return "0";
-        }
-        
-        // Return cached value - use sumOfBets directly from backend
-        return playerChipAmounts[seatIndex] || "0";
+        // Return exactly what the backend says - no defaults or fallbacks
+        return playerChipAmounts[seatIndex] || "";
     };
 
     // Default values in case of error or loading
     const defaultState: PlayerChipDataReturn = {
-        getChipAmount: (seatIndex: number): string => "0",
+        getChipAmount: (seatIndex: number): string => "",
         isLoading,
         error
     };

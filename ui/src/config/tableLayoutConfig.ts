@@ -106,10 +106,10 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     players: {
       // 4-PLAYER TABLE POSITIONS (cross pattern)
       four: [
-        { left: "50%", top: "110%", color: "#4ade80" },    // Seat 1 - Bottom (green)
-        { left: "10%", top: "32%", color: "#f97316" },     // Seat 2 - Left (orange)
-        { left: "450px", top: "-45%", color: "#3b82f6" },    // Seat 3 - Top (blue)
-        { left: "1050px", top: "150px", color: "#ec4899" }      // Seat 4 - Right (pink)
+        { left: "50%", top: "400px", color: "#4ade80" },    // Seat 1 - Bottom (green)
+        { left: "-100px", top: "80px", color: "#f97316" },     // Seat 2 - Left (orange)
+        { left: "50%", top: "-140px", color: "#3b82f6" },    // Seat 3 - Top (blue)
+        { left: "980px", top: "80px", color: "#ec4899" }      // Seat 4 - Right (pink)
       ],
       
       // 6-PLAYER TABLE POSITIONS
@@ -174,10 +174,10 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     chips: {
       // 4-PLAYER CHIP POSITIONS
       four: [
-        { left: "450px", bottom: "260px" },  // Chips for Seat 1
-        { left: "200px", bottom: "350px" },  // Chips for Seat 2
-        { left: "450px", bottom: "440px" },  // Chips for Seat 3
-        { left: "700px", bottom: "350px" }   // Chips for Seat 4
+        { left: "50%", bottom: "10px" },  // Chips for Seat 1
+        { left: "50px", bottom: "150px" },  // Chips for Seat 2
+        { left: "200px", bottom: "240px" },  // Chips for Seat 3
+        { left: "750px", bottom: "150px" }   // Chips for Seat 4
       ],
       
       // 6-PLAYER CHIP POSITIONS
@@ -316,7 +316,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
   'mobile-landscape': {
     // TABLE POSITION & SCALE
     table: {
-      scale: 1.1,           // Slightly larger than portrait
+      scale: 1.3,           // Slightly larger than portrait
       translateX: '-50%',   // Center horizontally
       translateY: '20%',   // Moved up to account for removed header
       rotation: 180         // Needs to be 180 for proper orientation
@@ -394,10 +394,10 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     chips: {
       // 4-PLAYER CHIP POSITIONS
       four: [
-        { left: "450px", bottom: "260px" },  // Chips for Seat 1
-        { left: "200px", bottom: "350px" },  // Chips for Seat 2
-        { left: "450px", bottom: "440px" },  // Chips for Seat 3
-        { left: "700px", bottom: "350px" }   // Chips for Seat 4
+        { left: "500px", bottom: "20px" },  // Chips for Seat 1
+        { left: "30px", bottom: "130px" },  // Chips for Seat 2
+        { left: "240px", bottom: "300px" },  // Chips for Seat 3
+        { left: "750px", bottom: "130px" }   // Chips for Seat 4
       ],
       
       // 6-PLAYER CHIP POSITIONS
@@ -462,8 +462,8 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     turnAnimations: {
       // 4-PLAYER TURN INDICATORS
       four: [
-        { left: "450px", top: "399px" },   // Turn indicator Seat 1
-        { left: "-110px", top: "175px" },  // Turn indicator Seat 2
+        { left: "450px", top: "500px" },   // Turn indicator Seat 1
+        { left: "-110px", top: "270px" },  // Turn indicator Seat 2
         { left: "450px", top: "-20px" },  // Turn indicator Seat 3
         { left: "999px", top: "175px" }    // Turn indicator Seat 4
       ],
@@ -834,10 +834,10 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     chips: {
       // 4-PLAYER CHIP POSITIONS
       four: [
-        { left: "450px", bottom: "260px" },  // Chips for Seat 1
-        { left: "200px", bottom: "350px" },  // Chips for Seat 2
-        { left: "450px", bottom: "440px" },  // Chips for Seat 3
-        { left: "700px", bottom: "350px" }   // Chips for Seat 4
+        { left: "420px", bottom: "20px" },  // Chips for Seat 1
+        { left: "30px", bottom: "150px" },  // Chips for Seat 2
+        { left: "280px", bottom: "300px" },  // Chips for Seat 3
+        { left: "800px", bottom: "150px" }   // Chips for Seat 4
       ],
       
       // 6-PLAYER CHIP POSITIONS
@@ -903,9 +903,9 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
       // 4-PLAYER TURN INDICATORS
       four: [
         { left: "450px", top: "500px" },   // Turn indicator Seat 1
-        { left: "-110px", top: "175px" },  // Turn indicator Seat 2
+        { left: "-110px", top: "260px" },  // Turn indicator Seat 2
         { left: "450px", top: "-20px" },  // Turn indicator Seat 3
-        { left: "999px", top: "175px" }    // Turn indicator Seat 4
+        { left: "999px", top: "250px" }    // Turn indicator Seat 4
       ],
       
       // 6-PLAYER TURN INDICATORS

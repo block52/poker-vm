@@ -20,8 +20,19 @@ export class Bridge {
     private readonly provider: ethers.JsonRpcProvider;
 
     constructor(private readonly nodeUrl: string) {
-        this.provider = createProvider(this.nodeUrl);
-        this.bridgeContract = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridge_abi, this.provider);
+        console.log(`🌉 Bridge: Initializing with RPC URL: ${nodeUrl}`);
+        console.log(`🌉 Bridge: Using bridge contract address: ${CONTRACT_ADDRESSES.bridgeAddress}`);
+        
+        try {
+            this.provider = createProvider(this.nodeUrl);
+            console.log(`🌉 Bridge: Provider created successfully`);
+            
+            this.bridgeContract = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridge_abi, this.provider);
+            console.log(`🌉 Bridge: Contract instance created successfully`);
+        } catch (error) {
+            console.error(`🌉 Bridge: ERROR during initialization:`, error);
+            throw error;
+        }
     }
 
     public async listenToBridge(): Promise<void> {
@@ -115,7 +126,19 @@ export class Bridge {
         console.log("\n🔄 Bridge: Starting resync...");
 
         try {
-            const count: bigint = await this.bridgeContract.depositIndex();
+            console.log("🔄 Bridge: Fetching deposit count from contract...");
+            
+            // Add timeout for deposit index fetch
+            const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error("Bridge contract call timed out after 10 seconds")), 10000);
+            });
+            
+            const count: bigint = await Promise.race([
+                this.bridgeContract.depositIndex(),
+                timeoutPromise
+            ]);
+            
+            console.log(`🔄 Bridge: Found ${count} total deposits`);
 
             if (count === 0n) {
                 console.log("🚫 Bridge: No deposits found, skipping resync.");
@@ -174,6 +197,18 @@ export class Bridge {
             });
         } catch (error) {
             console.error("\n💥 Bridge: Resync failed with error:", error);
+            
+            // Check for specific error types
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (errorMessage.includes("ENOTFOUND") || errorMessage.includes("getaddrinfo")) {
+                console.error("🌐 Network error: Cannot reach Ethereum RPC endpoint");
+                console.error("🌐 Please check your RPC_URL in .env file");
+                console.error("🌐 Current RPC_URL:", this.nodeUrl);
+            } else if (errorMessage.includes("timed out")) {
+                console.error("⏱️ Bridge contract call timed out - Ethereum RPC may be slow or unreachable");
+            }
+            
+            console.log("⚠️ Bridge resync failed but server will continue without historical deposits");
             // Don't throw the error further - let the service continue running
         }
     }
