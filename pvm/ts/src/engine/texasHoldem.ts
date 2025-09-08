@@ -87,7 +87,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this._playersMap = new Map<number, Player | null>(playerStates);
         this._deck = new Deck(deck);
         this._currentRound = currentRound;
-        
+
         // Force casting
         this._gameOptions = {
             minBuyIn: BigInt(gameOptions.minBuyIn),
@@ -133,8 +133,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Initialize update handler
         this._update = new (class implements IUpdate {
-            constructor(public game: TexasHoldemGame) {}
-            addAction(action: Turn): void {}
+            constructor(public game: TexasHoldemGame) { }
+            addAction(action: Turn): void { }
         })(this);
 
         // Initialize action handlers
@@ -1275,15 +1275,52 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return winningHand.includes(heroSolution);
     }
 
+    rankHands(handArrays: string[][]) {
+        // Solve all hands
+        const hands = handArrays.map((cards, index) => ({
+            hand: PokerSolver.Hand.solve(cards, game),
+            cards: cards,
+            index: index
+        }));
+
+        // Sort by rank (higher rank = better hand) and then by comparison
+        hands.sort((a, b) => {
+            if (a.hand.rank !== b.hand.rank) {
+                return b.hand.rank - a.hand.rank; // Higher rank first
+            }
+            return a.hand.compare(b.hand); // If same rank, use compare
+        });
+
+        return hands.map((item, position) => ({
+            position: position + 1,
+            cards: item.cards,
+            handName: item.hand.name,
+            description: item.hand.descr,
+            originalIndex: item.index
+        }));
+    }
+
+    //   // Example usage
+    //   const playerHands = [
+    //     ['Ah', 'Kh', 'Qh', 'Jh', 'Th'], // Royal Flush
+    //     ['9s', '9h', '9d', '9c', '2s'],   // Four of a Kind  
+    //     ['Ac', 'Ad', 'Ah', '2s', '2h'],   // Full House
+    //     ['7h', '8h', '9h', 'Th', 'Jh'],   // Straight Flush
+    //     ['As', 'Ks', 'Qd', 'Jc', 'Th']    // High Card
+    //   ];
+
+    //   const rankings = rankHands(playerHands);
+    //   rankings.forEach(result => {
+    //     console.log(`${result.position}. ${result.description} (${result.cards.join(', ')})`);
+    // });
+
     /**
      * Calculates the winner(s) at showdown
      */
     private calculateWinner(): void {
-        const players = this.getSeatedPlayers();
-
-        const hands = new Map<string, any>(players.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic))]));
 
         const livePlayers = this.findLivePlayers();
+        const hands = new Map<string, any>(livePlayers.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic))]));
 
         // If only one player is active, they win the pot
         if (livePlayers.length === 1) {
@@ -1301,9 +1338,16 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return;
         }
 
+        // Set all in players to SHOWING
+        livePlayers.forEach(p => {
+            if (p.status === PlayerStatus.ALL_IN) {
+                p.updateStatus(PlayerStatus.SHOWING);
+            }
+        });
+
         // Calculate winners for multiple active players
         this._winners = new Map<string, Winner>();
-        const showingPlayers = players.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
+        const showingPlayers = livePlayers.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
         const pot: bigint = this.getPot();
 
         const winningHands = PokerSolver.Hand.winners(showingPlayers.map(a => hands.get(a.id)));
@@ -1326,9 +1370,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
+        PokerSolver.Hand.getNext()
+
         // Check all players, if they have no chips left, set them to SITTING_OUT
+        const players: Player[] = this.getSeatedPlayers();
         for (const player of players) {
-            if (player.chips <= 0n) {
+            if (player.chips === 0n) {
                 // if cash game, set to sitting out
                 if (this.type === GameType.CASH) {
                     player.updateStatus(PlayerStatus.SITTING_OUT);
@@ -1337,9 +1384,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 // if sit and go or tournament, set to busted
                 if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
                     // Get payouts from the payout manager
-                    const players: Player[] = this.getSeatedPlayers();
                     const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
-
                     const payout = payoutManager.calculateCurrentPayout();
                     if (payout > 0n) {
                         // Need to do transfer back to player here

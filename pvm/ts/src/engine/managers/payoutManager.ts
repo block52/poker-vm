@@ -3,18 +3,21 @@ import { Player } from "../../models/player";
 
 export class PayoutManager {
 
+    private readonly players: Player[];
     private readonly runners: number;
     private readonly totalPrizePool: bigint;
     // This class will handle the payout logic for the game
     // It will calculate payouts based on the game state and player positions
 
-    constructor(private readonly buyIn: bigint, private readonly players: Player[]) {
+    constructor(private readonly buyIn: bigint, players: Player[]) {
+        // Copy players array to avoid mutating the original
+        this.players = [...players];
         this.runners = players.length;
         this.totalPrizePool = this.buyIn * BigInt(this.runners);
     }
 
     calculateCurrentPayout(): bigint {
-        const livePlayers = this.players.filter(player => player.status === PlayerStatus.ACTIVE);
+        const livePlayers = this.players.filter(player => player.status !== PlayerStatus.BUSTED);
 
         if (livePlayers.length === 0) {
             throw new Error("No active players to calculate payout");
@@ -29,10 +32,7 @@ export class PayoutManager {
     }
 
     calculatePayout(place: number): bigint {
-        if (place < 1) {
-            return 0n; // Only top 3 places get paid
-        }
-
+        // Payout structure based on number of runners
         if (this.runners < 6) {
             switch (place) {
                 case 1: // First place - 100%
