@@ -15,6 +15,7 @@ const USDC_ABI = [
 
 import BuyInModal from "./playPage/BuyInModal";
 import WithdrawalModal from "./WithdrawalModal";
+import USDCDepositModal from "./USDCDepositModal";
 
 // game wallet and SDK imports
 import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
@@ -60,21 +61,31 @@ const NetworkDisplay = React.memo(({ isMainnet = false }: { isMainnet?: boolean 
 });
 
 // Memoized Deposit button component  
-const DepositButton = React.memo(({ onClick }: { onClick: () => void }) => {
+const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) => {
     const buttonStyle = useMemo(() => ({ 
-        background: `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)` 
-    }), []);
+        background: disabled 
+            ? `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 0.5)} 0%, ${hexToRgba(colors.ui.bgDark, 0.3)} 100%)`
+            : `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)` 
+    }), [disabled]);
     
     const handleClick = useCallback(() => {
-        onClick();
-    }, [onClick]);
+        if (!disabled) {
+            onClick();
+        }
+    }, [onClick, disabled]);
     
     return (
         <button
             type="button"
             onClick={handleClick}
-            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            disabled={disabled}
+            className={`flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 shadow-md ${
+                disabled 
+                    ? 'cursor-not-allowed opacity-50' 
+                    : 'transform hover:scale-105 hover:opacity-90'
+            }`}
             style={buttonStyle}
+            title={disabled ? "Connect Web3 wallet to deposit" : "Deposit USDC"}
         >
             Deposit
         </button>
@@ -192,6 +203,12 @@ const Dashboard: React.FC = () => {
     
     // Withdrawal Modal
     const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+    
+    // USDC Deposit Modal
+    const [showUSDCDepositModal, setShowUSDCDepositModal] = useState(false);
+    
+    // Wallet connection warning
+    const [showWalletWarning, setShowWalletWarning] = useState(false);
     
     // State for showing all tables
     const [showAllTables, setShowAllTables] = useState(false);
@@ -516,8 +533,15 @@ const Dashboard: React.FC = () => {
     
     // Memoized Deposit callback
     const handleDepositClick = useCallback(() => {
-        navigate("/qr-deposit");
-    }, [navigate]);
+        if (isConnected) {
+            setShowUSDCDepositModal(true);
+        } else {
+            // Show warning popup if wallet not connected
+            setShowWalletWarning(true);
+            // Auto-hide after 3 seconds
+            setTimeout(() => setShowWalletWarning(false), 3000);
+        }
+    }, [isConnected]);
     
     // Memoized Withdrawal callback
     const handleWithdrawClick = useCallback(() => {
@@ -1005,7 +1029,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     )}
                                     <div className="flex items-center gap-2 pt-2">
-                                        <DepositButton onClick={handleDepositClick} />
+                                        <DepositButton onClick={handleDepositClick} disabled={false} />
                                         <WithdrawButton onClick={handleWithdrawClick} />
                                         <CreateTableButton onClick={handleCreateTableClick} />
                                     </div>
@@ -1448,6 +1472,37 @@ const Dashboard: React.FC = () => {
                                 refetchAccount();
                             }}
                         />
+                    )}
+                    {showUSDCDepositModal && (
+                        <USDCDepositModal
+                            isOpen={showUSDCDepositModal}
+                            onClose={() => setShowUSDCDepositModal(false)}
+                            onSuccess={() => {
+                                // Refresh account balance after successful deposit
+                                refetchAccount();
+                                setShowUSDCDepositModal(false);
+                            }}
+                        />
+                    )}
+                    
+                    {/* Wallet Connection Warning Popup */}
+                    {showWalletWarning && (
+                        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slide-down">
+                            <div 
+                                className="px-6 py-4 rounded-lg shadow-lg flex items-center gap-3"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.ui.bgDark, 0.95),
+                                    border: `2px solid ${colors.accent.danger}`,
+                                    backdropFilter: 'blur(10px)'
+                                }}
+                            >
+                                <div className="text-2xl">⚠️</div>
+                                <div>
+                                    <p className="text-white font-semibold">Please connect your Web3 wallet first</p>
+                                    <p className="text-gray-400 text-sm mt-1">Click the wallet button to connect MetaMask or WalletConnect</p>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </>
             )}
