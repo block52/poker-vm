@@ -1274,45 +1274,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return winningHand.includes(heroSolution);
     }
 
-    // private rankHands(handArrays: string[]) {
-    //     // Solve all hands
-    //     const hands = handArrays.map((cards, index) => ({
-    //         hand: PokerSolver.Hand.solve(cards),
-    //         cards: cards,
-    //         index: index
-    //     }));
-
-    //     // Sort by rank (higher rank = better hand) and then by comparison
-    //     hands.sort((a, b) => {
-    //         if (a.hand.rank !== b.hand.rank) {
-    //             return b.hand.rank - a.hand.rank; // Higher rank first
-    //         }
-    //         return a.hand.compare(b.hand); // If same rank, use compare
-    //     });
-
-    //     return hands.map((item, position) => ({
-    //         position: position + 1,
-    //         cards: item.cards,
-    //         handName: item.hand.name,
-    //         description: item.hand.descr,
-    //         originalIndex: item.index
-    //     }));
-    // }
-
-    //   // Example usage
-    //   const playerHands = [
-    //     ['Ah', 'Kh', 'Qh', 'Jh', 'Th'], // Royal Flush
-    //     ['9s', '9h', '9d', '9c', '2s'],   // Four of a Kind  
-    //     ['Ac', 'Ad', 'Ah', '2s', '2h'],   // Full House
-    //     ['7h', '8h', '9h', 'Th', 'Jh'],   // Straight Flush
-    //     ['As', 'Ks', 'Qd', 'Jc', 'Th']    // High Card
-    //   ];
-
-    //   const rankings = rankHands(playerHands);
-    //   rankings.forEach(result => {
-    //     console.log(`${result.position}. ${result.description} (${result.cards.join(', ')})`);
-    // });
-
     /**
      * Calculates the winner(s) at showdown
      */
@@ -1375,28 +1336,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             });
         }
 
-        // const hands: Record<Player['id'], string[]> = {};
-
-        // for (const player of players) {
-        //     if (player.holeCards) {
-        //         hands[player.id] = this._communityCards.concat(player.holeCards).map(c => c.mnemonic);
-        //     }
-        // }
-
-
-
-
-
         if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
             for (const player of players) {
                 if (player.chips === 0n) {
-
-                    // // // convert hands mapping to an array and sort
-                    // const rankedHands = Array.from(hands.entries()).map(([playerId, hand]) => ({
-                    //     playerId,
-                    //     hand
-                    // }));
-
                     const handArray = Array.from(hands.entries()).map(([playerId, hand]) => ({
                         playerId,
                         hand
@@ -1409,6 +1351,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                         }
                         return a.hand.compare(b.hand); // If same rank, use compare
                     });
+
+                    console.table(handArray);
 
                     // The player is now BUSTED after the pots awarded.
                     const place = players.length;
