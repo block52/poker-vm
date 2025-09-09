@@ -7,17 +7,28 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ValidatorNFT } from "./ValidatorNFT.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { ERC4626 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-contract ValidatorPartial is ERC20, Ownable {
+contract ValidatorPartial is Ownable {
 
     public constant address NFT = address(0);
     public uint256 tokenId;
+    private address _underlying;
+    private uint8 _decimalsOffset;
+
+    function asset() public view virtual returns (address) {
+        return address(_underlying);
+    }
+
+    function decimals() public view virtual override(IERC20Metadata, ERC20) returns (uint8) {
+        return IERC20Metadata(_underlying).decimals();
+    }
 
     function name() public view override returns (string memory) {
         return "ValidatorPartial";
     }
 
-    constructor() ERC20("ValidatorPartial", "VP") Ownable(msg.sender) {
+    constructor() Ownable(msg.sender) {
 
         // nft = ValidatorNFT(nft_);
         // treasury = treasury_;
@@ -37,6 +48,19 @@ contract ValidatorPartial is ERC20, Ownable {
     function getNFTData() private view returns (address) {
         // ownerOf(uint256 _tokenId) external view returns (address);
         return IERC721(NFT).ownerOf(tokenId);
+    }
+
+    /// @inheritdoc IERC4626
+    function deposit(uint256 assets, address receiver) public virtual returns (uint256) {
+        uint256 maxAssets = maxDeposit(receiver);
+        if (assets > maxAssets) {
+            revert ERC4626ExceededMaxDeposit(receiver, assets, maxAssets);
+        }
+
+        uint256 shares = previewDeposit(assets);
+        _deposit(_msgSender(), receiver, assets, shares);
+
+        return shares;
     }
 
     function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes _data) external returns(bytes4) {
