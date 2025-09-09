@@ -1262,8 +1262,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const hands = players.map(p => PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic)));
         const communityCards: string[] = this._communityCards.map(c => c.mnemonic);
 
-        const heroCards = cards;
-        heroCards.concat(communityCards);
+        const heroCards = cards.concat(communityCards);
         const heroSolution = PokerSolver.Hand.solve(heroCards);
 
         // Check to see if hero's hand is already in the hands
@@ -1275,30 +1274,30 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         return winningHand.includes(heroSolution);
     }
 
-    rankHands(handArrays: string[][]) {
-        // Solve all hands
-        const hands = handArrays.map((cards, index) => ({
-            hand: PokerSolver.Hand.solve(cards, game),
-            cards: cards,
-            index: index
-        }));
+    // private rankHands(handArrays: string[]) {
+    //     // Solve all hands
+    //     const hands = handArrays.map((cards, index) => ({
+    //         hand: PokerSolver.Hand.solve(cards),
+    //         cards: cards,
+    //         index: index
+    //     }));
 
-        // Sort by rank (higher rank = better hand) and then by comparison
-        hands.sort((a, b) => {
-            if (a.hand.rank !== b.hand.rank) {
-                return b.hand.rank - a.hand.rank; // Higher rank first
-            }
-            return a.hand.compare(b.hand); // If same rank, use compare
-        });
+    //     // Sort by rank (higher rank = better hand) and then by comparison
+    //     hands.sort((a, b) => {
+    //         if (a.hand.rank !== b.hand.rank) {
+    //             return b.hand.rank - a.hand.rank; // Higher rank first
+    //         }
+    //         return a.hand.compare(b.hand); // If same rank, use compare
+    //     });
 
-        return hands.map((item, position) => ({
-            position: position + 1,
-            cards: item.cards,
-            handName: item.hand.name,
-            description: item.hand.descr,
-            originalIndex: item.index
-        }));
-    }
+    //     return hands.map((item, position) => ({
+    //         position: position + 1,
+    //         cards: item.cards,
+    //         handName: item.hand.name,
+    //         description: item.hand.descr,
+    //         originalIndex: item.index
+    //     }));
+    // }
 
     //   // Example usage
     //   const playerHands = [
@@ -1339,10 +1338,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Set all in players to SHOWING
-        livePlayers.forEach(p => {
-            if (p.status === PlayerStatus.ALL_IN) {
-                p.updateStatus(PlayerStatus.SHOWING);
-            }
+        livePlayers.filter(p => p.status === PlayerStatus.ALL_IN).map(p => {
+            p.updateStatus(PlayerStatus.SHOWING);
         });
 
         // Calculate winners for multiple active players
@@ -1370,25 +1367,58 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        PokerSolver.Hand.getNext()
-
         // Check all players, if they have no chips left, set them to SITTING_OUT
         const players: Player[] = this.getSeatedPlayers();
-        for (const player of players) {
-            if (player.chips === 0n) {
-                // if cash game, set to sitting out
-                if (this.type === GameType.CASH) {
-                    player.updateStatus(PlayerStatus.SITTING_OUT);
-                }
+        if (this.type === GameType.CASH) {
+            players.filter(p => p.chips === 0n).map(p => {
+                p.updateStatus(PlayerStatus.SITTING_OUT);
+            });
+        }
 
-                // if sit and go or tournament, set to busted
-                if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
+        // const hands: Record<Player['id'], string[]> = {};
+
+        // for (const player of players) {
+        //     if (player.holeCards) {
+        //         hands[player.id] = this._communityCards.concat(player.holeCards).map(c => c.mnemonic);
+        //     }
+        // }
+
+
+
+
+
+        if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
+            for (const player of players) {
+                if (player.chips === 0n) {
+
+                    // // // convert hands mapping to an array and sort
+                    // const rankedHands = Array.from(hands.entries()).map(([playerId, hand]) => ({
+                    //     playerId,
+                    //     hand
+                    // }));
+
+                    const handArray = Array.from(hands.entries()).map(([playerId, hand]) => ({
+                        playerId,
+                        hand
+                    }));
+
+                    // Sort by rank (higher rank = better hand) and then by comparison
+                    handArray.sort((a, b) => {
+                        if (a.hand.rank !== b.hand.rank) {
+                            return b.hand.rank - a.hand.rank; // Higher rank first
+                        }
+                        return a.hand.compare(b.hand); // If same rank, use compare
+                    });
+
+                    // The player is now BUSTED after the pots awarded.
+                    const place = players.length;
+
                     // Get payouts from the payout manager
                     const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
-                    const payout = payoutManager.calculateCurrentPayout();
+                    const payout = payoutManager.calculatePayout(place);
+
                     if (payout > 0n) {
                         // Need to do transfer back to player here
-
                         console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
                     }
 
