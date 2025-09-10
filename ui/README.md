@@ -13,7 +13,7 @@ The following environment variables can be configured in your `.env` file:
     -   Environment mode for the application
     -   Values: `"development"` or `"production"`
     -   Default: `"production"`
-    -   Used in: Enables development features like layout debug indicator
+    -   Used in: Enables development features like layout debug indicator and game results display
 
 -   **`VITE_PROJECT_ID`** (required)
 
