@@ -123,6 +123,12 @@ export type PlayerDTO = {
     signature: string;
 };
 
+export type ResultDTO = {
+    place: number;
+    playerId: string;
+    payout: string;
+};
+
 export type TexasHoldemGameState = {
     type: string;
     address: string;
@@ -142,6 +148,7 @@ export type TexasHoldemGameState = {
     handNumber: number;
     round: TexasHoldemRound;
     winners: string[];
+    results: ResultDTO[];
     signature: string;
 };
 

@@ -103,3 +103,9 @@ export type Winner = {
     name: string | undefined;
     description: string | undefined;
 };
+
+export type Result = {
+    place: number;
+    playerId: string;
+    payout: bigint;
+}

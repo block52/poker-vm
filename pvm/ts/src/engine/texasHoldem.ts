@@ -40,7 +40,7 @@ import JoinActionSitAndGo from "./actions/sitAndGo/joinAction";
 
 // @ts-ignore
 import PokerSolver from "pokersolver";
-import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Turn, TurnWithSeat, Winner } from "./types";
+import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Result, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager, CashGameBlindsManager } from "./managers/index";
@@ -56,6 +56,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private readonly _playersMap: Map<number, Player | null>;
     private readonly _rounds = new Map<TexasHoldemRound, TurnWithSeat[]>();
     private readonly _communityCards: Card[] = [];
+    private readonly _communityCards2: Card[] = [];
     private readonly _actions: IAction[];
     private readonly _gameOptions: GameOptions;
     private readonly _address: string;
@@ -81,7 +82,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         deck: string = "",
         winners: WinnerDTO[] = [],
         private readonly _now: number = Date.now(),
-        dealerManager?: IDealerPositionManager
+        dealerManager?: IDealerPositionManager,
+        private readonly _results: Result[] = []
     ) {
         this._address = address;
         this._playersMap = new Map<number, Player | null>(playerStates);
@@ -233,6 +235,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this._deck = new Deck(deck);
         this._pots = [0n];
         this._communityCards.length = 0;
+        this._communityCards2.length = 0;
         this._currentRound = TexasHoldemRound.ANTE;
         this._winners.clear();
         this._handNumber += 1;
@@ -562,6 +565,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 player.holeCards[1] = secondCard; // Replace second card
             }
         }
+
+        // Deal community cards
+        this._communityCards2.push(...this._deck.deal(5));
     }
 
     /**
@@ -598,6 +604,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         } else if (this.currentRound === TexasHoldemRound.RIVER) {
             // Moving to SHOWDOWN
         }
+    }
+
+    private getCommunityCards(): Card[] {
+        const cards: Card[] = [];
+        if (this.currentRound === TexasHoldemRound.FLOP) {
+            // Moving to FLOP - deal 3 community cards
+            cards.push(...this._communityCards2.slice(0, 3));
+        } 
+        if (this.currentRound === TexasHoldemRound.TURN) {
+            // Moving to TURN - deal 1 card
+            cards.push(...this._communityCards2.slice(0, 4));
+        } 
+        if (this.currentRound === TexasHoldemRound.RIVER) {
+            // Moving to RIVER - deal 1 card
+            cards.push(...this._communityCards2.slice(0, 5));
+        }
+        return cards;
     }
 
     /**
@@ -1259,8 +1282,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        const hands = players.map(p => PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic)));
-        const communityCards: string[] = this._communityCards.map(c => c.mnemonic);
+        // const hands = players.map(p => PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic)));
+        // const communityCards: string[] = this._communityCards.map(c => c.mnemonic);
+        const hands = players.map(p => PokerSolver.Hand.solve(this.getCommunityCards().concat(p.holeCards!).map(c => c.mnemonic)));
+        const communityCards: string[] = this.getCommunityCards().map(c => c.mnemonic);
 
         const heroCards = cards.concat(communityCards);
         const heroSolution = PokerSolver.Hand.solve(heroCards);
@@ -1280,7 +1305,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private calculateWinner(): void {
 
         const livePlayers = this.findLivePlayers();
-        const hands = new Map<string, any>(livePlayers.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic))]));
+        // const hands = new Map<string, any>(livePlayers.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic))]));
+        const hands = new Map<string, any>(livePlayers.map(p => [p.id, PokerSolver.Hand.solve(this.getCommunityCards().concat(p.holeCards!).map(c => c.mnemonic))]));
 
         // If only one player is active, they win the pot
         if (livePlayers.length === 1) {
@@ -1339,6 +1365,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
             for (const player of players) {
                 if (player.chips === 0n) {
+                    
                     const handArray = Array.from(hands.entries()).map(([playerId, hand]) => ({
                         playerId,
                         hand
@@ -1354,8 +1381,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
                     console.table(handArray);
 
+                    // Find the position (0-based index) of a specific player
+                    function getPlayerPosition(playerId: string): number {
+                        return handArray.findIndex(player => player.playerId === playerId);
+                    }
+
                     // The player is now BUSTED after the pots awarded.
-                    const place = players.length;
+                    const place = getPlayerPosition(player.id);
 
                     // Get payouts from the payout manager
                     const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
@@ -1364,6 +1396,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     if (payout > 0n) {
                         // Need to do transfer back to player here
                         console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
+                        this._results.push({ place, playerId: player.id, payout });
                     }
 
                     player.updateStatus(PlayerStatus.BUSTED);
