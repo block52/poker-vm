@@ -122,6 +122,7 @@ import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
+import { getViewportMode } from "../../config/tableLayoutConfig";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -167,6 +168,9 @@ const Table = React.memo(() => {
 
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
+
+    // Track viewport mode for debugging
+    const [viewportMode, setViewportMode] = useState(getViewportMode());
 
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
@@ -353,6 +357,20 @@ const Table = React.memo(() => {
     const [isMobileLandscape, setIsMobileLandscape] = useState(
         window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600
     );
+
+    // Update viewport mode on window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setViewportMode(getViewportMode());
+            setIsMobile(window.innerWidth <= 414);
+            setIsMobileLandscape(
+                window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600
+            );
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // 🔧 PERFORMANCE FIX: Disabled mouse tracking to prevent hundreds of re-renders
     // Mouse tracking was causing setMousePosition({ x, y }) on every mouse move
@@ -971,6 +989,18 @@ const Table = React.memo(() => {
                         : 'absolute top-28 right-4 p-2 sm:p-4 text-center'
                 }`}>
                     Waiting for players to join...
+                </div>
+            )}
+
+            {/* Layout Mode Indicator - only shown in development mode */}
+            {import.meta.env.VITE_NODE_ENV === "development" && (
+                <div className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600">
+                    <div className="font-bold mb-1">Layout Debug Info</div>
+                    <div>Mode: <span className="text-yellow-400 font-mono">{viewportMode}</span></div>
+                    <div className="text-gray-400 mt-1">
+                        {window.innerWidth}x{window.innerHeight}
+                        {window.innerWidth > window.innerHeight ? ' (landscape)' : ' (portrait)'}
+                    </div>
                 </div>
             )}
 

@@ -8,6 +8,13 @@ The following environment variables can be configured in your `.env` file:
 
 ### Core Configuration
 
+-   **`VITE_NODE_ENV`** (optional)
+
+    -   Environment mode for the application
+    -   Values: `"development"` or `"production"`
+    -   Default: `"production"`
+    -   Used in: Enables development features like layout debug indicator
+
 -   **`VITE_PROJECT_ID`** (required)
 
     -   WalletConnect project ID for wallet integration
@@ -197,6 +204,34 @@ The color changes will be visible throughout the application, including:
     -   Values: `"true"` or `"false"`
     -   Default: `"false"`
     -   Used in: Join table functionality
+
+### Development Features
+
+#### Layout Debug Indicator
+
+When `VITE_NODE_ENV="development"` is set in your `.env` file, a layout debug indicator appears on the poker table page. This helps developers understand which responsive layout is currently active.
+
+The indicator displays:
+- **Current viewport mode**: One of `mobile-portrait`, `mobile-landscape`, `tablet`, or `desktop`
+- **Window dimensions**: Current width x height in pixels
+- **Orientation**: Whether the device is in landscape or portrait mode
+
+This is particularly useful when:
+- Testing responsive layouts across different screen sizes
+- Debugging player positioning issues on different devices
+- Adjusting table layout configurations in `src/config/tableLayoutConfig.ts`
+
+To enable the layout debug indicator:
+1. Set `VITE_NODE_ENV="development"` in your `.env` file
+2. Restart the development server
+3. Navigate to any poker table page
+4. The debug info will appear in the top-right corner
+
+The viewport modes are determined by these breakpoints:
+- **mobile-portrait**: width ≤ 414px and portrait orientation
+- **mobile-landscape**: width ≤ 926px and landscape orientation  
+- **tablet**: 927px ≤ width ≤ 1024px
+- **desktop**: width > 1024px
 
 ## Quick Start
 
