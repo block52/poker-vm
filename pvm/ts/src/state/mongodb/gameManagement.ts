@@ -127,6 +127,7 @@ export class GameManagement extends StateManager implements IGameManagement {
             handNumber: 0,
             round: TexasHoldemRound.ANTE,
             winners: [],
+            results: [],
             signature: ethers.ZeroHash
         };
 

@@ -1523,8 +1523,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             round: this.currentRound,
             winners: winners,
             results: this._results.map(r => ({ place: r.place, playerId: r.playerId, payout: r.payout.toString() })),
-            now: Date.now(),
-            autoExpire: this._autoExpire,
             signature: ethers.ZeroHash
         };
 
