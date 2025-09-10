@@ -46,6 +46,12 @@ class CallAction extends BaseAction implements IAction {
         // const largestBet: bigint = betManager.getLargestBet();
         const delta: bigint = currentBet - playersBet;
 
+        if (delta > player.chips) {
+            // Player does not have enough chips to call the full amount
+            // They can go all-in with their remaining chips
+            return { minAmount: player.chips, maxAmount: player.chips };
+        }
+
         // Return the exact call amount required
         return { minAmount: delta, maxAmount: delta };
     }
