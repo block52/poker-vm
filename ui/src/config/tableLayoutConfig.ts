@@ -96,7 +96,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
   'mobile-portrait': {
     // TABLE POSITION & SCALE
     table: {
-      scale: 1,           // Reduce size to fit small screen
+      scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
       translateX: '-50%',   // Center horizontally
       translateY: '-50%',   // Center vertically  
       rotation: 0           // No rotation needed
@@ -316,7 +316,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
   'mobile-landscape': {
     // TABLE POSITION & SCALE
     table: {
-      scale: 1.3,           // Slightly larger than portrait
+      scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
       translateX: '-50%',   // Center horizontally
       translateY: '20%',   // Moved up to account for removed header
       rotation: 180         // Needs to be 180 for proper orientation
@@ -536,7 +536,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
   'tablet': {
     // TABLE POSITION & SCALE
     table: {
-      scale: 0.8,           // Good size for tablets
+      scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
       translateX: '-50%',   // Center horizontally
       translateY: '-50%',   // Center vertically
       rotation: 0           // No rotation needed
@@ -756,9 +756,9 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
   'desktop': {
     // TABLE POSITION & SCALE
     table: {
-      scale: 1.0,           // Full size for desktop
+      scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
       translateX: '-50%',   // Center horizontally
-      translateY: '-50%',   // Center vertically
+      translateY: '-30%',   // Moved down to prevent top cards cutoff (adjust -20% to -40% as needed)
       rotation: 0           // No rotation needed
     },
     
@@ -992,22 +992,184 @@ export const getPositionArrays = (tableSize: 4 | 6 | 9) => {
 // Calculate dynamic zoom based on viewport
 export const calculateTableZoom = (): number => {
   const mode = getViewportMode();
-  const config = viewportConfigs[mode];
   
-  // Base calculation can be overridden by config
-  const baseWidth = 2000;
-  const baseHeight = 850;
-  const headerFooterHeight = 550;
+  // Define base table dimensions
+  const TABLE_WIDTH = 900;
+  const TABLE_HEIGHT = 450;
   
-  const availableHeight = window.innerHeight - headerFooterHeight;
-  const scaleWidth = window.innerWidth / baseWidth;
-  const scaleHeight = availableHeight / baseHeight;
+  // Minimum and maximum scale limits
+  const MIN_SCALE = 0.3;
+  const MAX_SCALE = 2.0;
   
-  // Use config scale as a multiplier
-  const calculatedScale = Math.min(scaleWidth, scaleHeight) * 1.5;
-  const finalScale = calculatedScale * config.table.scale;
+  // =====================================================
+  // DESKTOP CALCULATION
+  // =====================================================
+  if (mode === 'desktop') {
+    // ========== DESKTOP SETTINGS - ADJUST THESE! ==========
+    
+    // MINIMUM SCALE: The smallest the table can be on desktop
+    // Lower value = smaller table minimum size
+    // Try: 0.3, 0.4, 0.5 for smaller tables
+    const DESKTOP_MIN_SCALE = 0.3;  // Allow table to shrink more on very short screens
+    
+    // MAXIMUM SCALE: The largest the table can be on desktop  
+    // Higher value = bigger table on large screens
+    // Try: 1.0, 1.2, 1.5, 2.0 for bigger tables on large monitors
+    const DESKTOP_MAX_SCALE = 1.2;
+    
+    // HORIZONTAL PADDING: Space on left + right sides
+    // Higher value = more space around table horizontally
+    // Lower value = table can be wider
+    // Try: 100 (tight), 200 (normal), 300 (spacious)
+    const DESKTOP_PADDING_H = 200;
+    
+    // VERTICAL PADDING: Space on top + bottom (for header/footer)
+    // Higher value = more space for UI elements, smaller table
+    // Lower value = bigger table but might cut off at top/bottom
+    // Try: 200 (tight), 300 (normal), 400 (safe)
+    // NOTE: If top cards are cut off, also adjust translateY in desktop config (line 761)
+    const DESKTOP_PADDING_V = 300;  // Increased to prevent cutoff at typical desktop heights
+    
+    // TARGET SCALE: Ideal scale for medium screens (1920x1080)
+    // This is what we "aim for" on standard desktop screens
+    // Try: 0.6 (small), 0.8 (medium), 1.0 (large)
+    const DESKTOP_TARGET_SCALE = 0.8;
+    
+    // ========== CALCULATION LOGIC ==========
+    
+    // Calculate available space after padding
+    const availableWidth = window.innerWidth - DESKTOP_PADDING_H;
+    const availableHeight = window.innerHeight - DESKTOP_PADDING_V;
+    
+    // Calculate scale needed to fit width and height
+    const scaleByWidth = availableWidth / TABLE_WIDTH;
+    const scaleByHeight = availableHeight / TABLE_HEIGHT;
+    
+    // Debug logging - remove after testing
+    console.log('Desktop scaling debug:', {
+      windowSize: `${window.innerWidth}x${window.innerHeight}`,
+      padding: `H:${DESKTOP_PADDING_H}, V:${DESKTOP_PADDING_V}`,
+      availableSpace: `${availableWidth}x${availableHeight}`,
+      scaleByWidth,
+      scaleByHeight
+    });
+    
+    // Use the smaller scale to ensure table fits in viewport
+    const fitScale = Math.min(scaleByWidth, scaleByHeight);
+    
+    // For large screens, allow scaling up to DESKTOP_MAX_SCALE
+    // For small screens, ensure we don't go below DESKTOP_MIN_SCALE
+    let finalScale;
+    
+    if (window.innerWidth > 1920) {
+      // Large screens: Scale up but not beyond max
+      finalScale = Math.min(fitScale, DESKTOP_MAX_SCALE);
+    } else if (window.innerWidth > 1440) {
+      // Medium screens: Use target scale or fit scale, whichever is smaller
+      finalScale = Math.min(fitScale, DESKTOP_TARGET_SCALE);
+    } else {
+      // Small desktop screens: Ensure minimum scale
+      finalScale = Math.max(Math.min(fitScale, DESKTOP_TARGET_SCALE), DESKTOP_MIN_SCALE);
+    }
+    
+    // Final bounds check
+    const result = Math.max(MIN_SCALE, Math.min(finalScale, MAX_SCALE));
+    console.log('Desktop final scale:', result);
+    return result;
+  }
   
-  return Math.min(finalScale, 2);
+  // =====================================================
+  // TABLET CALCULATION
+  // =====================================================
+  else if (mode === 'tablet') {
+    // ========== TABLET SETTINGS - ADJUST THESE! ==========
+    
+    // MAXIMUM SCALE: Largest size for tablets
+    // Try: 0.6 (small), 0.8 (medium), 1.0 (large)
+    const TABLET_MAX_SCALE = 0.8;
+    
+    // HORIZONTAL PADDING: Space on sides
+    // Try: 50 (tight), 100 (normal), 150 (spacious)
+    const TABLET_PADDING_H = 100;
+    
+    // VERTICAL PADDING: Space top/bottom
+    // Try: 150 (tight), 200 (normal), 250 (safe)
+    const TABLET_PADDING_V = 200;
+    
+    // ========== CALCULATION ==========
+    const availableWidth = window.innerWidth - TABLET_PADDING_H;
+    const availableHeight = window.innerHeight - TABLET_PADDING_V;
+    
+    const scaleByWidth = availableWidth / TABLE_WIDTH;
+    const scaleByHeight = availableHeight / TABLE_HEIGHT;
+    
+    const fitScale = Math.min(scaleByWidth, scaleByHeight);
+    const finalScale = Math.min(fitScale, TABLET_MAX_SCALE);
+    
+    return Math.max(MIN_SCALE, Math.min(finalScale, MAX_SCALE));
+  }
+  
+  // =====================================================
+  // MOBILE LANDSCAPE CALCULATION
+  // =====================================================
+  else if (mode === 'mobile-landscape') {
+    // ========== MOBILE LANDSCAPE SETTINGS - ADJUST THESE! ==========
+    
+    // MAXIMUM SCALE: Largest size for mobile landscape
+    // Try: 0.5 (tiny), 0.7 (small), 0.9 (medium)
+    const MOBILE_LANDSCAPE_MAX_SCALE = 0.7;
+    
+    // HORIZONTAL PADDING: Space on sides (usually minimal on mobile)
+    // Try: 20 (very tight), 50 (normal), 100 (spacious)
+    const MOBILE_LANDSCAPE_PADDING_H = 50;
+    
+    // VERTICAL PADDING: Space top/bottom (for controls)
+    // Try: 80 (tight), 100 (normal), 150 (safe)
+    const MOBILE_LANDSCAPE_PADDING_V = 100;
+    
+    // ========== CALCULATION ==========
+    const availableWidth = window.innerWidth - MOBILE_LANDSCAPE_PADDING_H;
+    const availableHeight = window.innerHeight - MOBILE_LANDSCAPE_PADDING_V;
+    
+    const scaleByWidth = availableWidth / TABLE_WIDTH;
+    const scaleByHeight = availableHeight / TABLE_HEIGHT;
+    
+    const fitScale = Math.min(scaleByWidth, scaleByHeight);
+    const finalScale = Math.min(fitScale, MOBILE_LANDSCAPE_MAX_SCALE);
+    
+    return Math.max(MIN_SCALE, Math.min(finalScale, MAX_SCALE));
+  }
+  
+  // =====================================================
+  // MOBILE PORTRAIT CALCULATION
+  // =====================================================
+  else {
+    // ========== MOBILE PORTRAIT SETTINGS - ADJUST THESE! ==========
+    
+    // MAXIMUM SCALE: Largest size for mobile portrait
+    // Try: 0.3 (tiny), 0.5 (small), 0.7 (medium)
+    const MOBILE_PORTRAIT_MAX_SCALE = 0.5;
+    
+    // HORIZONTAL PADDING: Space on sides (minimal on mobile)
+    // Try: 10 (very tight), 20 (normal), 40 (spacious)
+    const MOBILE_PORTRAIT_PADDING_H = 20;
+    
+    // VERTICAL PADDING: Space top/bottom (needs room for controls)
+    // Try: 120 (tight), 150 (normal), 200 (safe)
+    const MOBILE_PORTRAIT_PADDING_V = 150;
+    
+    // ========== CALCULATION ==========
+    const availableWidth = window.innerWidth - MOBILE_PORTRAIT_PADDING_H;
+    const availableHeight = window.innerHeight - MOBILE_PORTRAIT_PADDING_V;
+    
+    const scaleByWidth = availableWidth / TABLE_WIDTH;
+    const scaleByHeight = availableHeight / TABLE_HEIGHT;
+    
+    const fitScale = Math.min(scaleByWidth, scaleByHeight);
+    const finalScale = Math.min(fitScale, MOBILE_PORTRAIT_MAX_SCALE);
+    
+    return Math.max(MIN_SCALE, Math.min(finalScale, MAX_SCALE));
+  }
 };
 
 // Export a method to update configurations dynamically (for testing/debugging)
