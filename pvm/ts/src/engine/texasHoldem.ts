@@ -1522,6 +1522,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             previousActions: this.getActionDTOs(),
             round: this.currentRound,
             winners: winners,
+            results: this._results.map(r => ({ place: r.place, playerId: r.playerId, payout: r.payout.toString() })),
+            now: Date.now(),
+            autoExpire: this._autoExpire,
             signature: ethers.ZeroHash
         };
 
@@ -1574,6 +1577,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Create winners array
         const winners: WinnerDTO[] = json.winners || [];
 
+        const results: Result[] = json.results?.map((r: any) => ({
+            place: r.place,
+            playerId: r.playerId,
+            payout: BigInt(r.payout)
+        })) || [];
+
         // Create and return new game instance
         return new TexasHoldemGame(
             json.address,
@@ -1588,7 +1597,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             players,
             json.deck,
             winners,
-            json.now ? json.now : Date.now()
+            json.now ? json.now : Date.now(),
+            undefined,
+            results
         );
     }
 }

@@ -170,6 +170,7 @@ export type TexasHoldemStateDTO = {
     handNumber: number;
     round: TexasHoldemRound;
     winners: WinnerDTO[];
+    results: ResultDTO[];
     signature: string;
 };
 
