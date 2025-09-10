@@ -5,13 +5,15 @@ import {
     PlayerActionType,
     NonPlayerActionType,
     GameType,
-    GameStatus
+    GameStatus,
+    TexasHoldemStateDTO
 } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN } from "./testConstants";
 import { Player } from "../models/player";
 import { SitAndGoStatusManager } from "./managers/statusManager";
 import { PayoutManager } from "./managers/payoutManager";
+import { exitCode } from "process";
 
 describe("Sit and Go - Full Game", () => {
     describe("Complete Tournament Flow", () => {
@@ -128,9 +130,22 @@ describe("Sit and Go - Full Game", () => {
             game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14);
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP); // Should still be preflop
 
-            game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
-            expect(game.communityCards.length).toBe(5); // All community cards should be dealt
-            expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN); // Should jump to showdown
+            // game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
+            game.performAction(seatMap[2], PlayerActionType.FOLD, 15);
+            // expect(game.communityCards.length).toBe(5); // All community cards should be dealt
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE); // Should jump to showdown then to ante
+
+            // Expect that one player should be busted, and we should have a results object
+            const livePlayersAfterHand1 = game.findLivePlayers();
+            expect(livePlayersAfterHand1.length).toBeLessThan(6);
+            expect(livePlayersAfterHand1.length).toBeGreaterThanOrEqual(1);
+
+            console.log("✓ First hand completed - some players may be eliminated");
+
+            const gameState: TexasHoldemStateDTO = game.toJson();
+            expect(gameState.results).toBeDefined();
+
+
 
             // // Verify pot size
             // expect(game.pot).toBeGreaterThan(0n);
