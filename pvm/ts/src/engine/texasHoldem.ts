@@ -611,11 +611,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (this.currentRound === TexasHoldemRound.FLOP) {
             // Moving to FLOP - deal 3 community cards
             cards.push(...this._communityCards2.slice(0, 3));
-        } 
+        }
         if (this.currentRound === TexasHoldemRound.TURN) {
             // Moving to TURN - deal 1 card
             cards.push(...this._communityCards2.slice(0, 4));
-        } 
+        }
         if (this.currentRound === TexasHoldemRound.RIVER) {
             // Moving to RIVER - deal 1 card
             cards.push(...this._communityCards2.slice(0, 5));
@@ -707,6 +707,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Search from start position to end
         for (let i = start; i <= this.maxPlayers; i++) {
             const player = this.getPlayerAtSeat(i);
+
+            // if they dont have chips and the round is not show down, skip them
+            if (player && player.chips === 0n && round !== TexasHoldemRound.SHOWDOWN) {
+                continue;
+            }
+
             if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
                 return player;
             }
@@ -715,6 +721,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Wrap around and search from beginning to start
         for (let i = 1; i < start; i++) {
             const player = this.getPlayerAtSeat(i);
+
+            // if they dont have chips and the round is not show down, skip them
+            if (player && player.chips === 0n && round !== TexasHoldemRound.SHOWDOWN) {
+                continue;
+            }
+
             if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
                 return player;
             }
@@ -1365,7 +1377,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
             for (const player of players) {
                 if (player.chips === 0n) {
-                    
+
                     const handArray = Array.from(hands.entries()).map(([playerId, hand]) => ({
                         playerId,
                         hand
