@@ -3467,3 +3467,160 @@ export const test_1103_modified = {
         "signature": "0xe9a138076d48264c498393bcf62d6cc43d2ae788fbeafebd1dba2fe84f4d5ebf42ed4f6067a92a03a79a491cedcaae77c38ed28e59b841ea8d91067b7f4d81dc1c"
     }
 }
+
+export const test_1103_2 = {
+    "id": "1",
+    "result": {
+        "data": {
+            "type": "sit-and-go",
+            "address": "0x2618f85b62c618d37ac694e4dcd00689a8f473d9",
+            "gameOptions": {
+                "minBuyIn": "1000000000000000000",
+                "maxBuyIn": "1000000000000000000",
+                "maxPlayers": 4,
+                "minPlayers": 4,
+                "smallBlind": "100000000000000000000",
+                "bigBlind": "200000000000000000000",
+                "timeout": 300000,
+                "type": "sit-and-go"
+            },
+            "smallBlindPosition": 3,
+            "bigBlindPosition": 4,
+            "dealer": 2,
+            "players": [
+                {
+                    "address": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 1,
+                    "stack": "22700000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "status": "active",
+                    "legalActions": [
+                        {
+                            "action": "sit-out",
+                            "min": "0",
+                            "max": "0",
+                            "index": 46
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 3,
+                    "stack": "8500000000000000000000",
+                    "isSmallBlind": true,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "status": "active",
+                    "lastAction": {
+                        "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                        "seat": 3,
+                        "action": "post-small-blind",
+                        "amount": "100000000000000000000",
+                        "round": "ante",
+                        "index": 45,
+                        "timestamp": 1757474809572
+                    },
+                    "legalActions": [
+                        {
+                            "action": "sit-out",
+                            "min": "0",
+                            "max": "0",
+                            "index": 46
+                        }
+                    ],
+                    "sumOfBets": "100000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 2,
+                    "stack": "8700000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": true,
+                    "status": "active",
+                    "legalActions": [
+                        {
+                            "action": "sit-out",
+                            "min": "0",
+                            "max": "0",
+                            "index": 46
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0x228f76138259f398B95165115cF1180fe4BdBe92",
+                    "seat": 4,
+                    "stack": "0",
+                    "isSmallBlind": false,
+                    "isBigBlind": true,
+                    "isDealer": false,
+                    "status": "active",
+                    "legalActions": [
+                        {
+                            "action": "post-big-blind",
+                            "min": "200000000000000000000",
+                            "max": "200000000000000000000",
+                            "index": 46
+                        },
+                        {
+                            "action": "fold",
+                            "min": "0",
+                            "max": "0",
+                            "index": 46
+                        },
+                        {
+                            "action": "sit-out",
+                            "min": "0",
+                            "max": "0",
+                            "index": 46
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ],
+            "communityCards": [],
+            "deck": "[AH]-9H-QH-8D-TD-JS-5S-TH-2S-3H-JH-KH-6S-TS-2H-QD-8C-JD-KS-QC-7H-AC-4D-5C-6D-KD-2D-7D-8H-3S-6C-QS-9S-4S-AS-5D-KC-TC-9C-JC-3C-7C-8S-9D-3D-4C-7S-AD-4H-5H-2C-6H",
+            "pots": [
+                "100000000000000000000"
+            ],
+            "lastActedSeat": 3,
+            "actionCount": 44,
+            "handNumber": 3,
+            "nextToAct": 4,
+            "previousActions": [
+                {
+                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
+                    "seat": 3,
+                    "action": "post-small-blind",
+                    "amount": "100000000000000000000",
+                    "round": "ante",
+                    "index": 45,
+                    "timestamp": 1757474809572
+                }
+            ],
+            "round": "ante",
+            "winners": [],
+            "results": [
+                {
+                    "place": 1,
+                    "playerId": "0x228f76138259f398B95165115cF1180fe4BdBe92",
+                    "payout": "3200000000000000000"
+                }
+            ],
+            "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "signature": "0x12afe9da36f48f91bdead381f024610423b0860f128005f0bf352191255ad57e0c0e5cde8c4d41f4241bfc105411da4ca37a7a66d5efcb01191bc3b2f14ed7691b"
+    }
+}
