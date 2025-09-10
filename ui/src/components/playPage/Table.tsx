@@ -102,6 +102,7 @@ import { leaveTable } from "../../hooks/playerActions/leaveTable";
 
 // 5. Winner Info
 import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner information for animations
+import { useGameResults } from "../../hooks/useGameResults"; // Game results display
 
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
@@ -252,6 +253,9 @@ const Table = React.memo(() => {
 
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions();
+    
+    // Add the useGameResults hook
+    const { results } = useGameResults();
 
     // Memoize formatted values
     const formattedValues = useMemo(
@@ -781,6 +785,7 @@ const Table = React.memo(() => {
             </div>
             )}
 
+
             {/* Mobile Landscape Floating Controls */}
             {isMobileLandscape && (
                 <div className="fixed top-2 left-2 right-2 flex justify-between items-center z-50">
@@ -1002,12 +1007,18 @@ const Table = React.memo(() => {
 
             {/* Layout Mode Indicator - only shown in development mode */}
             {import.meta.env.VITE_NODE_ENV === "development" && (
-                <div className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600">
+                <div className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600" style={{ maxWidth: '180px' }}>
                     <div className="font-bold mb-1">Layout Debug Info</div>
                     <div>Mode: <span className="text-yellow-400 font-mono">{viewportMode}</span></div>
                     <div className="text-gray-400 mt-1">
                         {window.innerWidth}x{window.innerHeight}
                         {window.innerWidth > window.innerHeight ? ' (landscape)' : ' (portrait)'}
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                        <div className="font-bold mb-1">Results</div>
+                        <pre className="text-gray-300 break-words whitespace-pre-wrap" style={{ wordBreak: 'break-word', fontSize: '10px' }}>
+                            {results ? JSON.stringify(results, null, 2) : "empty"}
+                        </pre>
                     </div>
                 </div>
             )}
