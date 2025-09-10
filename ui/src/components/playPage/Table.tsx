@@ -122,6 +122,7 @@ import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
+import { getViewportMode } from "../../config/tableLayoutConfig";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -167,6 +168,9 @@ const Table = React.memo(() => {
 
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
+
+    // Track viewport mode for debugging
+    const [viewportMode, setViewportMode] = useState(getViewportMode());
 
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
@@ -353,6 +357,20 @@ const Table = React.memo(() => {
     const [isMobileLandscape, setIsMobileLandscape] = useState(
         window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600
     );
+
+    // Update viewport mode on window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setViewportMode(getViewportMode());
+            setIsMobile(window.innerWidth <= 414);
+            setIsMobileLandscape(
+                window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600
+            );
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // 🔧 PERFORMANCE FIX: Disabled mouse tracking to prevent hundreds of re-renders
     // Mouse tracking was causing setMousePosition({ x, y }) on every mouse move
@@ -922,16 +940,20 @@ const Table = React.memo(() => {
                 </div>
             </div>
 
-            {/* Status Messages Container - Stacked properly to avoid overlap */}
+            {/* Status Messages Container - Desktop positioned top-left, mobile/tablet centered */}
             <div className={`flex flex-col space-y-2 z-50 ${
-                isMobileLandscape 
-                    ? 'absolute left-2 items-start max-w-[150px]'
-                    : 'absolute left-1/2 transform -translate-x-1/2 items-center'
-            }`} style={{ top: isMobileLandscape ? '3rem' : '6.25rem' }}>
+                viewportMode === 'desktop' 
+                    ? 'fixed left-4 top-32 items-start'
+                    : isMobileLandscape 
+                        ? 'absolute left-2 items-start max-w-[150px]'
+                        : 'absolute left-1/2 transform -translate-x-1/2 items-center'
+            }`} style={{ top: viewportMode === 'desktop' ? undefined : isMobileLandscape ? '3rem' : '6.25rem' }}>
                 {/* Add a message for the current user's seat */}
                 {currentUserSeat >= 0 && (
-                    <div className={`text-white bg-black bg-opacity-50 px-2 py-1 rounded text-xs sm:text-sm ${
-                        isMobileLandscape ? 'text-left break-words' : 'text-center'
+                    <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
+                        viewportMode === 'desktop' ? 'bg-black bg-opacity-60 text-left' :
+                        isMobileLandscape ? 'bg-black bg-opacity-50 text-left break-words' : 
+                        'bg-black bg-opacity-50 text-center'
                     }`}>
                         You are seated at position {currentUserSeat}
                     </div>
@@ -939,11 +961,13 @@ const Table = React.memo(() => {
 
                 {/* Add an indicator for whose turn it is */}
                 {nextToActSeat && isGameInProgress && (
-                    <div className={`text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm ${
-                        isMobileLandscape ? 'text-left break-words' : 'text-center'
+                    <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
+                        viewportMode === 'desktop' ? 'bg-black bg-opacity-80 text-left' :
+                        isMobileLandscape ? 'bg-black bg-opacity-70 text-left break-words' : 
+                        'bg-black bg-opacity-70 text-center'
                     }`}>
                         {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
-                            <span className="text-white">Your turn to act!</span>
+                            <span className="text-yellow-400 font-semibold">Your turn to act!</span>
                         ) : (
                             <span>
                                 Waiting for{" "}
@@ -955,8 +979,10 @@ const Table = React.memo(() => {
 
                 {/* Show a message when the hand is over */}
                 {!isGameInProgress && tableActivePlayers.length > 0 && (
-                    <div className={`text-white bg-black bg-opacity-70 px-2 py-1 rounded text-xs sm:text-sm ${
-                        isMobileLandscape ? 'text-left break-words' : 'text-center'
+                    <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
+                        viewportMode === 'desktop' ? 'bg-black bg-opacity-80 text-left' :
+                        isMobileLandscape ? 'bg-black bg-opacity-70 text-left break-words' : 
+                        'bg-black bg-opacity-70 text-center'
                     }`}>
                         <span>Hand complete - waiting for next hand</span>
                     </div>
@@ -971,6 +997,18 @@ const Table = React.memo(() => {
                         : 'absolute top-28 right-4 p-2 sm:p-4 text-center'
                 }`}>
                     Waiting for players to join...
+                </div>
+            )}
+
+            {/* Layout Mode Indicator - only shown in development mode */}
+            {import.meta.env.VITE_NODE_ENV === "development" && (
+                <div className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600">
+                    <div className="font-bold mb-1">Layout Debug Info</div>
+                    <div>Mode: <span className="text-yellow-400 font-mono">{viewportMode}</span></div>
+                    <div className="text-gray-400 mt-1">
+                        {window.innerWidth}x{window.innerHeight}
+                        {window.innerWidth > window.innerHeight ? ' (landscape)' : ' (portrait)'}
+                    </div>
                 </div>
             )}
 
