@@ -1379,15 +1379,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                         return a.hand.compare(b.hand); // If same rank, use compare
                     });
 
-                    console.table(handArray);
+                    // console.table(handArray);
 
-                    // Find the position (0-based index) of a specific player
-                    function getPlayerPosition(playerId: string): number {
-                        return handArray.findIndex(player => player.playerId === playerId);
-                    }
+                    // // Find the position (0-based index) of a specific player
+                    // function getPlayerPosition(playerId: string): number {
+                    //     return handArray.findIndex(player => player.playerId === playerId);
+                    // }
+
+                    const livePlayers = this.findLivePlayers;
 
                     // The player is now BUSTED after the pots awarded.
-                    const place = getPlayerPosition(player.id);
+                    const place = livePlayers.length + 1;
 
                     // Get payouts from the payout manager
                     const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
