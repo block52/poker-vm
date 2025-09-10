@@ -767,7 +767,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
       // 4-PLAYER TABLE POSITIONS
       four: [
         { left: "450px", top: "399px", color: "#4ade80" },   // Seat 1 - Bottom (green)
-        { left: "-110px", top: "175px", color: "#f97316" },  // Seat 2 - Left (orange)
+        { left: "-110px", top: "160px", color: "#f97316" },  // Seat 2 - Left (orange)
         { left: "450px", top: "-110px", color: "#3b82f6" },  // Seat 3 - Top (blue)
         { left: "999px", top: "160px", color: "#ec4899" }    // Seat 4 - Right (pink)
       ],
@@ -836,7 +836,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
       four: [
         { left: "420px", bottom: "20px" },  // Chips for Seat 1
         { left: "30px", bottom: "150px" },  // Chips for Seat 2
-        { left: "280px", bottom: "300px" },  // Chips for Seat 3
+        { left: "220px", bottom: "300px" },  // Chips for Seat 3
         { left: "800px", bottom: "150px" }   // Chips for Seat 4
       ],
       
