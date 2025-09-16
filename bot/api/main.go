@@ -46,6 +46,44 @@ func getBots(c *gin.Context) {
 	c.JSON(http.StatusOK, bots)
 }
 
+// PATCH /bots/:address - update enabled and/or tableAddress
+func patchBot(c *gin.Context) {
+	address := c.Param("address")
+	var req struct {
+		Enabled      *bool   `json:"enabled"`
+		TableAddress *string `json:"tableAddress"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	update := bson.M{}
+	if req.Enabled != nil {
+		update["enabled"] = *req.Enabled
+	}
+	if req.TableAddress != nil {
+		update["tableAddress"] = *req.TableAddress
+	}
+	if len(update) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	res, err := botCollection.UpdateOne(ctx, bson.M{"address": address}, bson.M{"$set": update})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update bot"})
+		return
+	}
+	if res.MatchedCount == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Bot not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"updated": true})
+}
+
 func main() {
 	// Load .env if present
 	_ = godotenv.Load()
@@ -70,5 +108,6 @@ func main() {
 
 	r := gin.Default()
 	r.GET("/bots", getBots)
+	r.PATCH("/bots/:address", patchBot)
 	r.Run(":8080")
 }
