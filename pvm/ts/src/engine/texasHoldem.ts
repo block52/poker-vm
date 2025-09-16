@@ -1398,20 +1398,19 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     //     return handArray.findIndex(player => player.playerId === playerId);
                     // }
 
-                    const livePlayers = this.findLivePlayers;
 
                     // The player is now BUSTED after the pots awarded.
-                    const place = livePlayers.length + 1;
+                    const place = this._gameOptions.minPlayers - this._results.length;
 
                     // Get payouts from the payout manager
                     const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
                     const payout = payoutManager.calculatePayout(place);
 
-                    if (payout > 0n) {
-                        // Need to do transfer back to player here
-                        console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
-                        this._results.push({ place, playerId: player.id, payout });
-                    }
+
+                    // Need to do transfer back to player here
+                    console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
+                    this._results.push({ place, playerId: player.id, payout });
+
 
                     player.updateStatus(PlayerStatus.BUSTED);
                 }

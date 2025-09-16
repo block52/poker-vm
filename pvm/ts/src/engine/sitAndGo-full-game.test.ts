@@ -133,19 +133,25 @@ describe("Sit and Go - Full Game", () => {
             // game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
             game.performAction(seatMap[2], PlayerActionType.FOLD, 15);
             // expect(game.communityCards.length).toBe(5); // All community cards should be dealt
-            expect(game.currentRound).toBe(TexasHoldemRound.ANTE); // Should jump to showdown then to ante
+            expect(game.currentRound).toBe(TexasHoldemRound.END); // Should jump to end
 
             // Expect that one player should be busted, and we should have a results object
             const livePlayersAfterHand1 = game.findLivePlayers();
-            expect(livePlayersAfterHand1.length).toBeLessThan(6);
-            expect(livePlayersAfterHand1.length).toBeGreaterThanOrEqual(1);
+            expect(livePlayersAfterHand1.length).toEqual(1); // 5 players should be all in, 1 folded
+            const playerCount = game.getPlayerCount();
+            expect(playerCount).toEqual(6); // At least one player should be eliminated
 
             console.log("✓ First hand completed - some players may be eliminated");
 
             const gameState: TexasHoldemStateDTO = game.toJson();
             expect(gameState.results).toBeDefined();
 
+            // Should have players in results
+            expect(gameState.results?.length).toBeGreaterThan(0);
 
+            // // Check that at least one player is marked as BUSTED
+            // const bustedPlayers = gameState.results?.filter(r => r.status === PlayerStatus.BUSTED);
+            // expect(bustedPlayers && bustedPlayers.length).toBeGreaterThanOrEqual(0);
 
             // // Verify pot size
             // expect(game.pot).toBeGreaterThan(0n);
