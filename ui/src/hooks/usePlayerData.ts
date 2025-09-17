@@ -17,19 +17,35 @@ import { useGameStateContext } from "../context/GameStateContext";
 export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
   // Get game state directly from Context - real-time data via WebSocket
   const { gameState, error, isLoading } = useGameStateContext();
-  
+
   // Get player data from the table state
   const playerData = React.useMemo((): PlayerDTO | null => {
     if (!gameState || !seatIndex) {
       return null;
     }
-    
+
     if (!gameState.players) {
       return null;
     }
-    
+
     const player = gameState.players.find((p: PlayerDTO) => p.seat === seatIndex);
-    
+
+    // Debug logging for seat mapping
+    console.log(`🔍 usePlayerData - Looking for seat ${seatIndex}: ` + JSON.stringify({
+      requestedSeat: seatIndex,
+      foundPlayer: player ? {
+        address: player.address,
+        seat: player.seat,
+        stack: player.stack,
+        status: player.status
+      } : null,
+      allPlayers: gameState.players.map((p: PlayerDTO) => ({
+        seat: p.seat,
+        address: p.address?.substring(0, 10) + '...',
+        stack: p.stack
+      }))
+    }, null, 2));
+
     return player || null;
   }, [gameState, seatIndex]);
   

@@ -6,9 +6,25 @@ type ChipProps = {
 };
 
 const Chip: React.FC<ChipProps> = React.memo(({ amount }) => {
-    // Convert amount to string
-    const amountStr = amount.toString();
-    
+    // Debug logging for chip amount
+    console.log("💰 CHIP Component - Received amount: " + JSON.stringify({
+        amount: amount,
+        amountType: typeof amount,
+        amountValue: amount,
+        isEmptyString: amount === "",
+        isNull: amount === null,
+        isUndefined: amount === undefined
+    }, null, 2));
+
+    // Convert amount to string - handle edge cases
+    const amountStr = amount ? amount.toString() : "0";
+
+    // Debug the conversion
+    console.log("💰 CHIP Component - After conversion: " + JSON.stringify({
+        amountStr: amountStr,
+        isEmpty: amountStr === ""
+    }, null, 2));
+
     // Always display chip, even with zero amount
     // Format the chip amount properly from Wei-stored amounts to readable dollar amounts
     // Since sumOfBets is already in Wei format representing dollar amounts, we use the simple conversion
