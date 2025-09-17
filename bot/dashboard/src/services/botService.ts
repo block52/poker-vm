@@ -77,6 +77,32 @@ export class BotService {
             throw error;
         }
     }
+
+    /**
+     * Update bot table address
+     */
+    static async updateTableAddress(address: string, tableAddress: string): Promise<Bot> {
+        try {
+            const response = await api.patch<Bot>(`/bots/${address}`, { tableAddress });
+            return response.data;
+        } catch (error) {
+            console.error(`Error updating table address for bot ${address}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Update bot type
+     */
+    static async updateBotType(address: string, type: string): Promise<Bot> {
+        try {
+            const response = await api.patch<Bot>(`/bots/${address}`, { type });
+            return response.data;
+        } catch (error) {
+            console.error(`Error updating bot type for ${address}:`, error);
+            throw error;
+        }
+    }
 }
 
 export default api;
