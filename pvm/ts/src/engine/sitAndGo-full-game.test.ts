@@ -125,14 +125,23 @@ describe("Sit and Go - Full Game", () => {
             previousActions = game.getPreviousActions();
             expect(previousActions.length).toBe(11);
 
+            // Check the legal actions of player 4
+            const legalActionsPlayer4 = game.getLegalActions(seatMap[4]);
+            expect(legalActionsPlayer4.length).toEqual(0); // Player 4 should have no legal actions after going all-in
+
             game.performAction(seatMap[5], PlayerActionType.ALL_IN, 12);
             game.performAction(seatMap[6], PlayerActionType.ALL_IN, 13);
             game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14);
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP); // Should still be preflop
 
             // game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
+            // Check the legal actions of player 2
+            const legalActionsPlayer2 = game.getLegalActions(seatMap[2]);
+            expect(legalActionsPlayer2.length).toBeGreaterThan(0); // Player 2 should have legal actions
+            
             game.performAction(seatMap[2], PlayerActionType.FOLD, 15);
-            // expect(game.communityCards.length).toBe(5); // All community cards should be dealt
+            
+            expect(game.communityCards.length).toBe(5); // All community cards should be dealt
             expect(game.currentRound).toBe(TexasHoldemRound.END); // Should jump to end
 
             // Expect that one player should be busted, and we should have a results object

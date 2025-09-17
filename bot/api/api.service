@@ -1,0 +1,41 @@
+[Unit]
+Description=Go Gin API Service
+Documentation=https://github.com/your-org/your-gin-api
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=apiuser
+Group=apiuser
+WorkingDirectory=/opt/gin-api
+ExecStart=/opt/gin-api/gin-api
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gin-api
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/gin-api/logs /opt/gin-api/data
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+# Environment variables
+Environment=GIN_MODE=release
+Environment=PORT=8080
+Environment=LOG_LEVEL=info
+# Environment=DATABASE_URL=your_database_connection_string
+# Environment=JWT_SECRET=your_jwt_secret
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=32768
+
+[Install]
+WantedBy=multi-user.target

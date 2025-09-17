@@ -36,11 +36,11 @@
     "wagmi": "^2.14.7"
   },
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 3002",
-    "dev:lint": "eslint . --fix && vite --host 0.0.0.0 --port 3002",
-    "dev:nocheck": "vite --host 0.0.0.0 --port 3002",
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "dev:lint": "eslint . --fix && vite --host 0.0.0.0 --port 3000",
+    "dev:nocheck": "vite --host 0.0.0.0 --port 3000",
     "build": "tsc -b && vite build",
-    "start": "vite preview --host 0.0.0.0 --port 3002",
+    "start": "vite preview --host 0.0.0.0 --port 3000",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:warn": "eslint . --fix --max-warnings=100",
