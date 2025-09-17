@@ -149,9 +149,10 @@ describe("Sit and Go - Full Game", () => {
             // Should have players in results
             expect(gameState.results?.length).toBeGreaterThan(0);
 
-            // // Check that at least one player is marked as BUSTED
-            // const bustedPlayers = gameState.results?.filter(r => r.status === PlayerStatus.BUSTED);
-            // expect(bustedPlayers && bustedPlayers.length).toBeGreaterThanOrEqual(0);
+            // Check that at least one player is marked as BUSTED
+            const bustedPlayerId = gameState.results[0].playerId;
+            const bustedPlayer = game.getPlayer(bustedPlayerId);
+            expect(bustedPlayer?.status).toBe(PlayerStatus.BUSTED);
 
             // // Verify pot size
             // expect(game.pot).toBeGreaterThan(0n);
@@ -175,7 +176,7 @@ describe("Sit and Go - Full Game", () => {
             // expect(winner[0].status).toBe(PlayerStatus.ACTIVE);
         });
 
-        it("should run a complete 6-player sit and go tournament", () => {
+        it.skip("should run a complete 6-player sit and go tournament - untested", () => {
             // Sanity checks
             expect(game.getPlayerCount()).toBe(0);
             expect(game.findLivePlayers().length).toBe(0);

@@ -1424,8 +1424,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Converts the game state to a DTO for serialization
      */
     toJson(caller?: string): TexasHoldemStateDTO {
-        const nextPlayerToAct = this.findNextPlayerToActForRound(this.currentRound);
-
         // Create player DTOs
         const players: PlayerDTO[] = Array.from(this._playersMap.entries())
             .filter(([_, player]) => player !== null)
@@ -1516,6 +1514,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             type: this.type
         };
 
+        const nextPlayerToAct = this.findNextPlayerToActForRound(this.currentRound);
+        
         // Return the complete state DTO
         const state: TexasHoldemStateDTO = {
             type: this.type, // Todo remove this duplication
