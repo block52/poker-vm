@@ -11,12 +11,27 @@ import { useGameStateContext } from "../../../context/GameStateContext";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
+import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
 
-const Player: React.FC<PlayerProps> = memo(
-  ({ left, top, index, currentIndex, color, status }) => {
+const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
+  ({ left, top, index, currentIndex, color, status, uiPosition }) => {
     const { id } = useParams<{ id: string }>();
     const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
+
+    // Debug logging for Player component stack value
+    React.useEffect(() => {
+        console.log(`🎮 PLAYER Component - Seat ${index}: ` + JSON.stringify({
+            playerData: playerData,
+            stackValue: stackValue,
+            stackRaw: playerData?.stack,
+            address: playerData?.address,
+            status: playerData?.status,
+            isFolded: isFolded,
+            isAllIn: isAllIn,
+            isSittingOut: isSittingOut
+        }, null, 2));
+    }, [playerData, stackValue, index, isFolded, isAllIn, isSittingOut]);
     const { 
         extendTime, 
         canExtend, 
@@ -24,9 +39,15 @@ const Player: React.FC<PlayerProps> = memo(
     } = usePlayerTimer(id, index);
 
     const { dealerSeat } = useDealerPosition();
-    
+
     // Check if this seat is the dealer
     const isDealer = dealerSeat === index;
+
+    // Get tournament results for this seat
+    const { getSeatResult, isSitAndGo } = useSitAndGoPlayerResults();
+    const tournamentResult = useMemo(() => {
+        return isSitAndGo ? getSeatResult(index) : null;
+    }, [getSeatResult, isSitAndGo, index]);
     
     // State for extension UI feedback
     const [isExtending, setIsExtending] = useState(false);
@@ -185,6 +206,15 @@ const Player: React.FC<PlayerProps> = memo(
         className={`${opacityClass} absolute flex flex-col justify-center w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
         style={{ ...containerStyle, color: colors.ui.textSecondary }}
       >
+        {/* Development Mode Debug Info */}
+        {import.meta.env.VITE_NODE_ENV === "development" && (
+          <div className="absolute top-[-60px] left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap z-50 border border-green-400">
+            <div className="text-green-400">UI Pos: {uiPosition ?? 'N/A'}</div>
+            <div className="text-yellow-400">Seat: {index}</div>
+            <div className="text-gray-300">XY: {left}, {top}</div>
+            <div className="text-orange-300">Addr: ...{playerData?.address ? playerData.address.slice(-3) : 'N/A'}</div>
+          </div>
+        )}
         <div className="flex justify-center gap-1">{renderCards()}</div>
         <div className="relative flex flex-col justify-end mt-[-6px] mx-1s">
           <div
@@ -195,12 +225,14 @@ const Player: React.FC<PlayerProps> = memo(
             {statusText}
           </div>
           <div className="absolute top-[-10px] w-full">
-            <Badge 
-                count={index} 
-                value={stackValue} 
+            <Badge
+                count={index}
+                value={stackValue}
                 color={color}
                 canExtend={shouldShowTimerExtension}
                 // onExtend={shouldShowTimerExtension ? handleExtendTime : undefined}
+                tournamentPlace={tournamentResult?.place}
+                tournamentPayout={tournamentResult?.formattedPayout}
             />
           </div>
 

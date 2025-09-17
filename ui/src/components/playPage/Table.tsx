@@ -329,9 +329,63 @@ const Table = React.memo(() => {
         []
     );
 
-    // Add any variables we need
+    // ============================================================
+    // TABLE ROTATION SYSTEM - COMPREHENSIVE DOCUMENTATION
+    // ============================================================
+    //
+    // OVERVIEW:
+    // The rotation system allows the poker table view to rotate, changing which
+    // seat appears at the bottom (traditional "hero" position in poker UIs).
+    // This is controlled by a single variable: startIndex
+    //
+    // KEY CONCEPTS:
+    // - UI Position: The visual position on screen (0 = bottom, 1 = left, 2 = top, etc.)
+    // - Seat Number: The actual seat at the table (1, 2, 3, 4, etc.)
+    // - startIndex: The offset that determines the rotation
+    //
+    // HOW IT WORKS:
+    // The formula: seatNumber = ((uiPosition + startIndex) % tableSize) + 1
+    //
+    // Example with 4 players:
+    // - startIndex = 0: No rotation
+    //   UI Pos 0 shows Seat 1 (bottom)
+    //   UI Pos 1 shows Seat 2 (left)
+    //   UI Pos 2 shows Seat 3 (top)
+    //   UI Pos 3 shows Seat 4 (right)
+    //
+    // - startIndex = 1: Rotate by 1 (Seat 2 at bottom)
+    //   UI Pos 0 shows Seat 2 (bottom)
+    //   UI Pos 1 shows Seat 3 (left)
+    //   UI Pos 2 shows Seat 4 (top)
+    //   UI Pos 3 shows Seat 1 (right)
+    //
+    // ROTATION CONTROLS:
+    // - ← Rotate: Increases startIndex, rotates seats CLOCKWISE
+    //   From default (0): goes to 1 → Seat 4 moves to bottom, Seat 1 moves to left
+    // - Rotate →: Decreases startIndex, rotates seats COUNTER-CLOCKWISE
+    //   From default (0): goes to 3 → Seat 2 moves to bottom, Seat 1 moves to right
+    // - Reset (startIndex = 0): Returns to default view (Seat 1 at bottom)
+    //
+    // WHERE ROTATION IS APPLIED:
+    // 1. In getComponentToRender() function (line ~570)
+    //    - Calculates which seat should appear at each UI position
+    //    - Formula: seatNumber = ((positionIndex + startIndex) % tableSize) + 1
+    //
+    // 2. In the render loop (line ~1000)
+    //    - Uses tableLayout.positions.players (NOT pre-rotated)
+    //    - Passes positionIndex to getComponentToRender
+    //    - Rotation happens inside getComponentToRender
+    //
+    // IMPORTANT: Rotation happens ONLY ONCE in getComponentToRender()
+    // We don't pre-rotate arrays to avoid double rotation
+
     const [seat, ] = useState<number>(0);
-    const [startIndex, setStartIndex] = useState<number>(0);
+    const [startIndex, setStartIndex] = useState<number>(0); // Controls table rotation (0 = no rotation)
+
+    // Log rotation changes for debugging
+    useEffect(() => {
+        console.log(`🔄 TABLE ROTATION - startIndex changed to ${startIndex}, rotating view by ${startIndex} positions`);
+    }, [startIndex]);
 
     const [currentIndex, setCurrentIndex] = useState<number>(1);
 
@@ -353,8 +407,24 @@ const Table = React.memo(() => {
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
         const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
+
+        // Debug logging for seat mapping
+        console.log("🎲 TABLE - Active Players Mapping: " + JSON.stringify({
+            totalPlayers: activePlayers.length,
+            currentUserAddress: userWalletAddress,
+            currentUserSeat: currentUserSeat,
+            players: activePlayers.map((p: PlayerDTO) => ({
+                seat: p.seat,
+                address: p.address,
+                stack: p.stack,
+                status: p.status,
+                lastAction: p.lastAction,
+                sumOfBets: p.sumOfBets
+            }))
+        }, null, 2));
+
         return activePlayers;
-    }, [tableDataValues.tableDataPlayers]);
+    }, [tableDataValues.tableDataPlayers, userWalletAddress, currentUserSeat]);
 
     // Optimize window width detection - only check on resize
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 414);
@@ -383,7 +453,22 @@ const Table = React.memo(() => {
     //     // Mouse tracking disabled for performance
     // }, []);
 
+    // Legacy seat effect (can be removed if not used)
     useEffect(() => (seat ? setStartIndex(seat) : setStartIndex(0)), [seat]);
+
+    // AUTO-ROTATION: Automatically rotate table when user joins
+    // This ensures the current user always appears at the bottom position
+    // DISABLED FOR NOW - uncomment to enable auto-rotation
+    // useEffect(() => {
+    //     if (currentUserSeat > 0) {
+    //         // Calculate rotation needed to put current user at bottom
+    //         // Position 0 is bottom, so we need to rotate by (userSeat - 1)
+    //         const rotationNeeded = currentUserSeat - 1;
+    //
+    //         console.log(`🎯 AUTO-ROTATION: User is at seat ${currentUserSeat}, rotating by ${rotationNeeded} to put them at bottom`);
+    //         setStartIndex(rotationNeeded);
+    //     }
+    // }, [currentUserSeat]);
 
     // Memoize reordered arrays using positions from tableLayout
     const reorderedPlayerArray = useMemo(
@@ -507,14 +592,60 @@ const Table = React.memo(() => {
     // Memoize the component renderer
     const getComponentToRender = useCallback(
         (position: PositionArray, positionIndex: number) => {
-            // Calculate the actual seat number accounting for rotation
-            const seatNumber = ((positionIndex + startIndex) % tableSize) + 1;
+            // ================================================================
+            // CRITICAL ROTATION LOGIC - THIS IS WHERE THE ROTATION HAPPENS
+            // ================================================================
+            //
+            // INPUTS:
+            // - position: The UI position data (left, top coordinates)
+            // - positionIndex: Which UI position we're rendering (0-8)
+            //   * 0 = bottom (hero position)
+            //   * 1 = left
+            //   * 2 = top-left (for 9 players) or top (for 4 players)
+            //   * 3 = top (for 9 players) or right (for 4 players)
+            //   * etc.
+            //
+            // ROTATION FORMULA:
+            // seatNumber = ((positionIndex - startIndex + tableSize) % tableSize) + 1
+            //
+            // STEP BY STEP BREAKDOWN:
+            // 1. positionIndex - startIndex: Subtracts the rotation offset (for clockwise rotation)
+            // 2. + tableSize: Ensures no negative numbers before modulo
+            // 3. % tableSize: Wraps around if we exceed table size
+            // 4. + 1: Converts from 0-based index to 1-based seat numbers
+            //
+            // VISUAL EXAMPLE (4 players, startIndex = 1):
+            // - UI Pos 0: (0 - 1 + 4) % 4 + 1 = 4 → Seat 4 appears at bottom
+            // - UI Pos 1: (1 - 1 + 4) % 4 + 1 = 1 → Seat 1 appears at left
+            // - UI Pos 2: (2 - 1 + 4) % 4 + 1 = 2 → Seat 2 appears at top
+            // - UI Pos 3: (3 - 1 + 4) % 4 + 1 = 3 → Seat 3 appears at right
+            //
+            // The subtraction creates a CLOCKWISE rotation:
+            // As startIndex increases, lower numbered seats move clockwise to new positions
+
+            // ROTATION DIRECTION: We subtract startIndex to rotate clockwise
+            // When startIndex increases, seats move CLOCKWISE around the table
+            const seatNumber = ((positionIndex - startIndex + tableSize) % tableSize) + 1;
 
             // Find if a player is seated at this position
             const playerAtThisSeat = tableActivePlayers.find((p: PlayerDTO) => p.seat === seatNumber);
 
             // Check if this seat belongs to the current user
             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
+
+            // Debug logging for seat assignment
+            console.log(`🪑 SEAT ASSIGNMENT - Position ${positionIndex} → Seat ${seatNumber}: ` + JSON.stringify({
+                positionIndex: positionIndex,
+                startIndex: startIndex,
+                calculatedSeat: seatNumber,
+                playerFound: playerAtThisSeat ? {
+                    address: playerAtThisSeat.address?.substring(0, 10) + '...',
+                    stack: playerAtThisSeat.stack,
+                    sumOfBets: playerAtThisSeat.sumOfBets
+                } : null,
+                isCurrentUser: isCurrentUser,
+                uiPosition: { left: position.left, top: position.top }
+            }, null, 2));
 
             // Build common props shared by all player components
             const playerProps = {
@@ -532,6 +663,7 @@ const Table = React.memo(() => {
                 return (
                     <VacantPlayer
                         index={seatNumber}
+                        uiPosition={positionIndex}
                         left={tableLayout.positions.vacantPlayers[positionIndex]?.left || "0px"}
                         top={tableLayout.positions.vacantPlayers[positionIndex]?.top || "0px"}
                         onJoin={updateBalanceOnPlayerJoin}
@@ -540,13 +672,22 @@ const Table = React.memo(() => {
             }
 
             // CASE 2: Current user's seat or CASE 3: Another player's seat
+            // Pass the positionIndex so components can show the correct UI position
             return isCurrentUser ? (
-                <Player {...playerProps} />
+                <Player {...playerProps} uiPosition={positionIndex} />
             ) : (
-                <OppositePlayer {...playerProps} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />
+                // OppositePlayer includes the "SIT HERE" button in PlayerPopUpCard
+                // When clicked, it calls setStartIndex(seatNumber - 1) to rotate the table
+                // This makes the clicked seat appear at the bottom position
+                <OppositePlayer {...playerProps} uiPosition={positionIndex} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />
             );
         },
-        [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin]
+        // INVESTIGATE: startIndex is in the dependency array, so component should re-render when it changes
+        // If rotation isn't working, check:
+        // 1. Is startIndex actually changing? (console log confirms it is)
+        // 2. Is reorderedPlayerArray using startIndex correctly?
+        // 3. Is the table layout using the correct tableSize?
+        [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin, tableLayout]
     );
 
     const copyToClipboard = useCallback((text: string) => {
@@ -894,9 +1035,34 @@ const Table = React.memo(() => {
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 z-30">
-                                        {reorderedPlayerArray.map((position, positionIndex) => {
-                                            const seatNum = ((positionIndex + startIndex) % tableSize) + 1;
+                                        {/* ============================================================
+                                            MAIN RENDER LOOP - APPLIES ROTATION TO ALL PLAYERS
+                                            ============================================================
+
+                                            KEY POINTS:
+                                            1. We iterate over tableLayout.positions.players (the UNROTATED positions)
+                                            2. Each position has fixed UI coordinates (left, top)
+                                            3. The rotation happens in getComponentToRender()
+
+                                            IMPORTANT: We do NOT pre-rotate the positions array!
+                                            - We use the original positions as-is
+                                            - getComponentToRender decides WHICH seat goes WHERE
+                                            - This avoids double-rotation bugs
+
+                                            FLOW:
+                                            - positionIndex 0 → getComponentToRender → decides which seat appears at bottom
+                                            - positionIndex 1 → getComponentToRender → decides which seat appears at left
+                                            - positionIndex 2 → getComponentToRender → decides which seat appears at top
+                                            - etc.
+                                        */}
+                                        {tableLayout.positions.players.map((position, positionIndex) => {
+                                            // Calculate seat number for animations (turn indicator, winner effects)
+                                            // This uses the SAME REVERSED formula as getComponentToRender to stay in sync
+                                            const seatNum = ((positionIndex - startIndex + tableSize) % tableSize) + 1;
                                             const isWinnerSeat = !!winnerInfo?.some(w => w.seat === seatNum);
+
+                                            // Get the actual component to render (Player, OppositePlayer, or VacantPlayer)
+                                            // This function handles all the rotation logic internally
                                             const componentToRender = getComponentToRender(position, positionIndex);
 
                                             return (
@@ -1013,6 +1179,39 @@ const Table = React.memo(() => {
                     <div className="text-gray-400 mt-1">
                         {window.innerWidth}x{window.innerHeight}
                         {window.innerWidth > window.innerHeight ? ' (landscape)' : ' (portrait)'}
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                        <div className="font-bold mb-1">Table Rotation</div>
+                        <div className="text-green-400">StartIndex: <span className="font-mono">{startIndex}</span></div>
+                        <div className="text-gray-400 text-[10px] mt-1">
+                            {startIndex === 0 && "No rotation (Seat 1 at bottom)"}
+                            {startIndex === 1 && "Rotated by 1 (Seat 2 at bottom)"}
+                            {startIndex === 2 && "Rotated by 2 (Seat 3 at bottom)"}
+                            {startIndex === 3 && "Rotated by 3 (Seat 4 at bottom)"}
+                            {startIndex > 3 && `Rotated by ${startIndex}`}
+                        </div>
+                        <div className="flex gap-1 mt-2">
+                            <button
+                                onClick={() => setStartIndex((prev) => (prev + 1) % tableSize)}
+                                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px]"
+                                title="Rotate left - increases startIndex"
+                            >
+                                ← Rotate
+                            </button>
+                            <button
+                                onClick={() => setStartIndex((prev) => (prev - 1 + tableSize) % tableSize)}
+                                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px]"
+                                title="Rotate right - decreases startIndex"
+                            >
+                                Rotate →
+                            </button>
+                            <button
+                                onClick={() => setStartIndex(0)}
+                                className="bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded text-[10px]"
+                            >
+                                Reset
+                            </button>
+                        </div>
                     </div>
                     <div className="mt-2 pt-2 border-t border-gray-700">
                         <div className="font-bold mb-1">Results</div>

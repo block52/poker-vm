@@ -1046,13 +1046,13 @@ export const calculateTableZoom = (): number => {
     const scaleByHeight = availableHeight / TABLE_HEIGHT;
     
     // Debug logging - remove after testing
-    console.log('Desktop scaling debug:', {
-      windowSize: `${window.innerWidth}x${window.innerHeight}`,
-      padding: `H:${DESKTOP_PADDING_H}, V:${DESKTOP_PADDING_V}`,
-      availableSpace: `${availableWidth}x${availableHeight}`,
-      scaleByWidth,
-      scaleByHeight
-    });
+    // console.log('Desktop scaling debug:', {
+    //   windowSize: `${window.innerWidth}x${window.innerHeight}`,
+    //   padding: `H:${DESKTOP_PADDING_H}, V:${DESKTOP_PADDING_V}`,
+    //   availableSpace: `${availableWidth}x${availableHeight}`,
+    //   scaleByWidth,
+    //   scaleByHeight
+    // });
     
     // Use the smaller scale to ensure table fits in viewport
     const fitScale = Math.min(scaleByWidth, scaleByHeight);

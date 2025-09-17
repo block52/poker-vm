@@ -55,20 +55,31 @@ type BadgeProps = {
     // Timer extension props
     canExtend?: boolean;
     onExtend?: () => void;
+    // Sit & Go tournament results
+    tournamentPlace?: number;
+    tournamentPayout?: string;
 };
 
-const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend, onExtend }) => {
+const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend, onExtend, tournamentPlace, tournamentPayout }) => {
     // Get game options to determine if it's a Sit & Go
     const { gameOptions } = useGameOptions();
     const isSitAndGo = gameOptions?.type === GameType.SIT_AND_GO;
-    
+
     // Format the value based on game type using clean utility functions
-    const formattedValue = isSitAndGo 
+    const formattedValue = isSitAndGo
         ? formatForSitAndGo(value)  // Returns "10,000" format
         : formatForCashGame(value);  // Returns "$100.00" format
-    
+
     // Get action display data for this player
     const actionDisplay = usePlayerActionDropBox(count);
+
+    // Get place suffix (1st, 2nd, 3rd, 4th)
+    const getPlaceSuffix = (place: number) => {
+        if (place === 1) return "1st";
+        if (place === 2) return "2nd";
+        if (place === 3) return "3rd";
+        return `${place}th`;
+    };
 
     return (
         <div className="badge-container">
@@ -78,6 +89,26 @@ const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend
             <div className="badge-value">
                 {formattedValue}
             </div>
+
+            {/* Tournament Results Display */}
+            {tournamentPlace && (
+                <div className="badge-tournament-results">
+                    <div className="tournament-place" style={{
+                        backgroundColor: tournamentPlace === 1 ? '#ffd700' :
+                                       tournamentPlace === 2 ? '#c0c0c0' :
+                                       tournamentPlace === 3 ? '#cd7f32' :
+                                       '#666',
+                        color: tournamentPlace <= 3 ? '#000' : '#fff'
+                    }}>
+                        {getPlaceSuffix(tournamentPlace)} Place
+                    </div>
+                    {tournamentPayout && tournamentPayout !== "0" && (
+                        <div className="tournament-payout" style={{ color: '#4ade80' }}>
+                            Won: ${tournamentPayout}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Player Action Drop Box - positioned below the price */}
             <ActionDisplay 

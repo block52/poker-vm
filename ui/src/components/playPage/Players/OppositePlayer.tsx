@@ -52,6 +52,7 @@ import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddres
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
+import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
 
 type OppositePlayerProps = {
     left?: string;
@@ -63,16 +64,39 @@ type OppositePlayerProps = {
     isCardVisible: number;
     setCardVisible: (index: number) => void;
     setStartIndex: (index: number) => void;
+    uiPosition?: number;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
+const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition }) => {
     const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
+
+    // Debug logging for OppositePlayer component stack value
+    React.useEffect(() => {
+        console.log(`👥 OPPOSITE PLAYER Component - Seat ${index}: ` + JSON.stringify({
+            playerData: playerData,
+            stackValue: stackValue,
+            stackRaw: playerData?.stack,
+            address: playerData?.address,
+            status: playerData?.status,
+            sumOfBets: playerData?.sumOfBets,
+            lastAction: playerData?.lastAction,
+            isFolded: isFolded,
+            isAllIn: isAllIn,
+            isSittingOut: isSittingOut
+        }, null, 2));
+    }, [playerData, stackValue, index, isFolded, isAllIn, isSittingOut]);
     const { showingPlayers } = useShowingCardsByAddress();
     const { dealerSeat } = useDealerPosition();
-    
+
     // Check if this seat is the dealer
     const isDealer = dealerSeat === index;
+
+    // Get tournament results for this seat
+    const { getSeatResult, isSitAndGo } = useSitAndGoPlayerResults();
+    const tournamentResult = React.useMemo(() => {
+        return isSitAndGo ? getSeatResult(index) : null;
+    }, [getSeatResult, isSitAndGo, index]);
 
     // 1) detect when any winner exists
     const hasWinner = React.useMemo(() => Array.isArray(winnerInfo) && winnerInfo.length > 0, [winnerInfo]);
@@ -127,6 +151,15 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                     setCardVisible(index);
                 }}
             >
+                {/* Development Mode Debug Info */}
+                {import.meta.env.VITE_NODE_ENV === "development" && (
+                    <div className="absolute top-[-60px] left-1/2 transform -translate-x-1/2 bg-blue-600 bg-opacity-80 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap z-50 border border-blue-400">
+                        <div className="text-blue-200">UI Pos: {uiPosition ?? 'N/A'}</div>
+                        <div className="text-yellow-300">Seat: {index}</div>
+                        <div className="text-gray-200">XY: {left}, {top}</div>
+                        <div className="text-orange-300">Addr: ...{playerData?.address ? playerData.address.slice(-3) : 'N/A'}</div>
+                    </div>
+                )}
                 <div className="flex justify-center gap-1">
                     {holeCards && holeCards.length === 2 ? (
                         isShowingCards && showingCards ? (
@@ -178,7 +211,13 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                         )}
                     </div>
                     <div className="absolute top-[-10px] w-full">
-                        <Badge count={index} value={stackValue} color={color} />
+                        <Badge
+                            count={index}
+                            value={stackValue}
+                            color={color}
+                            tournamentPlace={tournamentResult?.place}
+                            tournamentPayout={tournamentResult?.formattedPayout}
+                        />
                     </div>
 
                     {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}

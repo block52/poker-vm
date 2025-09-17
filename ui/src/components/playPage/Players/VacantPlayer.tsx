@@ -61,8 +61,8 @@ import { useGameOptions } from "../../../hooks/useGameOptions";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
 
-const VacantPlayer: React.FC<VacantPlayerProps> = memo(
-    ({ left, top, index, onJoin }) => {
+const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo(
+    ({ left, top, index, onJoin, uiPosition }) => {
         const { isUserAlreadyPlaying, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
@@ -179,11 +179,19 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
         return (
             <>
-                <div 
-                    className="absolute cursor-pointer" 
+                <div
+                    className="absolute cursor-pointer"
                     style={containerStyle}
                     onClick={handleSeatClick}
                 >
+                    {/* Development Mode Debug Info */}
+                    {import.meta.env.VITE_NODE_ENV === "development" && (
+                        <div className="absolute top-[-50px] left-1/2 transform -translate-x-1/2 bg-gray-600 bg-opacity-80 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap z-50 border border-gray-400">
+                            <div className="text-gray-300">UI Pos: {uiPosition ?? 'N/A'}</div>
+                            <div className="text-yellow-300">Vacant Seat: {index}</div>
+                            <div className="text-gray-300">XY: {left}, {top}</div>
+                        </div>
+                    )}
                     <div className="flex justify-center mb-2">
                         <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
                     </div>
