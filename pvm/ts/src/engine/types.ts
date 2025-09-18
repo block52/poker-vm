@@ -31,10 +31,14 @@ export interface IDealerGameInterface {
     // setDealerPosition(seat: number): void;
 }
 
+export interface IPositionManager {
+    findNextActivePlayer(currentSeat: number): Player | undefined;
+}
+
 /**
  * Interface defining the dealer position management contract
  */
-export interface IDealerPositionManager {
+export interface IDealerPositionManager extends IPositionManager {
     // Core dealer position methods
     getDealerPosition(): number;
     
