@@ -66,7 +66,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     /**
      * Finds the next active player starting from a given seat
      */
-    private findNextActivePlayer(startSeat: number): Player | undefined {
+    public findNextActivePlayer(startSeat: number): Player | undefined {
         const maxSeats = this.game.maxPlayers;
 
         // Start searching from the next seat after startSeat
@@ -183,7 +183,7 @@ export class DealerPositionManager implements IDealerPositionManager {
      */
     public getSmallBlindPosition(): number {
         const dealerSeat = this.getDealerPosition();
-        const sbPlayer = this.findNextPlayer(dealerSeat);
+        const sbPlayer = this.findNextActivePlayer(dealerSeat);
         return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : (this.game.maxPlayers % dealerSeat) + 1;
     }
 
@@ -193,7 +193,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     public getBigBlindPosition(): number {
         const sbSeat = this.getSmallBlindPosition();
         // Multi-player: big blind is next active player after small blind
-        const bbPlayer = this.findNextPlayer(sbSeat);
+        const bbPlayer = this.findNextActivePlayer(sbSeat);
         return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (this.game.maxPlayers % sbSeat) + 1;
     }
 
@@ -201,7 +201,7 @@ export class DealerPositionManager implements IDealerPositionManager {
      * Helper method to check if a player is active
      */
     private isPlayerActive(player: Player): boolean {
-        return player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED || player.status === PlayerStatus.SHOWING;
+        return (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED || player.status === PlayerStatus.SHOWING) && player.chips > 0;
     }
 
     private isPlayerSittingIn(player: Player): boolean {

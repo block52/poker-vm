@@ -673,8 +673,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
             // If small blind hasn't been posted yet, small blind player should act
             if (!hasSmallBlind) {
-                const smallBlindPlayer = this.getPlayerAtSeat(this.smallBlindPosition);
-                if (smallBlindPlayer && (smallBlindPlayer.status === PlayerStatus.ACTIVE || smallBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                const smallBlindPosition = this.dealerManager.getSmallBlindPosition();
+                const smallBlindPlayer = this.getPlayerAtSeat(smallBlindPosition);
+
+                // The statuses are covered in the dealer manager
+                // if (smallBlindPlayer && (smallBlindPlayer.status === PlayerStatus.ACTIVE || smallBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                if (smallBlindPlayer) {
                     return smallBlindPlayer;
                 }
             }
@@ -683,8 +687,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
             // If small blind posted but big blind hasn't, big blind player should act
             if (hasSmallBlind && !hasBigBlind) {
-                const bigBlindPlayer = this.getPlayerAtSeat(this.bigBlindPosition);
-                if (bigBlindPlayer && (bigBlindPlayer.status === PlayerStatus.ACTIVE || bigBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                const bigBlindPosition = this.dealerManager.getBigBlindPosition();
+                const bigBlindPlayer = this.getPlayerAtSeat(bigBlindPosition);
+                if (bigBlindPlayer) {
                     return bigBlindPlayer;
                 }
             }

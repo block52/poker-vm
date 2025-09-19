@@ -21,6 +21,7 @@ import {
     test_1006,
     test_1103,
     test_1103_2,
+    test_1120,
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -297,6 +298,15 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions).toBeDefined();
 
             game.performAction("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C", PlayerActionType.CHECK, 0, ONE_TOKEN);
+        });
+
+        it.only("should test bug 1120 next to act", () => {
+            game = fromTestJson(test_1120);
+
+            // Player 1
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD");
         });
     });
 });
