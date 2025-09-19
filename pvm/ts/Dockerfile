@@ -1,5 +1,5 @@
 # Dockerfile for Express (backend/Dockerfile)
-FROM node:20.18.2-alpine
+FROM node:20.19.5-alpine
 
 # Set up working directory
 WORKDIR /usr/src/app
