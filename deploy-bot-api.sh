@@ -63,11 +63,11 @@ chmod +x "$WORKING_DIR/gin-api"
 chown -R "$USER:$GROUP" "$WORKING_DIR"
 
 # Copy service file if it doesn't exist
-if [ ! -f "$SERVICE_FILE" ]; then
+# if [ ! -f "$SERVICE_FILE" ]; then
     echo "Copying service file..."
-    cp "$PWD_DIR/bot/api/api.service" "$SERVICE_FILE"
+    cp "$PWD_DIR/bot/api/$SERVICE_NAME" "$SERVICE_FILE"
     chmod 644 "$SERVICE_FILE"
-fi
+# fi
 
 # Reload systemd and start the service
 echo "Reloading systemd daemon..."
