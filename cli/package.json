@@ -20,7 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "@bitcoinbrisbane/block52": "1.0.142",
-    "axios": "^1.9.0",
+    "axios": "^1.12.0",
     "chalk": "^4.1.2",
     "commander": "^9.4.1",
     "dotenv": "^16.4.7",
