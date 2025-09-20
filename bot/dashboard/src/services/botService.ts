@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import type { Bot, ApiError } from "../types";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://botapi.block52.xyz";
 
 // Configure axios with base URL and CORS headers
 const api = axios.create({
