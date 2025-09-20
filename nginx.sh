@@ -11,12 +11,16 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Get pwd
+PWD_DIR=$(pwd)
+echo -e "${GREEN}Current working directory: $PWD_DIR${NC}"
+
 # Configuration paths
 NGINX_CONF_DIR="/etc/nginx"
 SITES_AVAILABLE="$NGINX_CONF_DIR/sites-available"
 SITES_ENABLED="$NGINX_CONF_DIR/sites-enabled"
 DEFAULT_CONF="$SITES_AVAILABLE/default"
-SOURCE_CONF="/nginx/default"
+SOURCE_CONF="$PWD_DIR/nginx/default"
 BACKUP_DIR="/etc/nginx/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
