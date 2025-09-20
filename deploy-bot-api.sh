@@ -1,9 +1,9 @@
 #!/bin/bash
-# filepath: /Users/lucascullen/Github/block52/poker-vm/deploy-bot-api.sh
 
 set -e  # Exit on any error
 
 # Configuration
+PWD_DIR=$(pwd)
 SERVICE_NAME="api.service"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
 WORKING_DIR="/opt/gin-api"
@@ -36,7 +36,7 @@ git pull origin main
 
 
 # Navigate to the bot/api subdirectory
-cd bot/api
+cd "$PWD_DIR/bot/api"
 
 # Build the application
 echo "Building application..."
@@ -65,7 +65,7 @@ chown -R "$USER:$GROUP" "$WORKING_DIR"
 # Copy service file if it doesn't exist
 if [ ! -f "$SERVICE_FILE" ]; then
     echo "Copying service file..."
-    cp "../../api.service" "$SERVICE_FILE"
+    cp "$PWD_DIR/api.service" "$SERVICE_FILE"
     chmod 644 "$SERVICE_FILE"
 fi
 
