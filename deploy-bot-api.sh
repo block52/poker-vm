@@ -4,7 +4,6 @@
 set -e  # Exit on any error
 
 # Configuration
-REPO_URL="https://github.com/block52/bot-api.git"  # Update with actual repo URL
 SERVICE_NAME="api.service"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
 WORKING_DIR="/opt/gin-api"
@@ -26,24 +25,15 @@ if ! id "$USER" &>/dev/null; then
     useradd --system --no-create-home --shell /bin/false "$USER"
 fi
 
-# Check if repository exists, clone if not
-if [ ! -d "$REPO_DIR" ]; then
-    echo "Cloning repository..."
-    git clone "$REPO_URL" "$REPO_DIR"
-    cd "$REPO_DIR"
-else
-    echo "Repository exists, updating..."
-    cd "$REPO_DIR"
-    
-    # Stash any local changes
-    echo "Stashing local changes..."
-    git stash push -m "Auto-stash before deploy $(date)"
-    
-    # Switch to main branch and pull latest
-    echo "Pulling latest from main..."
-    git checkout main
-    git pull origin main
-fi
+# Stash any local changes
+echo "Stashing local changes..."
+git stash push -m "Auto-stash before deploy $(date)"
+
+# Switch to main branch and pull latest
+echo "Pulling latest from main..."
+git checkout main
+git pull origin main
+
 
 # Navigate to the bot/api subdirectory
 cd bot/api
