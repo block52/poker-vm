@@ -1,6 +1,6 @@
 [Unit]
 Description=Go Gin API Service
-Documentation=https://github.com/your-org/your-gin-api
+Documentation=https://github.com/block52/
 After=network.target
 Wants=network.target
 
