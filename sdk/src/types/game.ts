@@ -37,7 +37,6 @@ export enum GameStatus {
 
 export enum PlayerStatus {
     NOT_ACTED = "not-acted",
-    TURN = "turn",
     ACTIVE = "active",
     BUSTED = "busted",
     FOLDED = "folded",
