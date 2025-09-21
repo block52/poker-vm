@@ -41,6 +41,7 @@ cd "$PWD_DIR/bot/api"
 # Build the application
 echo "Building application..."
 go mod tidy
+go mod download
 go build -o gin-api .
 
 # Stop the service if it's running

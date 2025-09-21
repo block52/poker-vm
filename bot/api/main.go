@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	// "github.com/gin-contrib/cors"
@@ -24,7 +25,7 @@ type Bot struct {
 }
 
 var (
-	mongoClient   *mongo.Client
+	// mongoClient   *mongo.Client
 	botCollection *mongo.Collection
 )
 
@@ -85,6 +86,8 @@ func patchBot(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"updated": true})
 }
 
+var logger *Logger
+
 func main() {
 	// Load .env if present
 	_ = godotenv.Load()
@@ -98,13 +101,17 @@ func main() {
 		dbName = "pvm"
 	}
 
+	// Initialize logger
+	logger = NewLogger("bot-api")
+	logger.Info("Starting bot API server", nil, "", "")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	mongoClient = client
+	// mongoClient = client
 	botCollection = client.Database(dbName).Collection("bots")
 
 	r := gin.Default()
@@ -122,5 +129,33 @@ func main() {
 
 	r.GET("/bots", getBots)
 	r.PATCH("/bots/:address", patchBot)
+
+	// Add logs route
+	r.GET("/logs", getLogsHandler)
+
+	logger.Info("Server starting on port 8080", nil, "", "")
 	r.Run(":8080")
+}
+
+func getLogsHandler(c *gin.Context) {
+	// Get limit from query parameter, default to 50
+	limitStr := c.DefaultQuery("limit", "50")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 || limit > 1000 {
+		limit = 50
+	}
+
+	logs, err := logger.GetLogs(limit)
+	if err != nil {
+		logger.Error("Failed to retrieve logs", map[string]interface{}{"error": err.Error()}, "", "")
+		c.JSON(500, gin.H{"error": "Failed to retrieve logs"})
+		return
+	}
+
+	logger.Debug("Retrieved logs", map[string]interface{}{"count": len(logs)}, "", "")
+	c.JSON(200, gin.H{
+		"logs":  logs,
+		"count": len(logs),
+		"limit": limit,
+	})
 }
