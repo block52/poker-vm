@@ -47,12 +47,9 @@ func NewLogger(component string) *Logger {
 		redisPort = "6379"
 	}
 
-	redisPassword := os.Getenv("REDIS_PASSWORD")
-
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisHost + ":" + redisPort,
-		Password: redisPassword,
-		DB:       0,
+		Addr: redisHost + ":" + redisPort,
+		DB:   0,
 	})
 
 	// Test connection
