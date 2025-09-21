@@ -43,11 +43,6 @@ fi
 echo "Installing bot dependencies with yarn..."
 yarn install
 
-# Build the bot
-echo "Building bot..."
-yarn build
-
-echo "Building bot..."
 # Stop existing bot process if running
 if pm2 list | grep -q "$BOT_NAME"; then
     echo "Stopping existing bot process..."
@@ -57,7 +52,7 @@ fi
 
 # Start the bot with PM2
 echo "Starting bot with PM2..."
-pm2 start dist/index.js --name "$BOT_NAME" --log "$LOG_DIR/$BOT_NAME.log" --error "$LOG_DIR/$BOT_NAME-error.log"
+pm2 start "npx ts-node index.ts" --name "$BOT_NAME" --log "$LOG_DIR/$BOT_NAME.log" --error "$LOG_DIR/$BOT_NAME-error.log"
 
 # Save PM2 configuration
 pm2 save
@@ -66,10 +61,3 @@ pm2 save
 echo "✅ Bot started successfully!"
 pm2 show "$BOT_NAME"
 
-echo ""
-echo "Useful PM2 commands:"
-echo "  pm2 list                 - Show all processes"
-echo "  pm2 logs $BOT_NAME       - Show bot logs"
-echo "  pm2 restart $BOT_NAME    - Restart bot"
-echo "  pm2 stop $BOT_NAME       - Stop bot"
-echo "  pm2 delete $BOT_NAME     - Delete bot process"
