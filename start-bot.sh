@@ -43,6 +43,10 @@ fi
 echo "Installing bot dependencies with yarn..."
 yarn install
 
+# Build the bot
+echo "Building bot..."
+yarn build
+
 echo "Building bot..."
 # Stop existing bot process if running
 if pm2 list | grep -q "$BOT_NAME"; then
@@ -53,8 +57,6 @@ fi
 
 # Start the bot with PM2
 echo "Starting bot with PM2..."
-pm2 start ecosystem.config.js --only "$BOT_NAME" || \
-pm2 start package.json --name "$BOT_NAME" || \
 pm2 start dist/index.js --name "$BOT_NAME" --log "$LOG_DIR/$BOT_NAME.log" --error "$LOG_DIR/$BOT_NAME-error.log"
 
 # Save PM2 configuration
