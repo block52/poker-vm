@@ -7,31 +7,31 @@ import Bots from "./schema/bots";
 import { RaiseOrCallBot } from "./RaiseOrCallBot";
 import { RandomBot } from "./RandomBot";
 import { ClaudeBot } from "./ClaudBot";
-import { NodeRpcClient, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
-import { ethers } from "ethers";
+import { NodeRpcClient } from "@bitcoinbrisbane/block52";
+import { logger } from "./src/utils/logger";
 
 dotenv.config();
 
 // Add nonce tracking
 let play = true;
 const allBots: Record<string, IBot> = {};
-let client;
+let client: NodeRpcClient;
 
 // Modify the main loop to include small blind posting
 async function main() {
     const connectionString = process.env.DB_URL;
     if (!connectionString) {
-        console.error(chalk.red("No database connection string provided. Please set the DB_URL environment variable."));
+        logger.error("No database connection string provided. Please set the DB_URL environment variable.");
         process.exit(1);
     }
     await connectDB.connect(connectionString);
 
-    console.log(chalk.green("Connected to MongoDB database."));
-    console.log(chalk.green("Using DB: " + connectionString));
+    logger.info("Connected to MongoDB database.");
+    logger.info("Using DB: " + connectionString);
 
     const NODE_URL = process.env.NODE_URL;
     if (!NODE_URL) {
-        console.error(chalk.red("No Ethereum node URL provided. Please set the NODE_URL environment variable."));
+        logger.error("No Ethereum node URL provided. Please set the NODE_URL environment variable.");
         process.exit(1);
     }
 
@@ -40,12 +40,12 @@ async function main() {
     const bots = await Bots.find({ enabled: true });
 
     console.table(bots, ["address", "tableAddress", "type", "enabled"]);
-    console.log(chalk.green("Found " + bots.length + " enabled bots in the database."));
+    logger.info("Found " + bots.length + " enabled bots in the database.");
 
     if (bots.length === 0) {
         // const TABLE_ADDRESS = process.env.TABLE_ADDRESS || ethers.ZeroAddress; // Replace with your default table address
-        // console.error(chalk.red("No enabled bots found in the database."));
-        // console.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
+        // logger.error(chalk.red("No enabled bots found in the database."));
+        // logger.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
 
         // // Remove the global pk variable since we'll use the selected key
         // let privateKey: string = process.env.PRIVATE_KEY || "";
@@ -76,7 +76,7 @@ async function main() {
 
     for (const bot of bots) {
         if (bot.privateKey) {
-            console.log(chalk.green(`Found bot with address: ${bot.address}`));
+            logger.info(`Found bot with address: ${bot.address}`);
             let botInstance: IBot | null = null;
 
             // Make this a switch statement
@@ -96,7 +96,7 @@ async function main() {
             }
 
             if (botInstance) {
-                console.log(chalk.green(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`));
+                logger.info(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`);
                 const joined = await botInstance.joinGame();
                 if (joined) {
                     allBots[bot.address] = botInstance;
@@ -106,7 +106,7 @@ async function main() {
     }
 
     // Continuous monitoring loop
-    console.log(chalk.yellow("\nStarting continuous monitoring (checking every 10 seconds)..."));
+    logger.info("Starting continuous monitoring (checking every 10 seconds)...");
     while (play) {
 
         // const game: TexasHoldemStateDTO = await client.getGameState("0xeb563377d3f7805ff663bd78770acec870cf9c33", ethers.ZeroAddress);
@@ -119,7 +119,7 @@ async function main() {
         // }
 
         for (const bot of Object.values(allBots)) {
-            console.log(chalk.cyan("Time: " + new Date().toLocaleTimeString()));
+            logger.debug("Time: " + new Date().toLocaleTimeString());
 
             try {
                 await bot.performAction();
@@ -127,13 +127,13 @@ async function main() {
                 // Wait before next check
                 await new Promise(resolve => setTimeout(resolve, 5000));
             } catch (error) {
-                console.error(chalk.red("Error in main loop:"), error);
+                logger.error("Error in main loop:", error);
             }
         }
     }
 }
 
 main().catch(error => {
-    console.error(chalk.red("Fatal error:"), error);
+    logger.error("Fatal error:", error);
     process.exit(1);
 });

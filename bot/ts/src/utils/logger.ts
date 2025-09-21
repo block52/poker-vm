@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import chalk from "chalk";
 
 export enum LogLevel {
     DEBUG = "debug",
@@ -18,18 +19,28 @@ export interface LogEntry {
 }
 
 export class Logger {
-    private redis: Redis;
+    private redis: Redis | null = null;
     private component: string;
 
     constructor(component: string = "bot") {
         this.component = component;
-        this.redis = new Redis({
-            host: process.env.REDIS_HOST || "localhost",
-            port: parseInt(process.env.REDIS_PORT || "6379"),
-            password: process.env.REDIS_PASSWORD,
-            retryDelayOnFailover: 100,
-            maxRetriesPerRequest: 3
-        });
+        try {
+            this.redis = new Redis({
+                host: process.env.REDIS_HOST || "localhost",
+                port: parseInt(process.env.REDIS_PORT || "6379"),
+                maxRetriesPerRequest: 1,
+                lazyConnect: true
+            });
+
+            // Test connection
+            this.redis.ping().catch(() => {
+                console.warn(chalk.yellow("Redis connection failed, continuing without Redis logging"));
+                this.redis = null;
+            });
+        } catch (error) {
+            console.warn(chalk.yellow("Redis initialization failed, continuing without Redis logging"));
+            this.redis = null;
+        }
     }
 
     private async writeLog(level: LogLevel, message: string, data?: any, gameId?: string, userId?: string): Promise<void> {
@@ -43,18 +54,36 @@ export class Logger {
             gameId
         };
 
-        try {
-            // Store in Redis with TTL of 7 days
-            const key = `logs:${this.component}:${Date.now()}`;
-            await this.redis.setex(key, 604800, JSON.stringify(logEntry));
+        // Always console log first
+        const timestamp = new Date().toLocaleTimeString();
+        const prefix = `[${level.toUpperCase()}] ${this.component}:`;
 
-            // Also add to a sorted set for easy querying
-            await this.redis.zadd(`logs:${this.component}:index`, Date.now(), key);
+        switch (level) {
+            case LogLevel.DEBUG:
+                console.log(chalk.gray(`${timestamp} ${prefix} ${message}`), data ? data : "");
+                break;
+            case LogLevel.INFO:
+                console.log(chalk.green(`${timestamp} ${prefix} ${message}`), data ? data : "");
+                break;
+            case LogLevel.WARN:
+                console.log(chalk.yellow(`${timestamp} ${prefix} ${message}`), data ? data : "");
+                break;
+            case LogLevel.ERROR:
+                console.log(chalk.red(`${timestamp} ${prefix} ${message}`), data ? data : "");
+                break;
+        }
 
-            // Console log for development
-            console.log(`[${level.toUpperCase()}] ${this.component}: ${message}`, data ? data : "");
-        } catch (error) {
-            console.error("Failed to write log to Redis:", error);
+        // Try Redis logging if available
+        if (this.redis) {
+            try {
+                const key = `logs:${this.component}:${Date.now()}`;
+                await this.redis.setex(key, 604800, JSON.stringify(logEntry));
+                await this.redis.zadd(`logs:${this.component}:index`, Date.now(), key);
+            } catch (error) {
+                // Disable Redis on error to prevent spam
+                console.warn(chalk.yellow("Redis logging disabled due to error"));
+                this.redis = null;
+            }
         }
     }
 
@@ -75,6 +104,10 @@ export class Logger {
     }
 
     async getLogs(limit: number = 100): Promise<LogEntry[]> {
+        if (!this.redis) {
+            console.warn("Redis is not available, cannot retrieve logs.");
+            return [];
+        }
         try {
             const keys = await this.redis.zrevrange(`logs:${this.component}:index`, 0, limit - 1);
             const logs: LogEntry[] = [];
@@ -94,7 +127,9 @@ export class Logger {
     }
 
     async close(): Promise<void> {
-        await this.redis.quit();
+        if (this.redis) {
+            await this.redis.quit();
+        }
     }
 }
 

@@ -22,15 +22,13 @@ services:
         image: redis:7.2-alpine
         container_name: pvm-redis
         restart: always
-        command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-Passw0rd123}
+        command: redis-server --appendonly yes
         ports:
             - 6379:6379
         volumes:
             - redis_data:/data
         networks:
             - poker-network
-        environment:
-            REDIS_PASSWORD: ${REDIS_PASSWORD:-Passw0rd123}
 
     # TypeScript Backend
     # backend:
@@ -86,6 +84,8 @@ networks:
 
 volumes:
     mongodb_data:
+        driver: local
+    redis_data:
         driver: local
     redis_data:
         driver: local
