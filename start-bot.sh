@@ -9,7 +9,7 @@ if [[ ! "$(pwd)" == *"poker-vm" ]]; then
 fi
 
 # Configuration
-BOT_DIR="$(pwd)/bot"
+BOT_DIR="$(pwd)/bot/ts"
 BOT_NAME="poker-bot"
 LOG_DIR="$(pwd)/logs"
 
