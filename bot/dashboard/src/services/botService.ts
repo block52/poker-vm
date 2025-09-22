@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import type { Bot, ApiError } from "../types";
+import type { Bot, ApiError, LogsResponse } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://botapi.block52.xyz";
 
@@ -103,6 +103,24 @@ export class BotService {
         } catch (error) {
             console.error(`Error updating bot type for ${address}:`, error);
             throw error;
+        }
+    }
+
+    static async getLogs(limit: number = 50): Promise<LogsResponse> {
+        try {
+            const response: AxiosResponse<LogsResponse> = await api.get(`/logs?limit=${limit}`);
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                throw {
+                    message: error.response?.data?.message || error.message,
+                    status: error.response?.status || 500
+                } as ApiError;
+            }
+            throw {
+                message: "An unexpected error occurred while fetching logs",
+                status: 500
+            } as ApiError;
         }
     }
 }

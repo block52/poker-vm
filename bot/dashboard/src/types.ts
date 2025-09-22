@@ -16,3 +16,19 @@ export interface ApiError {
     message: string;
     status?: number;
 }
+
+export interface LogEntry {
+    timestamp: string;
+    level: "debug" | "info" | "warn" | "error";
+    message: string;
+    data?: any;
+    component?: string;
+    userId?: string;
+    gameId?: string;
+}
+
+export interface LogsResponse {
+    logs: LogEntry[];
+    count: number;
+    limit: number;
+}
