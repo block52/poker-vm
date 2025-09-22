@@ -149,15 +149,13 @@ describe("JoinAction", () => {
             expect(game.getPlayerSeatNumber(player.address)).toBe(5);
         });
 
-        it("should handle seat number in middle of string", () => {
+        it("should reject seat number not in strict 'seat=<n>' format", () => {
             const index = 1;
             const amount = ONE_HUNDRED_TOKENS;
 
-            joinAction.execute(player, index, amount, "some other data seat=3 more data");
-
-            expect(game.getPlayerSeatNumber(player.address)).toBe(3);
+            expect(() => joinAction.execute(player, index, amount, "some other data seat=3 more data"))
+                .toThrow('Invalid seat data format: some other data seat=3 more data. Expected format: "seat=<number>"');
         });
-
         it("should add action to game history", () => {
             const index = 1;
             const amount = ONE_HUNDRED_TOKENS;
