@@ -17,8 +17,8 @@ describe("Texas Holdem - Random Join", () => {
         it("should let one player join with random seat", () => {
             const player1 = new Player(PLAYER_1, undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE);
 
-            game.performAction(player1.address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS); // Only one player
-            
+            game.performAction(player1.address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1"); // Only one player
+
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.exists(player1.address)).toBeTruthy();
         });
@@ -27,11 +27,11 @@ describe("Texas Holdem - Random Join", () => {
             const player1 = new Player(PLAYER_1, undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE);
             const player2 = new Player(PLAYER_2, undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE);
 
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.exists(player1.address)).toBeTruthy();
 
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
 
             //expect(game.getPlayerCount()).toEqual(2); // Not sure why this fails
             expect(game.exists(player1.address)).toBeTruthy();
