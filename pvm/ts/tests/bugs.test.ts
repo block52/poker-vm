@@ -22,6 +22,7 @@ import {
     test_1103,
     test_1103_2,
     test_1120,
+    test_1126,
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -286,7 +287,7 @@ describe("Texas Holdem - Data driven", () => {
             game.performAction("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C", PlayerActionType.CHECK, 0, ONE_TOKEN);
         });
 
-        it.only("should test bug 1103 next to act", () => {
+        it("should test bug 1103 next to act", () => {
             game = fromTestJson(test_1103_2);
 
             // Player 4
@@ -300,13 +301,45 @@ describe("Texas Holdem - Data driven", () => {
             game.performAction("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C", PlayerActionType.CHECK, 0, ONE_TOKEN);
         });
 
-        it.only("should test bug 1120 next to act", () => {
+        it("should test bug 1120 next to act", () => {
             game = fromTestJson(test_1120);
 
             // Player 1
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD");
+        });
+
+        it.only("should test bug 1126", () => {
+            game = fromTestJson(test_1126);
+
+            // Player 3 should be next to act
+            const SEAT_3 = "0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD";
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct?.address).toEqual(SEAT_3);
+
+            // Player 3 should have 3 legal actions: fold, call, raise
+            const legalActions = game.getLegalActions(SEAT_3);
+            expect(legalActions).toBeDefined();
+            expect(legalActions.length).toEqual(3);
+
+            // Verify the legal actions
+            expect(legalActions[0].action).toEqual("fold");
+            expect(legalActions[0].min).toEqual("0");
+            expect(legalActions[0].max).toEqual("0");
+
+            expect(legalActions[1].action).toEqual("check");
+            // Player 3 has already matched the highest bet, so they can check
+            expect(legalActions[1].min).toEqual("0");
+            expect(legalActions[1].max).toEqual("0");
+
+            expect(legalActions[2].action).toEqual("raise");
+            expect(legalActions[2].min).toEqual("1800000000000000000000"); // All-in amount
+            expect(legalActions[2].max).toEqual("1800000000000000000000");
+
+            // Game should still be in TURN round, not END
+            expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
         });
     });
 });

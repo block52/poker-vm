@@ -37,7 +37,7 @@ describe("CallAction", () => {
 
         // Mock the BetManager constructor to return our mock
         jest.spyOn(BetManager.prototype, 'current').mockImplementation(() => mockBetManager.current());
-        jest.spyOn(BetManager.prototype, 'getTotalBetsForPlayer').mockImplementation((playerId: string) => 
+        jest.spyOn(BetManager.prototype, 'getTotalBetsForPlayer').mockImplementation((playerId: string) =>
             mockBetManager.getTotalBetsForPlayer(playerId)
         );
         jest.spyOn(BetManager.prototype, 'getLargestBet').mockImplementation(() => mockBetManager.getLargestBet());
@@ -61,7 +61,7 @@ describe("CallAction", () => {
         jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
         jest.spyOn(game, "getActionsForRound").mockReturnValue([]);
-        
+
         game.addAction = jest.fn();
     });
 
@@ -73,14 +73,14 @@ describe("CallAction", () => {
     describe("verify", () => {
         it("should throw error if no previous action to call", () => {
             // Setup: No current bet (no one has bet yet)
-            mockBetManager.setCurrentBet(0n);
+            mockBetManager.setLargestBet(0n);
 
             expect(() => action.verify(player)).toThrow("No previous action to call.");
         });
 
         it("should throw error if player has already matched the current bet", () => {
             // Setup: Current bet is 50n and player has already bet 50n
-            mockBetManager.setCurrentBet(50n);
+            mockBetManager.setLargestBet(50n);
             mockBetManager.setPlayerBet(player.address, 50n);
 
             expect(() => action.verify(player)).toThrow("Player has already matched the current bet so can check instead.");
@@ -88,7 +88,7 @@ describe("CallAction", () => {
 
         it("should return correct range when player needs to call", () => {
             // Setup: Current bet is 100n, player has bet 30n, so needs to call 70n more
-            mockBetManager.setCurrentBet(100n);
+            mockBetManager.setLargestBet(100n);
             mockBetManager.setPlayerBet(player.address, 30n);
 
             const result = action.verify(player);
@@ -98,7 +98,7 @@ describe("CallAction", () => {
 
         it("should return correct range for new player with no previous bet", () => {
             // Setup: Current bet is 50n, player hasn't bet anything yet
-            mockBetManager.setCurrentBet(50n);
+            mockBetManager.setLargestBet(50n);
             mockBetManager.setPlayerBet(player.address, 0n);
 
             const result = action.verify(player);
@@ -121,7 +121,7 @@ describe("CallAction", () => {
                         timestamp: Date.now()
                     },
                     {
-                        playerId: PLAYER_2_ADDRESS, 
+                        playerId: PLAYER_2_ADDRESS,
                         action: PlayerActionType.BET,
                         amount: 10n,
                         index: 2,
@@ -131,7 +131,7 @@ describe("CallAction", () => {
                 ]);
 
             // Current bet is big blind (10n), player hasn't bet anything
-            mockBetManager.setCurrentBet(10n);
+            mockBetManager.setLargestBet(10n);
             mockBetManager.setPlayerBet(player.address, 0n);
 
             const result = action.verify(player);
