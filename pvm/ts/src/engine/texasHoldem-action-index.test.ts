@@ -60,39 +60,39 @@ describe("Texas Holdem - Action Index", () => {
         it("should increment turn index by exactly 1 for each action", () => {
             // Check initial turn index is 1
             expect(game.getActionIndex()).toBe(3);
-            
+
             // Perform first action and check index
             game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3);
             expect(game.getActionIndex()).toBe(4);
-            
+
             // Perform second action and check index
             game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4);
             expect(game.getActionIndex()).toBe(5);
-            
+
             // Perform third action and check index
             game.performAction(PLAYER_2, PlayerActionType.CALL, 5, ONE_TOKEN);
             expect(game.getActionIndex()).toBe(6);
         });
 
         it.skip("should increment turn index through multiple game rounds", () => {
-            // Post blinds
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
+            // Post blinds (starting from index 3 since players joined at 1,2)
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3);
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4);
 
             // Perform actions to complete preflop round
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 3, ONE_TOKEN);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 4);
-            
-            // Turn index should be 4 now
-            expect(game.getActionIndex()).toBe(4);
-            expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
-            
-            // Continue with flop actions
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 5);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 5, ONE_TOKEN);
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 6);
 
-            // Turn index should be 6 now
-            expect(game.getActionIndex()).toBe(6);
+            // Turn index should be 7 now
+            expect(game.getActionIndex()).toBe(7);
+            expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
+
+            // Continue with flop actions
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 7);
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 8);
+
+            // Turn index should be 9 now
+            expect(game.getActionIndex()).toBe(9);
             expect(game.currentRound).toBe(TexasHoldemRound.TURN);
         });
 
@@ -100,15 +100,15 @@ describe("Texas Holdem - Action Index", () => {
             // Add a third player
             game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=3");
             expect(game.getActionIndex()).toBe(1);
-            
+
             // Perform a fold action
             game.performAction(PLAYER_3, PlayerActionType.FOLD, 2);
             expect(game.getActionIndex()).toBe(2);
-            
+
             // Perform a leave action
             game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, 3);
             expect(game.getActionIndex()).toBe(3);
-            
+
             // Now post blinds with remaining players
             game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 4);
             expect(game.getActionIndex()).toBe(4);
@@ -128,7 +128,7 @@ describe("Texas Holdem - Action Index", () => {
         it("should include current turn index in legal actions", () => {
             // Get legal actions for the first player
             const legalActions = game.getLegalActions(PLAYER_1);
-            
+
             // Check that all legal actions have the current turn index
             legalActions.forEach(action => {
                 expect(action.index).toBe(game.getActionIndex());
@@ -146,7 +146,7 @@ describe("Texas Holdem - Action Index", () => {
             legalActions.forEach(action => {
                 expect(action.index).toBe(4);
             });
-            
+
             // Post big blind
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4);
 
