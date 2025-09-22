@@ -13,7 +13,6 @@ import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN } from "./testConstants";
 import { Player } from "../models/player";
 import { SitAndGoStatusManager } from "./managers/statusManager";
 import { PayoutManager } from "./managers/payoutManager";
-import { exitCode } from "process";
 
 describe.skip("Sit and Go - Full Game", () => {
     describe("Complete Tournament Flow", () => {

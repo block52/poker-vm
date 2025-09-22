@@ -17,9 +17,7 @@ class ShowAction extends BaseAction implements IAction {
             }
         }
 
-        if (this.game.currentRound !== TexasHoldemRound.SHOWDOWN) {
-            throw new Error("Game is not in showdown round.");
-        }
+        this.validateInSpecificRound(TexasHoldemRound.SHOWDOWN);
 
         return { minAmount: 0n, maxAmount: 0n };
     }
@@ -28,10 +26,10 @@ class ShowAction extends BaseAction implements IAction {
     execute(player: Player, index: number): void {
         // First verify the action
         this.verify(player);
-        
+
         // Set player status to SHOWING
         player.updateStatus(PlayerStatus.SHOWING);
-        
+
         // Add the action to the game
         this.game.addAction({ playerId: player.address, action: PlayerActionType.SHOW, index: index });
     }

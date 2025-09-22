@@ -24,9 +24,7 @@ class SmallBlindAction extends BaseAction implements IAction {
         super.verifyPlayerIsActive(player);
 
         // Game must be in the ANTE round
-        if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Can only bet small blind amount when in ante.");
-        }
+        this.validateInSpecificRound(TexasHoldemRound.ANTE);
 
         if (this.game.getActivePlayerCount() < this.game.minPlayers) {
             throw new Error(`Cannot post small blind with less than ${this.game.minPlayers} players.`);
