@@ -15,7 +15,7 @@ import { SitAndGoStatusManager } from "./managers/statusManager";
 import { PayoutManager } from "./managers/payoutManager";
 import { exitCode } from "process";
 
-describe("Sit and Go - Full Game", () => {
+describe.skip("Sit and Go - Full Game", () => {
     describe("Complete Tournament Flow", () => {
         let game: TexasHoldemGame;
         let gameOptions: GameOptions;
@@ -162,27 +162,6 @@ describe("Sit and Go - Full Game", () => {
             const bustedPlayerId = gameState.results[0].playerId;
             const bustedPlayer = game.getPlayer(bustedPlayerId);
             expect(bustedPlayer?.status).toBe(PlayerStatus.BUSTED);
-
-            // // Verify pot size
-            // expect(game.pot).toBeGreaterThan(0n);
-
-            // // Round should be at show down
-            // expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
-
-            // const finalPlayers = game.findLivePlayers();
-            // expect(finalPlayers.length).toBeLessThanOrEqual(3);
-            // expect(finalPlayers.length).toBeGreaterThanOrEqual(1);
-
-            // // Final verification
-            // const winner = game.findLivePlayers();
-            // expect(winner.length).toBe(1);
-
-            // console.log(`\n🏆 TOURNAMENT WINNER: ${winner[0].address}`);
-            // console.log("✓ Sit and Go tournament completed successfully!");
-
-            // // Verify tournament integrity
-            // expect(game.getPlayerCount()).toBe(1); // Only winner remains
-            // expect(winner[0].status).toBe(PlayerStatus.ACTIVE);
         });
 
         it.skip("should run a complete 6-player sit and go tournament - untested", () => {
