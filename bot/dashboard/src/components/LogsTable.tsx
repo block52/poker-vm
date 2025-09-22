@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { BotService, LogEntry, LogsResponse, ApiError } from "../services/botService";
+import { BotService } from "../services/botService";
+import { ApiError, LogEntry, LogsResponse } from "../types";
 
 const LogsTable: React.FC = () => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
