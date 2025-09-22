@@ -113,6 +113,7 @@ describe("JoinAction", () => {
             const index = 1;
             const amount = ONE_HUNDRED_TOKENS;
 
+            // These tests are correct - they're testing that invalid seats throw errors
             expect(() => joinAction.execute(player, index, amount, "seat=0"))
                 .toThrow("Invalid seat number: 0");
 
