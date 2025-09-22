@@ -114,20 +114,5 @@ describe("SmallBlindAction", () => {
             action.execute(player, 0, game.smallBlind);
             expect(player.chips).toBe(initialChips - game.smallBlind);
         });
-
-        it.skip("should add small blind action to update", () => {
-            action.execute(player, 0, game.smallBlind);
-            expect(updateMock.addAction).toHaveBeenCalledWith({
-                playerId: player.id,
-                action: PlayerActionType.SMALL_BLIND,
-                amount: game.smallBlind
-            });
-        });
-
-        // Skipped because the amount validation happens in verify() before execute() is called
-        // In the actual flow, verify() would throw an error for invalid amounts before execute() is reached
-        it.skip("should throw error if amount doesn't match small blind", () => {
-            expect(() => action.execute(player, 0, game.smallBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
-        });
     });
 });
