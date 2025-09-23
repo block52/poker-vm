@@ -32,6 +32,10 @@ class JoinAction extends BaseAction {
             throw new Error("Player does not have enough or too many chips to join.");
         }
 
+        if (!requestedSeat) {
+            throw new Error("Seat must be specified in the format 'seat=<number>'");
+        }
+
         // Find an available seat or use the requested one
         const seat: number = this.getSeat(requestedSeat);
         this.game.joinAtSeat(player, seat);
