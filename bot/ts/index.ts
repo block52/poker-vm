@@ -43,35 +43,7 @@ async function main() {
     logger.info("Found " + bots.length + " enabled bots in the database.");
 
     if (bots.length === 0) {
-        // const TABLE_ADDRESS = process.env.TABLE_ADDRESS || ethers.ZeroAddress; // Replace with your default table address
-        // logger.error(chalk.red("No enabled bots found in the database."));
-        // logger.error(chalk.red("Adding a default bot with table address: " + TABLE_ADDRESS));
-
-        // // Remove the global pk variable since we'll use the selected key
-        // let privateKey: string = process.env.PRIVATE_KEY || "";
-        // if (!privateKe) {
-        //     console.error(chalk.red("No private key provided. Please set the PRIVATE_KEY environment variable."));
-        //     process.exit(1);
-        // }
-
-        // const wallet = new ethers.Wallet(process.env.PRIVATE_KEY || "");
-
-        // const defaultBot = new Bots({
-        //     address: wallet.address,
-        //     tableAddress: "0x7fac1de2961cd3c4fe7b529d39a80c329a23bd51",
-        //     privateKey: process.env.PRIVATE_KEY || "",
-        //     type: "raiseOrCall", // Default type
-        //     enabled: true
-        // });
-
-        // await defaultBot.save();
-        // console.log(chalk.green("Default bot added successfully."));
-
-        // // Push the default bot to the _bots array
-        // _bots.push(new RaiseOrCallBot("0x7fac1de2961cd3c4fe7b529d39a80c329a23bd51", NODE_URL, process.env.PRIVATE_KEY || ""));
-
-        // console.error(chalk.red("No enabled bots found in the database. Please add a bot to the database before running this script."));
-        // process.exit(1);
+        logger.warn("No enabled bots found. Exiting.");
     }
 
     for (const bot of bots) {
@@ -121,6 +93,14 @@ async function main() {
         for (const bot of Object.values(allBots)) {
             logger.debug("Time: " + new Date().toLocaleTimeString());
 
+            const enabled = Bots.find({ address: bot.me });
+            if (!enabled) {
+                logger.info(`Bot with address ${bot.me} is no longer enabled. Removing from active bots.`);
+                delete allBots[bot.me];
+                continue;
+            }
+
+            // Perform action for each bot
             try {
                 await bot.performAction();
 
