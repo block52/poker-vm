@@ -15,10 +15,11 @@ dotenv.config();
 let play = true;
 const allBots: Record<string, IBot> = {};
 let client: NodeRpcClient;
+const blackList: string[] = []; // Add blacklisted addresses here
 
 // Modify the main loop to include small blind posting
 async function main() {
-    
+
     const connectionString = process.env.DB_URL;
     if (!connectionString) {
         logger.error("No database connection string provided. Please set the DB_URL environment variable.");
@@ -37,58 +38,79 @@ async function main() {
 
     client = new NodeRpcClient(NODE_URL, "");
 
-    const bots = await Bots.find({ enabled: true });
-
-    console.table(bots, ["address", "tableAddress", "type", "enabled"]);
-    logger.info("Found " + bots.length + " enabled bots in the database.");
-
-    if (bots.length === 0) {
-        logger.warn("No enabled bots found. Exiting.");
-    }
-
-    for (const bot of bots) {
-        if (bot.privateKey) {
-            logger.info(`Found bot with address: ${bot.address}`);
-            let botInstance: IBot | null = null;
-
-            // Make this a switch statement
-            switch (bot.type) {
-                case "check":
-                    botInstance = new CheckBot(bot.tableAddress, NODE_URL, bot.privateKey);
-                    break;
-                case "raiseOrCall":
-                    botInstance = new RaiseOrCallBot(bot.tableAddress, NODE_URL, bot.privateKey);
-                    break;
-                case "random":
-                    botInstance = new RandomBot(bot.tableAddress, NODE_URL, bot.privateKey);
-                    break;
-                case "claude":
-                    botInstance = new ClaudeBot(bot.tableAddress, NODE_URL, bot.privateKey, process.env.API_KEY || "");
-                    break;
-            }
-
-            if (botInstance) {
-                logger.info(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`);
-                const joined = await botInstance.joinGame();
-                if (joined) {
-                    allBots[bot.address] = botInstance;
-                }
-            }
-        }
-    }
-
     // Continuous monitoring loop
     logger.info("Starting continuous monitoring (checking every 10 seconds)...");
     while (play) {
 
-        // const game: TexasHoldemStateDTO = await client.getGameState("0xeb563377d3f7805ff663bd78770acec870cf9c33", ethers.ZeroAddress);
-        // console.log(chalk.cyan("Next player to act:"), game.nextToAct);
+        const bots = await Bots.find();
 
-        // const playerAddress = game.players.find(p => p.seat === game.nextToAct)?.address;
-        // if (playerAddress && allBots[playerAddress]) {
-        //     const bot = allBots[playerAddress];
-        //     await bot.performAction();
-        // }
+        console.table(bots, ["address", "tableAddress", "type", "enabled"]);
+        logger.info("Found " + bots.length + " enabled bots in the database.");
+
+        if (bots.length === 0) {
+            logger.warn("No enabled bots found. Exiting.");
+            // Sleep for 30 seconds before checking again
+            await new Promise(resolve => setTimeout(resolve, 30000));
+            continue;
+        }
+
+        for (const bot of bots) {
+            if (allBots[bot.address] && bot.enabled) {
+                // Bot is already active
+                continue;
+            }
+
+            if (!bot.enabled) {
+                // Skip disabled bots
+                logger.info(`Bot with address ${bot.address} is disabled. Skipping.`);
+                continue;
+            }
+
+            if (allBots[bot.address] && !bot.enabled) {
+                // Remove disabled bot from active bots
+                logger.info(`Bot with address ${bot.address} is no longer enabled. Removing from active bots.`);
+                delete allBots[bot.address];
+                continue;
+            }
+
+            if (bot.privateKey) {
+
+                if (blackList.includes(bot.tableAddress)) {
+                    logger.warn(`Table address ${bot.tableAddress} is blacklisted. Skipping bot with address ${bot.address}.`);
+                    continue;
+                }
+
+                logger.info(`Found bot with address: ${bot.address}`);
+                let botInstance: IBot | null = null;
+
+                // Make this a switch statement
+                switch (bot.type) {
+                    case "check":
+                        botInstance = new CheckBot(bot.tableAddress, NODE_URL, bot.privateKey);
+                        break;
+                    case "raiseOrCall":
+                        botInstance = new RaiseOrCallBot(bot.tableAddress, NODE_URL, bot.privateKey);
+                        break;
+                    case "random":
+                        botInstance = new RandomBot(bot.tableAddress, NODE_URL, bot.privateKey);
+                        break;
+                    case "claude":
+                        botInstance = new ClaudeBot(bot.tableAddress, NODE_URL, bot.privateKey, process.env.API_KEY || "");
+                        break;
+                }
+
+                if (botInstance) {
+                    logger.info(`Joining game for bot with address: ${bot.address} to table: ${bot.tableAddress}`);
+                    const joined = await botInstance.joinGame();
+                    if (joined) {
+                        allBots[bot.address] = botInstance;
+                    } else {
+                        logger.error(`Bot with address ${bot.address} failed to join the game at table ${bot.tableAddress}. It will not be activated.`);
+                        blackList.push(bot.tableAddress);
+                    }
+                }
+            }
+        }
 
         for (const bot of Object.values(allBots)) {
             logger.debug("Time: " + new Date().toLocaleTimeString());
