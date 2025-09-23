@@ -102,11 +102,11 @@ describe.skip("Texas Holdem Game", () => {
             game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=3");
 
             // Post blinds
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 0);
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 1);
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 1);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 2);
 
             // Player 3 folds
-            game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.FOLD, 2);
+            game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.FOLD, 3);
 
             // Next should be small blind, not player 3 again
             expect(game.getNextPlayerToAct()?.address).toEqual("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
@@ -125,8 +125,8 @@ describe.skip("Texas Holdem Game", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             // Add minimum required players
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=0");
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=1");
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=2");
         });
 
         it("should return false when no blinds have been posted", () => {
@@ -206,7 +206,7 @@ describe.skip("Texas Holdem Game", () => {
 
         it.skip("should handle three player scenarios correctly", () => {
             // Add a third player
-            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=0");
+            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=3");
 
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 1);
@@ -266,8 +266,8 @@ describe.skip("Texas Holdem Game", () => {
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
             // Add minimum required players
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=0");
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=1");
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=2");
         });
 
         it("should have correct table properties", () => {
@@ -384,8 +384,8 @@ describe.skip("Texas Holdem Game", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=0");
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 0, TEN_TOKENS, "seat=1");
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=2");
         });
 
         it("should complete a full round of play", () => {
