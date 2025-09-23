@@ -20,8 +20,8 @@ describe("Creating a Test for proof of correct actions pre flop with 2 players. 
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("should enforce correct showdown behavior - first to act must show", () => {
@@ -69,8 +69,8 @@ describe("TEST - Make sure that the First player to act AT SHOWDOWN shows his ha
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("should enforce correct showdown behavior - first to act must show", () => {
@@ -124,8 +124,8 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("should enforce correct showdown behavior - first to act must show", () => {
@@ -155,8 +155,8 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("ensure there is no check option when facing a bet from another opponent (scenario 3 of 18 - 3 bets)", () => {
@@ -191,8 +191,8 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("ensure there is no check option when facing a bet from another opponent (scenario 4 of 18 - calls a 3 bets)", () => {
@@ -234,8 +234,8 @@ describe("Checking the betting system values after each action #927 + #568", () 
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("checking the betting system values after each action #927 + #568", () => {
@@ -278,8 +278,8 @@ describe.skip("TEST - Make sure that the First player to act AT SHOWDOWN shows h
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
     it("test - make sure that the first player to act at showdown shows his hand automatically. - 903 incorrect option to muck winning hand at showdown after opponent shows", () => {

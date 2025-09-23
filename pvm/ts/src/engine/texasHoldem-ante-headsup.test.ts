@@ -20,7 +20,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should not allow player to join with insufficient funds", () => {
-            expect(() => game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, 10n)).toThrow(
+            expect(() => game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, 10n, "seat=1")).toThrow(
                 "Player does not have enough or too many chips to join."
             );
         });
@@ -91,10 +91,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         it("should get next to act after the blinds", () => {
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
-            
+
             // Add a DEAL action to advance from ANTE to PREFLOP
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
-            
+
             // Now we're in PREFLOP round, so CALL is a valid action
             game.performAction(PLAYER_1, PlayerActionType.CALL, 6, ONE_TOKEN);
 
@@ -109,7 +109,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
-            
+
             // Add a DEAL action to advance from ANTE to PREFLOP
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
 
@@ -320,7 +320,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             actions = game.getLegalActions(PLAYER_2);
             // expect(actions.length).toEqual(1); // Winner must show
             // expect(actions[0].action).toEqual(PlayerActionType.SHOW);
-            
+
             // Both reveal cards
             game.performAction(PLAYER_2, PlayerActionType.SHOW, 15, 0n);
 
@@ -399,7 +399,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             actions = game.getLegalActions(PLAYER_1);
             expect(actions.length).toEqual(2);
-            
+
             game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 18, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(THREE_TOKENS);

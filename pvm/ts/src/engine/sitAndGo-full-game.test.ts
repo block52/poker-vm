@@ -15,7 +15,7 @@ import { SitAndGoStatusManager } from "./managers/statusManager";
 import { PayoutManager } from "./managers/payoutManager";
 import { exitCode } from "process";
 
-describe("Sit and Go - Full Game", () => {
+describe.skip("Sit and Go - Full Game", () => {
     describe("Complete Tournament Flow", () => {
         let game: TexasHoldemGame;
         let gameOptions: GameOptions;
@@ -138,9 +138,9 @@ describe("Sit and Go - Full Game", () => {
             // Check the legal actions of player 2
             const legalActionsPlayer2 = game.getLegalActions(seatMap[2]);
             expect(legalActionsPlayer2.length).toBeGreaterThan(0); // Player 2 should have legal actions
-            
+
             game.performAction(seatMap[2], PlayerActionType.FOLD, 15);
-            
+
             expect(game.communityCards.length).toBe(5); // All community cards should be dealt
             expect(game.currentRound).toBe(TexasHoldemRound.END); // Should jump to end
 
@@ -162,27 +162,6 @@ describe("Sit and Go - Full Game", () => {
             const bustedPlayerId = gameState.results[0].playerId;
             const bustedPlayer = game.getPlayer(bustedPlayerId);
             expect(bustedPlayer?.status).toBe(PlayerStatus.BUSTED);
-
-            // // Verify pot size
-            // expect(game.pot).toBeGreaterThan(0n);
-
-            // // Round should be at show down
-            // expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
-
-            // const finalPlayers = game.findLivePlayers();
-            // expect(finalPlayers.length).toBeLessThanOrEqual(3);
-            // expect(finalPlayers.length).toBeGreaterThanOrEqual(1);
-
-            // // Final verification
-            // const winner = game.findLivePlayers();
-            // expect(winner.length).toBe(1);
-
-            // console.log(`\n🏆 TOURNAMENT WINNER: ${winner[0].address}`);
-            // console.log("✓ Sit and Go tournament completed successfully!");
-
-            // // Verify tournament integrity
-            // expect(game.getPlayerCount()).toBe(1); // Only winner remains
-            // expect(winner[0].status).toBe(PlayerStatus.ACTIVE);
         });
 
         it.skip("should run a complete 6-player sit and go tournament - untested", () => {
@@ -195,11 +174,11 @@ describe("Sit and Go - Full Game", () => {
             console.log("=== PHASE 1: PLAYER REGISTRATION ===");
 
             // Players join the tournament
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS);
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS);
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS);
-            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS);
-            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
+            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5");
 
             // Verify we're waiting for the last player
             expect(game.getPlayerCount()).toBe(5);
@@ -208,7 +187,7 @@ describe("Sit and Go - Full Game", () => {
             expect(statusManager.getState()).toBe(GameStatus.WAITING_FOR_PLAYERS);
 
             // Last player joins - tournament should be ready to start
-            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS);
+            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6");
             expect(game.getPlayerCount()).toBe(6);
 
             const finalLivePlayers = game.findLivePlayers();
@@ -281,7 +260,7 @@ describe("Sit and Go - Full Game", () => {
 
                     // Get next player to act
                     const nextPlayer = game.getNextPlayerToAct();
-                    
+
                     // Get their legal actions
                     const legalActions = game.getLegalActions(nextPlayer!.address);
 

@@ -51,7 +51,7 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         const betManager = new BetManager(newActions);
-        const currentBet: bigint = betManager.current();
+        const currentBet: bigint = betManager.getLargestBet();
         if (currentBet === 0n) {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }

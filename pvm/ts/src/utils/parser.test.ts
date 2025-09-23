@@ -41,7 +41,7 @@ describe("Parser", () => {
                 from: "0x1234",
                 to: "0x5678",
                 value: 1000n,
-                data: "join,0,undefined"
+                data: "actiontype=join&index=0&seat=1"
             };
 
             const actual = toOrderedTransaction(tx);
@@ -50,7 +50,6 @@ describe("Parser", () => {
             expect(actual.to).toBe("0x5678");
             // expect(actual.value).toBe(1000n);
             expect(actual.type).toBe(NonPlayerActionType.JOIN);
-            expect(actual.data).toBeNull();
         });
 
         it("should create ordered transaction with URLSearchParams format", () => {

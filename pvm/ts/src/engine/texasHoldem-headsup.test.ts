@@ -20,7 +20,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should not allow player to join with insufficient funds", () => {
-            expect(() => game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, 10n)).toThrow(
+            expect(() => game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, 10n, "seat=1")).toThrow(
                 "Player does not have enough or too many chips to join."
             );
         });
