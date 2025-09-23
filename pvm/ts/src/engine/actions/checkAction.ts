@@ -37,7 +37,7 @@ class CheckAction extends BaseAction implements IAction {
         // }
 
         const betManager = new BetManager(newActions);
-        const currentBetAmount: bigint = betManager.current();
+        const currentBetAmount: bigint = betManager.getLargestBet();
 
         if (currentBetAmount === 0n) {
             return { minAmount: 0n, maxAmount: 0n };
@@ -80,7 +80,7 @@ class CheckAction extends BaseAction implements IAction {
         // if (playerBet === largestBet) {
         //     return { minAmount: 0n, maxAmount: 0n };
         // }
-        
+
         // I think all of this is  unnecessary, but leaving it here for now
         // 3. Special case for preflop round
         if (currentRound === TexasHoldemRound.PREFLOP) {
