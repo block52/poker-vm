@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import BotTable from "./components/BotTable";
 import LogsTable from "./components/LogsTable";
 import "bootstrap/dist/css/bootstrap.min.css";
