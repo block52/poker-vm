@@ -43,12 +43,13 @@ async function main() {
     while (play) {
 
         const bots = await Bots.find();
+        const enabledBots = bots.filter(bot => bot.enabled);
 
         console.table(bots, ["address", "tableAddress", "type", "enabled"]);
-        logger.info("Found " + bots.length + " enabled bots in the database.");
+        logger.info("Found " + enabledBots.length + " enabled bots in the database.");
 
-        if (bots.length === 0) {
-            logger.warn("No enabled bots found. Exiting.");
+        if (enabledBots.length === 0) {
+            logger.warn("No enabled bots found. Sleeping for 30 seconds.");
             // Sleep for 30 seconds before checking again
             await new Promise(resolve => setTimeout(resolve, 30000));
             continue;
