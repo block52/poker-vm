@@ -1487,7 +1487,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     status: _player.status,
                     lastAction: lastAction,
                     legalActions: legalActions,
-                    sumOfBets: this.getPlayerTotalBets(_player.address).toString(),
+                    sumOfBets: this.getPlayerTotalBets(_player.address, this.currentRound, true).toString(), // Include blinds in JSON output
                     timeout: 0,
                     signature: ethers.ZeroHash
                 };
@@ -1520,7 +1520,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         };
 
         const nextPlayerToAct = this.findNextPlayerToActForRound(this.currentRound);
-        
+
         // Return the complete state DTO
         const state: TexasHoldemStateDTO = {
             type: this.type, // Todo remove this duplication
