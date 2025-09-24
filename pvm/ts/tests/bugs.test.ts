@@ -23,6 +23,7 @@ import {
     test_1103_2,
     test_1120,
     test_1126,
+    test_1130,
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -340,6 +341,21 @@ describe("Texas Holdem - Data driven", () => {
 
             // Game should still be in TURN round, not END
             expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
+        });
+
+        it.skip("should test bug 1130", () => {
+            game = fromTestJson(test_1130);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+        });
+
+        it.only("should test bug 1130 should progress to next round", () => {
+            game = fromTestJson(test_1130);
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+
+            // Seat 3 to check
+            game.performAction("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD", PlayerActionType.CHECK, 0, ONE_TOKEN);
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         });
     });
 });
