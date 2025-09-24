@@ -2,7 +2,6 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
-import { BetManager } from "../managers/betManager";
 
 class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {

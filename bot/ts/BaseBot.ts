@@ -4,8 +4,7 @@ import { ethers, Wallet } from "ethers";
 
 export abstract class BaseBot {
     readonly client: IClient;
-    readonly me: string;
-
+    public readonly me: string;
     public isPlaying: boolean = false;
 
     constructor(readonly tableAddress: string, private nodeUrl: string, private privateKey: string) {
