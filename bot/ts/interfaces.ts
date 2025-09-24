@@ -1,4 +1,5 @@
 export interface IBot {
+    me: string;
     tableAddress: string;
     isTurn: boolean;
     hasJoined(): Promise<boolean>;
