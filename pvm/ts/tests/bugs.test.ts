@@ -353,7 +353,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
             // Seat 3 to check
-            game.performAction("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD", PlayerActionType.CHECK, 0, ONE_TOKEN);
+            game.performAction("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD", PlayerActionType.CHECK, 27, 0n);
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         });
