@@ -313,7 +313,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(nextToAct?.address).toEqual("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD");
         });
 
-        it.only("should test bug 1126", () => {
+        it.skip("should test bug 1126", () => {
             game = fromTestJson(test_1126);
 
             // Player 3 should be next to act
