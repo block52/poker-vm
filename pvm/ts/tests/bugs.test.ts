@@ -25,6 +25,7 @@ import {
     test_1126,
     test_1130,
     test_1130_edited,
+    test_1111,
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -349,7 +350,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
         });
 
-                it("should test bug 1111 - sumOfBets should include blinds in JSON", () => {
+        it("should test bug 1111 - sumOfBets should include blinds in JSON", () => {
             // Use test_1130_edited as the basis since it has blind posting setup
             game = fromTestJson(test_1130_edited);
 
@@ -390,6 +391,113 @@ describe("Texas Holdem - Data driven", () => {
             console.log("Has round ended after action:", (game as any).hasRoundEnded(TexasHoldemRound.PREFLOP));
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
+        });
+
+        it("should test bug 1111 - sumOfBets values for blinds", () => {
+            game = fromTestJson(test_1111);
+
+            console.log("=== BUG 1111: sumOfBets for Blinds ===");
+            console.log("Current round:", game.currentRound);
+            console.log("Pot total:", game.pot.toString());
+
+            // Define player addresses
+            const SEAT_1_SMALL_BLIND = "0xC84737526E425D7549eF20998Fa992f88EAC2484";
+            const SEAT_2_BIG_BLIND = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
+            const SEAT_3_CALLER = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+            const SEAT_4_DEALER = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
+
+            // Expected values from the data
+            const SMALL_BLIND_AMOUNT = BigInt("100000000000000000000"); // 100 tokens
+            const BIG_BLIND_AMOUNT = BigInt("200000000000000000000");   // 200 tokens
+            const CALL_AMOUNT = BigInt("200000000000000000000");        // 200 tokens
+
+            // Check game state
+            expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
+            expect(game.pot).toEqual(BigInt("500000000000000000000")); // 100 + 200 + 200 = 500
+
+            // Test JSON output to verify sumOfBets property
+            console.log("=== TESTING JSON OUTPUT ===");
+            const gameJson = game.toJson();
+            console.log("Game JSON players with sumOfBets:");
+
+            // Find each player in the JSON and verify their sumOfBets
+            const jsonSmallBlindPlayer = gameJson.players.find((p: any) => p.address === SEAT_1_SMALL_BLIND);
+            const jsonBigBlindPlayer = gameJson.players.find((p: any) => p.address === SEAT_2_BIG_BLIND);
+            const jsonCallerPlayer = gameJson.players.find((p: any) => p.address === SEAT_3_CALLER);
+            const jsonDealerPlayer = gameJson.players.find((p: any) => p.address === SEAT_4_DEALER);
+
+            // Verify JSON objects have sumOfBets property
+            expect(jsonSmallBlindPlayer).toBeDefined();
+            expect(jsonSmallBlindPlayer?.sumOfBets).toBeDefined();
+            expect(jsonBigBlindPlayer).toBeDefined();
+            expect(jsonBigBlindPlayer?.sumOfBets).toBeDefined();
+            expect(jsonCallerPlayer).toBeDefined();
+            expect(jsonCallerPlayer?.sumOfBets).toBeDefined();
+            expect(jsonDealerPlayer).toBeDefined();
+            expect(jsonDealerPlayer?.sumOfBets).toBeDefined();
+
+            // Check sumOfBets values in JSON
+            console.log(`JSON SEAT_1 (Small Blind): sumOfBets=${jsonSmallBlindPlayer?.sumOfBets}`);
+            console.log(`JSON SEAT_2 (Big Blind): sumOfBets=${jsonBigBlindPlayer?.sumOfBets}`);
+            console.log(`JSON SEAT_3 (Caller): sumOfBets=${jsonCallerPlayer?.sumOfBets}`);
+            console.log(`JSON SEAT_4 (Dealer): sumOfBets=${jsonDealerPlayer?.sumOfBets}`);
+
+            // Assert JSON sumOfBets values match expectations
+            // These should be the CORRECT values - test will fail showing the bug
+            expect(jsonSmallBlindPlayer?.sumOfBets).toEqual("100000000000000000000"); // Should be 100 tokens
+            expect(jsonBigBlindPlayer?.sumOfBets).toEqual("200000000000000000000");   // Should be 200 tokens  
+            expect(jsonCallerPlayer?.sumOfBets).toEqual("200000000000000000000");     // ✅ Correct: Call bet is tracked
+            expect(jsonDealerPlayer?.sumOfBets).toEqual("0");                         // ✅ Correct: No bets
+
+            // Get all players
+            const smallBlindPlayer = game.getPlayer(SEAT_1_SMALL_BLIND);
+            const bigBlindPlayer = game.getPlayer(SEAT_2_BIG_BLIND);
+            const callerPlayer = game.getPlayer(SEAT_3_CALLER);
+            const dealerPlayer = game.getPlayer(SEAT_4_DEALER);
+
+            console.log("=== PLAYER STACKS AND BETS ===");
+
+            // Get total bets using game's method - check all rounds
+            const smallBlindTotalBets = game.getPlayerTotalBets(SEAT_1_SMALL_BLIND, game.currentRound, true); // includeBlinds = true
+            const bigBlindTotalBets = game.getPlayerTotalBets(SEAT_2_BIG_BLIND, game.currentRound, true); // includeBlinds = true  
+            const callerTotalBets = game.getPlayerTotalBets(SEAT_3_CALLER, game.currentRound, true); // includeBlinds = true
+            const dealerTotalBets = game.getPlayerTotalBets(SEAT_4_DEALER, game.currentRound, true); // includeBlinds = true
+
+            // Check small blind player
+            console.log(`SEAT_1 (Small Blind): Stack=${smallBlindPlayer.chips.toString()}, TotalBets=${smallBlindTotalBets.toString()}`);
+            expect(smallBlindPlayer.chips).toEqual(BigInt("9900000000000000000000")); // 10000 - 100 = 9900
+            // VERIFIED: This is correctly tracking 100000000000000000000 (100 tokens)
+            expect(smallBlindTotalBets).toEqual(SMALL_BLIND_AMOUNT); // This assertion passes - blind bets ARE tracked correctly
+
+            // Check big blind player  
+            console.log(`SEAT_2 (Big Blind): Stack=${bigBlindPlayer.chips.toString()}, TotalBets=${bigBlindTotalBets.toString()}`);
+            expect(bigBlindPlayer.chips).toEqual(BigInt("9800000000000000000000")); // 10000 - 200 = 9800
+            // VERIFIED: This is correctly tracking 200000000000000000000 (200 tokens)
+            expect(bigBlindTotalBets).toEqual(BIG_BLIND_AMOUNT); // This assertion passes - blind bets ARE tracked correctly
+
+            // Check caller player (this should work correctly)
+            console.log(`SEAT_3 (Caller): Stack=${callerPlayer.chips.toString()}, TotalBets=${callerTotalBets.toString()}`);
+            expect(callerPlayer.chips).toEqual(BigInt("9800000000000000000000")); // 10000 - 200 = 9800
+            expect(callerTotalBets).toEqual(CALL_AMOUNT); // This should work correctly
+
+            // Check dealer player (no bets yet)
+            console.log(`SEAT_4 (Dealer): Stack=${dealerPlayer.chips.toString()}, TotalBets=${dealerTotalBets.toString()}`);
+            expect(dealerPlayer.chips).toEqual(BigInt("10000000000000000000000")); // No change
+            expect(dealerTotalBets).toEqual(BigInt(0)); // Should be 0
+
+            console.log("=== BLIND BET TRACKING ===");
+            console.log("✅ Small blind bet IS correctly tracked by game.getPlayerTotalBets()");
+            console.log("✅ Big blind bet IS correctly tracked by game.getPlayerTotalBets()");
+            console.log("✅ Small blind bet IS now correctly tracked in JSON sumOfBets!");
+            console.log("✅ Big blind bet IS now correctly tracked in JSON sumOfBets!");
+            console.log("✅ Total pot equals sum of all bets: 100 + 200 + 200 = 500");
+
+            // Additional verification: total bets should equal pot
+            const totalPlayerBets = smallBlindTotalBets + bigBlindTotalBets + callerTotalBets + dealerTotalBets;
+            console.log(`Total player bets: ${totalPlayerBets.toString()}`);
+            expect(totalPlayerBets).toEqual(game.pot);
+
+            console.log("=== BUG 1111 RESULT: FIXED! JSON sumOfBets now includes blind bets! ===");
         });
     });
 });
