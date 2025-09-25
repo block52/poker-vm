@@ -349,12 +349,45 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
         });
 
-        it.only("should test bug 1130 should progress to next round", () => {
+                it("should test bug 1111 - sumOfBets should include blinds in JSON", () => {
+            // Use test_1130_edited as the basis since it has blind posting setup
+            game = fromTestJson(test_1130_edited);
+
+            // Verify internal game state has correct totals including blinds
+            expect(game.getPlayerTotalBets("0xC84737526E425D7549eF20998Fa992f88EAC2484", TexasHoldemRound.ANTE, true)).toBe(100000000000000000000n); // Small blind
+            expect(game.getPlayerTotalBets("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD", TexasHoldemRound.ANTE, true)).toBe(200000000000000000000n); // Big blind
+
+            // This is the key fix - JSON should include blind bets in sumOfBets
+            const gameJson = game.toJson();
+            const player1Json = gameJson.players.find(p => p.address === "0xC84737526E425D7549eF20998Fa992f88EAC2484");
+            const player2Json = gameJson.players.find(p => p.address === "0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD");
+
+            expect(player1Json?.sumOfBets).toBe("200000000000000000000"); // Small blind + call = 200
+            expect(player2Json?.sumOfBets).toBe("200000000000000000000"); // Big blind amount in JSON
+        });
+
+        it("should test bug 1130 should progress to next round", () => {
             game = fromTestJson(test_1130_edited);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
-            // Seat 3 to check
+            console.log("\n=== PLAYER DETAILS ===");
+            const livePlayers = game.findLivePlayers();
+            for (const player of livePlayers) {
+                console.log(`Player ${player.address}:`);
+                console.log(`  - Status: ${player.status}`);
+                console.log(`  - Stack: ${player.chips}`);
+                console.log(`  - Seat: ${(game as any).getPlayerSeatNumber(player.address)}`);
+                const preflopBet = game.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP, true);
+                console.log(`  - PREFLOP bet (incl blinds): ${preflopBet}`);
+            }
+
+            console.log("Has round ended before action:", (game as any).hasRoundEnded(TexasHoldemRound.PREFLOP));
+
             game.performAction("0x527a896c23D93A5f381C5d1bc14FF8Ee812Ad3dD", PlayerActionType.CHECK, 27, 0n);
+
+            console.log("\n=== AFTER CHECK ACTION ===");
+            console.log("Current round:", game.currentRound);
+            console.log("Has round ended after action:", (game as any).hasRoundEnded(TexasHoldemRound.PREFLOP));
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         });
