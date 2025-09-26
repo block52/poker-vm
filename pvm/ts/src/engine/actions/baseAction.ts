@@ -6,7 +6,7 @@ import { BetManager } from "../managers/betManager";
 
 abstract class BaseAction {
     private readonly zeroChipsAllowed = [PlayerActionType.SIT_OUT, PlayerActionType.FOLD, NonPlayerActionType.DEAL, PlayerActionType.ALL_IN, PlayerActionType.SHOW, PlayerActionType.MUCK];
-    constructor(protected game: TexasHoldemGame, protected update: IUpdate) {}
+    constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
@@ -15,7 +15,7 @@ abstract class BaseAction {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
             if (nextPlayerAddress?.address !== player.address) throw new Error("Must be currently active player.");
         }
-        
+
         if (player.chips <= 0n && !this.zeroChipsAllowed.includes(this.type)) {
             throw new Error("Player has no chips left and cannot perform this action.");
         }
@@ -49,54 +49,44 @@ abstract class BaseAction {
         if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
     }
 
-    protected getLargestBet(includeBlinds: boolean = false): bigint {
+    protected getBetManager(includeBlinds: boolean = false): BetManager {
         const actions = this.game.getActionsForRound(this.game.currentRound);
         let newActions = [...actions];
         if (includeBlinds) {
             const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
             newActions.push(...anteActions);
         }
-        const betManager = new BetManager(newActions);
+        return new BetManager(newActions);
+    }
+
+    protected getLargestBet(includeBlinds: boolean = false): bigint {
+        const betManager = this.getBetManager(includeBlinds);
         return betManager.getLargestBet();
     }
 
-    // Get the largest bet in the current round
-    protected getLargestBet_old(includeBlinds: boolean = false): bigint {
-        let largestBettor: string = "";
-        let _amount = 0n;
-        const roundBets = this.game.getBets(this.game.currentRound);
-
-        for (const [playerId, amount] of roundBets.entries()) {
-            // playerId is the key, amount is the value
-            if (amount > _amount) {
-                _amount = amount;
-                largestBettor = playerId;
-            }
+    // Round validation utilities
+    protected validateNotInAnteRound(): void {
+        if (this.game.currentRound === TexasHoldemRound.ANTE) {
+            throw new Error(`Cannot ${this.type.toLowerCase()} in the ante round.`);
         }
+    }
 
-        if (includeBlinds) {
-            if (_amount === 0n) {
-                return this.game.bigBlind; // If no bets, return big blind as the minimum bet
-            }
-
-            const smallBlindPosition = this.game.smallBlindPosition;
-            const smallBlindPlayer = this.game.getPlayerAtSeat(smallBlindPosition);
-
-            // if the bet map is the small blind, we need to add the small blind amount
-            if (largestBettor === smallBlindPlayer?.address) {
-                _amount += this.game.smallBlind;
-            }
-
-            const bigBlindPosition = this.game.bigBlindPosition;
-            const bigBlindPlayer = this.game.getPlayerAtSeat(bigBlindPosition);
-
-            // if the bet map is the big blind, we need to add the big blind amount
-            if (largestBettor === bigBlindPlayer?.address) {
-                _amount += this.game.bigBlind;
-            }
+    protected validateNotInShowdownRound(): void {
+        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
+            throw new Error(`Cannot ${this.type.toLowerCase()} in the showdown round.`);
         }
+    }
 
-        return _amount;
+    protected validateInSpecificRound(requiredRound: TexasHoldemRound): void {
+        if (this.game.currentRound !== requiredRound) {
+            throw new Error(`${this.type} can only be performed during ${requiredRound} round.`);
+        }
+    }
+
+    protected validateNotInSpecificRound(forbiddenRound: TexasHoldemRound): void {
+        if (this.game.currentRound === forbiddenRound) {
+            throw new Error(`${this.type} action is not allowed during ${forbiddenRound} round.`);
+        }
     }
 }
 

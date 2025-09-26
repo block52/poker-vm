@@ -9,7 +9,6 @@ describe("BigBlindAction", () => {
     let updateMock: any;
     let action: BigBlindAction;
     let player: Player;
-    const previousActions: ActionDTO[] = [];
 
     beforeEach(() => {
         // Setup initial game state
@@ -25,7 +24,7 @@ describe("BigBlindAction", () => {
 
         game = getDefaultGame(playerStates);
         updateMock = {
-            addAction: jest.fn(action => {})
+            addAction: jest.fn(action => { })
         };
 
         action = new BigBlindAction(game, updateMock);
@@ -88,7 +87,7 @@ describe("BigBlindAction", () => {
             // Override the current round mock to be FLOP instead of PREFLOP
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
 
-            expect(() => action.verify(player)).toThrow("Big blind can only be posted during ante round.");
+            expect(() => action.verify(player)).toThrow("post-big-blind can only be performed during ante round.");
         });
 
         it("should throw error if player is not in small blind position", () => {

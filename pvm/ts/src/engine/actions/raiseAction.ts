@@ -2,7 +2,6 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
-import { BetManager } from "../managers/betManager";
 
 class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -26,47 +25,23 @@ class RaiseAction extends BaseAction implements IAction {
         // 1. Perform basic validation (player active, player's turn, etc.)
         super.verify(player);
 
-        // 2. Cannot raise in the ANTE round
-        const currentRound = this.game.currentRound;
-        if (currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot raise in the ante round. Only small and big blinds are allowed.");
-        }
+        // 2. Cannot raise in the ANTE or SHOWDOWN rounds
+        this.validateNotInAnteRound();
+        this.validateNotInShowdownRound();
 
-        if (currentRound === TexasHoldemRound.SHOWDOWN) {
-            throw new Error("Cannot raise in the showdown round.");
-        }
+        const currentRound = this.game.currentRound;
 
         // 3. Get the bets for the current round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-
-        const actions = this.game.getActionsForRound(currentRound);
-        let newActions = [...actions];
-        if (includeBlinds) {
-            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
-            newActions.push(...anteActions);
-        }
-
-        if (newActions.length < 2 && includeBlinds === true || newActions.length === 0 && includeBlinds === false) {
-            throw new Error("Cannot raise - no bets have been placed yet.");
-        }
-
-        const betManager = new BetManager(newActions);
+        const betManager = this.getBetManager(includeBlinds);
         const currentBet: bigint = betManager.getLargestBet();
+
         if (currentBet === 0n) {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
-        // const lastAggressor = betManager.getLastAggressor();
-        // if (lastAggressor === player.address) {
-        //     throw new Error("Cannot raise - you already have the largest bet.");
-        // }
-
         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
         // 4. Calculate the minimum raise amount
-        // let delta = currentBet - playersBet;
-        // if (delta === 0n) {
-        //     delta = this.game.bigBlind;
-        // }
         const delta = currentBet - playersBet;
         const minRaiseToAmount: bigint = delta + currentBet;
 

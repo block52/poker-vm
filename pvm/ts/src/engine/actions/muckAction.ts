@@ -10,9 +10,7 @@ class MuckAction extends BaseAction implements IAction {
         // Basic validation
         super.verify(player);
 
-        if (this.game.currentRound !== TexasHoldemRound.SHOWDOWN) {
-            throw new Error("Game is not in showdown round.");
-        }
+        this.validateInSpecificRound(TexasHoldemRound.SHOWDOWN);
 
         if (this.game.getActionsForRound(TexasHoldemRound.SHOWDOWN).length === 0) {
             throw new Error("A player must show first.");
@@ -32,10 +30,10 @@ class MuckAction extends BaseAction implements IAction {
     execute(player: Player, index: number, amount?: bigint): void {
         // First verify the action
         this.verify(player);
-        
+
         // Set player status to FOLDED
         player.updateStatus(PlayerStatus.FOLDED);
-        
+
         // Add the action to the game
         this.game.addAction({ playerId: player.address, action: PlayerActionType.MUCK, index: index });
     }
