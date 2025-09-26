@@ -13,8 +13,10 @@ export class BetManager implements IBetManager {
     private readonly bets: Map<string, bigint> = new Map();
     private readonly turns: Turn[] = [];
     private readonly aggregatedBets: AggregatedBet[] = [];
+    private readonly game: { bigBlind: bigint };
 
-    constructor(turns: Turn[] = []) {
+    constructor(turns: Turn[] = [], game?: { bigBlind: bigint }) {
+        this.game = game || { bigBlind: 0n };
         // Initialize the bet manager
         this.addTurns(turns);
     }
@@ -103,16 +105,48 @@ export class BetManager implements IBetManager {
         return largestBet?.amount || 0n;
     }
 
-    getLastAggressor(): string | null {
-        const sortedAggregatedBets = this.aggregatedBets.sort((a, b) => a.index - b.index);
-        if (sortedAggregatedBets.length === 0) {
-            return null;
+    getLastAggressor(): bigint {
+        // Check if the last action was aggressive
+        if (this.turns.length === 0) {
+            return 0n;
         }
-        const start = sortedAggregatedBets.length;
-        return sortedAggregatedBets[start - 1]?.playerId || null;
-    }
 
-    /**
+        const lastTurn = this.turns[this.turns.length - 1];
+
+        // If the last action was passive (call, check), return 0n
+        if (lastTurn.action === PlayerActionType.CALL || lastTurn.action === PlayerActionType.CHECK) {
+            return 0n;
+        }
+
+        // If the last action was aggressive
+        if (lastTurn.action === PlayerActionType.BET ||
+            lastTurn.action === PlayerActionType.RAISE ||
+            lastTurn.action === PlayerActionType.BIG_BLIND ||
+            lastTurn.action === PlayerActionType.SMALL_BLIND) {
+
+            // Check if the same player had a previous non-blind aggressive action
+            for (let i = this.turns.length - 2; i >= 0; i--) {
+                const turn = this.turns[i];
+                if (turn.action === PlayerActionType.BET || turn.action === PlayerActionType.RAISE) {
+
+                    // If the same player had a previous bet/raise, return 0n
+                    if (turn.playerId === lastTurn.playerId) {
+                        return 0n;
+                    }
+                    // If different player had previous bet/raise, return current aggressor's amount
+                    else {
+                        return this.bets.get(lastTurn.playerId) || 0n;
+                    }
+                }
+            }
+
+            // No previous bet/raise found, return current aggressor's amount
+            return this.bets.get(lastTurn.playerId) || 0n;
+        }
+
+        // For other actions, return 0n
+        return 0n;
+    }    /**
      * Get the last aggressor in the betting sequence
      * @returns The amount of the last aggressor's bet
      * @description The last aggressor is the player who made the last bet or raise in
@@ -135,23 +169,34 @@ export class BetManager implements IBetManager {
         const betsArray = Array.from(bets.entries()).map(([playerId, amount]) => ({ playerId, amount }));
 
         if (betsArray.length === 0) {
-            return 0n;
+            // No bets at all, return big blind as minimum raise
+            return this.game.bigBlind;
+        }
+
+        if (betsArray.length === 1) {
+            // Only one bet exists, minimum raise is big blind
+            return this.game.bigBlind;
         }
 
         // Sort bets by amount in descending order
         const sortedBets = [...betsArray].sort((a, b) => Number(b.amount - a.amount));
-
-        if (sortedBets.length === 1) {
-            // Only one bet (likely big blind), so raise amount is the big blind
-            return sortedBets[0].amount;
-        }
 
         // The raise amount is the difference between the largest and second largest bet
         const largestBet = sortedBets[0].amount;
         const secondLargestBet = sortedBets[1].amount;
         const raiseDelta = largestBet - secondLargestBet;
 
-        // If the raise delta is 0 or less than big blind, return big blind as minimum
-        return raiseDelta > 0n ? raiseDelta : 0n;
+        // Check if this involves only blinds or includes bet/raise actions
+        const hasNonBlindActions = this.turns.some(turn =>
+            turn.action === PlayerActionType.BET || turn.action === PlayerActionType.RAISE
+        );
+
+        // If delta is less than big blind AND involves bet/raise actions, return big blind
+        // Otherwise, return the actual delta (for blinds scenarios)
+        if (raiseDelta < this.game.bigBlind && hasNonBlindActions) {
+            return this.game.bigBlind;
+        }
+
+        return raiseDelta;
     }
 }
