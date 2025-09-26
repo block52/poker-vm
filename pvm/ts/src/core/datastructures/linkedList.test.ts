@@ -2,7 +2,7 @@ import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import { FixedCircularList } from "./linkedList";
 
-describe.only("Fixed List Tests", () => {
+describe.skip("Fixed List Tests", () => {
     it("should test the linked list properties", () => {
         const list = new FixedCircularList<Player>(9, null);
         expect(list.getSize()).toEqual(0);

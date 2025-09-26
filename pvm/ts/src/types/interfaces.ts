@@ -15,5 +15,6 @@ export interface IBetManager {
     getBets(): Map<string, bigint>;
     getLargestBet(): bigint;
     getLastAggressor(start?: number): string | null;
+    getRaisedAmount(): bigint;
     previous(): bigint;
 }

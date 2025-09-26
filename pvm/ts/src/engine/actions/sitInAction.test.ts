@@ -2,8 +2,8 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import SitInAction from "./sitInAction";
-import { IUpdate, TurnWithSeat } from "../types";
-import { gameOptions, getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { IUpdate } from "../types";
+import { getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
 
 describe("SitInAction", () => {
     let action: SitInAction;
@@ -165,7 +165,7 @@ describe("SitInAction", () => {
     describe("execute", () => {
         it("should call verify before executing", () => {
             const verifySpy = jest.spyOn(action, "verify");
-            action.execute(sittingOutPlayer, 5);
+            action.execute(sittingOutPlayer, 5, 0n);
             expect(verifySpy).toHaveBeenCalledWith(sittingOutPlayer);
         });
 

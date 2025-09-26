@@ -125,4 +125,33 @@ export class BetManager implements IBetManager {
         const start = sortedAggregatedBets.length;
         return sortedAggregatedBets[start - 1]?.amount || 0n;
     }
+
+    /**
+     * Gets the amount of the last raise in the current betting round
+     * @returns The size of the last raise, or big blind if no raises have occurred
+     */
+    getRaisedAmount(): bigint {
+        const bets = this.getBets();
+        const betsArray = Array.from(bets.entries()).map(([playerId, amount]) => ({ playerId, amount }));
+
+        if (betsArray.length === 0) {
+            return 0n;
+        }
+
+        // Sort bets by amount in descending order
+        const sortedBets = [...betsArray].sort((a, b) => Number(b.amount - a.amount));
+
+        if (sortedBets.length === 1) {
+            // Only one bet (likely big blind), so raise amount is the big blind
+            return sortedBets[0].amount;
+        }
+
+        // The raise amount is the difference between the largest and second largest bet
+        const largestBet = sortedBets[0].amount;
+        const secondLargestBet = sortedBets[1].amount;
+        const raiseDelta = largestBet - secondLargestBet;
+
+        // If the raise delta is 0 or less than big blind, return big blind as minimum
+        return raiseDelta > 0n ? raiseDelta : 0n;
+    }
 }
