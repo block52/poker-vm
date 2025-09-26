@@ -224,6 +224,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Reset all players
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
+
+            // In tournament games, players with 0 chips should be marked as BUSTED
+            if (this._gameOptions.type !== GameType.CASH && player.chips === 0n) {
+                player.updateStatus(PlayerStatus.BUSTED);
+            }
         }
 
         const newDealerPosition: number = this.dealerManager.handleNewHand();
@@ -387,11 +392,15 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
-     * Finds players who are still in the hand (not folded)
+     * Finds players who are still in the hand (not folded, busted, or sitting out)
      */
     findLivePlayers(): Player[] {
         return Array.from(this._playersMap.values()).filter(
-            (player): player is Player => player !== null && [PlayerStatus.SHOWING, PlayerStatus.ACTIVE, PlayerStatus.ALL_IN].includes(player.status)
+            (player): player is Player =>
+                player !== null &&
+                ![PlayerStatus.FOLDED, PlayerStatus.BUSTED, PlayerStatus.SITTING_OUT].includes(player.status) &&
+                // In tournament games, also exclude players with 0 chips (effectively busted)
+                (this._gameOptions.type === GameType.CASH || player.chips > 0n)
         );
     }
 
@@ -1487,7 +1496,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     status: _player.status,
                     lastAction: lastAction,
                     legalActions: legalActions,
-                    sumOfBets: this.getPlayerTotalBets(_player.address).toString(),
+                    sumOfBets: this.getPlayerTotalBets(_player.address, this.currentRound, true).toString(), // Include blinds in JSON output
                     timeout: 0,
                     signature: ethers.ZeroHash
                 };
@@ -1520,7 +1529,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         };
 
         const nextPlayerToAct = this.findNextPlayerToActForRound(this.currentRound);
-        
+
         // Return the complete state DTO
         const state: TexasHoldemStateDTO = {
             type: this.type, // Todo remove this duplication
