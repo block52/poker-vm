@@ -54,23 +54,31 @@ class JoinAction extends BaseAction {
     }
 
     // Refactored method to handle seat assignment cleanly without legacy number support
-    private getSeat(data: string): number {
+    private getSeat(data?: string): number {
         let seat: number;
 
-        if (!data) {
-            throw new Error("Seat must be specified in the format 'seat=<number>'");
-        }
+        if (data === undefined || data === "" || data === null) {
+            // Get all available seats
+            const availableSeats = this.game.getAvailableSeats();
 
-        // Parse seat number from "seat=X" format
-        const seatRegex = /seat=(\d+)/;
-        const match = data.match(seatRegex);
+            // If all seats are occupied, throw an error
+            if (availableSeats.length === 0)
+                throw new Error("No available seats to join.");
 
-        if (match && match[1]) {
-            seat = parseInt(match[1], 10);
+            // Choose randomly from the available seats
+            const randomIndex = Math.floor(Math.random() * availableSeats.length);
+            seat = availableSeats[randomIndex];
         } else {
-            throw new Error(`Invalid seat data format: ${data}. Expected format: "seat=<number>"`);
-        }
+            // Parse seat number from "seat=X" format
+            const seatRegex = /seat=(\d+)/;
+            const match = data.match(seatRegex);
 
+            if (match && match[1]) {
+                seat = parseInt(match[1], 10);
+            } else {
+                throw new Error(`Invalid seat data format: ${data}. Expected format: "seat=<number>"`);
+            }
+        }
 
         // Validate the seat number
         if (!seat || isNaN(seat) || seat < 1) {

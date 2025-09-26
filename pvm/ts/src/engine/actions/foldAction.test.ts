@@ -88,7 +88,7 @@ describe("FoldAction", () => {
             // Mock game in showdown state
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
 
-            expect(() => action.verify(player)).toThrow("Fold action is not allowed during showdown round.");
+            expect(() => action.verify(player)).toThrow("fold action is not allowed during showdown round.");
         });
 
         it("should throw error if player is the last live player", () => {
@@ -123,7 +123,7 @@ describe("FoldAction", () => {
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
-            
+
             // Mock findLivePlayers to have multiple players so fold is allowed
             jest.spyOn(game, "findLivePlayers").mockReturnValue([player, mockNextPlayer]);
 
@@ -139,9 +139,9 @@ describe("FoldAction", () => {
 
         it("should set player status to FOLDED", () => {
             const updateStatusSpy = jest.spyOn(player, "updateStatus");
-            
+
             action.execute(player, 0);
-            
+
             expect(updateStatusSpy).toHaveBeenCalledWith(PlayerStatus.FOLDED);
         });
 
@@ -157,9 +157,9 @@ describe("FoldAction", () => {
 
         it("should call verify before executing", () => {
             const verifySpy = jest.spyOn(action, "verify");
-            
+
             action.execute(player, 0);
-            
+
             expect(verifySpy).toHaveBeenCalledWith(player);
         });
     });

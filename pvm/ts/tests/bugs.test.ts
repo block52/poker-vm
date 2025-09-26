@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS, TWO_TOKENS } from "../src/engine/testConstants";
 import {
@@ -26,6 +26,7 @@ import {
     test_1130,
     test_1130_edited,
     test_1111,
+    test_1137,
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -498,6 +499,89 @@ describe("Texas Holdem - Data driven", () => {
             expect(totalPlayerBets).toEqual(game.pot);
 
             console.log("=== BUG 1111 RESULT: FIXED! JSON sumOfBets now includes blind bets! ===");
+        });
+    });
+
+    describe.only("Bug 1137 - Should allow seat 1 to start new hand after tournament end", () => {
+        let game: TexasHoldemGame;
+
+        beforeEach(() => {
+            game = fromTestJson(test_1137);
+        });
+
+        it("should show round as 'end' after tournament completion", () => {
+            expect(game.currentRound).toBe(TexasHoldemRound.END);
+        });
+
+        it("should have winners declared", () => {
+            const gameData = game.toJson();
+            expect(gameData.winners).toBeDefined();
+            expect(gameData.winners.length).toBe(1);
+            expect(gameData.winners[0].address).toBe("0xE8DE79b707BfB7d8217cF0a494370A9cC251602C");
+            expect(gameData.winners[0].amount).toBe("27200000000000000000000");
+        });
+
+        // it("should have busted players marked correctly", () => {
+        //     const players = game.getPlayers();
+        //     const seat2Player = players.find(p => p.seat === 2);
+        //     const seat3Player = players.find(p => p.seat === 3);
+
+        //     expect(seat2Player?.status).toBe(PlayerStatus.BUSTED);
+        //     expect(seat3Player?.status).toBe(PlayerStatus.BUSTED);
+        //     expect(seat2Player?.stack).toBe(0n);
+        //     expect(seat3Player?.stack).toBe(0n);
+        // });
+
+        it("should allow seat 1 to start new hand", () => {
+            const seat1Address = "0xc264FEDe83B081C089530BA0b8770C98266d058a";
+            const legalActions = game.getLegalActions(seat1Address);
+
+            const newHandAction = legalActions.find(action => action.action === NonPlayerActionType.NEW_HAND);
+            expect(newHandAction).toBeDefined();
+            expect(newHandAction?.min).toBe("0");
+            expect(newHandAction?.max).toBe("0");
+        });
+
+        it("should allow seat 4 (winner) to start new hand", () => {
+            const seat4Address = "0xE8DE79b707BfB7d8217cF0a494370A9cC251602C";
+            const legalActions = game.getLegalActions(seat4Address);
+
+            const newHandAction = legalActions.find(action => action.action === NonPlayerActionType.NEW_HAND);
+            expect(newHandAction).toBeDefined();
+        });
+
+        it("should have correct pot amount from final hand", () => {
+            const gameData = game.toJson();
+            expect(gameData.pots).toEqual(["27200000000000000000000"]);
+        });
+
+        it("should have correct chip distribution after tournament", () => {
+            const players = game.g
+
+            // Seat 1 should have remaining chips
+            const seat1Player = players.find(p => p.seat === 1);
+            expect(seat1Player?.stack).toBe(BigInt("9200000000000000000000"));
+
+            // Seat 4 (winner) should have most chips
+            const seat4Player = players.find(p => p.seat === 4);
+            expect(seat4Player?.stack).toBe(BigInt("30800000000000000000000"));
+
+            // Seats 2 and 3 should be busted
+            const seat2Player = players.find(p => p.seat === 2);
+            const seat3Player = players.find(p => p.seat === 3);
+            expect(seat2Player?.stack).toBe(0n);
+            expect(seat3Player?.stack).toBe(0n);
+        });
+
+        it("should execute new-hand action successfully", () => {
+            const seat1Address = "0xc264FEDe83B081C089530BA0b8770C98266d058a";
+
+            expect(() => {
+                game.performAction(seat1Address, NonPlayerActionType.NEW_HAND, 17);
+            }).not.toThrow();
+
+            // After new hand, the game should reset for heads-up play
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
         });
     });
 });

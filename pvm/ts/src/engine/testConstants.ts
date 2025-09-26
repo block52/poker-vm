@@ -125,7 +125,7 @@ export class MockBetManager implements IBetManager {
     getLastAggressor(start?: number): string {
         throw new Error("Method not implemented.");
     }
-    
+
     previous(): bigint {
         throw new Error("Method not implemented.");
     }
@@ -148,6 +148,7 @@ export class MockBetManager implements IBetManager {
     // Helper methods to set up test scenarios
     setCurrentBet(amount: bigint): void {
         this.mockCurrentBet = amount;
+        this.mockLargestBet = amount; // Keep them in sync
     }
 
     setPlayerBet(playerId: string, amount: bigint): void {
@@ -156,6 +157,7 @@ export class MockBetManager implements IBetManager {
 
     setLargestBet(amount: bigint): void {
         this.mockLargestBet = amount;
+        this.mockCurrentBet = amount; // Keep them in sync
     }
 
     reset(): void {

@@ -13,23 +13,14 @@ class CallAction extends BaseAction implements IAction {
         // Check base conditions (hand active, player's turn, player active)
         super.verify(player);
 
-        // 1. Round state check: Cannot call during ANTE round
-        const currentRound = this.game.currentRound;
-        if (currentRound === TexasHoldemRound.ANTE || currentRound === TexasHoldemRound.SHOWDOWN) {
-            throw new Error(`Call action is not allowed during ${currentRound} round.`);
-        }
+        // 1. Round state check: Cannot call during ANTE or SHOWDOWN rounds
+        this.validateNotInAnteRound();
+        this.validateNotInShowdownRound();
 
+        const currentRound = this.game.currentRound;
         // 2. Get the bets for the current round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
-
-        const actions = this.game.getActionsForRound(currentRound);
-        let newActions = [...actions];
-        if (includeBlinds) {
-            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
-            newActions.push(...anteActions);
-        }
-
-        const betManager = new BetManager(newActions);
+        const betManager = this.getBetManager(includeBlinds);
         const currentBet: bigint = betManager.getLargestBet();
 
         if (currentBet === 0n) {
@@ -43,7 +34,6 @@ class CallAction extends BaseAction implements IAction {
         }
 
         // 3. Action sequence check: Need a previous action with amount to call
-        // const largestBet: bigint = betManager.getLargestBet();
         const delta: bigint = currentBet - playersBet;
 
         if (delta > player.chips) {
