@@ -4,7 +4,7 @@ import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
 import { BetManager } from "../managers/betManager";
 
-class RaiseAction extends BaseAction implements IAction {
+class RaiseToAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
         return PlayerActionType.RAISE;
     }
@@ -67,7 +67,7 @@ class RaiseAction extends BaseAction implements IAction {
         // if (delta === 0n) {
         //     delta = this.game.bigBlind;
         // }
-        const delta: bigint = currentBet - playersBet;
+        const delta = currentBet - playersBet;
         const minRaiseToAmount: bigint = delta + currentBet;
 
         if (player.chips < minRaiseToAmount) {
@@ -97,4 +97,4 @@ class RaiseAction extends BaseAction implements IAction {
     }
 }
 
-export default RaiseAction;
+export default RaiseToAction;

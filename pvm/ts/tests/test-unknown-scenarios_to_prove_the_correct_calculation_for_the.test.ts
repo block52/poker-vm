@@ -25,7 +25,23 @@ describe("SCenarios to prove the correct calculation for the minimum raise/Slide
         expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
         // Pre-flop actions
+        let legalActions = game.getLegalActions(PLAYER_1);
+        expect(legalActions).toBeDefined();
+        expect(legalActions?.length).toEqual(3); // FOLD, CALL, RAISE
+        let raiseAction = legalActions?.find(action => action.action === PlayerActionType.RAISE);
+        expect(raiseAction).toBeDefined();
+        expect(raiseAction!.min).toEqual("300000000000000000");
+
         game.performAction(PLAYER_1, PlayerActionType.RAISE, 6, 300000000000000000n);
+
+        legalActions = game.getLegalActions(PLAYER_2);
+        expect(legalActions).toBeDefined();
+        expect(legalActions?.length).toEqual(3); // FOLD, CALL, RAISE
+
+        raiseAction = legalActions?.find(action => action.action === PlayerActionType.RAISE);
+        expect(raiseAction).toBeDefined();
+        expect(raiseAction!.min).toEqual("400000000000000000");
+
         game.performAction(PLAYER_2, PlayerActionType.RAISE, 7, 400000000000000000n);
         game.performAction(PLAYER_1, PlayerActionType.CALL, 8, TWO_TOKENS);
         game.performAction(PLAYER_1, PlayerActionType.CHECK, 9, 0n);
