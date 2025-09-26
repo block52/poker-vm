@@ -264,7 +264,7 @@ describe("Checking the betting system values after each action #927 + #568", () 
         expect(legalActions[1].max).toEqual("200000000000000000");
 
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions[2].min).toEqual("600000000000000000");
+        expect(legalActions[2].min).toEqual("400000000000000000");
     });
 });
 

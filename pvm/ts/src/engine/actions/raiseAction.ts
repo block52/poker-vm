@@ -61,7 +61,7 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         return {
-            minAmount: minTotalBetAmount,  // Return total bet amount, not additional amount
+            minAmount: minRaiseAmount,  // Return additional amount needed, not total bet amount
             maxAmount: player.chips
         };
     }

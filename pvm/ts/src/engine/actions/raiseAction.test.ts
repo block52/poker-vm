@@ -97,11 +97,11 @@ describe("Raise Action", () => {
                 }
             });
 
-            const SIX_TOKENS = 600000000000000000n; // 6 tokens total
+            const TWO_TOKENS_ADDITIONAL = 200000000000000000n; // 2 additional tokens needed  
             const range = action.verify(player1);
 
-            // Should be able to raise to 6 tokens total (4 current + 2 big blind)
-            expect(range.minAmount).toBe(SIX_TOKENS);
+            // Player 1 has bet 4 tokens total, needs 2 additional to raise to 6 total
+            expect(range.minAmount).toBe(TWO_TOKENS_ADDITIONAL);
         });
 
         it("should have correct four bet range", () => {
@@ -149,9 +149,11 @@ describe("Raise Action", () => {
                 }
             });
 
-            const TEN_TOKENS = 1000000000000000000n; // 10 tokens total
+            const SIX_TOKENS_ADDITIONAL = 600000000000000000n; // 6 additional tokens needed
             const range = action.verify(player1);
-            expect(range.minAmount).toBe(TEN_TOKENS);
+
+            // Player 1 has bet 4 tokens total, needs 6 additional to raise to 10 total  
+            expect(range.minAmount).toBe(SIX_TOKENS_ADDITIONAL);
         });
 
         it("should handle all-in scenario when player has insufficient chips", () => {
