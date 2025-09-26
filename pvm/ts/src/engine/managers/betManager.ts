@@ -178,6 +178,16 @@ export class BetManager implements IBetManager {
             return this.game.bigBlind;
         }
 
+        // Check if this involves only blinds or includes bet/raise actions
+        const hasNonBlindActions = this.turns.some(turn =>
+            turn.action === PlayerActionType.BET || turn.action === PlayerActionType.RAISE
+        );
+
+        // If only blinds, the minimum raise amount is the big blind
+        if (!hasNonBlindActions) {
+            return this.game.bigBlind;
+        }
+
         // Sort bets by amount in descending order
         const sortedBets = [...betsArray].sort((a, b) => Number(b.amount - a.amount));
 
@@ -186,14 +196,8 @@ export class BetManager implements IBetManager {
         const secondLargestBet = sortedBets[1].amount;
         const raiseDelta = largestBet - secondLargestBet;
 
-        // Check if this involves only blinds or includes bet/raise actions
-        const hasNonBlindActions = this.turns.some(turn =>
-            turn.action === PlayerActionType.BET || turn.action === PlayerActionType.RAISE
-        );
-
-        // If delta is less than big blind AND involves bet/raise actions, return big blind
-        // Otherwise, return the actual delta (for blinds scenarios)
-        if (raiseDelta < this.game.bigBlind && hasNonBlindActions) {
+        // If delta is less than big blind, return big blind
+        if (raiseDelta < this.game.bigBlind) {
             return this.game.bigBlind;
         }
 

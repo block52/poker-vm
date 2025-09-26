@@ -232,7 +232,7 @@ describe("Bet Manager Tests", () => {
             ];
             const betManager = new BetManager(blindsTurns, mockGame);
 
-            expect(betManager.getRaisedAmount()).toBe(10n); // 20 - 10 = 10
+            expect(betManager.getRaisedAmount()).toBe(20n); // bigBlind for blinds-only scenario
         });
 
         it("should handle preflop raise scenario", () => {
