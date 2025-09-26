@@ -13,9 +13,7 @@ class BigBlindAction extends BaseAction implements IAction {
         super.verifyPlayerIsActive(player);
 
         // 1. Round state check: Big blind can only be posted during ANTE round
-        if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Big blind can only be posted during ante round.");
-        }
+        this.validateInSpecificRound(TexasHoldemRound.ANTE);
 
         // 2. Player position check: Only the big blind position can post big blind
         const seat = this.game.getPlayerSeatNumber(player.address);

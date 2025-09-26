@@ -22,9 +22,7 @@ class SitOutAction extends BaseAction implements IAction {
             return { minAmount: 0n, maxAmount: 0n };
         }
 
-        if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Sit out is only allowed during the ante round.");
-        }
+        this.validateInSpecificRound(TexasHoldemRound.ANTE);
 
         return { minAmount: 0n, maxAmount: 0n };
     }

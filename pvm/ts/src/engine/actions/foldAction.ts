@@ -5,7 +5,7 @@ import { IAction, Range } from "../types";
 
 class FoldAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.FOLD }
-    
+
     /**
      * Verify if a player can fold. In poker, folding is always allowed regardless of player status
      * or game state, as players can always choose to forfeit their hand.
@@ -26,10 +26,7 @@ class FoldAction extends BaseAction implements IAction {
             throw new Error("Player has already folded.");
         }
 
-        if (this.game.currentRound === TexasHoldemRound.SHOWDOWN) {
-            // Muck cards instead of folding
-            throw new Error("Fold action is not allowed during showdown round.");
-        }
+        this.validateNotInSpecificRound(TexasHoldemRound.SHOWDOWN);
 
         if (this.isLastLivePlayer(player)) {
             // If the player is the last live player, they cannot fold
@@ -41,7 +38,7 @@ class FoldAction extends BaseAction implements IAction {
         // and for it to be their turn to act
         return { minAmount: 0n, maxAmount: 0n };
     }
-    
+
     /**
      * Execute the fold action, setting the player's status to FOLDED
      * 
@@ -52,10 +49,10 @@ class FoldAction extends BaseAction implements IAction {
     execute(player: Player, index: number, amount?: bigint): void {
         // First verify the action
         this.verify(player);
-        
+
         // Set player status to FOLDED
         player.updateStatus(PlayerStatus.FOLDED);
-        
+
         // Add the action to the game
         const round = this.game.currentRound;
         this.game.addAction({ playerId: player.address, action: PlayerActionType.FOLD, index: index }, round);

@@ -25,9 +25,7 @@ class DealAction extends BaseAction implements IAction {
         }
 
         // 1. Round state check: Can only deal when in ANTE round
-        if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Dealing can only occur after blinds are posted in the ANTE round.");
-        }
+        this.validateInSpecificRound(TexasHoldemRound.ANTE);
 
         // 2. Player count check: Need at least minimum players
         const count = this.game.getPlayerCount();
@@ -37,7 +35,7 @@ class DealAction extends BaseAction implements IAction {
 
         // 3. Blind posting check: Both blinds must be posted
         const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
-        
+
         // Check if small blind has been posted
         const smallBlindAction = anteActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
         if (!smallBlindAction) {
