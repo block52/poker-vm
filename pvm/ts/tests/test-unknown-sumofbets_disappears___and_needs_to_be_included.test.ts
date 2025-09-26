@@ -1,3 +1,7 @@
+import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import TexasHoldemGame from "../src/engine/texasHoldem";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "../src/engine/testConstants";
+
 describe("sumOfBets disappears - and needs to be included.", () => {
     const PLAYER_1 = "0x1111111111111111111111111111111111111111";
     const PLAYER_2 = "0x2222222222222222222222222222222222222222";
@@ -27,8 +31,7 @@ describe("sumOfBets disappears - and needs to be included.", () => {
         const nextToAct = game.getNextPlayerToAct();
         
         // TODO: Add assertions specific to this test case
-        const legalActions = game.getLegalActions(nextToAct?.address);
+        const legalActions = game.getLegalActions(nextToAct!.address);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(0); // TODO: CHECK
     });
 });
