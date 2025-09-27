@@ -87,7 +87,7 @@ describe.skip("TransferCommand", () => {
 
             // Verify mempool addition
             expect(mockMempool.add).toHaveBeenCalledWith(tx);
-            
+
         });
 
         it.skip("should successfully create and add transaction to mempool", async () => {

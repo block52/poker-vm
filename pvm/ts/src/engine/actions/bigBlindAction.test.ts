@@ -74,8 +74,14 @@ describe("BigBlindAction", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(0);
         });
 
-        // Mocking seat number to be 2 is failing
-        it.skip("should return correct range for big blind", () => {
+        it("should return correct range for big blind", () => {
+            // Mock that small blind has been posted and player is in correct position
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                { playerId: "0x123", action: PlayerActionType.SMALL_BLIND, amount: TWO_TOKENS, index: 0, seat: 1, timestamp: Date.now() }
+            ]);
+            jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(2); // Big blind position
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
             const range = action.verify(player);
             expect(range).toEqual({
                 minAmount: game.bigBlind,
@@ -144,25 +150,6 @@ describe("BigBlindAction", () => {
             const initialChips = player.chips;
             action.execute(player, 0, TWO_TOKENS);
             expect(player.chips).toBe(initialChips - game.bigBlind);
-        });
-
-        it.skip("should add big blind action to update", () => {
-            action.execute(player, 0, TWO_TOKENS);
-            expect(updateMock.addAction).toHaveBeenCalledWith(
-                {
-                    playerId: player.id,
-                    action: PlayerActionType.BIG_BLIND,
-                    amount: TWO_TOKENS,
-                    index: 0,
-                },
-                TexasHoldemRound.ANTE
-            );
-        });
-
-        // Skipped because the amount validation happens in verify() before execute() is called
-        // In the actual flow, verify() would throw an error for invalid amounts before execute() is reached
-        it.skip("should throw error if amount doesn't match big blind", () => {
-            expect(() => action.execute(player, 0, game.bigBlind + 1n)).toThrow("Amount is greater than maximum allowed.");
         });
     });
 });
