@@ -232,7 +232,7 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                 topics: depositEvent?.topics,
                 topicsHex: depositEvent?.topics?.map((t: any) => ({ 
                     raw: t, 
-                    decimal: t ? BigInt(t).toString() : 'null' 
+                    decimal: t ? BigInt(t).toString() : "null" 
                 })),
                 data: depositEvent?.data,
                 dataLength: depositEvent?.data?.length,
@@ -252,17 +252,17 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                 console.log("📍 [19a] Debugging event structure:");
                 if (depositEvent.topics) {
                     depositEvent.topics.forEach((topic: any, i: number) => {
-                        console.log(`  topics[${i}]:`, topic, "=>", topic ? BigInt(topic).toString() : 'null');
+                        console.log(`  topics[${i}]:`, topic, "=>", topic ? BigInt(topic).toString() : "null");
                     });
                 }
-                if (depositEvent.data && depositEvent.data !== '0x') {
+                if (depositEvent.data && depositEvent.data !== "0x") {
                     const dataHex = depositEvent.data.slice(2);
                     console.log("  data (hex):", depositEvent.data);
                     console.log("  data length:", dataHex.length, "chars (", dataHex.length / 64, "words)");
                     
                     // Parse each 32-byte word in data
                     for (let i = 0; i < dataHex.length; i += 64) {
-                        const word = '0x' + dataHex.slice(i, i + 64);
+                        const word = "0x" + dataHex.slice(i, i + 64);
                         console.log(`  data word ${i/64}:`, word, "=>", BigInt(word).toString());
                     }
                 }
@@ -274,12 +274,12 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                     console.log("📍 [20a] Deposit index from topics[2]:", depositIndex);
                 } 
                 // Method 2: Parse from data field
-                else if (depositEvent.data && depositEvent.data !== '0x') {
+                else if (depositEvent.data && depositEvent.data !== "0x") {
                     const dataHex = depositEvent.data.slice(2); // Remove 0x
                     
                     // If data has 2 words (128 chars), second word is likely the index
                     if (dataHex.length === 128) {
-                        const indexHex = '0x' + dataHex.slice(64, 128);
+                        const indexHex = "0x" + dataHex.slice(64, 128);
                         depositIndex = BigInt(indexHex).toString();
                         console.log("📍 [20b] Deposit index from data (2nd word):", depositIndex);
                     }
@@ -297,7 +297,7 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                     
                     // For debugging, let's try using a hash of the transaction as index
                     // This is a temporary workaround
-                    const txHashAsNumber = BigInt('0x' + hash.slice(2, 10)); // Use first 8 chars of hash
+                    const txHashAsNumber = BigInt("0x" + hash.slice(2, 10)); // Use first 8 chars of hash
                     depositIndex = txHashAsNumber.toString();
                     console.log("📍 [20f] Using transaction hash prefix as fallback index:", depositIndex);
                 }

@@ -81,8 +81,8 @@ const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () =
             disabled={disabled}
             className={`flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 shadow-md ${
                 disabled 
-                    ? 'cursor-not-allowed opacity-50' 
-                    : 'transform hover:scale-105 hover:opacity-90'
+                    ? "cursor-not-allowed opacity-50" 
+                    : "transform hover:scale-105 hover:opacity-90"
             }`}
             style={buttonStyle}
             title={disabled ? "Connect Web3 wallet to deposit" : "Deposit USDC"}
@@ -1493,7 +1493,7 @@ const Dashboard: React.FC = () => {
                                 style={{
                                     backgroundColor: hexToRgba(colors.ui.bgDark, 0.95),
                                     border: `2px solid ${colors.accent.danger}`,
-                                    backdropFilter: 'blur(10px)'
+                                    backdropFilter: "blur(10px)"
                                 }}
                             >
                                 <div className="text-2xl">⚠️</div>
