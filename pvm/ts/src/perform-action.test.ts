@@ -71,33 +71,13 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         process.env.VALIDATOR_KEY = "0x8bf5d2b410baf602fbb1ca59ab16b1772ca0f143950e12a2d4a2ead44ab845fb";
 
         // Spy on console.error
-        jest.spyOn(console, "error").mockImplementation(() => {});
-        jest.spyOn(console, "log").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => { });
+        jest.spyOn(console, "log").mockImplementation(() => { });
     });
 
     afterEach(() => {
         // Restore environment
         process.env = originalEnv;
-    });
-
-    it.skip("should successfully process a valid PERFORM_ACTION request with PlayerActionType", async () => {
-        // Arrange
-        const request: RPCRequest = {
-            id: "1",
-            method: RPCMethods.PERFORM_ACTION,
-            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 0, ""] //  // [from, to, action, amount, nonce, index, data]
-        };
-
-        // Act
-        const response = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request);
-
-        // Assert
-        expect(response).toBeDefined();
-        expect(response).toHaveProperty("id", "1");
-
-        // Check if the mempool add method was called
-        // const mempool = getMempoolInstance();
-        // expect(mempool.add).toHaveBeenCalledTimes(1);
     });
 
     it("should successfully sit out after joining", async () => {

@@ -449,10 +449,6 @@ ui/yarn-debug.log*
 ui/yarn-error.log*
 ui/.DS_Store
 
-
-
-
-
 # explorer
 explorer/node_modules
 explorer/dist
@@ -463,3 +459,8 @@ explorer/src
 explorer/static
 explorer/templates
 explorer/.env
+
+bot/dashboard/.env
+bot/dashboard/node_modules
+bot/dashboard/build
+bot/dashboard/dist

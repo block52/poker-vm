@@ -76,6 +76,7 @@ describe("CheckAction", () => {
             // this should throw an error if the player has not matched the current bet
             const range = action.verify(player);
             expect(range).toBeDefined();
+            expect(range).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
         it("should throw error if it's not player's turn", () => {

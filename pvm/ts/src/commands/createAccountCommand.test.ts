@@ -6,7 +6,7 @@ import { Account } from "../models";
 // Mock the account management module
 jest.mock("../state/index");
 
-describe.skip("CreateAccountCommand Tests", () => {
+describe("CreateAccountCommand Tests", () => {
     // Mock instances
     let mockAccountManagement: jest.Mocked<any>;
 
@@ -16,13 +16,7 @@ describe.skip("CreateAccountCommand Tests", () => {
 
         // Setup mock account management with a mock account return value
         mockAccountManagement = {
-            createAccount: jest.fn().mockResolvedValue(
-                new Account(
-                    ethers.Wallet.createRandom().address,
-                    BigInt(0),
-                    0
-                )
-            )
+            createAccount: jest.fn().mockResolvedValue(new Account(ethers.Wallet.createRandom().address, BigInt(0), 0))
         };
 
         // Log the mock structure
@@ -58,11 +52,11 @@ describe.skip("CreateAccountCommand Tests", () => {
         expect(mockAccountManagement.createAccount).toHaveBeenCalledWith(privateKey);
 
         // Verify the response structure
-        expect(response).toHaveProperty('data');
-        expect(response).toHaveProperty('signature');
-        expect(response.data).toHaveProperty('address');
-        expect(response.data).toHaveProperty('balance');
-        expect(response.data).toHaveProperty('nonce');
+        expect(response).toHaveProperty("data");
+        expect(response).toHaveProperty("signature");
+        expect(response.data).toHaveProperty("address");
+        expect(response.data).toHaveProperty("balance");
+        expect(response.data).toHaveProperty("nonce");
     });
 
     it("should fail with invalid private key", async () => {

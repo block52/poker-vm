@@ -52,7 +52,75 @@ describe("Raise Action", () => {
     });
 
     describe("verify", () => {
+        describe("PREFLOP scenarios", () => {
+            // beforeEach(() => {
+            //     jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+
+            //     // // Mock player total bets for PREFLOP scenario:
+            //     // // Player 1: 1 token (small blind)
+            //     // // Player 2: 2 tokens (big blind)
+            //     // // Player 3: 5 tokens (bet 3 more after big blind)
+            //     // jest.spyOn(game, "getPlayerTotalBets").mockImplementation((address, round, includeBlinds) => {
+            //     //     if (address === PLAYER_1_ADDRESS) return ONE_TOKEN; // Small blind only
+            //     //     if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind only
+            //     //     if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Big blind + 3 token bet
+            //     //     return 0n;
+            //     // });
+            // });
+
+            // it.skip("should return correct range for a raise in PREFLOP", () => {
+            //     const range = action.verify(player1); // Player 1 wants to raise
+
+            //     // Player 3 has largest bet (5 tokens)
+            //     // Minimum raise = 5 + 2 (big blind) = 7 tokens total
+            //     // Player 1 currently has 1 token, so needs 6 more
+            //     const expectedMinAmount = FIVE_TOKENS + TWO_TOKENS; // 7 tokens total
+            //     const expectedMaxAmount = ONE_TOKEN + player1.chips; // Current bet + all chips
+
+            //     expect(range).toEqual({
+            //         minAmount: expectedMinAmount,
+            //         maxAmount: expectedMaxAmount
+            //     });
+            // });
+
+            // should throw error if player has largest bet (can't raise yourself)
+            it("should throw if you're not the active player", () => {
+                // Mock so player1 has the largest bet
+                // jest.spyOn(game, "getPlayerTotalBets").mockImplementation(address => {
+                //     if (address === PLAYER_1_ADDRESS) return ONE_TOKEN; // Small blind
+                //     if (address === PLAYER_2_ADDRESS) return TWO_TOKENS; // Big blind
+                //     if (address === PLAYER_3_ADDRESS) return FIVE_TOKENS; // Smaller bet
+                //     return 0n;
+                // });
+
+                jest.spyOn(game, "getActionsForRound").mockImplementation(() => {
+                    // Return blind actions for ANTE round
+                    return [
+                        {
+                            index: 1,
+                            playerId: PLAYER_1_ADDRESS,
+                            seat: 1,
+                            action: PlayerActionType.SMALL_BLIND,
+                            amount: ONE_TOKEN,
+                            timestamp: 0
+                        },
+                        {
+                            index: 2,
+                            playerId: PLAYER_2_ADDRESS,
+                            seat: 2,
+                            action: PlayerActionType.BIG_BLIND,
+                            amount: TWO_TOKENS,
+                            timestamp: 0
+                        }
+                    ];
+                });
+
+                expect(() => action.verify(player2)).toThrow("Must be currently active player.");
+            });
+        });
+
         it("should have correct three bet range", () => {
+            const THREE_TOKENS = 300000000000000000n; // 3 tokens
             jest.spyOn(game, "getActionsForRound").mockImplementation(round => {
                 if (round === TexasHoldemRound.ANTE) {
                     // Return blind actions for ANTE round
