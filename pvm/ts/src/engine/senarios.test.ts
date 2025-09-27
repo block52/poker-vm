@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS} from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
 /**
  * Test file generated from poker scenario: Creating a Test for proof of correct actions pre flop with 2 players. #924
@@ -18,7 +18,7 @@ describe("Creating a Test for proof of correct actions pre flop with 2 players. 
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        
+
         // Add players to the game
         game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
@@ -36,13 +36,13 @@ describe("Creating a Test for proof of correct actions pre flop with 2 players. 
         // Verify the game executed correctly
         expect(game.currentRound).toBeDefined();
         expect(game.getPlayerCount()).toEqual(2);
-        
+
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
         const nextToAct = game.getNextPlayerToAct();
         expect(nextToAct).toBeDefined();
         expect(nextToAct?.address).toBeDefined();
-        
+
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
         const legalActions = game.getLegalActions(nextToAct!.address);
@@ -67,7 +67,7 @@ describe("TEST - Make sure that the First player to act AT SHOWDOWN shows his ha
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        
+
         // Add players to the game
         game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
@@ -89,17 +89,17 @@ describe("TEST - Make sure that the First player to act AT SHOWDOWN shows his ha
 
         // Test showdown behavior
         expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
-        
+
         // The first player to act should only have SHOW as a legal action
         // This is the core test - first to act cannot muck, must show
         const firstPlayerActions = game.getLegalActions(PLAYER_1);
         expect(firstPlayerActions).toBeDefined();
         expect(firstPlayerActions.length).toEqual(1);
         expect(firstPlayerActions[0].action).toEqual(PlayerActionType.SHOW);
-        
+
         // Now perform the SHOW action to complete the test
         game.performAction(PLAYER_1, PlayerActionType.SHOW, 14, 0n);
-        
+
         // Verify that the game state is consistent
         expect(game.getPlayerCount()).toEqual(2);
         expect(game.pot).toBeGreaterThan(0n);
@@ -122,7 +122,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        
+
         // Add players to the game
         game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
@@ -139,7 +139,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         // Verify the game executed correctly
         expect(game.currentRound).toBeDefined();
         expect(game.getPlayerCount()).toEqual(2);
-        
+
         // Add more specific assertions based on the scenario requirements
         // TODO: Add assertions specific to this test case
     });
@@ -153,7 +153,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        
+
         // Add players to the game
         game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
@@ -170,7 +170,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         // Verify the game executed correctly
         expect(game.currentRound).toBeDefined();
         expect(game.getPlayerCount()).toEqual(2);
-        
+
         const nextToAct = game.getNextPlayerToAct();
         expect(nextToAct).toBeDefined();
         expect(nextToAct?.address).toBeDefined();
@@ -189,7 +189,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        
+
         // Add players to the game
         game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
@@ -212,7 +212,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         // Verify the game executed correctly
         expect(game.currentRound).toBeDefined();
         expect(game.getPlayerCount()).toEqual(2);
-        
+
         const nextToAct = game.getNextPlayerToAct();
         expect(nextToAct).toBeDefined();
 
@@ -232,7 +232,7 @@ describe("Checking the betting system values after each action #927 + #568", () 
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        
+
         // Add players to the game
         game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
@@ -249,7 +249,7 @@ describe("Checking the betting system values after each action #927 + #568", () 
         // Verify the game executed correctly
         expect(game.currentRound).toBeDefined();
         expect(game.getPlayerCount()).toEqual(2);
-        
+
         const nextToAct = game.getNextPlayerToAct();
         expect(nextToAct).toBeDefined();
 
@@ -264,7 +264,7 @@ describe("Checking the betting system values after each action #927 + #568", () 
         expect(legalActions[1].max).toEqual("200000000000000000");
 
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions[2].min).toEqual("600000000000000000");
+        expect(legalActions[2].min).toEqual("400000000000000000");
     });
 });
 
@@ -276,7 +276,7 @@ describe.skip("TEST - Make sure that the First player to act AT SHOWDOWN shows h
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-        
+
         // Add players to the game
         game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
@@ -298,17 +298,17 @@ describe.skip("TEST - Make sure that the First player to act AT SHOWDOWN shows h
 
         // Test showdown behavior
         expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
-        
+
         // The first player to act should only have SHOW as a legal action
         // This is the core test - first to act cannot muck, must show
         const firstPlayerActions = game.getLegalActions(PLAYER_1);
         expect(firstPlayerActions).toBeDefined();
         expect(firstPlayerActions.length).toEqual(1);
         expect(firstPlayerActions[0].action).toEqual(PlayerActionType.SHOW);
-        
+
         // Now perform the SHOW action to complete the test
         game.performAction(PLAYER_1, PlayerActionType.SHOW, 14, 0n);
-        
+
         // Verify that the game state is consistent
         expect(game.getPlayerCount()).toEqual(2);
         expect(game.pot).toBeGreaterThan(0n);

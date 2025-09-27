@@ -56,7 +56,7 @@ abstract class BaseAction {
             const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
             newActions.push(...anteActions);
         }
-        return new BetManager(newActions);
+        return new BetManager(newActions, { bigBlind: this.game.bigBlind });
     }
 
     protected getLargestBet(includeBlinds: boolean = false): bigint {

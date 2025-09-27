@@ -27,6 +27,10 @@ NODE_VERSION="22.12.0"
 PROJECT_DIR="$HOME/poker-vm/pvm/ts"
 DIST_DIR="$PROJECT_DIR/dist/src"
 PM2_APP_NAME="node"
+HEALTH_CHECK_URL="http://localhost:8545"
+EXPECTED_RESPONSE="PVM RPC Server v0.1.1"
+MAX_RETRIES=30
+RETRY_INTERVAL=2
 
 # Function to check if command exists
 command_exists() {
@@ -154,12 +158,47 @@ start_pm2() {
     fi
 }
 
+# Function to perform health check
+health_check() {
+    log_info "Performing health check on $HEALTH_CHECK_URL..."
+    
+    local retry_count=0
+    while [ $retry_count -lt $MAX_RETRIES ]; do
+        log_info "Health check attempt $((retry_count + 1))/$MAX_RETRIES..."
+        
+        # Perform the curl request and capture the response
+        local response=$(curl -s "$HEALTH_CHECK_URL" 2>/dev/null || echo "CURL_FAILED")
+        
+        if [ "$response" = "$EXPECTED_RESPONSE" ]; then
+            log_info "Health check passed! Server is responding correctly."
+            log_info "Response: $response"
+            return 0
+        elif [ "$response" = "CURL_FAILED" ]; then
+            log_warn "Health check failed: Unable to connect to server"
+        else
+            log_warn "Health check failed: Unexpected response"
+            log_warn "Expected: '$EXPECTED_RESPONSE'"
+            log_warn "Received: '$response'"
+        fi
+        
+        retry_count=$((retry_count + 1))
+        if [ $retry_count -lt $MAX_RETRIES ]; then
+            log_info "Retrying in $RETRY_INTERVAL seconds..."
+            sleep $RETRY_INTERVAL
+        fi
+    done
+    
+    log_error "Health check failed after $MAX_RETRIES attempts"
+    log_error "Server may not be running correctly"
+    return 1
+}
+
 # Main execution
 main() {
     log_info "Starting poker-vm installation/deployment..."
     
     # Verify required commands exist
-    for cmd in yarn docker pm2 git; do
+    for cmd in yarn docker pm2 git curl; do
         if ! command_exists "$cmd"; then
             log_error "Required command '$cmd' not found"
             exit 1
@@ -177,7 +216,20 @@ main() {
     # start_docker
     start_pm2
     
-    log_info "Deployment completed successfully!"
+    # Wait a moment for PM2 to fully start the service
+    log_info "Waiting for service to start..."
+    sleep 5
+    
+    # Perform health check
+    if health_check; then
+        log_info "Deployment completed successfully!"
+        log_info "Server is healthy and responding correctly."
+    else
+        log_error "Deployment completed but health check failed!"
+        log_error "Please check the server logs for issues."
+        exit 1
+    fi
+    
     log_info "PM2 status:"
     pm2 status
 }
