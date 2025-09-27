@@ -1,0 +1,1 @@
+These tests files are created from the scenario website
