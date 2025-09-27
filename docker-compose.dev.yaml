@@ -18,7 +18,7 @@ services:
     # Development Frontend with hot reload
     frontend:
         build:
-            target: dev
+            target: development
         environment:
             NODE_ENV: development
         volumes:

@@ -93,7 +93,7 @@ services:
         build:
             context: ./ui
             dockerfile: Dockerfile
-            target: ${NODE_ENV:-dev}
+            target: ${NODE_ENV:-development}
         container_name: pvm-frontend
         restart: unless-stopped
         environment:

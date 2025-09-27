@@ -1,5 +1,5 @@
 # Frontend UI Dockerfile
-FROM node:20.18.2-alpine AS base
+FROM node:22.12-alpine AS base
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -10,14 +10,15 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package files first for better caching
-COPY package.json yarn.lock* ./
+COPY package.json yarn.lock ./
 
 # Development stage
-FROM base AS dev
+FROM base AS development
 ENV NODE_ENV=development
 
 # Install all dependencies (including dev dependencies)
-RUN yarn install --frozen-lockfile && yarn cache clean
+# Use --ignore-engines to avoid Node version conflicts
+RUN yarn install --ignore-engines && yarn cache clean
 
 # Copy source code
 COPY . .
@@ -37,7 +38,8 @@ FROM base AS builder
 ENV NODE_ENV=production
 
 # Install all dependencies
-RUN yarn install --frozen-lockfile && yarn cache clean
+# Use --ignore-engines to avoid Node version conflicts
+RUN yarn install --ignore-engines && yarn cache clean
 
 # Copy source code
 COPY . .
