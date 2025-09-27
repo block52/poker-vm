@@ -145,7 +145,7 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             const buyInAmountInWei = gameOptions.maxBuyIn;
             const buyInAmountInDollars = parseFloat(ethers.formatEther(buyInAmountInWei));
             
-            console.log(`💰 Converting from gameOptions:`);
+            console.log("💰 Converting from gameOptions:");
             console.log(`   Wei string: "${buyInAmountInWei}"`);
             console.log(`   Dollar amount: $${buyInAmountInDollars}`);
             

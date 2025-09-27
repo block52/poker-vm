@@ -69,19 +69,19 @@ export interface ViewportConfig {
 }
 
 // Helper function to detect viewport mode
-export const getViewportMode = (): 'mobile-portrait' | 'mobile-landscape' | 'tablet' | 'desktop' => {
+export const getViewportMode = (): "mobile-portrait" | "mobile-landscape" | "tablet" | "desktop" => {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const isLandscape = width > height;
   
   if (width <= 414 && !isLandscape) {
-    return 'mobile-portrait';
+    return "mobile-portrait";
   } else if (width <= 926 && isLandscape) {
-    return 'mobile-landscape';
+    return "mobile-landscape";
   } else if (width <= 1024) {
-    return 'tablet';
+    return "tablet";
   } else {
-    return 'desktop';
+    return "desktop";
   }
 };
 
@@ -93,12 +93,12 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
    * For phones in vertical orientation (width <= 414px)
    * =====================================================
    */
-  'mobile-portrait': {
+  "mobile-portrait": {
     // TABLE POSITION & SCALE
     table: {
       scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
-      translateX: '-50%',   // Center horizontally
-      translateY: '-50%',   // Center vertically  
+      translateX: "-50%",   // Center horizontally
+      translateY: "-50%",   // Center vertically  
       rotation: 0           // No rotation needed
     },
     
@@ -313,12 +313,12 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
    * For phones in horizontal orientation (width <= 926px)
    * =====================================================
    */
-  'mobile-landscape': {
+  "mobile-landscape": {
     // TABLE POSITION & SCALE
     table: {
       scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
-      translateX: '-50%',   // Center horizontally
-      translateY: '20%',   // Moved up to account for removed header
+      translateX: "-50%",   // Center horizontally
+      translateY: "20%",   // Moved up to account for removed header
       rotation: 180         // Needs to be 180 for proper orientation
     },
     
@@ -533,12 +533,12 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
    * For tablets and medium screens (927px - 1024px)
    * =====================================================
    */
-  'tablet': {
+  "tablet": {
     // TABLE POSITION & SCALE
     table: {
       scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
-      translateX: '-50%',   // Center horizontally
-      translateY: '-50%',   // Center vertically
+      translateX: "-50%",   // Center horizontally
+      translateY: "-50%",   // Center vertically
       rotation: 0           // No rotation needed
     },
     
@@ -753,12 +753,12 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
    * For large screens (width > 1024px)
    * =====================================================
    */
-  'desktop': {
+  "desktop": {
     // TABLE POSITION & SCALE
     table: {
       scale: 1,           // Base scale - actual scaling handled by calculateTableZoom()
-      translateX: '-50%',   // Center horizontally
-      translateY: '-30%',   // Moved down to prevent top cards cutoff (adjust -20% to -40% as needed)
+      translateX: "-50%",   // Center horizontally
+      translateY: "-30%",   // Moved down to prevent top cards cutoff (adjust -20% to -40% as needed)
       rotation: 0           // No rotation needed
     },
     
@@ -977,7 +977,7 @@ export const getCurrentConfig = (): ViewportConfig => {
 // Helper to get specific position arrays
 export const getPositionArrays = (tableSize: 4 | 6 | 9) => {
   const config = getCurrentConfig();
-  const sizeKey = tableSize === 4 ? 'four' : tableSize === 6 ? 'six' : 'nine';
+  const sizeKey = tableSize === 4 ? "four" : tableSize === 6 ? "six" : "nine";
   
   return {
     players: config.players[sizeKey],
@@ -1004,7 +1004,7 @@ export const calculateTableZoom = (): number => {
   // =====================================================
   // DESKTOP CALCULATION
   // =====================================================
-  if (mode === 'desktop') {
+  if (mode === "desktop") {
     // ========== DESKTOP SETTINGS - ADJUST THESE! ==========
     
     // MINIMUM SCALE: The smallest the table can be on desktop
@@ -1074,14 +1074,14 @@ export const calculateTableZoom = (): number => {
     
     // Final bounds check
     const result = Math.max(MIN_SCALE, Math.min(finalScale, MAX_SCALE));
-    console.log('Desktop final scale:', result);
+    console.log("Desktop final scale:", result);
     return result;
   }
   
   // =====================================================
   // TABLET CALCULATION
   // =====================================================
-  else if (mode === 'tablet') {
+  else if (mode === "tablet") {
     // ========== TABLET SETTINGS - ADJUST THESE! ==========
     
     // MAXIMUM SCALE: Largest size for tablets
@@ -1112,7 +1112,7 @@ export const calculateTableZoom = (): number => {
   // =====================================================
   // MOBILE LANDSCAPE CALCULATION
   // =====================================================
-  else if (mode === 'mobile-landscape') {
+  else if (mode === "mobile-landscape") {
     // ========== MOBILE LANDSCAPE SETTINGS - ADJUST THESE! ==========
     
     // MAXIMUM SCALE: Largest size for mobile landscape

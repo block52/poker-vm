@@ -442,8 +442,8 @@ const Table = React.memo(() => {
             );
         };
 
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     // 🔧 PERFORMANCE FIX: Disabled mouse tracking to prevent hundreds of re-renders
@@ -639,7 +639,7 @@ const Table = React.memo(() => {
                 startIndex: startIndex,
                 calculatedSeat: seatNumber,
                 playerFound: playerAtThisSeat ? {
-                    address: playerAtThisSeat.address?.substring(0, 10) + '...',
+                    address: playerAtThisSeat.address?.substring(0, 10) + "...",
                     stack: playerAtThisSeat.stack,
                     sumOfBets: playerAtThisSeat.sumOfBets
                 } : null,
@@ -1092,11 +1092,11 @@ const Table = React.memo(() => {
                     {/*//! FOOTER - Adjusted for mobile landscape */}
                     <div className={`w-full flex justify-center items-center z-[10] ${
                         isMobileLandscape 
-                            ? 'h-[80px] fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm' 
-                            : 'h-[200px] sm:h-[250px] bg-transparent'
+                            ? "h-[80px] fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm" 
+                            : "h-[200px] sm:h-[250px] bg-transparent"
                     }`}>
                         <div className={`w-full flex justify-center items-center h-full ${
-                            isMobileLandscape ? 'max-w-[500px] px-2' : 'max-w-[700px]'
+                            isMobileLandscape ? "max-w-[500px] px-2" : "max-w-[700px]"
                         }`}>
                             <PokerActionPanel />
                         </div>
@@ -1113,18 +1113,18 @@ const Table = React.memo(() => {
 
             {/* Status Messages Container - Desktop positioned top-left, mobile/tablet centered */}
             <div className={`flex flex-col space-y-2 z-50 ${
-                viewportMode === 'desktop' 
-                    ? 'fixed left-4 top-32 items-start'
+                viewportMode === "desktop" 
+                    ? "fixed left-4 top-32 items-start"
                     : isMobileLandscape 
-                        ? 'absolute left-2 items-start max-w-[150px]'
-                        : 'absolute left-1/2 transform -translate-x-1/2 items-center'
-            }`} style={{ top: viewportMode === 'desktop' ? undefined : isMobileLandscape ? '3rem' : '6.25rem' }}>
+                        ? "absolute left-2 items-start max-w-[150px]"
+                        : "absolute left-1/2 transform -translate-x-1/2 items-center"
+            }`} style={{ top: viewportMode === "desktop" ? undefined : isMobileLandscape ? "3rem" : "6.25rem" }}>
                 {/* Add a message for the current user's seat */}
                 {currentUserSeat >= 0 && (
                     <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
-                        viewportMode === 'desktop' ? 'bg-black bg-opacity-60 text-left' :
-                        isMobileLandscape ? 'bg-black bg-opacity-50 text-left break-words' : 
-                        'bg-black bg-opacity-50 text-center'
+                        viewportMode === "desktop" ? "bg-black bg-opacity-60 text-left" :
+                        isMobileLandscape ? "bg-black bg-opacity-50 text-left break-words" : 
+                        "bg-black bg-opacity-50 text-center"
                     }`}>
                         You are seated at position {currentUserSeat}
                     </div>
@@ -1133,9 +1133,9 @@ const Table = React.memo(() => {
                 {/* Add an indicator for whose turn it is */}
                 {nextToActSeat && isGameInProgress && (
                     <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
-                        viewportMode === 'desktop' ? 'bg-black bg-opacity-80 text-left' :
-                        isMobileLandscape ? 'bg-black bg-opacity-70 text-left break-words' : 
-                        'bg-black bg-opacity-70 text-center'
+                        viewportMode === "desktop" ? "bg-black bg-opacity-80 text-left" :
+                        isMobileLandscape ? "bg-black bg-opacity-70 text-left break-words" : 
+                        "bg-black bg-opacity-70 text-center"
                     }`}>
                         {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                             <span className="text-yellow-400 font-semibold">Your turn to act!</span>
@@ -1151,9 +1151,9 @@ const Table = React.memo(() => {
                 {/* Show a message when the hand is over */}
                 {!isGameInProgress && tableActivePlayers.length > 0 && (
                     <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
-                        viewportMode === 'desktop' ? 'bg-black bg-opacity-80 text-left' :
-                        isMobileLandscape ? 'bg-black bg-opacity-70 text-left break-words' : 
-                        'bg-black bg-opacity-70 text-center'
+                        viewportMode === "desktop" ? "bg-black bg-opacity-80 text-left" :
+                        isMobileLandscape ? "bg-black bg-opacity-70 text-left break-words" : 
+                        "bg-black bg-opacity-70 text-center"
                     }`}>
                         <span>Hand complete - waiting for next hand</span>
                     </div>
@@ -1164,8 +1164,8 @@ const Table = React.memo(() => {
             {tableActivePlayers.length === 0 && (
                 <div className={`text-white bg-black bg-opacity-50 rounded text-xs sm:text-sm ${
                     isMobileLandscape 
-                        ? 'absolute left-2 top-24 p-2 max-w-[150px] text-left break-words'
-                        : 'absolute top-28 right-4 p-2 sm:p-4 text-center'
+                        ? "absolute left-2 top-24 p-2 max-w-[150px] text-left break-words"
+                        : "absolute top-28 right-4 p-2 sm:p-4 text-center"
                 }`}>
                     Waiting for players to join...
                 </div>
@@ -1173,12 +1173,12 @@ const Table = React.memo(() => {
 
             {/* Layout Mode Indicator - only shown in development mode */}
             {import.meta.env.VITE_NODE_ENV === "development" && (
-                <div className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600" style={{ maxWidth: '180px' }}>
+                <div className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600" style={{ maxWidth: "180px" }}>
                     <div className="font-bold mb-1">Layout Debug Info</div>
                     <div>Mode: <span className="text-yellow-400 font-mono">{viewportMode}</span></div>
                     <div className="text-gray-400 mt-1">
                         {window.innerWidth}x{window.innerHeight}
-                        {window.innerWidth > window.innerHeight ? ' (landscape)' : ' (portrait)'}
+                        {window.innerWidth > window.innerHeight ? " (landscape)" : " (portrait)"}
                     </div>
                     <div className="mt-2 pt-2 border-t border-gray-700">
                         <div className="font-bold mb-1">Table Rotation</div>
@@ -1215,7 +1215,7 @@ const Table = React.memo(() => {
                     </div>
                     <div className="mt-2 pt-2 border-t border-gray-700">
                         <div className="font-bold mb-1">Results</div>
-                        <pre className="text-gray-300 break-words whitespace-pre-wrap" style={{ wordBreak: 'break-word', fontSize: '10px' }}>
+                        <pre className="text-gray-300 break-words whitespace-pre-wrap" style={{ wordBreak: "break-word", fontSize: "10px" }}>
                             {results ? JSON.stringify(results, null, 2) : "empty"}
                         </pre>
                     </div>
@@ -1226,10 +1226,10 @@ const Table = React.memo(() => {
             {hasSitOutAction && (
                 <div className={`fixed z-30 ${
                     isMobileLandscape 
-                        ? 'bottom-2 left-2' 
+                        ? "bottom-2 left-2" 
                         : isMobile
-                            ? 'bottom-[260px] right-4' // Moved to right side on mobile portrait to avoid blind button overlap
-                            : 'bottom-20 left-4'
+                            ? "bottom-[260px] right-4" // Moved to right side on mobile portrait to avoid blind button overlap
+                            : "bottom-20 left-4"
                 }`}>
                     {/* Mobile: Compact Button Design */}
                     {(isMobile || isMobileLandscape) ? (
@@ -1265,10 +1265,10 @@ const Table = React.memo(() => {
             {hasSitInAction && (
                 <div className={`fixed z-30 ${
                     isMobileLandscape 
-                        ? 'bottom-2 left-2' 
+                        ? "bottom-2 left-2" 
                         : isMobile
-                            ? 'bottom-[260px] right-4'
-                            : 'bottom-20 left-4'
+                            ? "bottom-[260px] right-4"
+                            : "bottom-20 left-4"
                 }`}>
                     <button
                         onClick={() => handleSitIn(id)}
@@ -1314,8 +1314,8 @@ const Table = React.memo(() => {
             {/* Club Name at Bottom Center (or Bottom Right in mobile landscape) */}
             <div className={`fixed z-40 ${
                 isMobileLandscape 
-                    ? 'bottom-4 right-4 opacity-30' 
-                    : 'bottom-1 left-1/2 transform -translate-x-1/2 opacity-60'
+                    ? "bottom-4 right-4 opacity-30" 
+                    : "bottom-1 left-1/2 transform -translate-x-1/2 opacity-60"
             }`}>
                 <div className="text-xs" style={{ color: colors.ui.textSecondary, fontSize: isMobileLandscape ? "14px" : "20px" }}>
                     {clubName}
