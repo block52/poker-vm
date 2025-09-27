@@ -1,44 +1,14 @@
 # PVM (Poker Virtual Machine) Dockerfile
-FROM node:22.12-alpine AS base
+FROM node:22.12-alpine
 
 # Install system dependencies
-RUN apk add --no-cache \
-    curl \
-    && rm -rf /var/cache/apk/*
+RUN apk add --no-cache curl && rm -rf /var/cache/apk/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files first for better caching
+# Copy package files and install dependencies
 COPY package.json yarn.lock ./
-
-# Development stage
-FROM base AS development
-ENV NODE_ENV=development
-
-# Install all dependencies (including dev dependencies)
-# Use --ignore-engines to avoid Node version conflicts
-RUN yarn install --ignore-engines && yarn cache clean
-
-# Copy source code
-COPY . .
-
-# Expose port
-EXPOSE 8545
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8545/health || exit 1
-
-# Start development server with ts-node
-CMD ["yarn", "dev"]
-
-# Production build stage
-FROM base AS builder
-ENV NODE_ENV=production
-
-# Install all dependencies
-# Use --ignore-engines to avoid Node version conflicts
 RUN yarn install --ignore-engines && yarn cache clean
 
 # Copy source code
@@ -46,18 +16,6 @@ COPY . .
 
 # Build the application
 RUN yarn build
-
-# Production stage
-FROM base AS production
-ENV NODE_ENV=production
-
-# Install only production dependencies
-# Use --ignore-engines to avoid Node version conflicts
-RUN yarn install --production --ignore-engines && yarn cache clean
-
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -74,5 +32,5 @@ EXPOSE 8545
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8545/health || exit 1
 
-# Start production server
+# Start the server
 CMD ["yarn", "start"]
