@@ -52,7 +52,6 @@ services:
         container_name: pvm-backend
         restart: unless-stopped
         environment:
-            NODE_ENV: ${NODE_ENV:-development}
             PORT: 8545
             DB_URL: mongodb://node1:Passw0rd123@mongo:27017/pvm?authSource=admin
             REDIS_URL: redis://:Passw0rd123@redis:6379
@@ -95,7 +94,6 @@ services:
         container_name: pvm-frontend
         restart: unless-stopped
         environment:
-            NODE_ENV: ${NODE_ENV:-development}
             VITE_PROJECT_ID: ${VITE_PROJECT_ID:-23ec57c1c95f3f54a97605975d4df7eb}
             VITE_NODE_RPC_URL: http://localhost:8545
             VITE_NODE_WS_URL: ws://localhost:8545

@@ -1,17 +1,15 @@
 # Poker VM Docker Management
-.PHONY: help build up down logs restart clean dev prod status health
+.PHONY: help build up down logs restart clean status health
 
 # Default target
 help:
 	@echo "Available commands:"
 	@echo "  build     - Build all Docker images"
-	@echo "  up        - Start all services (development mode)"
+	@echo "  up        - Start all services"
 	@echo "  down      - Stop all services"
 	@echo "  logs      - View logs from all services"
 	@echo "  restart   - Restart all services"
 	@echo "  clean     - Clean up containers, images, and volumes"
-	@echo "  dev       - Start in development mode with hot reload"
-	@echo "  prod      - Start in production mode"
 	@echo "  status    - Show status of all containers"
 	@echo "  health    - Check health of all services"
 
@@ -20,9 +18,9 @@ build:
 	@echo "Building Docker images..."
 	docker compose build --no-cache
 
-# Start services in development mode (default)
+# Start services
 up:
-	@echo "Starting services in development mode..."
+	@echo "Starting services..."
 	docker compose up -d
 
 # Start services and show logs
@@ -52,23 +50,6 @@ clean:
 	docker system prune -f
 	@echo "Cleanup completed"
 
-# Development mode with hot reload
-dev: export NODE_ENV=development
-dev:
-	@echo "Starting in development mode with hot reload..."
-	docker compose up -d
-	@echo "Services started. Access:"
-	@echo "  PVM API: http://localhost:8545"
-	@echo "  Frontend: http://localhost:5173"
-	@echo "  MongoDB: mongodb://localhost:27017"
-
-# Production mode
-prod: export NODE_ENV=production
-prod:
-	@echo "Starting in production mode..."
-	docker compose up -d --build
-	@echo "Production services started"
-
 # Show container status
 status:
 	@echo "Container status:"
@@ -85,32 +66,6 @@ health:
 	@docker compose exec mongo mongosh --quiet --eval "db.adminCommand('ping').ok" >/dev/null && echo "✅ MongoDB is healthy" || echo "❌ MongoDB not responding"
 	@echo "\n🔍 Redis Health Check:"
 	@docker compose exec redis redis-cli --raw incr ping >/dev/null && echo "✅ Redis is healthy" || echo "❌ Redis not responding"
-
-# Individual service management
-up-mongo:
-	docker compose up -d mongo
-
-up-redis:
-	docker compose up -d redis
-
-up-pvm:
-	docker compose up -d pvm
-
-up-frontend:
-	docker compose up -d frontend
-
-# Logs for individual services
-logs-mongo:
-	docker compose logs -f mongo
-
-logs-redis:
-	docker compose logs -f redis
-
-logs-pvm:
-	docker compose logs -f pvm
-
-logs-frontend:
-	docker compose logs -f frontend
 
 # Database management
 mongo-shell:

@@ -44,10 +44,10 @@ This guide explains how to run the entire Poker VM stack using Docker.
 
 ### Frontend UI
 
--   **Port**: 5173 (development) / 80 (production)
+-   **Port**: 5173
 -   **Description**: React-based poker interface
 -   **Technology**: React + Vite + TypeScript
--   **Environment**: Development mode with hot reload
+-   **Mode**: Development server with hot reload
 
 ### MongoDB Database
 
@@ -67,15 +67,14 @@ This guide explains how to run the entire Poker VM stack using Docker.
 ### Starting Services
 
 ```bash
-# Start all services in development mode
-make dev
+# Start all services
+make up
 
 # Start with logs visible
 docker compose up
 
-# Start specific services
-make up-pvm
-make up-frontend
+# Build and start
+make build && make up
 ```
 
 ### Viewing Logs
@@ -84,9 +83,11 @@ make up-frontend
 # All services
 make logs
 
-# Specific service
-make logs-pvm
-make logs-frontend
+# Specific service logs
+docker compose logs -f pvm
+docker compose logs -f frontend
+docker compose logs -f mongo
+docker compose logs -f redis
 ```
 
 ### Database Access
@@ -114,9 +115,6 @@ curl http://localhost:8545/health
 Key environment variables in `.env`:
 
 ```bash
-# Development/Production mode
-NODE_ENV=development
-
 # PVM Configuration
 VALIDATOR_KEY=your_validator_key
 RPC_URL=https://mainnet.g.alchemy.com/v2/your_key
@@ -127,27 +125,6 @@ VITE_PROJECT_ID=your_project_id
 VITE_MAINNET_RPC_URL=https://mainnet.infura.io/v3/your_key
 VITE_CLUB_NAME="Your Club Name"
 ```
-
-## Production Deployment
-
-### Production Build
-
-```bash
-# Build for production
-NODE_ENV=production make prod
-
-# Or manually
-NODE_ENV=production docker compose up -d --build
-```
-
-### Production Features
-
--   ✅ Multi-stage Docker builds
--   ✅ Nginx serving static files
--   ✅ Non-root container users
--   ✅ Health checks for all services
--   ✅ Proper dependency management
--   ✅ Volume persistence
 
 ## Troubleshooting
 
@@ -216,19 +193,14 @@ docker volume ls | grep poker-vm
 
 ## Available Commands
 
-| Command        | Description                     |
-| -------------- | ------------------------------- |
-| `make help`    | Show all available commands     |
-| `make build`   | Build all Docker images         |
-| `make up`      | Start all services              |
-| `make down`    | Stop all services               |
-| `make logs`    | View logs from all services     |
-| `make restart` | Restart all services            |
-| `make clean`   | Clean up containers and volumes |
-| `make dev`     | Start in development mode       |
-| `make prod`    | Start in production mode        |
-| `make status`  | Show container status           |
-| `make health`  | Check service health            |
+| Command       | Description                     |
+| ------------- | ------------------------------- |
+| `make build`  | Build all Docker images         |
+| `make up`     | Start all services              |
+| `make down`   | Stop all services               |
+| `make logs`   | View logs from all services     |
+| `make clean`  | Clean up containers and volumes |
+| `make health` | Check service health            |
 
 ## Architecture
 

@@ -40,22 +40,11 @@ if [ ! -f .env ]; then
     fi
 fi
 
-# Determine environment
-ENV=${1:-development}
+echo -e "${GREEN}🚀 Starting Poker VM...${NC}"
 
-echo -e "${GREEN}🚀 Starting Poker VM in ${ENV} mode...${NC}"
-
-# Start services based on environment
-case $ENV in
-    "production"|"prod")
-        echo -e "${GREEN}🏭 Starting production services...${NC}"
-        docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d --build
-        ;;
-    "development"|"dev"|*)
-        echo -e "${GREEN}🔧 Starting development services...${NC}"
-        docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up -d --build
-        ;;
-esac
+# Start services
+echo -e "${GREEN}🔧 Starting services...${NC}"
+docker compose up -d --build
 
 # Wait for services to start
 echo -e "${GREEN}⏳ Waiting for services to start...${NC}"
@@ -69,15 +58,10 @@ if docker compose ps | grep -q "Up"; then
     echo -e "${GREEN}✅ Services are running!${NC}"
     
     echo -e "${GREEN}📍 Access your services:${NC}"
-    if [[ $ENV == "production" || $ENV == "prod" ]]; then
-        echo "   🎰 Frontend: http://localhost"
-        echo "   🔧 PVM API: http://localhost:8545"
-    else
-        echo "   🎰 Frontend: http://localhost:5173"
-        echo "   🔧 PVM API: http://localhost:8545"
-        echo "   🗄️  MongoDB: mongodb://localhost:27017"
-        echo "   🔄 Redis: redis://localhost:6379"
-    fi
+    echo "   🎰 Frontend: http://localhost:5173"
+    echo "   🔧 PVM API: http://localhost:8545"
+    echo "   🗄️  MongoDB: mongodb://localhost:27017"
+    echo "   🔄 Redis: redis://localhost:6379"
     echo "   🔧 API Health: http://localhost:8545/health"
     
     echo -e "${GREEN}📋 Useful commands:${NC}"
