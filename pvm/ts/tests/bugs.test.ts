@@ -67,7 +67,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(nextToAct).toBeDefined();
         });
 
-        it.only("should test bug 735 3", () => {
+        it("should test bug 735 3", () => {
             game = fromTestJson(test_735_3);
             // Check the current round
             expect(game.currentPlayerId).toEqual("0xC84737526E425D7549eF20998Fa992f88EAC2484"); // Seat 2 has checked
@@ -263,7 +263,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(legalActions[2].min).toEqual("40000000000000000");
         });
 
-        it.only("should test bug 1006 second test", () => {
+        it("should test bug 1006 second test", () => {
             game = fromTestJson(test_1006);
 
             const nextToAct = game.getNextPlayerToAct();
@@ -346,7 +346,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
         });
 
-        it.skip("should test bug 1130", () => {
+        it("should test bug 1130", () => {
             game = fromTestJson(test_1130);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
         });
@@ -502,7 +502,7 @@ describe("Texas Holdem - Data driven", () => {
         });
     });
 
-    describe.only("Bug 1137 - Should allow seat 1 to start new hand after tournament end", () => {
+    describe("Bug 1137 - Should allow seat 1 to start new hand after tournament end", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {

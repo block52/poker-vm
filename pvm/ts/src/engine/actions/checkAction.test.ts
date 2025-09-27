@@ -72,7 +72,7 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getBets").mockReturnValue(new Map([["0x980b8D8A16f5891F41871d878a479d81Da52334c", 0n]]));
         });
 
-        it.skip("should return a range for check action", () => {
+        it("should return a range for check action", () => {
             // this should throw an error if the player has not matched the current bet
             const range = action.verify(player);
             expect(range).toBeDefined();
@@ -155,8 +155,8 @@ describe("CheckAction", () => {
             );
         });
 
-        it.skip("should throw error if an amount is specified", () => {
-            expect(() => action.execute(player, 0, 10000000000000000n)).toThrow("Amount should not be specified for check");
+        it("should throw error if an amount is specified", () => {
+            expect(() => action.execute(player, 0, 10000000000000000n)).toThrow("Check amount must be zero.");
         });
     });
 });
