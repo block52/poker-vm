@@ -50,40 +50,49 @@ describe("Re Raise Action", () => {
         jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
         jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
         jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
-        jest.spyOn(game, "getActionsForRound").mockReturnValue([
-            {
-                playerId: PLAYER_1,
-                amount: ONE_TOKEN,
-                action: PlayerActionType.SMALL_BLIND,
-                index: 1,
-                seat: 2,
-                timestamp: Date.now()
-            },
-            {
-                playerId: PLAYER_2,
-                amount: TWO_TOKENS,
-                action: PlayerActionType.BIG_BLIND,
-                index: 2,
-                seat: 3,
-                timestamp: Date.now()
-            },
-            {
-                playerId: PLAYER_3,
-                amount: FIVE_TOKENS,
-                action: PlayerActionType.BET,
-                index: 3,
-                seat: 3,
-                timestamp: Date.now()
-            },
-            {
-                playerId: PLAYER_4,
-                amount: 1300000000000000000n, // 13 tokens
-                action: PlayerActionType.RAISE,
-                index: 4,
-                seat: 4,
-                timestamp: Date.now()
+
+        // Mock getActionsForRound to return different actions based on round
+        jest.spyOn(game, "getActionsForRound").mockImplementation((round) => {
+            if (round === TexasHoldemRound.ANTE) {
+                return [
+                    {
+                        playerId: PLAYER_1,
+                        amount: ONE_TOKEN,
+                        action: PlayerActionType.SMALL_BLIND,
+                        index: 1,
+                        seat: 2,
+                        timestamp: Date.now()
+                    },
+                    {
+                        playerId: PLAYER_2,
+                        amount: TWO_TOKENS,
+                        action: PlayerActionType.BIG_BLIND,
+                        index: 2,
+                        seat: 3,
+                        timestamp: Date.now()
+                    }
+                ];
+            } else {
+                return [
+                    {
+                        playerId: PLAYER_3,
+                        amount: FIVE_TOKENS,
+                        action: PlayerActionType.BET,
+                        index: 3,
+                        seat: 3,
+                        timestamp: Date.now()
+                    },
+                    {
+                        playerId: PLAYER_4,
+                        amount: 1300000000000000000n, // 13 tokens
+                        action: PlayerActionType.RAISE,
+                        index: 4,
+                        seat: 4,
+                        timestamp: Date.now()
+                    }
+                ];
             }
-        ]);
+        });
 
         const bets = new Map<string, bigint>();
         bets.set(PLAYER_1, ONE_TOKEN); // 1 token (small blind)
@@ -97,11 +106,17 @@ describe("Re Raise Action", () => {
     });
 
     describe("verify", () => {
-        it.skip("should return correct range for a re raise", () => {
+        it("should return correct range for a re raise", () => {
             const range = action.verify(player);
 
-            // Min amount should be previous bet + big blind
-            const expectedMinAmount = 800000000000000000n; // 8 tokens = 13 - 5
+            // In this scenario:
+            // - Small blind: 1 token
+            // - Big blind: 2 tokens
+            // - Bet: 5 tokens
+            // - Raise: 13 tokens (raise of 8 tokens from 5 to 13)
+            // 
+            // To re-raise, minimum should be current bet (13) + last raise amount (8) = 21 tokens
+            const expectedMinAmount = 2100000000000000000n; // 21 tokens
 
             expect(range).toEqual({
                 minAmount: expectedMinAmount,

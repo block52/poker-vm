@@ -40,7 +40,7 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
         expect(legalActions[1].min).toEqual("200000000000000000");
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions[2].min).toEqual("600000000000000000");
+        expect(legalActions[2].min).toEqual("400000000000000000");
 
         game.performAction(PLAYER_2, PlayerActionType.CALL, 7, TWO_TOKENS);
 
@@ -95,7 +95,7 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(legalActions[1].min).toEqual("100000000000000000");
         expect(legalActions[1].max).toEqual("100000000000000000");
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions[2].min).toEqual("300000000000000000"); // Min raise: BB (2) + raise amount (1) = 3 tokens
+        expect(legalActions[2].min).toEqual("300000000000000000"); // Min raise: additional 3 tokens needed (1 already bet + 3 more = 4 total)
         expect(legalActions[2].max).toEqual("99900000000000000000"); // Max raise: full stack
     });
 
@@ -129,7 +129,7 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(legalActions2[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions2[1].action).toEqual(PlayerActionType.CHECK);
         expect(legalActions2[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions2[2].min).toEqual("200000000000000000");  // Min raise: current bet (2) + BB size (2) = 4 tokens
+        expect(legalActions2[2].min).toEqual("200000000000000000");  // Min raise: additional 2 tokens needed (2 already bet + 2 more = 4 total)
         expect(legalActions2[2].max).toEqual("99800000000000000000"); // Max raise: full stack
     });
 
@@ -159,7 +159,7 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(legalActions[1].min).toEqual("200000000000000000"); // Call 2 more tokens to match SB's 4 token bet
         expect(legalActions[1].max).toEqual("200000000000000000");
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions[2].min).toEqual("600000000000000000"); // Min raise: SB's total bet (4) + SB's raise amount (2) = 6 tokens
+        expect(legalActions[2].min).toEqual("400000000000000000"); // Min raise: additional 4 tokens needed (2 already bet + 4 more = 6 total)
         expect(legalActions[2].max).toEqual("99800000000000000000"); // Max raise: full stack
     });
 
@@ -197,7 +197,7 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(legalActions[1].min).toEqual("200000000000000000"); // Call 2 more tokens to match BB's 4 token bet
         expect(legalActions[1].max).toEqual("200000000000000000");
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
-        expect(legalActions[2].min).toEqual("600000000000000000"); // Min raise: BB's total bet (4) + BB's raise amount (2) = 6 tokens
+        expect(legalActions[2].min).toEqual("400000000000000000"); // Min raise: additional 4 tokens needed (2 already bet + 4 more = 6 total)
         expect(legalActions[2].max).toEqual("99800000000000000000"); // Max raise: full stack
 
         game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 8, TWO_TOKENS);

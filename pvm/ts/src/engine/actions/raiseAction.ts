@@ -41,20 +41,27 @@ class RaiseAction extends BaseAction implements IAction {
         }
 
         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
-        // 4. Calculate the minimum raise amount
-        const delta = currentBet - playersBet;
-        const minRaiseToAmount: bigint = delta + currentBet;
 
-        if (player.chips < minRaiseToAmount) {
+        // 4. Calculate the minimum raise amount for 3-bet/4-bet scenarios
+        // Use the actual last raise amount from bet manager
+        const lastRaiseAmount: bigint = betManager.getRaisedAmount();
+
+        // Minimum total bet amount after raise
+        const minTotalBetAmount: bigint = currentBet + lastRaiseAmount;
+
+        // Convert to additional amount needed  
+        const minRaiseAmount: bigint = minTotalBetAmount - playersBet;
+
+        if (player.chips < minRaiseAmount) {
             // Player can only go all-in
             return {
-                minAmount: player.chips, // Total amount if going all-in
+                minAmount: player.chips,
                 maxAmount: player.chips
             };
         }
 
         return {
-            minAmount: minRaiseToAmount,
+            minAmount: minRaiseAmount,  // Return additional amount needed, not total bet amount
             maxAmount: player.chips
         };
     }
