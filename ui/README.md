@@ -212,26 +212,30 @@ The color changes will be visible throughout the application, including:
 When `VITE_NODE_ENV="development"` is set in your `.env` file, a layout debug indicator appears on the poker table page. This helps developers understand which responsive layout is currently active.
 
 The indicator displays:
-- **Current viewport mode**: One of `mobile-portrait`, `mobile-landscape`, `tablet`, or `desktop`
-- **Window dimensions**: Current width x height in pixels
-- **Orientation**: Whether the device is in landscape or portrait mode
+
+-   **Current viewport mode**: One of `mobile-portrait`, `mobile-landscape`, `tablet`, or `desktop`
+-   **Window dimensions**: Current width x height in pixels
+-   **Orientation**: Whether the device is in landscape or portrait mode
 
 This is particularly useful when:
-- Testing responsive layouts across different screen sizes
-- Debugging player positioning issues on different devices
-- Adjusting table layout configurations in `src/config/tableLayoutConfig.ts`
+
+-   Testing responsive layouts across different screen sizes
+-   Debugging player positioning issues on different devices
+-   Adjusting table layout configurations in `src/config/tableLayoutConfig.ts`
 
 To enable the layout debug indicator:
+
 1. Set `VITE_NODE_ENV="development"` in your `.env` file
 2. Restart the development server
 3. Navigate to any poker table page
 4. The debug info will appear in the top-right corner
 
 The viewport modes are determined by these breakpoints:
-- **mobile-portrait**: width ≤ 414px and portrait orientation
-- **mobile-landscape**: width ≤ 926px and landscape orientation  
-- **tablet**: 927px ≤ width ≤ 1024px
-- **desktop**: width > 1024px
+
+-   **mobile-portrait**: width ≤ 414px and portrait orientation
+-   **mobile-landscape**: width ≤ 926px and landscape orientation
+-   **tablet**: 927px ≤ width ≤ 1024px
+-   **desktop**: width > 1024px
 
 ## Quick Start
 
@@ -315,8 +319,8 @@ To test the custom branding feature locally:
 4. Navigate to:
 
     - Browser Tab: Check that your custom favicon appears in the browser tab
-    - Dashboard: `http://localhost:3002` - You should see your logo and club name above "Start Playing Now"
-    - Play Page: `http://localhost:3002/play/:tableId` - You should see your logo and club name in the center of the poker table
+    - Dashboard: `http://localhost:5173` - You should see your logo and club name above "Start Playing Now"
+    - Play Page: `http://localhost:5173/play/:tableId` - You should see your logo and club name in the center of the poker table
 
 5. If the branding doesn't appear, check:
     - The URLs are correct and accessible
@@ -328,7 +332,7 @@ To test the custom branding feature locally:
 
 ## Available Scripts
 
--   `yarn dev` - Start development server on port 3002
+-   `yarn dev` - Start development server on port 5173
 -   `yarn build` - Build for production
 -   `yarn lint` - Run ESLint
 -   `yarn lint:fix` - Fix ESLint errors automatically
