@@ -2,7 +2,7 @@ import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoi
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "../src/engine/testConstants";
 
-describe("TEST - When a player can not beat another players hand at showdown he has 2 options Muck hand or Show hand (Scenario 1 0f 2 He Mucks)", () => {
+describe("TEST - When a player can not beat another players hand at showdown he has 2 options Muck hand or Show hand (Scenario 2 0f 2 He REVEALS HIS HOLE CARDS)", () => {
     const PLAYER_1 = "0x1111111111111111111111111111111111111111";
     const PLAYER_2 = "0x2222222222222222222222222222222222222222";
 
@@ -16,7 +16,7 @@ describe("TEST - When a player can not beat another players hand at showdown he 
         game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
     });
 
-    it("test - when a player can not beat another players hand at showdown he has 2 options muck hand or show hand (scenario 1 0f 2 he mucks)", () => {
+    it("test - when a player can not beat another players hand at showdown he has 2 options muck hand or show hand (scenario 2 0f 2 he reveals his hole cards)", () => {
         // Execute the setup actions
         game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
         game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
@@ -42,7 +42,7 @@ describe("TEST - When a player can not beat another players hand at showdown he 
         
         // Now perform the SHOW action to complete the test
         game.performAction(PLAYER_1, PlayerActionType.SHOW, 14, 0n);
-        game.performAction(PLAYER_2, PlayerActionType.MUCK, 15, 0n);
+        game.performAction(PLAYER_2, PlayerActionType.SHOW, 15, 0n);
         
         // Verify that the game state is consistent
         expect(game.getPlayerCount()).toEqual(2);
