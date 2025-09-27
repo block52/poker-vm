@@ -108,7 +108,7 @@ services:
             VITE_BRAND_COLOR_PRIMARY: ${VITE_BRAND_COLOR_PRIMARY:-#3b82f6}
             VITE_BRAND_COLOR_SECONDARY: ${VITE_BRAND_COLOR_SECONDARY:-#1a2639}
         ports:
-            - "5173:5173" # Vite dev server port
+            - "5173:3000" # Map external 5173 to internal 3000
         depends_on:
             pvm:
                 condition: service_healthy
@@ -119,7 +119,7 @@ services:
         networks:
             - poker-network
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:5173"]
+            test: ["CMD", "curl", "-f", "http://localhost:3000"]
             interval: 30s
             timeout: 10s
             retries: 3
