@@ -1,23 +1,23 @@
-# Frontend Dockerfile - /ui/Dockerfile
+# Frontend UI Dockerfile
 FROM node:20.18.2-alpine AS base
 
-# Install dependencies only when needed
-FROM base AS deps
+# Install system dependencies
+RUN apk add --no-cache \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-# Install dependencies
-RUN yarn install --frozen-lockfile && yarn cache clean
+# Copy package files first for better caching
+COPY package.json yarn.lock* ./
 
 # Development stage
 FROM base AS dev
-WORKDIR /app
+ENV NODE_ENV=development
 
-# Copy package files
-COPY package*.json ./
 # Install all dependencies (including dev dependencies)
-RUN yarn install
+RUN yarn install --frozen-lockfile && yarn cache clean
 
 # Copy source code
 COPY . .
@@ -25,35 +25,61 @@ COPY . .
 # Expose port for Vite dev server
 EXPOSE 5173
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:5173 || exit 1
+
 # Start development server
 CMD ["yarn", "dev", "--host", "0.0.0.0"]
 
-# # Build stage
-# FROM base AS builder
-# WORKDIR /app
+# Build stage
+FROM base AS builder
+ENV NODE_ENV=production
 
-# # Copy package files
-# COPY package*.json ./
-# # Install all dependencies
-# RUN npm ci
+# Install all dependencies
+RUN yarn install --frozen-lockfile && yarn cache clean
 
-# # Copy source code
-# COPY . .
+# Copy source code
+COPY . .
 
-# # Build the application
-# RUN npm run build
+# Build the application
+RUN yarn build
 
-# # Production stage with Nginx
-# FROM nginx:alpine AS production
+# Production stage with Nginx
+FROM nginx:alpine AS production
 
-# # Copy built files from builder stage
-# COPY --from=builder /app/dist /usr/share/nginx/html
+# Install curl for health checks
+RUN apk add --no-cache curl
 
-# # Copy custom nginx configuration
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy built files from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# # Expose port
-# EXPOSE 80
+# Copy custom nginx configuration if available
+COPY nginx.conf* /etc/nginx/conf.d/
 
-# # Start Nginx
-# CMD ["nginx", "-g", "daemon off;"]
+# Create nginx configuration for React SPA
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html index.htm; \
+        try_files $uri $uri/ /index.html; \
+    } \
+    location /api { \
+        proxy_pass http://pvm:8545; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost || exit 1
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
