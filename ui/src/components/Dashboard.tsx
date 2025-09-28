@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import WalletPanel, { Transaction } from "./WalletPanel";
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -8,7 +9,7 @@ const Dashboard: React.FC = () => {
     const layer1Balance = 2000.4567;
     const block52Balance = 1250.75;
 
-    const recentTransactions = [
+    const recentTransactions: Transaction[] = [
         { id: "tx001", type: "deposit", amount: 100.0, currency: "Block52", date: "2024-09-28", status: "completed" },
         { id: "tx002", type: "withdrawal", amount: -50.25, currency: "ETH", date: "2024-09-27", status: "completed" },
         { id: "tx003", type: "game_win", amount: 75.5, currency: "Block52", date: "2024-09-27", status: "completed" },
@@ -16,86 +17,11 @@ const Dashboard: React.FC = () => {
         { id: "tx005", type: "game_loss", amount: -25.0, currency: "Block52", date: "2024-09-26", status: "completed" }
     ];
 
-    const getTransactionIcon = (type: string) => {
-        switch (type) {
-            case "deposit":
-                return "⬆️";
-            case "withdrawal":
-                return "⬇️";
-            case "game_win":
-                return "🎉";
-            case "game_loss":
-                return "🎮";
-            default:
-                return "💰";
-        }
-    };
-
-    const getTransactionColor = (amount: number) => {
-        return amount >= 0 ? "text-green-400" : "text-red-400";
-    };
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
             <div className="flex h-screen">
                 {/* Left Panel - Wallet (1/3 width) */}
-                <div className="w-1/3 bg-gray-800 shadow-2xl border-r border-gray-700">
-                    <div className="p-6">
-                        {/* Wallet Header */}
-                        <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-white mb-2">💼 Wallet</h2>
-                            <div className="h-1 w-16 bg-blue-500 rounded"></div>
-                        </div>
-
-                        {/* Balance Section */}
-                        <div className="space-y-4 mb-8">
-                            <div className="bg-gray-700 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-400 text-sm">Layer 1 (ETH)</span>
-                                    <span className="text-blue-400">🔗</span>
-                                </div>
-                                <div className="text-2xl font-bold text-white">{layer1Balance.toFixed(4)} USDC</div>
-                                <div className="text-gray-400 text-sm">≈ ${(layer1Balance * 2500).toLocaleString()}</div>
-                            </div>
-
-                            <div className="bg-gray-700 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-gray-400 text-sm">Block 52 Credits</span>
-                                    <span className="text-purple-400">♠️</span>
-                                </div>
-                                <div className="text-2xl font-bold text-white">{block52Balance.toLocaleString()} B52</div>
-                                <div className="text-gray-400 text-sm">Gaming credits</div>
-                            </div>
-                        </div>
-
-                        {/* Recent Transactions */}
-                        <div>
-                            <h3 className="text-lg font-semibold text-white mb-4">Recent Transactions</h3>
-                            <div className="space-y-2 max-h-96 overflow-y-auto">
-                                {recentTransactions.map(tx => (
-                                    <div key={tx.id} className="bg-gray-700 rounded-lg p-3 hover:bg-gray-600 transition-colors">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-3">
-                                                <span className="text-lg">{getTransactionIcon(tx.type)}</span>
-                                                <div>
-                                                    <div className="text-white text-sm font-medium capitalize">{tx.type.replace("_", " ")}</div>
-                                                    <div className="text-gray-400 text-xs">{tx.date}</div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`text-sm font-semibold ${getTransactionColor(tx.amount)}`}>
-                                                    {tx.amount >= 0 ? "+" : ""}
-                                                    {tx.amount.toFixed(2)}
-                                                </div>
-                                                <div className="text-gray-400 text-xs">{tx.currency}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <WalletPanel layer1Balance={layer1Balance} block52Balance={block52Balance} recentTransactions={recentTransactions} />
 
                 {/* Right Panel - Main Content (2/3 width) */}
                 <div className="flex-1 p-8">
