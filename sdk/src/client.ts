@@ -15,6 +15,7 @@ import axios from "axios";
 import { Wallet } from "ethers";
 
 export interface IClient {
+    bridge(): Promise<void>; // Layer 1 to Layer 2 bridge function
     deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<PerformActionResponse>;
     findGames(min?: bigint, max?: bigint): Promise<GameOptionsResponse[]>;
     getAccount(address: string): Promise<AccountDTO>;
