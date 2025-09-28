@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard: React.FC = () => {
+    const navigate = useNavigate();
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-8">
             <div className="max-w-4xl mx-auto">
@@ -38,7 +41,7 @@ const Dashboard: React.FC = () => {
 
                     <div className="mt-6 text-center">
                         <button
-                            onClick={() => (window.location.href = "/table/1")}
+                            onClick={() => navigate("/table/1")}
                             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
                         >
                             Enter Poker Table

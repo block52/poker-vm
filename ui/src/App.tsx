@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { HashRouter as Router, Route, Routes } from "react-router-dom";
 // import Deposit from "./components/Deposit";  // Commented out - uses web3
 import Table from "./components/playPage/Table";
 // import { createAppKit } from "@reown/appkit/react";
