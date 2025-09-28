@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import SettingsService from "../services/SettingsService";
 
 interface NodeStatusPanelProps {
     connectedNodes?: number;
@@ -7,20 +8,66 @@ interface NodeStatusPanelProps {
 const NodeStatusPanel: React.FC<NodeStatusPanelProps> = ({ connectedNodes = 12 }) => {
     const [newNodeUrl, setNewNodeUrl] = useState("");
     const [useVPN, setUseVPN] = useState(false);
+    const [, setNodeUrls] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleAddNode = () => {
-        if (newNodeUrl.trim()) {
-            // Handle adding new node functionality
-            console.log("Adding node:", newNodeUrl);
-            setNewNodeUrl("");
-            // This will be implemented with actual node management
+    // Load initial settings on component mount
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            const [nodesResult, settingsResult] = await Promise.all([SettingsService.getNodes(), SettingsService.getAllSettings()]);
+
+            if (nodesResult.success && nodesResult.nodeUrls) {
+                setNodeUrls(nodesResult.nodeUrls);
+            }
+
+            if (settingsResult.success && settingsResult.settings) {
+                setUseVPN(settingsResult.settings.useVPN);
+            }
+        } catch (error) {
+            console.error("Failed to load settings:", error);
         }
     };
 
-    const handleToggleVPN = () => {
-        setUseVPN(!useVPN);
-        console.log("VPN toggled:", !useVPN);
-        // This will be implemented with actual VPN functionality
+    const handleAddNode = async () => {
+        if (newNodeUrl.trim() && !isLoading) {
+            setIsLoading(true);
+            try {
+                // Add node using SettingsService (which saves to SQLite)
+                const result = await SettingsService.addNode(newNodeUrl.trim());
+
+                if (result.success) {
+                    console.log("Node added successfully:", newNodeUrl);
+                    setNewNodeUrl("");
+                    // Reload the node list to reflect the change
+                    await loadSettings();
+                } else {
+                    console.error("Failed to add node:", result.error);
+                    // You could show a toast notification here
+                }
+            } catch (error) {
+                console.error("Error adding node:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    };
+
+    const handleToggleVPN = async () => {
+        try {
+            const result = await SettingsService.toggleVPN();
+            if (result.success && typeof result.useVPN === "boolean") {
+                setUseVPN(result.useVPN);
+                console.log("VPN toggled:", result.useVPN);
+            } else {
+                console.error("Failed to toggle VPN:", result.error);
+            }
+        } catch (error) {
+            console.error("Error toggling VPN:", error);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -51,10 +98,10 @@ const NodeStatusPanel: React.FC<NodeStatusPanelProps> = ({ connectedNodes = 12 }
                         />
                         <button
                             onClick={handleAddNode}
-                            disabled={!newNodeUrl.trim()}
+                            disabled={!newNodeUrl.trim() || isLoading}
                             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         >
-                            Save
+                            {isLoading ? "Saving..." : "Save"}
                         </button>
                     </div>
                 </div>
