@@ -22,10 +22,10 @@ The PVM runs inside the CVM and handles poker-specific game logic.
 
 -   Docker and Docker Compose
 -   Git
--   Node.js 18+ (for local development)
+-   Node.js 20+ (for local development)
 -   Yarn
 
-### Setup
+### Docker Setup (Recommended)
 
 1. **Clone the repository:**
 
@@ -34,16 +34,31 @@ The PVM runs inside the CVM and handles poker-specific game logic.
     cd poker-vm
     ```
 
-2. **Start services:**
+2. **Start with Docker (one command):**
 
     ```bash
-    docker compose up
+    ./start-docker.sh
+    ```
+
+    Or manually:
+
+    ```bash
+    # Copy environment template
+    cp .env.example .env
+
+    # Start all services
+    make up
+    # OR
+    docker compose up -d
     ```
 
 3. **Access services:**
-    - PVM RPC: http://localhost:8545
-    - API Documentation: http://localhost:8545/docs
-    - MongoDB: localhost:27017
+    - 🎰 **Poker UI**: http://localhost:5173
+    - 🔧 **PVM API**: http://localhost:8545
+    - 🔧 **API Health**: http://localhost:8545/health
+    - 🗄️ **MongoDB**: mongodb://localhost:27017
+
+### Manual Setup (Development)
 
 ## Development
 
@@ -87,6 +102,64 @@ yarn test
 cd pvm/ts
 yarn build
 ```
+
+## Docker Deployment
+
+### Quick Docker Setup
+
+The easiest way to run the entire stack:
+
+```bash
+# One-command setup
+./start-docker.sh
+
+# Or step by step
+cp .env.example .env  # Configure as needed
+make up               # Start all services
+make health           # Check service health
+```
+
+### Docker Services
+
+| Service      | Port  | Description                                  |
+| ------------ | ----- | -------------------------------------------- |
+| **PVM**      | 8545  | Poker Virtual Machine (Node.js + TypeScript) |
+| **Frontend** | 5173  | React UI with hot reload                     |
+| **MongoDB**  | 27017 | Game state database                          |
+| **Redis**    | 6379  | Caching and sessions                         |
+
+### Docker Commands
+
+```bash
+# Service management
+make build          # Build all images
+make up             # Start services
+make down           # Stop services
+make logs           # View logs
+make restart        # Restart services
+
+# Environment-specific
+make dev            # Development mode
+make prod           # Production mode
+
+# Utilities
+make health         # Check service health
+make clean          # Clean up containers/volumes
+make mongo-shell    # Connect to MongoDB
+make redis-cli      # Connect to Redis
+```
+
+### Production Deployment
+
+```bash
+# Production mode with Nginx + optimized builds
+NODE_ENV=production make prod
+
+# Or manually
+docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
+```
+
+For detailed Docker documentation, see [DOCKER.md](./DOCKER.md).
 
 ## Game Features
 

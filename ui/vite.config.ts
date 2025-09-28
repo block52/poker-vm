@@ -21,13 +21,13 @@ export default defineConfig({
         copyPublicDir: true,
     },
     server: {
-        host: "localhost",
-        port: 3002,
+        host: "0.0.0.0", // Allow external access in Docker
+        port: 5173, // Use default Vite port
         strictPort: true,
         middlewareMode: false
     },
     base: "/",
     preview: {
-        port: 3002
+        port: 5173 // Use default Vite port for preview too
     },
 });
