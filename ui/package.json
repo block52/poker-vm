@@ -47,8 +47,8 @@
     "lint:warn": "eslint . --fix --max-warnings=100",
     "preview": "vite preview",
     "electron": "electron electron.js",
-    "electron:dev": "concurrently \"yarn dev\" \"wait-on http://localhost:5173 && electron electron.js\"",
     "electron:build": "yarn build && electron-builder",
+    "electron:start": "yarn build && electron electron.js",
     "postinstall": "electron-builder install-app-deps"
   },
   "eslintConfig": {

@@ -22,22 +22,31 @@ function createWindow() {
         show: false // Don't show until ready-to-show
     });
 
-    // Load the UI
+    // Load the UI from built files
+    const uiBuildPath = path.join(__dirname, "build", "index.html");
+
+    mainWindow.loadFile(uiBuildPath).then(() => {
+        console.log("Successfully loaded UI from:", uiBuildPath);
+    }).catch((error) => {
+        console.error("Failed to load UI files:", error.message);
+        console.log("Make sure to run 'yarn build' first");
+
+        // Create a simple error page
+        mainWindow.loadURL(`data:text/html;charset=utf-8,
+            <html>
+                <head><title>Error</title></head>
+                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h1>UI Build Not Found</h1>
+                    <p>Please run <code>yarn build</code> to build the UI files.</p>
+                    <p>Error: ${error.message}</p>
+                </body>
+            </html>
+        `);
+    });
+
+    // Open DevTools in development mode
     if (isDev) {
-        // In development, try local dev server
-        mainWindow.loadURL("http://localhost:5173").catch(() => {
-            console.log("Could not connect to local dev server, trying to load file...");
-            // Fallback to file if available
-            const fallbackPath = path.join(__dirname, "../ui/build/index.html");
-            mainWindow.loadFile(fallbackPath).catch(() => {
-                console.log("Could not load UI files. Please run: yarn build-ui");
-            });
-        });
         mainWindow.webContents.openDevTools();
-    } else {
-        // In production, load the built UI files
-        const uiBuildPath = path.join(__dirname, "../ui/build/index.html");
-        mainWindow.loadFile(uiBuildPath);
     }
 
     // Show window when ready
