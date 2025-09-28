@@ -25,7 +25,7 @@ function createWindow() {
     // Load the UI
     if (isDev) {
         // In development, try local dev server
-        mainWindow.loadURL("http://localhost:3000").catch(() => {
+        mainWindow.loadURL("http://localhost:5173").catch(() => {
             console.log("Could not connect to local dev server, trying to load file...");
             // Fallback to file if available
             const fallbackPath = path.join(__dirname, "../ui/build/index.html");
