@@ -66,22 +66,39 @@ function createWindow() {
 function createMenu() {
     const template = [
         {
-            label: "File",
+            label: "Wallet",
             submenu: [
                 {
-                    label: "New Game",
-                    accelerator: "CmdOrCtrl+N",
+                    label: "Import Private Key",
+                    accelerator: "CmdOrCtrl+I",
                     click: () => {
-                        // Handle new game
-                        console.log("New Game clicked");
+                        // Handle import private key
+                        console.log("Import Private Key clicked");
                     }
                 },
                 {
-                    label: "Join Game",
-                    accelerator: "CmdOrCtrl+J",
+                    label: "Export Private Key",
+                    accelerator: "CmdOrCtrl+E",
                     click: () => {
-                        // Handle join game
-                        console.log("Join Game clicked");
+                        // Handle export private key
+                        console.log("Export Private Key clicked");
+                    }
+                },
+                { type: "separator" },
+                {
+                    label: "Add Hardware Wallet",
+                    accelerator: "CmdOrCtrl+H",
+                    click: () => {
+                        // Handle add hardware wallet
+                        console.log("Add Hardware Wallet clicked");
+                    }
+                },
+                {
+                    label: "Wallet Connect",
+                    accelerator: "CmdOrCtrl+W",
+                    click: () => {
+                        // Handle wallet connect
+                        console.log("Wallet Connect clicked");
                     }
                 },
                 { type: "separator" },
