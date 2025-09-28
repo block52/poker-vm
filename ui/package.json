@@ -6,9 +6,6 @@
   "proxy": "=https://paymentservice.texashodl.net",
   "dependencies": {
     "@bitcoinbrisbane/block52": "1.2.15",
-    "@reown/appkit": "1.6.7",
-    "@reown/appkit-adapter-ethers": "1.6.7",
-    "@reown/appkit-adapter-wagmi": "1.6.7",
     "@tanstack/react-query": "^5.81.5",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
@@ -18,7 +15,6 @@
     "bigunit": "^1.2.5",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.4.7",
-    "ethers": "^6.13.5",
     "framer-motion": "^12.23.0",
     "pokersolver": "^2.1.4",
     "qrcode.react": "^4.2.0",
@@ -29,12 +25,9 @@
     "react-router-dom": "^7.7.0",
     "react-toastify": "^10.0.6",
     "swr": "^2.3.4",
-    "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss": "^3.4.14",
     "unstorage": "^1.17.0",
-    "uuid": "^11.1.0",
-    "viem": "2.x",
-    "wagmi": "^2.14.7"
+    "uuid": "^11.1.0"
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",

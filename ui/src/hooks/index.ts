@@ -34,11 +34,11 @@ export { default as useUserWallet } from "./useUserWallet";
 // Player actions (barrel)
 export * from "./playerActions";
 
-// DepositPage hooks (default exports)
-export { default as useAllowance } from "./DepositPage/useAllowance";
-export { default as useApprove } from "./DepositPage/useApprove";
-export { default as useDecimals } from "./DepositPage/useDecimals";
-export { default as useDepositUSDC } from "./DepositPage/useDepositUSDC";
-export { default as useUserWalletConnect } from "./DepositPage/useUserWalletConnect";
-export { default as useWalletBalance } from "./DepositPage/useWalletBalance";
-export { default as useWithdraw } from "./DepositPage/useWithdraw";
+// DepositPage hooks (default exports) - COMMENTED OUT FOR ELECTRON VERSION
+// export { default as useAllowance } from "./DepositPage/useAllowance";
+// export { default as useApprove } from "./DepositPage/useApprove";
+// export { default as useDecimals } from "./DepositPage/useDecimals";
+// export { default as useDepositUSDC } from "./DepositPage/useDepositUSDC";
+// export { default as useUserWalletConnect } from "./DepositPage/useUserWalletConnect";
+// export { default as useWalletBalance } from "./DepositPage/useWalletBalance";
+// export { default as useWithdraw } from "./DepositPage/useWithdraw";

@@ -26,7 +26,7 @@ export default defineConfig({
         strictPort: true,
         middlewareMode: false
     },
-    base: "/",
+    base: "./", // Use relative paths for Electron compatibility
     preview: {
         port: 5173 // Use default Vite port for preview too
     },
