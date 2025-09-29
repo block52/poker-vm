@@ -15,7 +15,8 @@ import axios from "axios";
 import { Wallet } from "ethers";
 
 export interface IClient {
-    bridge(): Promise<void>; // Layer 1 to Layer 2 bridge function
+    bridge(amount: string): Promise<TransactionResponse>; // Layer 1 to Layer 2 bridge function
+    claim(gameAddress: string, to: string, nonce?: number): Promise<TransactionResponse>;
     deal(gameAddress: string, seed: string, publicKey: string, nonce?: number): Promise<PerformActionResponse>;
     findGames(min?: bigint, max?: bigint): Promise<GameOptionsResponse[]>;
     getAccount(address: string): Promise<AccountDTO>;
@@ -54,6 +55,19 @@ export class NodeRpcClient implements IClient {
         if (privateKey && privateKey.length === 66) {
             this.wallet = new Wallet(privateKey);
         }
+    }
+
+    public async bridge(amount: string): Promise<TransactionResponse> {
+        throw new Error("Method not implemented.");
+    }
+
+    public async claim(gameAddress: string, to: string, nonce?: number): Promise<TransactionResponse> {
+        const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TransactionResponse> }>(this.url, {
+            id: this.getRequestId(),
+            method: RPCMethods.CLAIM,
+            params: [gameAddress, to, nonce]
+        });
+        return body.result.data;
     }
 
     /**

@@ -21,6 +21,7 @@ export type RPCResponse<T> = {
 export enum RPCMethods {
     BLOCK = "block",
     BURN = "burn",
+    CLAIM = "claim",
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     DEPLOY_CONTRACT = "deploy_contract",
@@ -58,6 +59,7 @@ export enum RPCMethods {
 export type RPCRequestParams = {
     [RPCMethods.BLOCK]: [string, string]; // [hash, block]
     [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
+    [RPCMethods.CLAIM]: [string, string, number?]; // [gameAddress, to(address), nonce?]
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
     [RPCMethods.DEPLOY_CONTRACT]: [string, string, string]; // [nonce, owner, data]
