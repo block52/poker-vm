@@ -22,6 +22,7 @@ export const READ_METHODS = [
 export const WRITE_METHODS = [
     RPCMethods.BLOCK,
     RPCMethods.BURN,
+    "claim" as RPCMethods,  // TODO: Replace with RPCMethods.CLAIM once added to SDK
     RPCMethods.CREATE_ACCOUNT,
     RPCMethods.CREATE_CONTRACT_SCHEMA,
     RPCMethods.DEPLOY_CONTRACT,

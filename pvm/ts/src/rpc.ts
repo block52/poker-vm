@@ -6,6 +6,7 @@ import {
     BlockCommand,
     BlockCommandParams,
     BurnCommand,
+    ClaimCommand,
     CreateAccountCommand,
     DeployContractCommand,
     FindGameStateCommand,
@@ -291,6 +292,28 @@ export class RPC {
                     const command = new BurnCommand(burnFrom, amount, bridgeTo, validatorPrivateKey);
                     result = await command.execute();
 
+                    break;
+                }
+
+                case "claim" as RPCMethods: {
+                    // Expect [playerAddress, tableAddress, actionIndex, nonce]
+                    if (request.params?.length !== 4) {
+                        return makeErrorRPCResponse(id, "Invalid params - need exactly 4 params: playerAddress, tableAddress, actionIndex, nonce");
+                    }
+                    const [playerAddress, tableAddress, actionIndex, nonce] = request.params as [string, string, number, number];
+
+                    if (typeof actionIndex !== "number" || typeof nonce !== "number") {
+                        return makeErrorRPCResponse(id, "actionIndex and nonce must be numbers");
+                    }
+
+                    const command = new ClaimCommand(
+                        playerAddress,
+                        tableAddress,
+                        actionIndex,
+                        nonce,
+                        validatorPrivateKey
+                    );
+                    result = await command.execute();
                     break;
                 }
 
