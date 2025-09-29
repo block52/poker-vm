@@ -34,10 +34,10 @@ const Dashboard: React.FC = () => {
                             <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
                                 <h2 className="text-2xl font-semibold text-white mb-4">Welcome to Block 52 Poker Desktop</h2>
 
-                                <p className="text-gray-300 mb-6">
+                                {/* <p className="text-gray-300 mb-6">
                                     This is the desktop version of Block 52 Poker, running in Electron without Web3 wallet integration. Web3 features have been
                                     disabled for this desktop version.
-                                </p>
+                                </p> */}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="bg-gray-700 p-4 rounded-lg">
