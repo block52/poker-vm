@@ -21,6 +21,7 @@ export type RPCResponse<T> = {
 export enum RPCMethods {
     BLOCK = "block",
     BURN = "burn",
+    CLAIM = "claim",
     CREATE_ACCOUNT = "create_account",
     CREATE_CONTRACT_SCHEMA = "create_contract_schema",
     DEPLOY_CONTRACT = "deploy_contract",
@@ -58,6 +59,7 @@ export enum RPCMethods {
 export type RPCRequestParams = {
     [RPCMethods.BLOCK]: [string, string]; // [hash, block]
     [RPCMethods.BURN]: [string, string, string]; // [burnFrom(privateKey), amount, bridgeTo(address)]
+    [RPCMethods.CLAIM]: [string, string, string]; // [gameAddress, to(address), nonce]
     [RPCMethods.CREATE_ACCOUNT]: [string]; // private key
     [RPCMethods.CREATE_CONTRACT_SCHEMA]: [string, string, any]; // [category, name, schema]
     [RPCMethods.DEPLOY_CONTRACT]: [string, string, string]; // [nonce, owner, data]
@@ -81,13 +83,13 @@ export type RPCRequestParams = {
     [RPCMethods.MINED_BLOCK_HASH]: [string, string]; // [blockHash, nodeUrl]
     [RPCMethods.MINT]: [string]; // [depositIndex]
     [RPCMethods.NEW_HAND]: [string, string, number, string]; // [to, nonce, index, data] where data is the seed
-    [RPCMethods.NEW_TABLE]: [string, string, number]; // [schemaAddress, owner, nonce]
+    [RPCMethods.NEW_TABLE]: [string, string, string]; // [schemaAddress, owner, nonce]
     [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string]; // [from, to, action, amount, nonce, index, data]
     [RPCMethods.PURGE]: [string, string]; // [username, password]
     [RPCMethods.RESET_BLOCKCHAIN]: [string, string]; // [username, password]
     [RPCMethods.SHUTDOWN]: [string, string]; // [username, password]
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
-    [RPCMethods.TRANSFER]: [string, string, string, number, string | null]; // [from, to, amount, nonce, data]
-    [RPCMethods.WITHDRAW]: [string, string, string, number]; // [from, to, amount, nonce]
+    [RPCMethods.TRANSFER]: [string, string, string, string, string | null]; // [from, to, amount, nonce, data]
+    [RPCMethods.WITHDRAW]: [string, string, string, string]; // [from, to, amount, nonce]
 };

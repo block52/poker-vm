@@ -14,6 +14,7 @@ export enum PlayerActionType {
 }
 
 export enum NonPlayerActionType {
+    CLAIM = "claim",
     DEAL = "deal",
     JOIN = "join",
     LEAVE = "leave",
