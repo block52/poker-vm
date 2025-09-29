@@ -20,7 +20,7 @@ export class ClaimCommand implements ISignedCommand<ClaimResult> {
     private readonly gameManagement: IGameManagement;
     private readonly mempool = getMempoolInstance();
 
-    constructor(private readonly playerAddress: string, private readonly gameAddress: string, private readonly nonce: bigint, private readonly privateKey: string) {
+    constructor(private readonly playerAddress: string, private readonly gameAddress: string, private readonly nonce: number, private readonly privateKey: string) {
         this.accountManagement = getAccountManagementInstance();
         this.gameManagement = getGameManagementInstance();
     }
@@ -32,7 +32,7 @@ export class ClaimCommand implements ISignedCommand<ClaimResult> {
             if (!gameState) {
                 const result: ClaimResult = {
                     success: false,
-                    amount: 0n,
+                    amount: "0",
                     gameAddress: this.gameAddress,
                     message: `Game state not found for address: ${this.gameAddress}`
                 };
@@ -43,7 +43,7 @@ export class ClaimCommand implements ISignedCommand<ClaimResult> {
             if (gameState.gameOptions.type !== GameType.SIT_AND_GO) {
                 const result: ClaimResult = {
                     success: false,
-                    amount: 0n,
+                    amount: "0",
                     gameAddress: this.gameAddress,
                     message: "Claims are only available for Sit and Go games"
                 };
@@ -79,7 +79,15 @@ export class ClaimCommand implements ISignedCommand<ClaimResult> {
             }
 
             const claimString = `CLAIM_${this.playerAddress}_${this.gameAddress}_${playerResult.place}`;
-            const transaction = await Transaction.create(this.playerAddress, this.gameAddress, value, this.nonce, this.privateKey, claimString);
+
+
+            // const exists = await this.transactionManagement.exists(tx.hash);
+            
+            // // Check for duplicate claims in mempool
+            // for (const tx of this.mempool.getAll()) {
+            //     if (tx.from === this.playerAddress && tx.to === this.gameAddress && tx.data === claimString) {
+
+            const transaction = await Transaction.create(this.playerAddress, this.gameAddress, value, BigInt(this.nonce), this.privateKey, claimString);
 
             this.creditAccount(this.playerAddress, value);
             this.mempool.add(transaction);

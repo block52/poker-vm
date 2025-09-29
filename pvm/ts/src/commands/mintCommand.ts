@@ -27,6 +27,10 @@ export class MintCommand implements ISignedCommand<Transaction> {
             throw new Error("Private key must be provided");
         }
 
+        if (!process.env.RPC_URL) {
+            throw new Error("RPC_URL environment variable must be set");
+        }
+
         this.depositIndex = depositIndex;
         this.index = BigInt(depositIndex);
         const signer = new ethers.Wallet(privateKey);
@@ -38,7 +42,7 @@ export class MintCommand implements ISignedCommand<Transaction> {
         this.mempool = getMempoolInstance();
         this.transactionManagement = getTransactionInstance();
 
-        this.provider = createProvider(process.env.RPC_URL ?? "https://eth-mainnet.g.alchemy.com/v2/uwae8IxsUFGbRFh8fagTMrGz1w5iuvpc");
+        this.provider = createProvider(process.env.RPC_URL);
         this.bridge = new ethers.Contract(CONTRACT_ADDRESSES.bridgeAddress, bridgeAbi, this.provider);
     }
 

@@ -7,7 +7,7 @@ import { ISignedCommand, ISignedResponse } from "./interfaces";
 import { GameStateCommand } from "./gameStateCommand";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { IGameStateDocument } from "../models/interfaces";
-import { GameOptions, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import { IBlockchainManagement, IGameManagement, ITransactionManagement } from "../state/interfaces";
 
