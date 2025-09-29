@@ -72,6 +72,7 @@ export class NodeRpcClient implements IClient {
             method: RPCMethods.CLAIM,
             params: [gameAddress, to, nonce]
         });
+        
         return body.result.data;
     }
 

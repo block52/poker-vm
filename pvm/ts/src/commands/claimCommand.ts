@@ -1,6 +1,6 @@
 import { Transaction } from "../models";
-import { getAccountManagementInstance, getGameManagementInstance } from "../state/index";
-import { IAccountManagement, IGameManagement } from "../state/interfaces";
+import { getAccountManagementInstance, getGameManagementInstance, getTransactionInstance } from "../state/index";
+import { IAccountManagement, IGameManagement, ITransactionManagement } from "../state/interfaces";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 import TexasHoldemGame from "../engine/texasHoldem";
@@ -18,11 +18,13 @@ export interface ClaimResult {
 export class ClaimCommand implements ISignedCommand<ClaimResult> {
     private readonly accountManagement: IAccountManagement;
     private readonly gameManagement: IGameManagement;
+    private readonly transactionManagment: ITransactionManagement;
     private readonly mempool = getMempoolInstance();
 
     constructor(private readonly playerAddress: string, private readonly gameAddress: string, private readonly nonce: number, private readonly privateKey: string) {
         this.accountManagement = getAccountManagementInstance();
         this.gameManagement = getGameManagementInstance();
+        this.transactionManagment = getTransactionInstance()
     }
 
     public async execute(): Promise<ISignedResponse<ClaimResult>> {
@@ -79,12 +81,23 @@ export class ClaimCommand implements ISignedCommand<ClaimResult> {
             }
 
             const claimString = `CLAIM_${this.playerAddress}_${this.gameAddress}_${playerResult.place}`;
-            const transaction = await Transaction.create(this.playerAddress, this.gameAddress, value, BigInt(this.nonce), this.privateKey, claimString);
-            this.mempool.add(transaction);
-
-            if (!this.mempool.has(transaction.hash)) {
-                this.mempool.add(transaction); // Add to mempool immediately
+            // Check for uniqueness
+            const exists = await this.transactionManagment.getTransactionByData(claimString);
+            if (exists) {
+                throw isCallException();
             }
+
+            const transaction = await Transaction.create(this.playerAddress, this.gameAddress, value, BigInt(this.nonce), this.privateKey, claimString);
+            
+
+
+            // Do mempools later (or not with COSMOS)
+            
+            // this.mempool.add(transaction);
+
+            // if (!this.mempool.has(transaction.hash)) {
+            //     this.mempool.add(transaction); // Add to mempool immediately
+            // }
 
             const result: ClaimResult = {
                 success: true,
@@ -104,10 +117,5 @@ export class ClaimCommand implements ISignedCommand<ClaimResult> {
             };
             return signResult(result, this.privateKey);
         }
-    }
-
-    private async creditAccount(playerAddress: string, amount: bigint): Promise<void> {
-        // Use the account management interface to increment balance
-        await this.accountManagement.incrementBalance(playerAddress, amount);
     }
 }

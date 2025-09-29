@@ -31,7 +31,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
         }
         
         const txs = this.mempool.get();
-
         const validTxs: Transaction[] = this.validate(txs);
         const uniqueTxs: Transaction[] = await this.filter(validTxs);
 
@@ -181,16 +180,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
         const validTxs: Transaction[] = [];
         let duplicateCount = 0;
 
-        // // Do in parallel
-        // const promises = txs.map(async (tx) => {
-        //     const exists = await this.transactionManagement.exists(tx.hash);
-        //     if (exists) {
-        //         duplicateCount++;
-        //         return null;
-        //     }
-        //     return tx;
-        // });
-
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
             const exists = await this.transactionManagement.exists(tx.hash);
@@ -202,13 +191,6 @@ export class MineCommand implements ISignedCommand<Block | null> {
             console.log(`Adding transaction: ${tx.hash}`);
             validTxs.push(tx);
         }
-
-        // // const results = await Promise.all(promises);
-        // for (const result of results) {
-        //     if (result) {
-        //         validTxs.push(result);
-        //     }
-        // }
 
         validTxs.sort((a, b) => a.timestamp - b.timestamp);
 
