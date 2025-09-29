@@ -243,7 +243,13 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>Join Seat {index}</h3>
+                            <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>
+                                {gameOptions?.type === "sit-and-go" ? (
+                                    <>Join Tournament - Seat {index}</>
+                                ) : (
+                                    <>Join Seat {index}</>
+                                )}
+                            </h3>
                             
                             {joinError && (
                                 <div 
@@ -258,9 +264,27 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 </div>
                             )}
                             
-                            <p className="mb-6 text-center" style={{ color: colors.ui.textSecondary + "dd" }}>
-                                Ready to join at seat {index}?
-                            </p>
+                            {gameOptions?.type === "sit-and-go" ? (
+                                <div className="mb-6">
+                                    <div className="bg-blue-900/30 border border-blue-500/30 rounded-lg p-4 mb-4">
+                                        <h4 className="text-sm font-semibold text-blue-300 mb-2">🏆 SIT & GO TOURNAMENT</h4>
+                                        <ul className="text-xs text-gray-300 space-y-1">
+                                            <li>• {gameOptions?.maxPlayers || 4} Player Tournament</li>
+                                            <li>• Buy-in: {gameOptions?.minBuyIn ? (Number(gameOptions.minBuyIn) / 1e18).toFixed(2) : "1.00"} USDC</li>
+                                            <li>• 1st Place: 70% of prize pool</li>
+                                            <li>• 2nd Place: 30% of prize pool</li>
+                                            <li>• Game starts when all seats are filled</li>
+                                        </ul>
+                                    </div>
+                                    <p className="text-center text-sm" style={{ color: colors.ui.textSecondary + "dd" }}>
+                                        Join tournament at seat {index}?
+                                    </p>
+                                </div>
+                            ) : (
+                                <p className="mb-6 text-center" style={{ color: colors.ui.textSecondary + "dd" }}>
+                                    Ready to join at seat {index}?
+                                </p>
+                            )}
 
                             <div className="flex justify-center space-x-3">
                                 <button

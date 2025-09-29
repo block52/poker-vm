@@ -1,6 +1,7 @@
 import { AccountCommand } from "./accountCommand";
 import { BalanceCommand } from "./balanceCommand";
 import { ChallengeCommand } from "./challengeCommand";
+import { ClaimCommand } from "./claimCommand";
 import { GetTransactionsCommand } from "./getTransactionsCommand";
 import { MeCommand } from "./meCommand";
 import { MintCommand } from "./mintCommand";
@@ -40,6 +41,7 @@ export {
     BlockCommand,
     BurnCommand,
     ChallengeCommand,
+    ClaimCommand,
     CreateAccountCommand,
     DeployContractCommand,
     FindGameStateCommand,

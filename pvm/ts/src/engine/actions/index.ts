@@ -3,6 +3,7 @@ import BetAction from "./betAction";
 import BigBlindAction from "./bigBlindAction";
 import CallAction from "./callAction";
 import CheckAction from "./checkAction";
+import ClaimAction from "./claimAction";
 import DealAction from "./dealAction";
 import FoldAction from "./foldAction";
 import JoinAction from "./joinAction";
@@ -22,6 +23,7 @@ export {
     BigBlindAction,
     CallAction,
     CheckAction,
+    ClaimAction,
     DealAction,
     FoldAction,
     JoinAction,
@@ -42,6 +44,7 @@ export const actions = {
     bigBlindAction: BigBlindAction,
     callAction: CallAction,
     checkAction: CheckAction,
+    claimAction: ClaimAction,
     foldAction: FoldAction,
     joinAction: JoinAction,
     leaveAction: LeaveAction,

@@ -193,8 +193,28 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
 
     // Don't show modal if user is already playing or has joined
     if (isUserAlreadyPlaying || hasJoined) {
+        console.log("🚫 SitAndGoAutoJoinModal hidden because:", {
+            isUserAlreadyPlaying,
+            hasJoined,
+            publicKey,
+            tableId
+        });
         return null;
     }
+
+    // Also don't show if user doesn't have a wallet set up
+    if (!publicKey) {
+        console.log("⚠️ SitAndGoAutoJoinModal hidden - No wallet found. User needs to generate wallet first.");
+        return null;
+    }
+
+    console.log("✅ SitAndGoAutoJoinModal will show:", {
+        isUserAlreadyPlaying,
+        hasJoined,
+        publicKey,
+        tableId,
+        gameState
+    });
 
     // Get player count label
     const getPlayerCountLabel = () => {
