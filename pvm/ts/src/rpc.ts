@@ -6,6 +6,7 @@ import {
     BlockCommand,
     BlockCommandParams,
     BurnCommand,
+    ClaimCommand,
     CreateAccountCommand,
     DeployContractCommand,
     FindGameStateCommand,
@@ -281,6 +282,16 @@ export class RPC {
         try {
             switch (method) {
                 // Write methods
+                case RPCMethods.CLAIM: {
+                    if (request.params?.length !== 3) {
+                        return makeErrorRPCResponse(id, "Invalid params - expected [playerAddress, gameAddress, nonce]");
+                    }
+                    const [playerAddress, gameAddress, nonce] = request.params as RPCRequestParams[RPCMethods.CLAIM];
+                    const command = new ClaimCommand(playerAddress, gameAddress, BigInt(nonce), validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
                 case RPCMethods.BURN: {
                     if (request.params?.length !== 3) {
                         return makeErrorRPCResponse(id, "Invalid params");

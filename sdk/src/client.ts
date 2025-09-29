@@ -62,6 +62,11 @@ export class NodeRpcClient implements IClient {
     }
 
     public async claim(gameAddress: string, to: string, nonce?: number): Promise<TransactionResponse> {
+        if (!nonce) {
+            const from = this.getAddress();
+            nonce = await this.getNonce(from);
+        }
+
         const { data: body } = await axios.post<RPCRequest, { data: RPCResponse<TransactionResponse> }>(this.url, {
             id: this.getRequestId(),
             method: RPCMethods.CLAIM,
