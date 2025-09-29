@@ -287,7 +287,7 @@ export class RPC {
                         return makeErrorRPCResponse(id, "Invalid params - expected [playerAddress, gameAddress, nonce]");
                     }
                     const [playerAddress, gameAddress, nonce] = request.params as RPCRequestParams[RPCMethods.CLAIM];
-                    const command = new ClaimCommand(playerAddress, gameAddress, BigInt(nonce), validatorPrivateKey);
+                    const command = new ClaimCommand(playerAddress, gameAddress, Number(nonce), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

@@ -79,17 +79,7 @@ export class ClaimCommand implements ISignedCommand<ClaimResult> {
             }
 
             const claimString = `CLAIM_${this.playerAddress}_${this.gameAddress}_${playerResult.place}`;
-
-
-            // const exists = await this.transactionManagement.exists(tx.hash);
-            
-            // // Check for duplicate claims in mempool
-            // for (const tx of this.mempool.getAll()) {
-            //     if (tx.from === this.playerAddress && tx.to === this.gameAddress && tx.data === claimString) {
-
             const transaction = await Transaction.create(this.playerAddress, this.gameAddress, value, BigInt(this.nonce), this.privateKey, claimString);
-
-            this.creditAccount(this.playerAddress, value);
             this.mempool.add(transaction);
 
             if (!this.mempool.has(transaction.hash)) {
