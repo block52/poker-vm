@@ -41,7 +41,7 @@ export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
       } : null,
       allPlayers: gameState.players.map((p: PlayerDTO) => ({
         seat: p.seat,
-        address: p.address?.substring(0, 10) + '...',
+        address: p.address?.substring(0, 10) + "...",
         stack: p.stack
       }))
     }, null, 2));

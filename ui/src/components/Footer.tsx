@@ -1,22 +1,18 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import * as React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { useTableState } from "../hooks/useTableState";
 import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
+import { ethers } from "ethers";
 
-// Import our custom hooks
-import { betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks/playerActions/index";
+// Import hooks from barrel file
+import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
 
-import { useNextToActInfo } from "../hooks/useNextToActInfo";
+// Import specific hooks not in barrel
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
-
-import { usePlayerTimer } from "../hooks/usePlayerTimer";
-import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
-import { ethers } from "ethers";
-import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleSitIn, handleSitOut, handleStartNewHand } from "./common/actionHandlers";
+// Import action handlers (removing unused ones)
+import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
@@ -24,29 +20,20 @@ import "./Footer.css";
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
 
-    // Add ref to track if we're already attempting to auto-deal
-    const attemptToAutoDeal = useRef<boolean>(false);
-    
-    // Detect mobile landscape and portrait
-    const [isMobileLandscape, setIsMobileLandscape] = useState(
-        window.innerWidth <= 926 && window.innerWidth > window.innerHeight
-    );
-    const [isMobilePortrait, setIsMobilePortrait] = useState(
-        window.innerWidth <= 414 && window.innerHeight > window.innerWidth
-    );
-    
+    // Detect mobile landscape orientation
+    const [isMobileLandscape, setIsMobileLandscape] = useState(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
+
     useEffect(() => {
         const checkOrientation = () => {
             setIsMobileLandscape(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
-            setIsMobilePortrait(window.innerWidth <= 414 && window.innerHeight > window.innerWidth);
         };
-        
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-        
+
+        window.addEventListener("resize", checkOrientation);
+        window.addEventListener("orientationchange", checkOrientation);
+
         return () => {
-            window.removeEventListener('resize', checkOrientation);
-            window.removeEventListener('orientationchange', checkOrientation);
+            window.removeEventListener("resize", checkOrientation);
+            window.removeEventListener("orientationchange", checkOrientation);
         };
     }, []);
 
@@ -57,7 +44,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const { gameOptions } = useGameOptions();
 
     // Use the useNextToActInfo hook
-    const { isCurrentUserTurn, timeRemaining } = useNextToActInfo(tableId);
+    const { isCurrentUserTurn } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState();
@@ -88,8 +75,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const hasMuckAction = hasAction(legalActions, PlayerActionType.MUCK);
     const hasShowAction = hasAction(legalActions, PlayerActionType.SHOW);
     const hasDealAction = hasAction(legalActions, NonPlayerActionType.DEAL);
-    const hasSitInAction = hasAction(legalActions, PlayerActionType.SIT_IN);
-    const hasSitOutAction = hasAction(legalActions, PlayerActionType.SIT_OUT);
 
     // Show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction && isUsersTurn;
@@ -118,7 +103,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     };
 
     // These are the default amounts - initialize with proper minimum
-    const initialAmount = hasBetAction ? (minBet > 0 ? minBet : 0) : (minRaise > 0 ? minRaise : 0);
+    const initialAmount = hasBetAction ? (minBet > 0 ? minBet : 0) : minRaise > 0 ? minRaise : 0;
     const [raiseAmount, setRaiseAmount] = useState<number>(initialAmount);
     const [, setRaiseInputRaw] = useState<string>(initialAmount.toFixed(2));
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
@@ -135,27 +120,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
-
-    // Add timer extension functionality for the footer button
-    const { extendTime, canExtend } = usePlayerTimer(tableId, userPlayer?.seat);
-
-    // Get the timeout duration from game options for display
-    const timeoutDuration = useMemo(() => {
-        if (!gameOptions?.timeout) return 30;
-        // Timeout now comes as milliseconds directly, convert to seconds
-        return Math.floor(gameOptions.timeout / 1000);
-    }, [gameOptions]);
-
-    // Handler for footer extension button
-    const handleExtendTimeFromFooter = useCallback(() => {
-        if (!extendTime || !canExtend) {
-            console.log("Cannot extend time - not available or already used");
-            return;
-        }
-
-        extendTime();
-        console.log(`⏰ Time extended by ${timeoutDuration} seconds from footer button`);
-    }, [extendTime, canExtend, timeoutDuration]);
 
     // Dynamic class names based on validation state
     const inputFieldClassName = useMemo(() => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
@@ -278,20 +242,17 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
 
-    // Check if player is sitting out
-    const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
-
     return (
-        <div className={`fixed left-0 right-0 text-white flex justify-center items-center relative ${
-            isMobileLandscape 
-                ? 'bottom-0 p-0.5' 
-                : 'bottom-12 lg:bottom-1 p-2 lg:p-1 pb-4 lg:pb-1'
-        }`}>
-            <div className={`flex flex-col w-full justify-center rounded-lg relative z-10 ${
-                isMobileLandscape 
-                    ? 'mx-1 space-y-0.5 max-w-full' 
-                    : 'lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 max-w-full'
-            }`}>
+        <div
+            className={`fixed left-0 right-0 text-white flex justify-center items-center relative ${
+                isMobileLandscape ? "bottom-0 p-0.5" : "bottom-12 lg:bottom-1 p-2 lg:p-1 pb-4 lg:pb-1"
+            }`}
+        >
+            <div
+                className={`flex flex-col w-full justify-center rounded-lg relative z-10 ${
+                    isMobileLandscape ? "mx-1 space-y-0.5 max-w-full" : "lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 max-w-full"
+                }`}
+            >
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-2 lg:mb-3">
@@ -374,14 +335,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
                     </div>
                 )}
 
-
                 {/* Only show other buttons if deal button is not showing */}
                 {!hideOtherButtons && (
                     <>
                         {/* Player Action Buttons Container */}
-                        <div className={`flex justify-center items-center ${
-                            isMobileLandscape ? 'gap-0.5' : 'gap-1 lg:gap-2'
-                        }`}>
+                        <div className={`flex justify-center items-center ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
                             {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostSmallBlind}
@@ -426,15 +384,13 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
                         {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
                             <>
-                                <div className={`flex justify-between ${
-                                    isMobileLandscape ? 'gap-0.5' : 'gap-1 lg:gap-2'
-                                }`}>
+                                <div className={`flex justify-between ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
                                     {canFoldAnytime && (
                                         <button
                                             className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium ${
-                                                isMobileLandscape 
-                                                    ? 'px-2 py-0.5 text-[10px] min-w-[50px]'
-                                                    : 'px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]'
+                                                isMobileLandscape
+                                                    ? "px-2 py-0.5 text-[10px] min-w-[50px]"
+                                                    : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]"
                                             }`}
                                             onClick={() => handleFold(tableId)}
                                         >
@@ -453,9 +409,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             className={`cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
                                             rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)] ${
-                                                isMobileLandscape 
-                                                    ? 'px-2 py-0.5 text-[10px]'
-                                                    : 'px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm'
+                                                isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
                                             onClick={() => handleCheck(tableId)}
                                         >
@@ -466,9 +420,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                         <button
                                             className={`btn-call cursor-pointer rounded-lg w-full border shadow-md backdrop-blur-sm
                                             transition-all duration-200 font-medium transform active:scale-105 ${
-                                                isMobileLandscape 
-                                                    ? 'px-2 py-0.5 text-[10px]'
-                                                    : 'px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm'
+                                                isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
                                             onClick={() => handleCall(callAction, callAmount, tableId)}
                                         >
@@ -480,15 +432,10 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             onClick={hasRaiseAction ? handleRaise : handleBet}
                                             disabled={hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn}
                                             className={`cursor-pointer hover:scale-105 btn-raise rounded-lg w-full border shadow-md backdrop-blur-sm transition-all duration-200 font-medium ${
-                                                isMobileLandscape 
-                                                    ? 'px-2 py-0.5 text-[10px]'
-                                                    : 'px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm'
+                                                isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
                                         >
-                                            {hasRaiseAction ? "RAISE" : "BET"}{" "}
-                                            <span style={{ color: colors.brand.primary }}>
-                                                ${raiseAmount.toFixed(2)}
-                                            </span>
+                                            {hasRaiseAction ? "RAISE" : "BET"} <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -497,11 +444,11 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                 {(hasBetAction || hasRaiseAction) && (
                                     <>
                                         {/* Slider and Controls - Compact for mobile landscape */}
-                                        <div className={`flex items-center bg-[#0f172a40] backdrop-blur-sm rounded-lg border border-[#3a546d]/50 shadow-inner ${
-                                            isMobileLandscape 
-                                                ? 'gap-1 px-1 py-0.5 h-8' 
-                                                : 'space-x-2 lg:space-x-4 p-2 lg:p-3'
-                                        }`}>
+                                        <div
+                                            className={`flex items-center bg-[#0f172a40] backdrop-blur-sm rounded-lg border border-[#3a546d]/50 shadow-inner ${
+                                                isMobileLandscape ? "gap-1 px-1 py-0.5 h-8" : "space-x-2 lg:space-x-4 p-2 lg:p-3"
+                                            }`}
+                                        >
                                             {/* Min/Max text - placed first in mobile landscape */}
                                             {isMobileLandscape && (
                                                 <div className="flex items-center text-[9px] text-gray-400 whitespace-nowrap">
@@ -510,11 +457,12 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     <span>Max:${formattedMaxBetAmount}</span>
                                                 </div>
                                             )}
-                                            
+
                                             <button
-                                                className={isMobileLandscape 
-                                                    ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
-                                                    : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                className={
+                                                    isMobileLandscape
+                                                        ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
+                                                        : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
                                                 }
                                                 onClick={() => handleRaiseChange(-getStep())}
                                                 disabled={!isPlayerTurn}
@@ -533,9 +481,10 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     setRaiseAmountAbsolute(Number(e.target.value));
                                                     setLastAmountSource("slider");
                                                 }}
-                                                className={isMobileLandscape 
-                                                    ? "flex-1 accent-[#64ffda] h-1 rounded-full transition-all duration-200"
-                                                    : "flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
+                                                className={
+                                                    isMobileLandscape
+                                                        ? "flex-1 accent-[#64ffda] h-1 rounded-full transition-all duration-200"
+                                                        : "flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
                                                 }
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
@@ -551,9 +500,10 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 disabled={!isPlayerTurn}
                                             />
                                             <button
-                                                className={isMobileLandscape 
-                                                    ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
-                                                    : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                className={
+                                                    isMobileLandscape
+                                                        ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
+                                                        : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
                                                 }
                                                 onClick={() => handleRaiseChange(getStep())}
                                                 disabled={!isPlayerTurn}
@@ -598,7 +548,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     </div>
                                                 </div>
                                             )}
-                                            
+
                                             {isMobileLandscape && (
                                                 <input
                                                     type="text"
@@ -629,7 +579,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     disabled={!isPlayerTurn}
                                                 />
                                             )}
-
                                         </div>
 
                                         {/* Additional Options - Hide in mobile landscape to save space */}

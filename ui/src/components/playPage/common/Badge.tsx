@@ -94,16 +94,16 @@ const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend
             {tournamentPlace && (
                 <div className="badge-tournament-results">
                     <div className="tournament-place" style={{
-                        backgroundColor: tournamentPlace === 1 ? '#ffd700' :
-                                       tournamentPlace === 2 ? '#c0c0c0' :
-                                       tournamentPlace === 3 ? '#cd7f32' :
-                                       '#666',
-                        color: tournamentPlace <= 3 ? '#000' : '#fff'
+                        backgroundColor: tournamentPlace === 1 ? "#ffd700" :
+                                       tournamentPlace === 2 ? "#c0c0c0" :
+                                       tournamentPlace === 3 ? "#cd7f32" :
+                                       "#666",
+                        color: tournamentPlace <= 3 ? "#000" : "#fff"
                     }}>
                         {getPlaceSuffix(tournamentPlace)} Place
                     </div>
                     {tournamentPayout && tournamentPayout !== "0" && (
-                        <div className="tournament-payout" style={{ color: '#4ade80' }}>
+                        <div className="tournament-payout" style={{ color: "#4ade80" }}>
                             Won: ${tournamentPayout}
                         </div>
                     )}

@@ -277,7 +277,7 @@ const QRDeposit: React.FC = () => {
 
                 // Navigate to the payment URL in a new tab
                 if (response.data && response.data.checkoutLink) {
-                    window.open(response.data.checkoutLink, '_blank');
+                    window.open(response.data.checkoutLink, "_blank");
                 }
             } catch (error) {
                 console.error("🔷 QRDeposit: Bitcoin payment error:", error);
@@ -330,7 +330,7 @@ const QRDeposit: React.FC = () => {
 
                 // Navigate to the payment URL in a new tab
                 if (response.data && response.data.checkoutLink) {
-                    window.open(response.data.checkoutLink, '_blank');
+                    window.open(response.data.checkoutLink, "_blank");
                 }
             } catch (error) {
                 console.error("🔷 QRDeposit: Bitcoin payment error:", error);

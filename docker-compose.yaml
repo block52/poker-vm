@@ -1,83 +1,125 @@
 name: poker-vm
 services:
+    # MongoDB Database
     mongo:
-        image: mongo:8.0-noble # Updated from 8.0.9-noble
+        image: mongo:8.0-noble
         container_name: pvm-mongo
         restart: always
         environment:
             MONGO_INITDB_DATABASE: pvm
-            # No auth for now
             MONGO_INITDB_ROOT_USERNAME: node1
             MONGO_INITDB_ROOT_PASSWORD: Passw0rd123
         ports:
-            - 27017:27017
+            - "27017:27017"
         volumes:
             - mongodb_data:/data/db
             - ./mongo-init:/docker-entrypoint-initdb.d
         networks:
             - poker-network
+        healthcheck:
+            test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
 
+    # Redis Cache
     redis:
-        image: redis:8.0-alpine # Updated from 7.2-alpine
+        image: redis:8.0-alpine
         container_name: pvm-redis
         restart: always
         command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-Passw0rd123}
         ports:
-            - 6379:6379
+            - "6379:6379"
         volumes:
             - redis_data:/data
         networks:
             - poker-network
         environment:
             REDIS_PASSWORD: ${REDIS_PASSWORD:-Passw0rd123}
+        healthcheck:
+            test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
 
-    # TypeScript Backend
-    # backend:
-    #   build:
-    #     context: ./pvm/ts
-    #     dockerfile: Dockerfile
-    #     target: ${NODE_ENV:-dev}
-    #   container_name: poker-backend
-    #   restart: unless-stopped
-    #   environment:
-    #     NODE_ENV: ${NODE_ENV:-development}
-    #     PORT: 8545
-    #     MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-password}@mongodb:27017/${MONGO_DB_NAME:-poker_db}?authSource=admin
-    #     JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
-    #     CORS_ORIGIN: http://localhost:5173
-    #   ports:
-    #     - "8545:8545"
-    #   depends_on:
-    #     - mongo
-    #   volumes:
-    #     # For development hot reload
-    #     - ./pvm/ts:/app:delegated
-    #     - /app/node_modules
-    #   networks:
-    #     - poker-network
+    # PVM (Poker Virtual Machine) Backend
+    pvm:
+        build:
+            context: ./pvm/ts
+            dockerfile: Dockerfile
+        container_name: pvm-backend
+        restart: unless-stopped
+        environment:
+            PORT: 8545
+            DB_URL: mongodb://node1:Passw0rd123@mongo:27017/pvm?authSource=admin
+            REDIS_URL: redis://:Passw0rd123@redis:6379
+            ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+            ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password}
+            VALIDATOR_KEY: ${VALIDATOR_KEY:-}
+            RPC_URL: ${RPC_URL:-https://mainnet.g.alchemy.com/v2/}
+            TOKEN_CONTRACT_ADDRESS: ${TOKEN_CONTRACT_ADDRESS:-0x7D9aAe2950a2c703159Bc42d2D28882904029130}
+            VAULT_CONTRACT_ADDRESS: ${VAULT_CONTRACT_ADDRESS:-0x687e526CE88a3E2aB889b3F110cF1C3cCfebafd7}
+            BRIDGE_CONTRACT_ADDRESS: ${BRIDGE_CONTRACT_ADDRESS:-0x0B6052D3951b001E4884eD93a6030f92B1d76cf0}
+            PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8545}
+            PK: ${PK:-}
+            SEED: ${SEED:-}
+        ports:
+            - "8545:8545"
+        depends_on:
+            mongo:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+        volumes:
+            # For development hot reload
+            - ./pvm/ts:/app:cached
+            - /app/node_modules
+            - /app/dist
+        networks:
+            - poker-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8545/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
 
-    # # React + Vite Frontend
-    # frontend:
-    #   build:
-    #     context: ./ui
-    #     dockerfile: Dockerfile
-    #     target: ${NODE_ENV:-dev}
-    #   container_name: poker-frontend
-    #   restart: unless-stopped
-    #   environment:
-    #     NODE_ENV: ${NODE_ENV:-development}
-    #     VITE_API_URL: http://localhost:3001/api
-    #   ports:
-    #     - "5173:5173" # Vite dev server port
-    #     - "80:80" # Nginx production port
-    #   depends_on:
-    #     - backend
-    #   volumes:
-    #     # For development hot reload
-    #     - ./ui:/app:delegated
-    #     - /app/node_modules
-    #   networks:
-    #     - poker-network
+    # Frontend UI
+    frontend:
+        build:
+            context: ./ui
+            dockerfile: Dockerfile
+        container_name: pvm-frontend
+        restart: unless-stopped
+        environment:
+            VITE_PROJECT_ID: ${VITE_PROJECT_ID:-23ec57c1c95f3f54a97605975d4df7eb}
+            VITE_NODE_RPC_URL: http://localhost:8545
+            VITE_NODE_WS_URL: ws://localhost:8545
+            VITE_MAINNET_RPC_URL: ${VITE_MAINNET_RPC_URL:-https://mainnet.infura.io/v3/}
+            VITE_CLUB_NAME: ${VITE_CLUB_NAME:-Block 52}
+            VITE_CLUB_LOGO: ${VITE_CLUB_LOGO:-}
+            VITE_FAVICON_URL: ${VITE_FAVICON_URL:-/b52favicon.svg}
+            VITE_BRAND_COLOR_PRIMARY: ${VITE_BRAND_COLOR_PRIMARY:-#3b82f6}
+            VITE_BRAND_COLOR_SECONDARY: ${VITE_BRAND_COLOR_SECONDARY:-#1a2639}
+        ports:
+            - "5173:5173" # Use standard Vite port
+        depends_on:
+            pvm:
+                condition: service_healthy
+        volumes:
+            # For development hot reload
+            - ./ui:/app:cached
+            - /app/node_modules
+        networks:
+            - poker-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:5173"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 60s
 
 networks:
     poker-network:

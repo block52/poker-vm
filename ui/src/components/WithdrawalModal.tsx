@@ -380,7 +380,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                         {!isWeb3Connected || !web3Address ? (
                             <div className="mb-4 p-3 rounded-lg" style={{ 
                                 backgroundColor: hexToRgba("#FFA500", 0.1),
-                                border: `1px solid #FFA500`
+                                border: "1px solid #FFA500"
                             }}>
                                 <p className="font-semibold mb-2" style={{ color: "#FFA500" }}>
                                     MetaMask Not Connected
