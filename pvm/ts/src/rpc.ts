@@ -300,10 +300,15 @@ export class RPC {
                     if (request.params?.length !== 4) {
                         return makeErrorRPCResponse(id, "Invalid params - need exactly 4 params: playerAddress, tableAddress, actionIndex, nonce");
                     }
-                    const [playerAddress, tableAddress, actionIndex, nonce] = request.params as [string, string, number, number];
+                    const [playerAddress, tableAddress, actionIndexParam, nonceParam] = request.params as [string, string, string | number, string | number];
 
-                    if (typeof actionIndex !== "number" || typeof nonce !== "number") {
-                        return makeErrorRPCResponse(id, "actionIndex and nonce must be numbers");
+                    // Convert to numbers
+                    const actionIndex = Number(actionIndexParam);
+                    const nonce = Number(nonceParam);
+
+                    // Validate they're valid numbers
+                    if (isNaN(actionIndex) || isNaN(nonce)) {
+                        return makeErrorRPCResponse(id, "actionIndex and nonce must be valid numbers");
                     }
 
                     const command = new ClaimCommand(
