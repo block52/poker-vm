@@ -23,6 +23,7 @@ import {
     BigBlindAction,
     CallAction,
     CheckAction,
+    ClaimAction,
     DealAction,
     FoldAction,
     JoinAction,
@@ -153,7 +154,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, ""),
             new SitOutAction(this, this._update),
-            new SitInAction(this, this._update)
+            new SitInAction(this, this._update),
+            new ClaimAction(this, this._update)
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
@@ -1066,6 +1068,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             case NonPlayerActionType.NEW_HAND:
                 new NewHandAction(this, this._update, data).execute(this.getPlayer(address), index);
                 return;
+            // TODO: Replace string literal with NonPlayerActionType.CLAIM after SDK update
+            case "claim" as NonPlayerActionType:
+                new ClaimAction(this, this._update).execute(this.getPlayer(address), index);
+                return;
         }
 
         if (amount !== undefined && amount < 0n) {
@@ -1549,7 +1555,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             previousActions: this.getActionDTOs(),
             round: this.currentRound,
             winners: winners,
-            results: this._results.map(r => ({ place: r.place, playerId: r.playerId, payout: r.payout.toString() })),
+            results: this._results.map(r => ({
+                place: r.place,
+                playerId: r.playerId,
+                payout: r.payout.toString(),
+                ...(r.claimed !== undefined && { claimed: r.claimed })
+            })),
             signature: ethers.ZeroHash
         };
 
@@ -1605,7 +1616,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const results: Result[] = json.results?.map((r: any) => ({
             place: r.place,
             playerId: r.playerId,
-            payout: BigInt(r.payout)
+            payout: BigInt(r.payout),
+            ...(r.claimed !== undefined && { claimed: r.claimed })
         })) || [];
 
         // Create and return new game instance

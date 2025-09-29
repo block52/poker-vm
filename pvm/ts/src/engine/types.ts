@@ -112,4 +112,5 @@ export type Result = {
     place: number;
     playerId: string;
     payout: bigint;
+    claimed?: boolean;  // Track if payout has been claimed
 }

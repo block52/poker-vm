@@ -13,6 +13,7 @@ import { useGameStateContext } from "../context/GameStateContext";
 
 // Import action handlers (removing unused ones)
 import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import { claimWinnings } from "../hooks/playerActions/claimWinnings";
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
@@ -75,6 +76,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const hasMuckAction = hasAction(legalActions, PlayerActionType.MUCK);
     const hasShowAction = hasAction(legalActions, PlayerActionType.SHOW);
     const hasDealAction = hasAction(legalActions, NonPlayerActionType.DEAL);
+    // TODO: Replace string literal with NonPlayerActionType.CLAIM after SDK update
+    const hasClaimAction = hasAction(legalActions, "claim" as any);
 
     // Show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction && isUsersTurn;
@@ -331,6 +334,28 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                 />
                             </svg>
                             SHOW CARDS
+                        </button>
+                    </div>
+                )}
+
+                {/* Claim Button - Show when action is available (SIT_AND_GO games only) */}
+                {hasClaimAction && (
+                    <div className="flex justify-center mb-2 lg:mb-3">
+                        <button
+                            onClick={async () => {
+                                try {
+                                    await claimWinnings(tableId!);
+                                    console.log("💰 Successfully claimed winnings");
+                                } catch (error) {
+                                    console.error("Failed to claim winnings:", error);
+                                }
+                            }}
+                            className="btn-claim bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 border-green-400 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            CLAIM WINNINGS
                         </button>
                     </div>
                 )}
