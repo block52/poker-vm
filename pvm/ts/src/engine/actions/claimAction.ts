@@ -10,9 +10,24 @@ class ClaimAction extends BaseAction {
     }
 
     verify(player: Player): Range {
-        // Only available for SIT_AND_GO games
-        if (this.game.type !== GameType.SIT_AND_GO) {
-            throw new Error("Claim only available for SIT_AND_GO games");
+        // Handle different game types
+        switch (this.game.type) {
+            case GameType.SIT_AND_GO:
+                // SIT_AND_GO claim logic
+                break;
+
+            case GameType.TOURNAMENT:
+                // TODO: Implement tournament claim logic
+                // Tournament games may have different payout structures
+                // and claim requirements
+                throw new Error("Tournament claim not yet implemented");
+
+            case GameType.CASH:
+                // Cash games don't have claim functionality
+                throw new Error("Claim not available for cash games");
+
+            default:
+                throw new Error(`Claim not supported for game type: ${this.game.type}`);
         }
 
         // Only available in END round
@@ -37,6 +52,28 @@ class ClaimAction extends BaseAction {
     }
 
     execute(player: Player, index: number): void {
+        // Handle different game types
+        switch (this.game.type) {
+            case GameType.SIT_AND_GO:
+                this.executeSitAndGoClaim(player, index);
+                break;
+
+            case GameType.TOURNAMENT:
+                // TODO: Implement tournament claim execution
+                // This would handle multi-table tournament payouts,
+                // bounties, and other tournament-specific claim logic
+                throw new Error("Tournament claim execution not yet implemented");
+
+            case GameType.CASH:
+                // Cash games should never reach here due to verify() check
+                throw new Error("Cannot execute claim for cash games");
+
+            default:
+                throw new Error(`Claim execution not supported for game type: ${this.game.type}`);
+        }
+    }
+
+    private executeSitAndGoClaim(player: Player, index: number): void {
         const results = (this.game as any)._results;
         const result = results.find((r: any) => r.playerId === player.address);
         if (!result) throw new Error("No result found for player");

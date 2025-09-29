@@ -1181,6 +1181,15 @@ const Table = React.memo(() => {
                         {window.innerWidth > window.innerHeight ? " (landscape)" : " (portrait)"}
                     </div>
                     <div className="mt-2 pt-2 border-t border-gray-700">
+                        <div className="font-bold mb-1">Connection</div>
+                        <div className="text-blue-400 text-[10px] break-all">
+                            WS: {import.meta.env.VITE_NODE_WS_URL || "wss://node1.block52.xyz"}
+                        </div>
+                        <div className="text-blue-400 text-[10px] break-all">
+                            RPC: {import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz"}
+                        </div>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-700">
                         <div className="font-bold mb-1">Table Rotation</div>
                         <div className="text-green-400">StartIndex: <span className="font-mono">{startIndex}</span></div>
                         <div className="text-gray-400 text-[10px] mt-1">
@@ -1302,13 +1311,45 @@ const Table = React.memo(() => {
 
             {/* Sit & Go Auto-Join Modal - Shows for Sit & Go games when user is not playing */}
             {gameState && (gameState.type as string) === "sit-and-go" && !isUserAlreadyPlaying && id && (
-                <SitAndGoAutoJoinModal 
-                    tableId={id}
-                    onJoinSuccess={() => {
-                        // Refresh the page or update state to show the user is now playing
-                        window.location.reload();
-                    }}
-                />
+                <>
+                    {!localStorage.getItem("user_eth_public_key") ? (
+                        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                            <div
+                                className="p-6 rounded-xl w-96 shadow-2xl"
+                                style={{
+                                    backgroundColor: colors.ui.bgDark,
+                                    border: `1px solid ${colors.ui.borderColor}`
+                                }}
+                            >
+                                <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>
+                                    🎮 Sit & Go Tournament
+                                </h3>
+                                <p className="mb-6" style={{ color: colors.ui.textSecondary }}>
+                                    To join this Sit & Go tournament, you need to set up a wallet first.
+                                </p>
+                                <button
+                                    onClick={() => window.location.href = "/"}
+                                    className="w-full px-4 py-2 text-sm rounded-lg transition duration-300"
+                                    style={{
+                                        background: colors.brand.primary,
+                                        color: "white"
+                                    }}
+                                >
+                                    Go to Dashboard to Generate Wallet
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <SitAndGoAutoJoinModal
+                            tableId={id}
+                            onJoinSuccess={() => {
+                                // COMMENTED OUT: Refresh disabled to observe logs
+                                // window.location.reload();
+                                console.log("✅ SitAndGoAutoJoinModal onJoinSuccess triggered - refresh disabled for debugging");
+                            }}
+                        />
+                    )}
+                </>
             )}
 
             {/* Club Name at Bottom Center (or Bottom Right in mobile landscape) */}
