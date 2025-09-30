@@ -57,6 +57,14 @@ export class NodeRpcClient implements IClient {
     }
 
     /**
+     * Bridge function for Layer 1 to Layer 2 operations
+     */
+    public async bridge(): Promise<void> {
+        // TODO: Implement bridge functionality
+        throw new Error("Bridge functionality not yet implemented");
+    }
+
+    /**
      * Get next request ID
      * @returns The request ID
      */
