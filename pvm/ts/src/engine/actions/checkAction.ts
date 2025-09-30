@@ -1,8 +1,7 @@
 import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { IAction, Range, Turn } from "../types";
-import { BetManager } from "../managers/betManager";
+import { IAction, Range } from "../types";
 
 class CheckAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -13,9 +12,10 @@ class CheckAction extends BaseAction implements IAction {
         // Basic validation
         super.verify(player);
 
-        // 1. Round state check: Cannot check in the ante or showdown rounds
+        // 1. Round state check: Cannot check in the ante, showdown, or end rounds
         this.validateNotInAnteRound();
         this.validateNotInShowdownRound();
+        this.validateNotInEndRound();
 
         const currentRound = this.game.currentRound;
 

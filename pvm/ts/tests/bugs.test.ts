@@ -26,6 +26,7 @@ import {
     test_1130,
     test_1130_edited,
     test_1137,
+    test_1158,
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -428,6 +429,40 @@ describe("Texas Holdem - Data driven", () => {
 
             // After new hand, the game should reset for heads-up play
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+        });
+    });
+
+    describe("Bug 1158 - Sit and Go tournament not ending when only one player remains", () => {
+        let game: TexasHoldemGame;
+
+        beforeEach(() => {
+            game = fromTestJson(test_1158);
+        });
+
+        it("should end tournament when only one player remains", () => {
+            // Tournament should be in END state when only one player has chips
+            expect(game.currentRound).toEqual(TexasHoldemRound.END);
+
+            // Check that only one player has chips remaining
+            const playersWithChips = game.getSeatedPlayers().filter(player => player.chips > 0n);
+            expect(playersWithChips.length).toBe(1);
+
+            // Should have a winner declared
+            const gameState = game.toJson();
+            expect(gameState.winners).toBeDefined();
+            expect(gameState.winners.length).toBe(1);
+        });
+
+        it("should not allow further actions in completed tournament", () => {
+            // No legal actions should be available when tournament is complete
+            const remainingPlayer = game.getSeatedPlayers().find(player => player.chips > 0n);
+            expect(remainingPlayer).toBeDefined();
+
+            const legalActions = game.getLegalActions(remainingPlayer!.address);
+
+            // Only NEW_HAND action should be available to start a new tournament
+            expect(legalActions.length).toBe(1);
+            expect(legalActions[0].action).toBe("new-hand");
         });
     });
 });
