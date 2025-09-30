@@ -18,6 +18,7 @@ import { CreateAccountCommand } from "./createAccountCommand";
 import { FindGameStateCommand } from "./findGameCommand";
 import { GameStateCommand } from "./gameStateCommand";
 import { GetBlocksCommand } from "./getBlocksCommand";
+import { GetCosmosBlocksCommand } from "./getCosmosBlocksCommand";
 import { GetNodesCommand } from "./getNodesCommand";
 import { GetTransactionCommand } from "./getTransactionCommand";
 import { MempoolCommand } from "./mempoolCommand";
@@ -45,6 +46,7 @@ export {
     FindGameStateCommand,
     GameStateCommand,
     GetBlocksCommand,
+    GetCosmosBlocksCommand,
     GetNodesCommand,
     GetTransactionCommand,
     GetTransactionsCommand,

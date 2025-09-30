@@ -2,6 +2,7 @@ import { StargateClient, SigningStargateClient, GasPrice } from "@cosmjs/stargat
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { stringToPath } from "@cosmjs/crypto";
 import { Coin } from "@cosmjs/amino";
+import { Tendermint37Client } from "@cosmjs/tendermint-rpc";
 
 export interface CosmosConfig {
     rpcEndpoint: string;
@@ -16,6 +17,7 @@ export class CosmosClient {
     private config: CosmosConfig;
     private client?: StargateClient;
     private signingClient?: SigningStargateClient;
+    private tmClient?: Tendermint37Client;
     private wallet?: DirectSecp256k1HdWallet;
 
     constructor(config: CosmosConfig) {
@@ -154,6 +156,58 @@ export class CosmosClient {
     }
 
     /**
+     * Initialize the Tendermint client for block queries
+     */
+    async initTendermintClient(): Promise<void> {
+        if (!this.tmClient) {
+            this.tmClient = await Tendermint37Client.connect(this.config.rpcEndpoint);
+        }
+    }
+
+    /**
+     * Get a specific block by height
+     */
+    async getBlock(height: number) {
+        await this.initTendermintClient();
+        if (!this.tmClient) throw new Error("Tendermint client not initialized");
+
+        return await this.tmClient.block(height);
+    }
+
+    /**
+     * Get multiple blocks starting from a specific height
+     */
+    async getBlocks(startHeight: number, count: number = 10) {
+        await this.initTendermintClient();
+        if (!this.tmClient) throw new Error("Tendermint client not initialized");
+
+        const blocks = [];
+        const currentHeight = await this.getHeight();
+        const endHeight = Math.min(startHeight + count - 1, currentHeight);
+
+        for (let height = startHeight; height <= endHeight; height++) {
+            try {
+                const block = await this.tmClient.block(height);
+                blocks.push(block);
+            } catch (error) {
+                console.warn(`Failed to fetch block at height ${height}:`, error);
+                // Continue fetching other blocks even if one fails
+            }
+        }
+
+        return blocks;
+    }
+
+    /**
+     * Get the latest blocks (most recent)
+     */
+    async getLatestBlocks(count: number = 10) {
+        const currentHeight = await this.getHeight();
+        const startHeight = Math.max(1, currentHeight - count + 1);
+        return await this.getBlocks(startHeight, count);
+    }
+
+    /**
      * Disconnect clients
      */
     async disconnect(): Promise<void> {
@@ -162,6 +216,9 @@ export class CosmosClient {
         }
         if (this.signingClient) {
             this.signingClient.disconnect();
+        }
+        if (this.tmClient) {
+            this.tmClient.disconnect();
         }
     }
 }
