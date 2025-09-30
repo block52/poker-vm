@@ -13,9 +13,10 @@ class CallAction extends BaseAction implements IAction {
         // Check base conditions (hand active, player's turn, player active)
         super.verify(player);
 
-        // 1. Round state check: Cannot call during ANTE or SHOWDOWN rounds
+        // 1. Round state check: Cannot call during ANTE, SHOWDOWN, or END rounds
         this.validateNotInAnteRound();
         this.validateNotInShowdownRound();
+        this.validateNotInEndRound();
 
         const currentRound = this.game.currentRound;
         // 2. Get the bets for the current round

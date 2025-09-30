@@ -25,9 +25,10 @@ class RaiseAction extends BaseAction implements IAction {
         // 1. Perform basic validation (player active, player's turn, etc.)
         super.verify(player);
 
-        // 2. Cannot raise in the ANTE or SHOWDOWN rounds
+        // 1. Round state check: Cannot raise during ANTE, SHOWDOWN, or END rounds
         this.validateNotInAnteRound();
         this.validateNotInShowdownRound();
+        this.validateNotInEndRound();
 
         const currentRound = this.game.currentRound;
 
