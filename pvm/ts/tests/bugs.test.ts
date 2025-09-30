@@ -429,5 +429,95 @@ describe("Texas Holdem - Data driven", () => {
             // After new hand, the game should reset for heads-up play
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
         });
+
+        it("should test bug 1159 - poker solver inconsistency", () => {
+            // DISCOVERED BUG: pokersolver compare() and winners() methods are inconsistent
+
+            const PokerSolver = require("pokersolver");
+
+            // Community cards from test data issue #1159
+            const community = ["7D", "3C", "TC", "6D", "8H"];
+
+            // Player hands from test data
+            const player1Cards = ["TD", "5C"].concat(community); // Should make pair of 10's
+            const player2Cards = ["5D", "5H"].concat(community); // Should make pair of 5's
+
+            const player1Hand = PokerSolver.Hand.solve(player1Cards);
+            const player2Hand = PokerSolver.Hand.solve(player2Cards);
+
+            console.log("Player 1:", player1Hand.descr, "- cards:", player1Hand.cards.map((c: any) => c.toString()));
+            console.log("Player 2:", player2Hand.descr, "- cards:", player2Hand.cards.map((c: any) => c.toString()));
+
+            // Test the bug: compare() vs winners() inconsistency
+            const comparison = player1Hand.compare(player2Hand);
+            const winners = PokerSolver.Hand.winners([player1Hand, player2Hand]);
+
+            console.log("compare() result:", comparison, "(1=P1 wins, -1=P2 wins, 0=tie)");
+            console.log("winners() result:", winners.map((w: any) => w.descr));
+
+            const winnerIsPlayer1 = winners.includes(player1Hand);
+            const winnerIsPlayer2 = winners.includes(player2Hand);
+
+            // This is the bug: inconsistent results between methods
+            expect(player1Hand.name).toBe("Pair");
+            expect(player2Hand.name).toBe("Pair");
+
+            // Document the specific bug found
+            expect(comparison).toBe(-1);        // compare() says Player 2 wins
+            expect(winnerIsPlayer1).toBe(true); // but winners() says Player 1 wins 
+            expect(winnerIsPlayer2).toBe(false);
+
+            console.log("BUG CONFIRMED: pokersolver methods are inconsistent!");
+            console.log("This explains the wrong winner determination in issue #1159");
+        });
+
+        it("should test bug 1159 - FIXED with custom poker solver", () => {
+            // FIX: Using our custom poker solver that is consistent
+
+            // Import our custom poker solver
+            const { PokerSolver: CustomPokerSolver } = require("../src/models/pokerSolver");
+            const { Deck } = require("../src/models/deck");
+
+            // Community cards from test data issue #1159
+            const community = ["7D", "3C", "TC", "6D", "8H"];
+
+            // Player hands from test data  
+            const player1Cards = ["TD", "5C"].concat(community); // Pair of 10's
+            const player2Cards = ["5D", "5H"].concat(community); // Pair of 5's
+
+            // Convert to Block52 Card objects
+            const player1Block52Cards = player1Cards.map((mnemonic: string) => Deck.fromString(mnemonic));
+            const player2Block52Cards = player2Cards.map((mnemonic: string) => Deck.fromString(mnemonic));
+
+            // Evaluate hands with our custom solver
+            const player1Evaluation = CustomPokerSolver.findBestHand(player1Block52Cards);
+            const player2Evaluation = CustomPokerSolver.findBestHand(player2Block52Cards);
+
+            console.log("CUSTOM SOLVER RESULTS:");
+            console.log("Player 1:", player1Evaluation.description, "- rank values:", player1Evaluation.rankValues);
+            console.log("Player 2:", player2Evaluation.description, "- rank values:", player2Evaluation.rankValues);
+
+            // Test our custom solver's consistency
+            const customComparison = CustomPokerSolver.compareHands(player1Evaluation, player2Evaluation);
+            const customWinners = CustomPokerSolver.findWinners([player1Evaluation, player2Evaluation]);
+
+            console.log("Custom compare() result:", customComparison, "(1=P1 wins, -1=P2 wins, 0=tie)");
+            console.log("Custom winners() result: Player", customWinners.map((i: number) => i + 1));
+
+            // Verify both hands are pairs
+            expect(player1Evaluation.handType).toBe(1); // HandType.PAIR
+            expect(player2Evaluation.handType).toBe(1); // HandType.PAIR
+
+            // Verify our solver is consistent - both methods should agree
+            expect(customComparison).toBe(1);           // Player 1 wins (pair of 10s > pair of 5s)
+            expect(customWinners).toEqual([0]);         // Player 1 (index 0) wins
+
+            // Verify correct pair ranks
+            expect(player1Evaluation.rankValues[0]).toBe(10); // Pair of 10s
+            expect(player2Evaluation.rankValues[0]).toBe(5);  // Pair of 5s
+
+            console.log("SUCCESS: Custom poker solver is consistent!");
+            console.log("Player 1 correctly wins with pair of 10s vs pair of 5s");
+        });
     });
 });
