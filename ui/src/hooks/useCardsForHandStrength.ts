@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { usePlayerData } from "./usePlayerData";
 import { useTableData } from "./useTableData";
-import { Hand } from "pokersolver";
+import { PokerSolver, PokerGameIntegration, Deck } from "@bitcoinbrisbane/block52";
 
 export interface HandStrength {
   name: string;
@@ -21,15 +21,17 @@ export const useCardsForHandStrength = (seatIndex?: number): HandStrength | null
 
     // Combine hole cards and community cards
     const allCards = [...holeCards, ...tableDataCommunityCards];
-    
+
     try {
-      // Solve the hand using pokersolver
-      const hand = Hand.solve(allCards);
-      
+      // Convert string cards to Card objects and evaluate using our poker solver
+      const cardObjects = allCards.map(cardStr => Deck.fromString(cardStr));
+      const evaluation = PokerSolver.findBestHand(cardObjects);
+      const description = PokerGameIntegration.formatHandDescription(evaluation);
+
       return {
-        name: hand.name,
-        descr: hand.descr,
-        score: hand.rank
+        name: description,
+        descr: description,
+        score: evaluation.handType
       };
     } catch (error) {
       console.error("Error calculating hand strength:", error);

@@ -22,7 +22,7 @@ abstract class BaseAction {
 
         // 3. Player status check: Player must be active (not folded/all-in)
         const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
+        if (playerStatus !== PlayerStatus.ACTIVE) throw new Error(`Only active player can ${this.type}.`);
 
         return undefined;
     }
@@ -46,7 +46,7 @@ abstract class BaseAction {
 
     protected verifyPlayerIsActive(player: Player): void {
         const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE && playerStatus !== PlayerStatus.NOT_ACTED) throw new Error(`Only active player can ${this.type}.`);
+        if (playerStatus !== PlayerStatus.ACTIVE) throw new Error(`Only active player can ${this.type}.`);
     }
 
     protected getBetManager(includeBlinds: boolean = false): BetManager {

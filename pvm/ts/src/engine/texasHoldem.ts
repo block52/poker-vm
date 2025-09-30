@@ -12,7 +12,10 @@ import {
     PlayerStatus,
     TexasHoldemRound,
     TexasHoldemStateDTO,
-    WinnerDTO
+    WinnerDTO,
+    PokerSolver,
+    PokerGameIntegration,
+    Deck as SDKDeck
 } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
@@ -37,9 +40,6 @@ import {
 } from "./actions";
 
 import JoinActionSitAndGo from "./actions/sitAndGo/joinAction";
-
-// @ts-ignore
-import PokerSolver from "pokersolver";
 import { IAction, IDealerGameInterface, IDealerPositionManager, IPoker, IUpdate, Result, Turn, TurnWithSeat, Winner } from "./types";
 import { ethers } from "ethers";
 import { DealerPositionManager } from "./managers/dealerManager";
@@ -727,7 +727,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 continue;
             }
 
-            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
+            if (player && player.status === PlayerStatus.ACTIVE) {
                 return player;
             }
         }
@@ -741,7 +741,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 continue;
             }
 
-            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
+            if (player && player.status === PlayerStatus.ACTIVE) {
                 return player;
             }
         }
@@ -762,7 +762,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             // If small blind hasn't been posted yet, small blind player should act
             if (!hasSmallBlind) {
                 const smallBlindPlayer = this.getPlayerAtSeat(this.smallBlindPosition);
-                if (smallBlindPlayer && (smallBlindPlayer.status === PlayerStatus.ACTIVE || smallBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                if (smallBlindPlayer && smallBlindPlayer.status === PlayerStatus.ACTIVE) {
                     return smallBlindPlayer;
                 }
             }
@@ -770,7 +770,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             // If small blind posted but big blind hasn't, big blind player should act
             if (hasSmallBlind && !hasBigBlind) {
                 const bigBlindPlayer = this.getPlayerAtSeat(this.bigBlindPosition);
-                if (bigBlindPlayer && (bigBlindPlayer.status === PlayerStatus.ACTIVE || bigBlindPlayer.status === PlayerStatus.NOT_ACTED)) {
+                if (bigBlindPlayer && bigBlindPlayer.status === PlayerStatus.ACTIVE) {
                     return bigBlindPlayer;
                 }
             }
@@ -783,7 +783,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Search from start position to end
         for (let i = start; i <= this.maxPlayers; i++) {
             const player = this.getPlayerAtSeat(i);
-            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
+            if (player && player.status === PlayerStatus.ACTIVE) {
                 return player;
             }
         }
@@ -791,7 +791,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Wrap around and search from beginning to start
         for (let i = 1; i < start; i++) {
             const player = this.getPlayerAtSeat(i);
-            if (player && (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED)) {
+            if (player && player.status === PlayerStatus.ACTIVE) {
                 return player;
             }
         }
@@ -1308,21 +1308,106 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        // const hands = players.map(p => PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic)));
-        // const communityCards: string[] = this._communityCards.map(c => c.mnemonic);
-        const hands = players.map(p => PokerSolver.Hand.solve(this.getCommunityCards().concat(p.holeCards!).map(c => c.mnemonic)));
-        const communityCards: string[] = this.getCommunityCards().map(c => c.mnemonic);
+        // Check if we have enough community cards for evaluation (need 5 for Texas Hold'em)
+        const communityCards = this.getCommunityCards();
+        if (communityCards.length < 5) {
+            // Use the actual community cards from _communityCards if available
+            const actualCommunityCards = this._communityCards.length >= 5 ?
+                this._communityCards.slice(0, 5) :
+                this._communityCards2.slice(0, 5);
 
-        const heroCards = cards.concat(communityCards);
-        const heroSolution = PokerSolver.Hand.solve(heroCards);
+            const playerCards = players.map(p =>
+                actualCommunityCards.concat(p.holeCards!)
+            );
 
-        // Check to see if hero's hand is already in the hands
-        if (!hands.some(hand => hand.cards.join(",") === heroCards.join(","))) {
-            hands.push(heroSolution);
+            const heroCards = cards.map(cardStr => SDKDeck.fromString(cardStr)).concat(actualCommunityCards);
+
+            // Ensure we have exactly 7 cards for hand evaluation
+            if (heroCards.length !== 7) {
+                return false;
+            }
+
+            // Prepare all player hands for comparison
+            const allPlayerHands = playerCards
+                .filter(cards => cards.length === 7)
+                .map(cards => cards.map(c => c.mnemonic));
+
+            // Find the hero player in the current players list
+            const heroHandStr = cards.join(',');
+            let heroPlayerIndex = -1;
+
+            for (let i = 0; i < players.length; i++) {
+                const playerHandStr = players[i].holeCards?.map(c => c.mnemonic).join(',');
+                if (playerHandStr === heroHandStr) {
+                    heroPlayerIndex = i;
+                    break;
+                }
+            }
+
+            // If hero is one of the current players, just use that index
+            if (heroPlayerIndex >= 0) {
+                const showdownResult = PokerGameIntegration.exampleShowdown(allPlayerHands);
+                return showdownResult.winners.includes(heroPlayerIndex);
+            } else {
+                // Hero is not currently in the game, compare as additional hand
+                const heroHand = heroCards.map(c => c.mnemonic);
+                const allHands = [...allPlayerHands, heroHand];
+                const showdownResult = PokerGameIntegration.exampleShowdown(allHands);
+                return showdownResult.winners.includes(allHands.length - 1);
+            }
+        }        // Convert strings to Card objects using Deck.fromString
+        const playerCards = players.map(p =>
+            communityCards.concat(p.holeCards!)
+        );
+
+        const heroCards = cards.map(cardStr => SDKDeck.fromString(cardStr)).concat(communityCards);
+
+        // Ensure we have exactly 7 cards for hand evaluation
+        if (heroCards.length !== 7) {
+            return false;
         }
 
-        const winningHand = PokerSolver.Hand.winners(hands);
-        return winningHand.includes(heroSolution);
+        const heroEvaluation = PokerSolver.findBestHand(heroCards);
+
+        // Evaluate all player hands - ensure each has exactly 7 cards
+        const playerEvaluations = playerCards
+            .filter(cards => cards.length === 7)
+            .map(cards => PokerSolver.findBestHand(cards));
+
+        // Find winners using PokerGameIntegration
+        const allPlayerHands = playerCards
+            .filter(cards => cards.length === 7)
+            .map(cards => cards.map(c => c.mnemonic));
+
+        // Find the hero player in the current players list
+        const heroHandStr = cards.join(',');
+        let heroPlayerIndex = -1;
+
+        console.log(`Debug: Hero cards: ${heroHandStr}`);
+
+        for (let i = 0; i < players.length; i++) {
+            const playerHandStr = players[i].holeCards?.map(c => c.mnemonic).join(',');
+            console.log(`Debug: Player ${i} cards: ${playerHandStr}`);
+            if (playerHandStr === heroHandStr) {
+                heroPlayerIndex = i;
+                break;
+            }
+        }
+
+        console.log(`Debug: Hero player index: ${heroPlayerIndex}`);
+
+        // If hero is one of the current players, just use that index
+        if (heroPlayerIndex >= 0) {
+            const showdownResult = PokerGameIntegration.exampleShowdown(allPlayerHands);
+            console.log(`Debug: Showdown result: ${JSON.stringify(showdownResult.winners)}, checking index ${heroPlayerIndex}`);
+            return showdownResult.winners.includes(heroPlayerIndex);
+        } else {
+            // Hero is not currently in the game, compare as additional hand
+            const heroHand = heroCards.map(c => c.mnemonic);
+            const allHands = [...allPlayerHands, heroHand];
+            const showdownResult = PokerGameIntegration.exampleShowdown(allHands);
+            return showdownResult.winners.includes(allHands.length - 1);
+        }
     }
 
     /**
@@ -1331,17 +1416,15 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private calculateWinner(): void {
 
         const livePlayers = this.findLivePlayers();
-        // const hands = new Map<string, any>(livePlayers.map(p => [p.id, PokerSolver.Hand.solve(this._communityCards.concat(p.holeCards!).map(c => c.mnemonic))]));
-        const hands = new Map<string, any>(livePlayers.map(p => [p.id, PokerSolver.Hand.solve(this.getCommunityCards().concat(p.holeCards!).map(c => c.mnemonic))]));
 
         // If only one player is active, they win the pot
         if (livePlayers.length === 1) {
-            const hand = hands.get(livePlayers[0].id);
+            // Winner by default - no hand evaluation needed
             const _winner: Winner = {
                 amount: this.getPot(),
                 cards: livePlayers[0].holeCards?.map(card => card.mnemonic),
-                name: hand.name,
-                description: hand.descr // Roll these back when description is available from PokerSolver
+                name: "Winner by default (others folded)",
+                description: "Winner by default (others folded)"
             };
 
             this._winners = new Map<string, Winner>();
@@ -1360,20 +1443,68 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const showingPlayers = livePlayers.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
         const pot: bigint = this.getPot();
 
-        const winningHands = PokerSolver.Hand.winners(showingPlayers.map(a => hands.get(a.id)));
+        // Check if we have enough community cards for proper evaluation
+        const communityCards = this.getCommunityCards();
+        if (communityCards.length < 5) {
+            // When showdown happens early (like preflop all-in), we need all 5 community cards
+            // Deal the remaining community cards for proper hand evaluation
+            console.log(`Dealing remaining community cards for showdown (currently have ${communityCards.length})`);
 
-        // Convert winners count to BigInt for division
-        const winnersCount = BigInt(winningHands.length);
+            // Use the actual community cards from _communityCards if available, fall back to _communityCards2  
+            const actualCommunityCards = this._communityCards.length >= 5 ?
+                this._communityCards.slice(0, 5) :
+                this._communityCards2.slice(0, 5);
 
-        for (const player of showingPlayers) {
-            if (winningHands.includes(hands.get(player.id))) {
-                const hand = hands.get(player.id);
+            // Use our PokerGameIntegration for showdown evaluation
+            const playerHands = showingPlayers.map(p =>
+                actualCommunityCards.concat(p.holeCards!).map(c => c.mnemonic)
+            );
+
+            const showdownResult = PokerGameIntegration.exampleShowdown(playerHands);
+            const winnersCount = BigInt(showdownResult.winners.length);
+
+            // Award prizes to winners
+            for (let i = 0; i < showingPlayers.length; i++) {
+                const player = showingPlayers[i];
+                const result = showdownResult.results[i];
+
+                if (result.isWinner) {
+                    const winAmount = pot / winnersCount;
+                    const _winner: Winner = {
+                        amount: winAmount,
+                        cards: player.holeCards?.map(card => card.mnemonic),
+                        name: result.handDescription,
+                        description: result.handDescription
+                    };
+
+                    this._winners.set(player.id, _winner);
+                    player.chips += winAmount;
+                }
+            }
+            return;
+        }
+
+        // Normal case: we have all 5 community cards
+        // Use our PokerGameIntegration for showdown evaluation  
+        const playerHands = showingPlayers.map(p =>
+            communityCards.concat(p.holeCards!).map(c => c.mnemonic)
+        );
+
+        const showdownResult = PokerGameIntegration.exampleShowdown(playerHands);
+        const winnersCount = BigInt(showdownResult.winners.length);
+
+        // Award prizes to winners
+        for (let i = 0; i < showingPlayers.length; i++) {
+            const player = showingPlayers[i];
+            const result = showdownResult.results[i];
+
+            if (result.isWinner) {
                 const winAmount = pot / winnersCount;
                 const _winner: Winner = {
                     amount: winAmount,
                     cards: player.holeCards?.map(card => card.mnemonic),
-                    name: hand.name,
-                    description: hand.descr
+                    name: result.handDescription,
+                    description: result.handDescription
                 };
                 player.chips += winAmount;
                 this._winners.set(player.address, _winner);
@@ -1391,28 +1522,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) {
             for (const player of players) {
                 if (player.chips === 0n) {
-
-                    const handArray = Array.from(hands.entries()).map(([playerId, hand]) => ({
-                        playerId,
-                        hand
-                    }));
-
-                    // Sort by rank (higher rank = better hand) and then by comparison
-                    handArray.sort((a, b) => {
-                        if (a.hand.rank !== b.hand.rank) {
-                            return b.hand.rank - a.hand.rank; // Higher rank first
-                        }
-                        return a.hand.compare(b.hand); // If same rank, use compare
-                    });
-
-                    // console.table(handArray);
-
-                    // // Find the position (0-based index) of a specific player
-                    // function getPlayerPosition(playerId: string): number {
-                    //     return handArray.findIndex(player => player.playerId === playerId);
-                    // }
-
-
                     // The player is now BUSTED after the pots awarded.
                     const place = this._gameOptions.minPlayers - this._results.length;
 
@@ -1420,11 +1529,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
                     const payout = payoutManager.calculatePayout(place);
 
-
                     // Need to do transfer back to player here
                     console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
                     this._results.push({ place, playerId: player.id, payout });
-
 
                     player.updateStatus(PlayerStatus.BUSTED);
                 }

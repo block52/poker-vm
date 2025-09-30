@@ -1,6 +1,6 @@
 {
     "name": "@bitcoinbrisbane/block52",
-    "version": "1.2.15",
+    "version": "1.3.1",
     "author": "@bitcoinbrisbane",
     "license": "MIT",
     "description": "SDK for interacting with the Block52 Node",
@@ -21,15 +21,22 @@
         "bigunit": "^1.2.5",
         "dotenv": "^16.5.0",
         "ethers": "^6.14.1",
-        "jest": "^30.1.3"
+        "jest": "^30.2.0"
     },
     "devDependencies": {
         "@types/jest": "^30.0.0",
         "@types/node": "^22.7.6",
-        "ts-jest": "^29.4.1",
+        "ts-jest": "^29.4.4",
         "typescript": "^5.9.2"
     },
     "peerDependencies": {
         "axios": "^1.7.7"
+    },
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "testMatch": [
+            "**/tests/**/*.test.ts"
+        ]
     }
 }
