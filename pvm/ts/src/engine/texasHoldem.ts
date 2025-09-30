@@ -1308,23 +1308,16 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        console.log(`findWinners called with hero cards: ${cards.join(', ')}`);
-        console.log(`Players in hand: ${players.length}`);
-        players.forEach((p, i) => {
-            console.log(`Player ${i + 1}: ${p.address} - status: ${p.status} - cards: ${p.holeCards?.map(c => c.mnemonic).join(', ') || 'none'}`);
-        });
-
         // Check if we have enough community cards for evaluation (need 5 for Texas Hold'em)
         const communityCards = this.getCommunityCards();
-        console.log(`Community cards (${communityCards.length}): ${communityCards.map(c => c.mnemonic).join(', ')}`);
-
         if (communityCards.length < 5) {
+            console.log(`FINDWINNERS: Taking early path - community cards < 5`);
             // Use the actual community cards from _communityCards if available
             const actualCommunityCards = this._communityCards.length >= 5 ?
                 this._communityCards.slice(0, 5) :
                 this._communityCards2.slice(0, 5);
 
-            console.log(`Using actual community cards (${actualCommunityCards.length}): ${actualCommunityCards.map(c => c.mnemonic).join(', ')}`);
+            console.log(`FINDWINNERS: Using ${actualCommunityCards.length} community cards`);
 
             const playerCards = players.map(p =>
                 actualCommunityCards.concat(p.holeCards!)
@@ -1334,23 +1327,54 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
             // Ensure we have exactly 7 cards for hand evaluation
             if (heroCards.length !== 7) {
-                console.log(`Hero hand has ${heroCards.length} cards, expected 7`);
+                console.log(`FINDWINNERS: Hero has ${heroCards.length} cards, not 7`);
                 return false;
-            }
-
-            // Find winners using PokerGameIntegration
+            }            // Prepare all player hands for comparison
             const allPlayerHands = playerCards
                 .filter(cards => cards.length === 7)
                 .map(cards => cards.map(c => c.mnemonic));
-            const heroHand = heroCards.map(c => c.mnemonic);
-            const allHands = [...allPlayerHands, heroHand];
 
-            console.log(`All hands for evaluation: ${JSON.stringify(allHands)}`);
-            const showdownResult = PokerGameIntegration.exampleShowdown(allHands);
-            console.log(`Showdown result: winners=${showdownResult.winners}, hero index=${allHands.length - 1}`);
+            console.log(`FINDWINNERS: All player hands: ${JSON.stringify(allPlayerHands)}`);
 
-            // Check if hero (last player in the array) is among the winners
-            return showdownResult.winners.includes(allHands.length - 1);
+            // Find the hero player in the current players list
+            const heroHandStr = cards.join(',');
+            let heroPlayerIndex = -1;
+
+            console.log(`FINDWINNERS: Looking for hero: ${heroHandStr}`);
+
+            for (let i = 0; i < players.length; i++) {
+                const playerHandStr = players[i].holeCards?.map(c => c.mnemonic).join(',');
+                console.log(`FINDWINNERS: Player ${i} has: ${playerHandStr}`);
+                if (playerHandStr === heroHandStr) {
+                    heroPlayerIndex = i;
+                    break;
+                }
+            }
+
+            console.log(`FINDWINNERS: Hero player index found: ${heroPlayerIndex}`);
+
+            // If hero is one of the current players, just use that index
+            if (heroPlayerIndex >= 0) {
+                console.log(`FINDWINNERS: Hero is player ${heroPlayerIndex}, checking if they win`);
+
+                // Debug the hands being evaluated
+                console.log(`FINDWINNERS: Hand 0: ${allPlayerHands[0].join(',')}`);
+                console.log(`FINDWINNERS: Hand 1: ${allPlayerHands[1].join(',')}`);
+
+                const showdownResult = PokerGameIntegration.exampleShowdown(allPlayerHands);
+                console.log(`FINDWINNERS: Showdown winners: ${JSON.stringify(showdownResult.winners)}`);
+                console.log(`FINDWINNERS: Showdown results: ${JSON.stringify(showdownResult.results)}`);
+
+                const result = showdownResult.winners.includes(heroPlayerIndex);
+                console.log(`FINDWINNERS: Hero wins? ${result}`);
+                return result;
+            } else {
+                // Hero is not currently in the game, compare as additional hand
+                const heroHand = heroCards.map(c => c.mnemonic);
+                const allHands = [...allPlayerHands, heroHand];
+                const showdownResult = PokerGameIntegration.exampleShowdown(allHands);
+                return showdownResult.winners.includes(allHands.length - 1);
+            }
         }        // Convert strings to Card objects using Deck.fromString
         const playerCards = players.map(p =>
             communityCards.concat(p.holeCards!)
@@ -1374,13 +1398,36 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const allPlayerHands = playerCards
             .filter(cards => cards.length === 7)
             .map(cards => cards.map(c => c.mnemonic));
-        const heroHand = heroCards.map(c => c.mnemonic);
-        const allHands = [...allPlayerHands, heroHand];
 
-        const showdownResult = PokerGameIntegration.exampleShowdown(allHands);
+        // Find the hero player in the current players list
+        const heroHandStr = cards.join(',');
+        let heroPlayerIndex = -1;
 
-        // Check if hero (last player in the array) is among the winners
-        return showdownResult.winners.includes(allHands.length - 1);
+        console.log(`Debug: Hero cards: ${heroHandStr}`);
+
+        for (let i = 0; i < players.length; i++) {
+            const playerHandStr = players[i].holeCards?.map(c => c.mnemonic).join(',');
+            console.log(`Debug: Player ${i} cards: ${playerHandStr}`);
+            if (playerHandStr === heroHandStr) {
+                heroPlayerIndex = i;
+                break;
+            }
+        }
+
+        console.log(`Debug: Hero player index: ${heroPlayerIndex}`);
+
+        // If hero is one of the current players, just use that index
+        if (heroPlayerIndex >= 0) {
+            const showdownResult = PokerGameIntegration.exampleShowdown(allPlayerHands);
+            console.log(`Debug: Showdown result: ${JSON.stringify(showdownResult.winners)}, checking index ${heroPlayerIndex}`);
+            return showdownResult.winners.includes(heroPlayerIndex);
+        } else {
+            // Hero is not currently in the game, compare as additional hand
+            const heroHand = heroCards.map(c => c.mnemonic);
+            const allHands = [...allPlayerHands, heroHand];
+            const showdownResult = PokerGameIntegration.exampleShowdown(allHands);
+            return showdownResult.winners.includes(allHands.length - 1);
+        }
     }
 
     /**
