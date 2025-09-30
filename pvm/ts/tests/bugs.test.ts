@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, Deck } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS, TWO_TOKENS } from "../src/engine/testConstants";
 import {
@@ -430,53 +430,53 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
         });
 
-        it("should test bug 1159 - poker solver inconsistency", () => {
+        it.skip("should test bug 1159 - poker solver inconsistency", () => {
             // DISCOVERED BUG: pokersolver compare() and winners() methods are inconsistent
+            // This test demonstrates the original bug and is skipped since we now use our custom solver
 
-            const PokerSolver = require("pokersolver");
+            // const PokerSolver = require("pokersolver");
 
             // Community cards from test data issue #1159
-            const community = ["7D", "3C", "TC", "6D", "8H"];
+            // const community = ["7D", "3C", "TC", "6D", "8H"];
 
             // Player hands from test data
-            const player1Cards = ["TD", "5C"].concat(community); // Should make pair of 10's
-            const player2Cards = ["5D", "5H"].concat(community); // Should make pair of 5's
+            // const player1Cards = ["TD", "5C"].concat(community); // Should make pair of 10's
+            // const player2Cards = ["5D", "5H"].concat(community); // Should make pair of 5's
 
-            const player1Hand = PokerSolver.Hand.solve(player1Cards);
-            const player2Hand = PokerSolver.Hand.solve(player2Cards);
+            // const player1Hand = PokerSolver.Hand.solve(player1Cards);
+            // const player2Hand = PokerSolver.Hand.solve(player2Cards);
 
-            console.log("Player 1:", player1Hand.descr, "- cards:", player1Hand.cards.map((c: any) => c.toString()));
-            console.log("Player 2:", player2Hand.descr, "- cards:", player2Hand.cards.map((c: any) => c.toString()));
+            // console.log("Player 1:", player1Hand.descr, "- cards:", player1Hand.cards.map((c: any) => c.toString()));
+            // console.log("Player 2:", player2Hand.descr, "- cards:", player2Hand.cards.map((c: any) => c.toString()));
 
             // Test the bug: compare() vs winners() inconsistency
-            const comparison = player1Hand.compare(player2Hand);
-            const winners = PokerSolver.Hand.winners([player1Hand, player2Hand]);
+            // const comparison = player1Hand.compare(player2Hand);
+            // const winners = PokerSolver.Hand.winners([player1Hand, player2Hand]);
 
-            console.log("compare() result:", comparison, "(1=P1 wins, -1=P2 wins, 0=tie)");
-            console.log("winners() result:", winners.map((w: any) => w.descr));
+            // console.log("compare() result:", comparison, "(1=P1 wins, -1=P2 wins, 0=tie)");
+            // console.log("winners() result:", winners.map((w: any) => w.descr));
 
-            const winnerIsPlayer1 = winners.includes(player1Hand);
-            const winnerIsPlayer2 = winners.includes(player2Hand);
+            // const winnerIsPlayer1 = winners.includes(player1Hand);
+            // const winnerIsPlayer2 = winners.includes(player2Hand);
 
             // This is the bug: inconsistent results between methods
-            expect(player1Hand.name).toBe("Pair");
-            expect(player2Hand.name).toBe("Pair");
+            // expect(player1Hand.name).toBe("Pair");
+            // expect(player2Hand.name).toBe("Pair");
 
             // Document the specific bug found
-            expect(comparison).toBe(-1);        // compare() says Player 2 wins
-            expect(winnerIsPlayer1).toBe(true); // but winners() says Player 1 wins 
-            expect(winnerIsPlayer2).toBe(false);
+            // expect(comparison).toBe(-1);        // compare() says Player 2 wins
+            // expect(winnerIsPlayer1).toBe(true); // but winners() says Player 1 wins 
+            // expect(winnerIsPlayer2).toBe(false);
 
-            console.log("BUG CONFIRMED: pokersolver methods are inconsistent!");
-            console.log("This explains the wrong winner determination in issue #1159");
+            // console.log("BUG CONFIRMED: pokersolver methods are inconsistent!");
+            // console.log("This explains the wrong winner determination in issue #1159");
         });
 
         it("should test bug 1159 - FIXED with custom poker solver", () => {
             // FIX: Using our custom poker solver that is consistent
 
-            // Import our custom poker solver
-            const { PokerSolver: CustomPokerSolver } = require("../src/models/pokerSolver");
-            const { Deck } = require("../src/models/deck");
+            // Import our custom poker solver from published SDK
+            const { PokerSolver: CustomPokerSolver } = require("@bitcoinbrisbane/block52");
 
             // Community cards from test data issue #1159
             const community = ["7D", "3C", "TC", "6D", "8H"];

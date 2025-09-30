@@ -129,15 +129,15 @@ describe("Texas Holdem Game - Next seat", () => {
             expect(nextPlayer?.address).toEqual("0x3333333333333333333333333333333333333333");
         });
 
-        it.skip("should recognize players with NOT_ACTED status", () => {
+        it.skip("should recognize players with ACTIVE status", () => {
             // Add three players
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1"); // seat 1
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2"); // seat 2
             game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3"); // seat 3
 
-            // Set player 2 (seat 2) as NOT_ACTED
+            // Set player 2 (seat 2) as ACTIVE
             const player2 = game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-            player2.updateStatus(PlayerStatus.NOT_ACTED);
+            player2.updateStatus(PlayerStatus.ACTIVE);
 
             // Post blinds
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 4);
@@ -147,7 +147,7 @@ describe("Texas Holdem Game - Next seat", () => {
             const gameAsAny = game as any;
             gameAsAny._lastActedSeat = 3;
 
-            // Next player should be seat 2 (NOT_ACTED) even though we've passed it
+            // Next player should be seat 2 (ACTIVE) even though we've passed it
             const nextPlayer = game.getNextPlayerToAct();
             expect(nextPlayer?.address).toEqual("0x980b8D8A16f5891F41871d878a479d81Da52334c");
         });

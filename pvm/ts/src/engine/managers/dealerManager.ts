@@ -35,7 +35,7 @@ export class DealerPositionManager implements IDealerPositionManager {
         // Fallback: if no next player found, start from first active player
         const firstActivePlayer = activePlayers[0];
         const fallbackSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-        return fallbackSeat;``
+        return fallbackSeat; ``
     }
 
     public getPosition(name: string): number {
@@ -201,7 +201,7 @@ export class DealerPositionManager implements IDealerPositionManager {
      * Helper method to check if a player is active
      */
     private isPlayerActive(player: Player): boolean {
-        return (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.NOT_ACTED || player.status === PlayerStatus.SHOWING) && player.chips > 0;
+        return (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.SHOWING) && player.chips > 0;
     }
 
     private isPlayerSittingIn(player: Player): boolean {

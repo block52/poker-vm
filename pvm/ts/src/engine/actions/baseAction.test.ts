@@ -98,8 +98,8 @@ describe("BaseAction", () => {
             expect(() => action.verify(player)).toThrow("Only active player can check.");
         });
 
-        it("should allow NOT_ACTED players to act", () => {
-            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.NOT_ACTED);
+        it("should allow ACTIVE players to act", () => {
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
             expect(() => action.verify(player)).not.toThrow();
         });
@@ -227,8 +227,8 @@ describe("BaseAction", () => {
                 expect(() => action.testVerifyPlayerIsActive(player)).not.toThrow();
             });
 
-            it("should not throw error for NOT_ACTED player", () => {
-                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.NOT_ACTED);
+            it("should not throw error for ACTIVE player", () => {
+                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
                 expect(() => action.testVerifyPlayerIsActive(player)).not.toThrow();
             });
 
