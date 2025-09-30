@@ -13,7 +13,7 @@ describe("hasRoundEnded", () => {
     beforeEach(() => {
         // Custom mnemonic where Player 1 has AA and Player 2 has KK
         // This ensures Player 1 wins and Player 2 can muck after Player 1 shows
-        const customMnemonic = 
+        const customMnemonic =
             "AS-KC-AH-KH-2S-7C-9H-TD-JD-" +                    // Player cards + community
             "2C-3C-4C-5C-6C-8C-9C-TC-JC-QC-AC-" +             // Clubs (avoiding duplicates)
             "2D-3D-4D-5D-6D-7D-8D-9D-QD-KD-AD-" +             // Diamonds
