@@ -7,6 +7,7 @@ import { IGameStateDocument } from "../models/interfaces";
 export interface IAccountManagement {
     createAccount(privateKey: string): Promise<Account>;
     getAccount(address: string): Promise<Account>;
+    getBalance(address: string): Promise<bigint>;
     incrementBalance(address: string, amount: bigint): Promise<void>;
     decrementBalance(address: string, amount: bigint): Promise<void>;
     applyTransaction(tx: Transaction): Promise<void>;
