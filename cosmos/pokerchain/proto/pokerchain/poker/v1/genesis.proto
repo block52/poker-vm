@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package pokerchain.poker.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "pokerchain/poker/v1/action_history.proto";
+import "pokerchain/poker/v1/params.proto";
+import "pokerchain/poker/v1/player_state.proto";
+
+option go_package = "github.com/yourusername/pokerchain/x/poker/types";
+
+// GenesisState defines the poker module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  repeated PlayerState player_state_map = 2 [(gogoproto.nullable) = false];
+  repeated ActionHistory action_history_map = 3 [(gogoproto.nullable) = false];
+}
