@@ -11,27 +11,28 @@ describe("hasRoundEnded", () => {
     const PLAYER_2 = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
 
     beforeEach(() => {
-        // gameOptions = {
-        //     minBuyIn: 100n * ONE_TOKEN,
-        //     maxBuyIn: 1000n * ONE_TOKEN,
-        //     maxPlayers: 9,
-        //     minPlayers: 2,
-        //     smallBlind: ONE_TOKEN,
-        //     bigBlind: TWO_TOKENS,
-        //     timeout: 30000
-        // };
+        // Custom mnemonic where Player 1 has AA and Player 2 has KK
+        // This ensures Player 1 wins and Player 2 can muck after Player 1 shows
+        const customMnemonic = 
+            "AS-KC-AH-KH-2S-7C-9H-TD-JD-" +                    // Player cards + community
+            "2C-3C-4C-5C-6C-8C-9C-TC-JC-QC-AC-" +             // Clubs (avoiding duplicates)
+            "2D-3D-4D-5D-6D-7D-8D-9D-QD-KD-AD-" +             // Diamonds
+            "2H-3H-4H-5H-6H-7H-8H-TH-JH-QH-" +                // Hearts  
+            "3S-4S-5S-6S-7S-8S-9S-TS-JS-QS-KS";               // Spades
 
-        // game = new TexasHoldemGame(
-        //     ethers.ZeroAddress,
-        //     gameOptions,
-        //     1, // dealer position
-        //     [], // previous actions
-        //     1, // hand number
-        //     0, // action count
-        //     TexasHoldemRound.ANTE
-        // );
-
-        game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+        game = new TexasHoldemGame(
+            ethers.ZeroAddress,
+            gameOptions,
+            9, // dealer
+            [],
+            1, // handNumber
+            0, // actionCount
+            TexasHoldemRound.ANTE,
+            [], // communityCards
+            [0n], // pot
+            new Map(),
+            customMnemonic
+        );
 
         // Add two players
         const player1 = new Player(PLAYER_1, undefined, 100n * ONE_TOKEN, undefined, PlayerStatus.ACTIVE);
