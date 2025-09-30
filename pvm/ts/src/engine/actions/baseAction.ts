@@ -77,6 +77,12 @@ abstract class BaseAction {
         }
     }
 
+    protected validateNotInEndRound(): void {
+        if (this.game.currentRound === TexasHoldemRound.END) {
+            throw new Error(`Cannot ${this.type.toLowerCase()} in the end round.`);
+        }
+    }
+
     protected validateInSpecificRound(requiredRound: TexasHoldemRound): void {
         if (this.game.currentRound !== requiredRound) {
             throw new Error(`${this.type} can only be performed during ${requiredRound} round.`);

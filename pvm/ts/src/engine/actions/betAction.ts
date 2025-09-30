@@ -2,7 +2,6 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range } from "../types";
-import { BetManager } from "../managers/betManager";
 
 class BetAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -13,9 +12,10 @@ class BetAction extends BaseAction implements IAction {
         // Check base conditions (hand active, player's turn, player active)
         super.verify(player);
 
-        // 1. Round state check: Cannot bet during ANTE or SHOWDOWN rounds
+        // 1. Round state check: Cannot bet during ANTE, SHOWDOWN, or END rounds
         this.validateNotInAnteRound();
         this.validateNotInShowdownRound();
+        this.validateNotInEndRound();
 
         const currentRound = this.game.currentRound;
 

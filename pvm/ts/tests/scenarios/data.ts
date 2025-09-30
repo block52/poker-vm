@@ -4932,3 +4932,100 @@ export const test_1137 = {
         "signature": "0x44a2eeaf6e0b9e7cd25fdabac75fe6564ec5f76284594ac3425a1c12d820e0221a7536df71add5ef4fcc24b84a6983cdfbba83db430b944a73f4d5e710243f381c"
     }
 }
+
+export const test_1158 = {
+    "id": "1158",
+    "result": {
+        "data": {
+            "type": "tournament",
+            "address": "0x22dfa2150160484310c5163f280f49e23b8fd34326",
+            "gameOptions": {
+                "minBuyIn": "10000000000000000000000",
+                "maxBuyIn": "10000000000000000000000",
+                "maxPlayers": 9,
+                "minPlayers": 2,
+                "smallBlind": "100000000000000000000",
+                "bigBlind": "200000000000000000000000",
+                "timeout": 300,
+                "type": "tournament"
+            },
+            "smallBlindPosition": 1,
+            "bigBlindPosition": 2,
+            "dealer": 9,
+            "players": [
+                {
+                    "address": "0xWINNER_ADDRESS_HERE",
+                    "seat": 1,
+                    "stack": "40000000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "deck": "AS-KH-AD-KS-2C-3H-4D-5S-6C-7H-8D-9S-TC-JH-QD-2H-3S-4C-5H-6D-7S-8C-9H-TD-JS-QC-AH-2D-3C-4S-5C-6H-7D-8S-9C-TH-JD-QS-AC-2S-3D-4H-5D-6S-7C-8H-9D-TC-JS-QH-AD-KD-KC",
+                    "holeCards": [],
+                    "status": "active",
+                    "legalActions": [
+                        {
+                            "action": "new-hand",
+                            "min": "0",
+                            "max": "0",
+                            "index": 1
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xBUSTED_PLAYER_1",
+                    "seat": 2,
+                    "stack": "0",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "deck": "",
+                    "holeCards": [],
+                    "status": "busted",
+                    "legalActions": [],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xBUSTED_PLAYER_2",
+                    "seat": 3,
+                    "stack": "0",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "deck": "",
+                    "holeCards": [],
+                    "status": "busted",
+                    "legalActions": [],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ],
+            "communityCards": [],
+            "pots": ["0"],
+            "lastActedSeat": 0,
+            "currentPlayerId": "0x0000000000000000000000000000000000000000",
+            "handNumber": 15,
+            "actionCount": 100,
+            "previousActions": [],
+            "round": "end",
+            "winners": [
+                {
+                    "address": "0xWINNER_ADDRESS_HERE",
+                    "amount": "40000000000000000000000",
+                    "cards": [],
+                    "name": "Tournament Winner",
+                    "description": "Last Player Standing"
+                }
+            ],
+            "results": [],
+            "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "signature": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    }
+}
