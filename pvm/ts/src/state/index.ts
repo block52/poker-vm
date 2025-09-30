@@ -5,10 +5,17 @@ import { getTransactionInstance } from "./mongodb/transactionManagement";
 import { MongoDBBlockchainManagement } from "./mongodb/blockchainManagement";
 import { getRedisAccountManagementInstance } from "./redis/redisAccountManagement";
 import { getMongoAccountManagementInstance } from "./mongodb/accountManagement";
+import { getCosmosAccountManagementInstance } from "./cosmos/accountManagement";
+import { getCosmosBlockchainManagementInstance } from "./cosmos/blockchainManagement";
+import { getCosmosGameManagementInstance } from "./cosmos/gameManagement";
 
 export const getBlockchainInstance = (): IBlockchainManagement => {
     const connString = process.env.DB_URL || "redis://localhost:6379";
     const dbType = connString.split(":")[0];
+
+    if (dbType === "cosmos") {
+        return getCosmosBlockchainManagementInstance();
+    }
 
     if (dbType === "redis") {
         return getRedisBlockchainManagementInstance(connString);
@@ -29,6 +36,10 @@ export const getAccountManagementInstance = (): IAccountManagement => {
     const connString = process.env.DB_URL || "redis://localhost:6379";
     const dbType = connString.split(":")[0];
 
+    if (dbType === "cosmos") {
+        return getCosmosAccountManagementInstance();
+    }
+
     if (dbType === "redis") {
         return getRedisAccountManagementInstance(connString);
     }
@@ -45,3 +56,6 @@ export const getAccountManagementInstance = (): IAccountManagement => {
 }
 
 export { getGameManagementInstance, getTransactionInstance };
+
+// Cosmos-specific exports
+export { getCosmosAccountManagementInstance, getCosmosBlockchainManagementInstance, getCosmosGameManagementInstance };
