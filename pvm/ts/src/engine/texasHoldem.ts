@@ -12,9 +12,11 @@ import {
     PlayerStatus,
     TexasHoldemRound,
     TexasHoldemStateDTO,
-    WinnerDTO
+    WinnerDTO,
+    PokerSolver,
+    PokerGameIntegration,
+    Deck as SDKDeck
 } from "@bitcoinbrisbane/block52";
-import { PokerSolver, PokerGameIntegration, Deck as SDKDeck } from "../../../../sdk/src/index";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 
