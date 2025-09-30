@@ -5,6 +5,7 @@ import { getTransactionInstance } from "../state/index";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
+// TODO: remove these and make same as cosmos
 export type BlockCommandParams = {
     index?: BigInt;
     hash?: string;

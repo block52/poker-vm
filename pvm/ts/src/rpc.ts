@@ -2,7 +2,6 @@ import { ZeroHash } from "ethers";
 import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
-    AccountCommand,
     BlockCommand,
     BlockCommandParams,
     BurnCommand,
@@ -10,7 +9,6 @@ import {
     DeployContractCommand,
     FindGameStateCommand,
     GameStateCommand,
-    GetBlocksCommand,
     GetNodesCommand,
     GetTransactionCommand,
     GetTransactionsCommand,
@@ -24,13 +22,14 @@ import {
     PurgeMempoolCommand,
     PerformActionCommandWithResult,
     ReceiveMinedBlockHashCommand,
-    ResetCommand,
     SharedSecretCommand,
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
     TransferCommand,
-    WithdrawCommand
+    WithdrawCommand,
+    GetCosmosBlocksCommand,
+    CosmosAccountCommand
 } from "./commands";
 
 import { makeErrorRPCResponse } from "./types/response";
@@ -93,13 +92,6 @@ export class RPC {
                 result = await command.execute();
                 break;
             }
-            case RPCMethods.RESET_BLOCKCHAIN: {
-                // SDK expects [username, password] params, but our implementation doesn't require them
-                // We could add authentication here if needed in the future
-                const command = new ResetCommand();
-                result = await command.execute();
-                break;
-            }
             default:
                 return makeErrorRPCResponse(request.id, "Method not found");
         }
@@ -133,7 +125,8 @@ export class RPC {
                     if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-                    const command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
+                    // const command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
+                    const command = new CosmosAccountCommand(process.env.COSMOS_RPC_ENDPOINT || "http://localhost:26657", request.params[0] as string, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
@@ -231,7 +224,8 @@ export class RPC {
 
                 case RPCMethods.GET_BLOCKS: {
                     const [count] = request.params as RPCRequestParams[RPCMethods.GET_BLOCKS];
-                    const command = new GetBlocksCommand(Number(count), validatorPrivateKey);
+                    // const command = new GetBlocksCommand(Number(count), validatorPrivateKey);
+                    const command = new GetCosmosBlocksCommand(process.env.COSMOS_RPC_ENDPOINT || "http://localhost:26657", validatorPrivateKey, Number(count));
                     result = await command.execute();
                     break;
                 }

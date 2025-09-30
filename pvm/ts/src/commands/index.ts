@@ -10,7 +10,6 @@ import { RandomCommand } from "./randomCommand";
 import { ResponseCommand } from "./responseCommand";
 import { TransferCommand } from "./transferCommand";
 import { DeployContractCommand } from "./deployContractCommand";
-import { ResetCommand } from "./resetCommand";
 
 import { BlockCommand, BlockCommandParams } from "./blockCommand";
 import { BurnCommand } from "./burnCommand";
@@ -28,6 +27,11 @@ import { PerformActionCommandWithResult } from "./performActionCommandWithResult
 import { PurgeMempoolCommand } from "./purgeMempoolCommand";
 import { ReceiveMinedBlockCommand } from "./receiveMinedBlockCommand";
 import { ReceiveMinedBlockHashCommand } from "./receiveMinedBlockHashCommand";
+
+// Cosmos commands
+import { CosmosAccountCommand } from "./cosmos/cosmosAccountCommand";
+
+// Server control commands
 import { SharedSecretCommand } from "./sharedSecretCommand";
 import { ShutdownCommand } from "./shutdownCommand";
 import { StartServerCommand } from "./startServerCommand";
@@ -41,6 +45,7 @@ export {
     BlockCommand,
     BurnCommand,
     ChallengeCommand,
+    CosmosAccountCommand,
     CreateAccountCommand,
     DeployContractCommand,
     FindGameStateCommand,
@@ -62,7 +67,6 @@ export {
     RandomCommand,
     ReceiveMinedBlockCommand,
     ReceiveMinedBlockHashCommand,
-    ResetCommand,
     ResponseCommand,
     SharedSecretCommand,
     ShutdownCommand,
@@ -76,3 +80,4 @@ export {
 // This separates types (which are erased at compile time) from values (which are preserved)
 // Classes and values like AccountCommand go in the normal export, while interfaces and type aliases go here
 export type { BlockCommandParams, ISignedResponse };
+export type { CosmosAccountInfo } from "./cosmos/cosmosAccountCommand";
