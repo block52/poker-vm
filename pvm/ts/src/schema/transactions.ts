@@ -12,11 +12,13 @@ const transactionSchema = new Schema<ITransactionDocument>({
     },
     to: {
         required: true,
-        type: String
+        type: String,
+        index: true // Indexing 'to' field for faster queries
     },
     from: {
         required: false,
-        type: String
+        type: String,
+        index: true // Indexing 'from' field for faster queries
     },
     value: {
         required: true,
@@ -32,7 +34,9 @@ const transactionSchema = new Schema<ITransactionDocument>({
     },
     hash: {
         required: true,
-        type: String
+        type: String,
+        index: true, // Indexing 'hash' field for faster queries
+        unique: true // Ensuring 'hash' is unique
     },
     signature: {
         required: true,
@@ -40,8 +44,11 @@ const transactionSchema = new Schema<ITransactionDocument>({
     },
     block_hash: {
         required: true,
-        type: String
+        type: String,
+        index: true // Indexing 'block_hash' field for faster queries
     }
 });
+
+// transactionSchema.index({ from: 1, nonce: 1 }, { unique: true }); // Unique constraint on from + nonce combination
 
 export default model("Transactions", transactionSchema);

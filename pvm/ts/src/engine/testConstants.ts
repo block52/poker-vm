@@ -1,4 +1,4 @@
-import { ActionDTO, GameOptions, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, GameOptions, GameType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
 import { Player } from "../models/player";
@@ -17,10 +17,10 @@ export const ONE_THOUSAND_TOKENS = 1000000000000000000000n;
 export const TWO_THOUSAND_TOKENS = 2000000000000000000000n;
 
 export const mnemonic =
-    "[AC]-2C-3C-4C-5C-6C-7C-8C-9C-10C-JC-QC-KC-" +
-    "AD-2D-3D-4D-5D-6D-7D-8D-9D-10D-JD-QD-KD-" +
-    "AH-2H-3H-4H-5H-6H-7H-8H-9H-10H-JH-QH-KH-" +
-    "AS-2S-3S-4S-5S-6S-7S-8S-9S-10S-JS-QS-KS";
+    "[AC]-2C-3C-4C-5C-6C-7C-8C-9C-TC-JC-QC-KC-" +
+    "AD-2D-3D-4D-5D-6D-7D-8D-9D-TD-JD-QD-KD-" +
+    "AH-2H-3H-4H-5H-6H-7H-8H-9H-TH-JH-QH-KH-" +
+    "AS-2S-3S-4S-5S-6S-7S-8S-9S-TS-JS-QS-KS";
 
 export const gameOptions: GameOptions = {
     minBuyIn: ONE_HUNDRED_TOKENS,
@@ -29,7 +29,8 @@ export const gameOptions: GameOptions = {
     maxPlayers: 9,
     smallBlind: ONE_TOKEN,
     bigBlind: TWO_TOKENS,
-    timeout: 60000
+    timeout: 60000,
+    type: GameType.CASH
 };
 
 export const baseGameConfig = {
@@ -43,7 +44,7 @@ export const baseGameConfig = {
     now: Date.now()
 };
 
-export const seed: string = "29-34-15-41-5-21-9-23-37-5-17-13-11-1-40-44-16-21-42-46-41-23-34-30-48-36-32-33-40-7-9-3-30-42-2-19-24-34-24-46-2-31-10-43-49-11-29-49-49-23-14-2";
+export const seed: string = "seed=29-34-15-41-5-21-9-23-37-5-17-13-11-1-40-44-16-21-42-46-41-23-34-30-48-36-32-33-40-7-9-3-30-42-2-19-24-34-24-46-2-31-10-43-49-11-29-49-49-23-14-2";
 
 export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasHoldemGame => {
     const previousActions: ActionDTO[] = [];
@@ -121,10 +122,14 @@ export class MockBetManager implements IBetManager {
         throw new Error("Method not implemented.");
     }
 
-    getLastAggressor(start?: number): bigint {
+    getLastAggressor(): bigint {
         throw new Error("Method not implemented.");
     }
-    
+
+    getRaisedAmount(): bigint {
+        throw new Error("Method not implemented.");
+    }
+
     previous(): bigint {
         throw new Error("Method not implemented.");
     }
@@ -147,6 +152,7 @@ export class MockBetManager implements IBetManager {
     // Helper methods to set up test scenarios
     setCurrentBet(amount: bigint): void {
         this.mockCurrentBet = amount;
+        this.mockLargestBet = amount; // Keep them in sync
     }
 
     setPlayerBet(playerId: string, amount: bigint): void {
@@ -155,6 +161,7 @@ export class MockBetManager implements IBetManager {
 
     setLargestBet(amount: bigint): void {
         this.mockLargestBet = amount;
+        this.mockCurrentBet = amount; // Keep them in sync
     }
 
     reset(): void {

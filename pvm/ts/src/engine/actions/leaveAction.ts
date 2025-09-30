@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { Range } from "../types";
@@ -15,12 +15,10 @@ class LeaveAction extends BaseAction {
 
     // Override execute to handle player leaving
     execute(player: Player, index: number): void {
-        // First verify the action
         this.verify(player);
 
         // Get player seat BEFORE changing any state
         const seat = this.game.getPlayerSeatNumber(player.address);
-
         this.game.dealerManager.handlePlayerLeave(seat);
 
         const playerAddress = player.address;
@@ -28,13 +26,15 @@ class LeaveAction extends BaseAction {
 
         console.log(`Player ${playerAddress} at seat ${seat} leaving with ${playerChips} chips...`);
 
+        this.game.removePlayer(playerAddress);
+
         // Add leave action to history BEFORE removing the player
         this.game.addNonPlayerAction({ 
             playerId: playerAddress, 
             action: NonPlayerActionType.LEAVE, 
             index: index,
             amount: playerChips // Include chips amount in the action
-        });
+        }, seat.toString());
     }
 }
 

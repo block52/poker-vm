@@ -65,6 +65,10 @@ export class Mempool {
         return this.txMap.get(hash);
     }
 
+    public has(hash: string): boolean {
+        return this.txMap.has(hash);
+    }
+
     public find(predicate: (tx: Transaction) => boolean): Transaction | undefined {
         return Array.from(this.txMap.values()).find(predicate);
     }

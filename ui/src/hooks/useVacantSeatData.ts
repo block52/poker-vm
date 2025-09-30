@@ -12,53 +12,77 @@ import { VacantSeatResponse } from "../types/index";
 export const useVacantSeatData = (): VacantSeatResponse => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
-
+    
     const userAddress = React.useMemo(() => {
         return localStorage.getItem("user_eth_public_key")?.toLowerCase() || null;
     }, []);
 
+    // Memoize players array and maxPlayers to avoid repeated property access
+    const { players, maxPlayers } = React.useMemo(() => ({
+        players: gameState?.players || [],
+        maxPlayers: gameState?.gameOptions?.maxPlayers || 6
+    }), [gameState]);
+
     // Check if user is already playing at the table
     const isUserAlreadyPlaying = React.useMemo(() => {
-        if (!userAddress || !gameState) return false;
-
-        if (!gameState.players) return false;
-
-        return gameState.players.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
-    }, [gameState, userAddress]);
-
+        return !!(userAddress && players.length > 0 && 
+            players.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress));
+    }, [players, userAddress]);
 
     // Function to check if a specific seat is vacant
     const isSeatVacant = React.useCallback(
         (seatIndex: number) => {
-            if (!gameState) return true;
-
-            if (!gameState.players) return true;
-
-            // Check if any player occupies this seat
-            const isOccupied = gameState.players.some(
-                (player: PlayerDTO) => player.seat === seatIndex && player.address && player.address !== ethers.ZeroAddress
+            return !players.some(
+                (player: PlayerDTO) => player.seat === seatIndex && 
+                player.address && 
+                player.address !== ethers.ZeroAddress
             );
-
-            return !isOccupied;
         },
-        [gameState]
+        [players]
     );
+
+    // Get array of all empty seat indexes - optimized to avoid repeated function calls
+    const emptySeatIndexes = React.useMemo(() => {
+        if (players.length === 0) {
+            // If no players, all seats are empty
+            return Array.from({ length: maxPlayers }, (_, i) => i + 1);
+        }
+        
+        const occupiedSeats = new Set(
+            players
+                .filter(player => player.address && player.address !== ethers.ZeroAddress)
+                .map(player => player.seat)
+        );
+        
+        const emptySeatNumbers: number[] = [];
+        for (let seatIndex = 1; seatIndex <= maxPlayers; seatIndex++) {
+            if (!occupiedSeats.has(seatIndex)) {
+                emptySeatNumbers.push(seatIndex);
+            }
+        }
+        
+        return emptySeatNumbers;
+    }, [players, maxPlayers]);
 
     // Function to check if a user can join a specific seat
     const canJoinSeat = React.useCallback(
         (seatIndex: number) => {
-            // User can join if:
-            // 1. The seat is vacant
-            // 2. The user is not already playing
-            return isSeatVacant(seatIndex) && !isUserAlreadyPlaying;
+            return !isUserAlreadyPlaying && isSeatVacant(seatIndex);
         },
         [isSeatVacant, isUserAlreadyPlaying]
     );
+
+    // Get array of all empty seat indexes that the user can join
+    const availableSeatIndexes = React.useMemo(() => {
+        return isUserAlreadyPlaying ? [] : emptySeatIndexes;
+    }, [emptySeatIndexes, isUserAlreadyPlaying]);
 
     return {
         isUserAlreadyPlaying,
         isSeatVacant,
         canJoinSeat,
+        emptySeatIndexes,        // NEW: Array of all empty seat numbers
+        availableSeatIndexes,    // NEW: Array of seats user can actually join
         isLoading,
         error
     };

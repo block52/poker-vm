@@ -41,8 +41,8 @@
 }
 
 .bg-custom-footer {
-    background: linear-gradient(to right, #1a2639, #2a3f5f, #1a2639);
-    border-top: 1px solid rgba(59, 130, 246, 0.3);
+    background: linear-gradient(to right, var(--table-bg-gradient-start), var(--table-bg-gradient-mid), var(--table-bg-gradient-end));
+    border-top: 1px solid var(--ui-border-color);
 }
 
 /* Animation for card falling */
@@ -77,15 +77,15 @@
 /* Hexagon pattern for table */
 .hexagon-pattern {
     background-image: 
-        linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+        linear-gradient(to right, var(--ui-border-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--ui-border-color) 1px, transparent 1px);
     background-size: 30px 30px;
 }
 
 /* Header specific styles */
 .bg-custom-header {
-    background: linear-gradient(to right, #1a2639, #2a3f5f, #1a2639);
-    border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+    background: linear-gradient(to right, var(--table-bg-gradient-start), var(--table-bg-gradient-mid), var(--table-bg-gradient-end));
+    border-bottom: 1px solid var(--ui-border-color);
 }
 
 /* Enhanced glow effects for text */
@@ -111,7 +111,7 @@
     inset: 0;
     z-index: 0;
     opacity: 0.3;
-    background-image: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%);
+    background-image: linear-gradient(90deg, rgba(0,0,0,0) 0%, var(--brand-primary-10) 25%, rgba(0,0,0,0) 50%, var(--brand-primary-10) 75%, rgba(0,0,0,0) 100%);
     background-size: 200% 100%;
 }
 
@@ -121,7 +121,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(to right, transparent, #3b82f6, transparent);
+    background: linear-gradient(to right, transparent, var(--brand-primary), transparent);
     opacity: 0.5;
 }
 
@@ -143,7 +143,7 @@
     inset: 0;
     z-index: 0;
     opacity: 0.3;
-    background-image: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.1) 25%, rgba(0,0,0,0) 50%, rgba(59,130,246,0.1) 75%, rgba(0,0,0,0) 100%);
+    background-image: linear-gradient(90deg, rgba(0,0,0,0) 0%, var(--brand-primary-10) 25%, rgba(0,0,0,0) 50%, var(--brand-primary-10) 75%, rgba(0,0,0,0) 100%);
     background-size: 200% 100%;
 }
 
@@ -161,7 +161,7 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    background-color: #111827;
+    background-color: var(--table-bg-base);
     filter: blur(60px);
     transition: all 0.3s ease-out;
 }
@@ -263,7 +263,7 @@
     left: 1rem;
     display: flex;
     align-items: center;
-    z-index: 5;
+    z-index: 50;
     opacity: 0.3;
 }
 
@@ -284,7 +284,7 @@
 }
 
 .powered-by-logo {
-    height: 3rem;
+    height: 1.5rem;
     width: auto;
     object-fit: contain;
     pointer-events: none;
@@ -333,11 +333,11 @@
     opacity: 0.2;
     background: linear-gradient(
         45deg,
-        rgba(42, 72, 143, 0.1) 0%,
-        rgba(61, 89, 161, 0.1) 25%,
-        rgba(30, 52, 107, 0.1) 50%,
-        rgba(50, 79, 151, 0.1) 75%,
-        rgba(42, 72, 143, 0.1) 100%
+        var(--anim-color-2-10) 0%,
+        var(--anim-color-1-10) 25%,
+        var(--anim-color-4-10) 50%,
+        var(--anim-color-5-10) 75%,
+        var(--anim-color-2-10) 100%
     );
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
@@ -349,12 +349,12 @@
     inset: 0;
     z-index: 0;
     background: 
-        radial-gradient(circle at 20% 30%, rgba(61, 89, 161, 0.8) 0%, transparent 60%),
-        radial-gradient(circle at 0% 0%, rgba(42, 72, 143, 0.7) 0%, transparent 50%),
-        radial-gradient(circle at 100% 0%, rgba(66, 99, 175, 0.7) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(30, 52, 107, 0.7) 0%, transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(50, 79, 151, 0.7) 0%, transparent 50%),
-        #111827;
+        radial-gradient(circle at 20% 30%, var(--anim-color-1-80) 0%, transparent 60%),
+        radial-gradient(circle at 0% 0%, var(--anim-color-2-70) 0%, transparent 50%),
+        radial-gradient(circle at 100% 0%, var(--anim-color-3-70) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, var(--anim-color-4-70) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, var(--anim-color-5-70) 0%, transparent 50%),
+        var(--table-bg-base);
     filter: blur(60px);
     transition: all 0.3s ease-out;
 }
@@ -413,7 +413,7 @@
     
     .text-gradient {
         animation: none;
-        background: linear-gradient(to right, #3b82f6, #60a5fa);
+        background: linear-gradient(to right, var(--brand-primary), #60a5fa);
         background-clip: text;
         -webkit-background-clip: text;
         color: transparent;
@@ -454,4 +454,33 @@
     .background-base-static {
         filter: blur(30px); /* Less blur = better performance */
     }
+}
+
+/* Professional Sit Out Toggle for Mobile */
+.sit-out-toggle {
+    user-select: none;
+    cursor: pointer;
+}
+
+.sit-out-toggle input[type="checkbox"]:checked ~ div > div:first-child {
+    background-color: #f97316; /* Orange when active */
+}
+
+.sit-out-toggle input[type="checkbox"]:checked ~ div > div:last-child {
+    transform: translateX(20px);
+}
+
+/* Smooth transitions for toggle */
+.sit-out-toggle div > div {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover effect for toggle container */
+.sit-out-toggle:hover {
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+/* Active state indicator */
+.sit-out-toggle input[type="checkbox"]:checked ~ span {
+    color: #fb923c; /* Lighter orange for text when active */
 } 

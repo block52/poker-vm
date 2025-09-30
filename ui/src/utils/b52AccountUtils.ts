@@ -11,7 +11,7 @@ let clientInstance: NodeRpcClient | null = null;
  * Get the user's private key from browser storage
  * @returns The private key string or null if not found
  */
-export function getPrivateKey(): string | null {
+export const getPrivateKey = (): string | null => {
     return localStorage.getItem("user_eth_private_key");
 }
 
@@ -19,7 +19,7 @@ export function getPrivateKey(): string | null {
  * Get the user's public key from browser storage
  * @returns The public key string or null if not found
  */
-export function getPublicKey(): string | null {
+export const getPublicKey = (): string | null => {
     return localStorage.getItem("user_eth_public_key");
 }
 
@@ -27,17 +27,17 @@ export function getPublicKey(): string | null {
  * Get formatted address for display (shortened with ellipsis)
  * @returns Formatted address string like "0x1234...abcd" or empty string if no address
  */
-export function getFormattedAddress(): string {
+export const getFormattedAddress = (length: number = 6): string => {
     const pubKey = getPublicKey();
     if (!pubKey) return "";
-    return `${pubKey.slice(0, 6)}...${pubKey.slice(-4)}`;
+    return `${pubKey.slice(0, length)}...${pubKey.slice(-4)}`;
 }
 
 /**
  * Set the user's private key in browser storage
  * @param privateKey The private key to store
  */
-export function setPrivateKey(privateKey: string): void {
+export const setPrivateKey = (privateKey: string): void => {
     localStorage.setItem("user_eth_private_key", privateKey);
     // Clear the client instance when private key changes
     clientInstance = null;
@@ -46,7 +46,7 @@ export function setPrivateKey(privateKey: string): void {
 /**
  * Remove the user's private key from browser storage
  */
-export function clearPrivateKey(): void {
+export const clearPrivateKey = (): void => {
     localStorage.removeItem("user_eth_private_key");
     // Clear the client instance when private key is removed
     clientInstance = null;
@@ -56,7 +56,7 @@ export function clearPrivateKey(): void {
  * Check if a private key is available
  * @returns True if private key exists in storage
  */
-export function hasPrivateKey(): boolean {
+export const hasPrivateKey = (): boolean => {
     return getPrivateKey() !== null;
 }
 
@@ -65,7 +65,7 @@ export function hasPrivateKey(): boolean {
  * @returns NodeRpcClient instance
  * @throws Error if private key is missing
  */
-export function getClient(): NodeRpcClient {
+export const getClient = (): NodeRpcClient => {
     const privateKey = getPrivateKey();
     if (!privateKey) {
         throw new Error("No private key found. Please connect your wallet first.");
@@ -86,7 +86,7 @@ export function getClient(): NodeRpcClient {
 /**
  * Clear the client instance (useful when private key changes or for testing)
  */
-export function clearClientInstance(): void {
+export const clearClientInstance = (): void => {
     clientInstance = null;
 }
 
@@ -95,7 +95,7 @@ export function clearClientInstance(): void {
  * @returns Promise with the account balance as string
  * @throws Error if private key or public key is missing, or if the fetch fails
  */
-export async function getAccountBalance(): Promise<string> {
+export const getAccountBalance = async (): Promise<string> => {
     const publicKey = getPublicKey();
     
     if (!publicKey) {

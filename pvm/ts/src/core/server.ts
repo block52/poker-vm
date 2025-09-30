@@ -34,7 +34,7 @@ export class Server {
     private _syncing: boolean = false;
     private _synced: boolean = false;
     _lastDepositSync: Date;
-    private readonly _port: number = parseInt(process.env.PORT || "3000");
+    private readonly _port: number = parseInt(process.env.PORT || "8545");
     private readonly _nodes: Map<string, Node> = new Map();
 
     constructor(private readonly privateKey: string) {

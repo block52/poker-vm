@@ -1,5 +1,4 @@
-import { NonPlayerActionType } from "./dist/types/game";
-import { PlayerActionType } from "./dist/types/game";
+import { PlayerActionType } from "./src/types/game";
 import { NodeRpcClient } from "./src/client";
 
 // import .env
@@ -9,8 +8,8 @@ config();
 const PLAYER_1_PRIVATE_KEY = process.env.PLAYER_1_PRIVATE_KEY;
 const PLAYER_2_PRIVATE_KEY = process.env.PLAYER_2_PRIVATE_KEY;
 
-const client1 = new NodeRpcClient("http://localhost:3000", PLAYER_1_PRIVATE_KEY || "");
-const client2 = new NodeRpcClient("http://localhost:3000", PLAYER_2_PRIVATE_KEY || "");
+const client1 = new NodeRpcClient("http://localhost:8545", PLAYER_1_PRIVATE_KEY || "");
+const client2 = new NodeRpcClient("http://localhost:8545", PLAYER_2_PRIVATE_KEY || "");
 
 const random = NodeRpcClient.generateRandomNumberString(true);
 console.log("Random number string:", random);
@@ -22,11 +21,17 @@ const TABLE_ID = "0x2314eac2fcb3943e41ad8b1fb46a188eef201452";
 // 0xccd6e31012fd0ade9beb377c2f20661b832abfe7
 
 async function main() {
-    let result2 = await client2.playerJoin(TABLE_ID, 1000000000000000000000n, 2);
-    let result1 = await client1.playerJoin(TABLE_ID, 1000000000000000000000n, 1);
+
+    const signResult = await client1.getSignature(1, [TABLE_ID, "10000000000000000"]);
+    console.log("Signature:", signResult);
+
+    let result2 = await client2.playerJoin(TABLE_ID, "1000000000000000000000", 2);
+    let result1 = await client1.playerJoin(TABLE_ID, "1000000000000000000000", 1);
     // let result2 = await client2.playerJoin(TABLE_ID, 1000000000000000000000n, 2);
     // console.log(result1);
     // console.log(result2);
+
+
 
     const sbResult = await client2.playerAction(TABLE_ID, PlayerActionType.SMALL_BLIND, "10000000000000000");
     console.log(sbResult);

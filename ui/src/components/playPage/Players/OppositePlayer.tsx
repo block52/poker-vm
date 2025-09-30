@@ -48,10 +48,11 @@ import ProgressBar from "../common/ProgressBar";
 import PlayerPopUpCard from "./PlayerPopUpCard";
 import { useWinnerInfo } from "../../../hooks/useWinnerInfo";
 import { usePlayerData } from "../../../hooks/usePlayerData";
-import { useParams } from "react-router-dom";
 import { useShowingCardsByAddress } from "../../../hooks/useShowingCardsByAddress";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
+import { colors } from "../../../utils/colorConfig";
+import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
 
 type OppositePlayerProps = {
     left?: string;
@@ -63,16 +64,39 @@ type OppositePlayerProps = {
     isCardVisible: number;
     setCardVisible: (index: number) => void;
     setStartIndex: (index: number) => void;
+    uiPosition?: number;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex }) => {
-    const { playerData, stackValue, isFolded, isAllIn, holeCards, round } = usePlayerData(index);
+const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition }) => {
+    const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
+
+    // Debug logging for OppositePlayer component stack value
+    React.useEffect(() => {
+        console.log(`👥 OPPOSITE PLAYER Component - Seat ${index}: ` + JSON.stringify({
+            playerData: playerData,
+            stackValue: stackValue,
+            stackRaw: playerData?.stack,
+            address: playerData?.address,
+            status: playerData?.status,
+            sumOfBets: playerData?.sumOfBets,
+            lastAction: playerData?.lastAction,
+            isFolded: isFolded,
+            isAllIn: isAllIn,
+            isSittingOut: isSittingOut
+        }, null, 2));
+    }, [playerData, stackValue, index, isFolded, isAllIn, isSittingOut]);
     const { showingPlayers } = useShowingCardsByAddress();
     const { dealerSeat } = useDealerPosition();
-    
+
     // Check if this seat is the dealer
     const isDealer = dealerSeat === index;
+
+    // Get tournament results for this seat
+    const { getSeatResult, isSitAndGo } = useSitAndGoPlayerResults();
+    const tournamentResult = React.useMemo(() => {
+        return isSitAndGo ? getSeatResult(index) : null;
+    }, [getSeatResult, isSitAndGo, index]);
 
     // 1) detect when any winner exists
     const hasWinner = React.useMemo(() => Array.isArray(winnerInfo) && winnerInfo.length > 0, [winnerInfo]);
@@ -84,7 +108,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
     }, [winnerInfo, index]);
 
     // 2) dim non-winners when someone has won
-    const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : isFolded ? "opacity-60" : "opacity-100";
+    const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : isSittingOut ? "opacity-50" : isFolded ? "opacity-60" : "opacity-100";
 
     // Get winner amount if this player is a winner
     const winnerAmount = React.useMemo(() => {
@@ -115,30 +139,40 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
             {/* Main player display */}
             <div
                 key={index}
-                className={`${opacityClass} absolute flex flex-col justify-center text-gray-600 w-[150px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
+                className={`${opacityClass} absolute flex flex-col justify-center w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
                 style={{
                     left: left,
                     top: top,
-                    transition: "top 1s ease, left 1s ease"
+                    transition: "top 1s ease, left 1s ease",
+                    color: colors.ui.textSecondary
                 }}
                 onClick={() => {
                     console.log("OppositePlayer clicked:", index);
                     setCardVisible(index);
                 }}
             >
+                {/* Development Mode Debug Info */}
+                {import.meta.env.VITE_NODE_ENV === "development" && (
+                    <div className="absolute top-[-60px] left-1/2 transform -translate-x-1/2 bg-blue-600 bg-opacity-80 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap z-50 border border-blue-400">
+                        <div className="text-blue-200">UI Pos: {uiPosition ?? "N/A"}</div>
+                        <div className="text-yellow-300">Seat: {index}</div>
+                        <div className="text-gray-200">XY: {left}, {top}</div>
+                        <div className="text-orange-300">Addr: ...{playerData?.address ? playerData.address.slice(-3) : "N/A"}</div>
+                    </div>
+                )}
                 <div className="flex justify-center gap-1">
                     {holeCards && holeCards.length === 2 ? (
                         isShowingCards && showingCards ? (
                             // Show the actual cards if player is showing
                             <>
-                                <img src={`/cards/${showingCards[0]}.svg`} alt="Player Card 1" className="w-[35%] h-[auto]" />
-                                <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" className="w-[35%] h-[auto]" />
+                                <img src={`/cards/${showingCards[0]}.svg`} alt="Player Card 1" width={60} height={80} className="mb-[11px]" />
+                                <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" width={60} height={80} className="mb-[11px]" />
                             </>
                         ) : (
                             // Show card backs if not showing
                             <>
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" className="w-[35%] h-[auto]" />
+                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
                             </>
                         )
                     ) : (
@@ -147,34 +181,43 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                 </div>
                 <div className="relative flex flex-col justify-end mt-[-6px] mx-1">
                     <div
-                        style={{ backgroundColor: isWinner ? "#2c8a3c" : color }}
+                        style={{ backgroundColor: isWinner ? colors.accent.success : (color || "#6b7280") }}
                         className={`b-[0%] mt-[auto] w-full h-[55px] shadow-[1px_2px_6px_2px_rgba(0,0,0,0.3)] rounded-tl-2xl rounded-tr-2xl rounded-bl-md rounded-br-md flex flex-col ${
                             isWinner 
                         }`}
                     >
                         {/* Progress bar is not shown in showdown */}
                         {!isWinner && round !== "showdown" && <ProgressBar index={index} />}
+                        {!isWinner && isSittingOut && (
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "#ff9800" }}>SITTING OUT</span>
+                        )}
                         {!isWinner && isFolded && (
-                            <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">FOLD</span>
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>FOLD</span>
                         )}
                         {!isWinner && isAllIn && (
-                            <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
                                 ALL IN
                             </span>
                         )}
                         {isShowingCards && !isWinner && (
-                            <span className="text-white animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center">
+                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
                                 SHOWING
                             </span>
                         )}
                         {isWinner && winnerAmount && (
-                            <span className="text-white font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base">
+                            <span className="font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base" style={{ color: "white" }}>
                                 WINS: {winnerAmount}
                             </span>
                         )}
                     </div>
                     <div className="absolute top-[-10px] w-full">
-                        <Badge count={index} value={stackValue} color={color} />
+                        <Badge
+                            count={index}
+                            value={stackValue}
+                            color={color}
+                            tournamentPlace={tournamentResult?.place}
+                            tournamentPayout={tournamentResult?.formattedPayout}
+                        />
                     </div>
 
                     {/* Dealer Button - TODO: Implement framer motion animation in future iteration */}

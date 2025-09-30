@@ -1,13 +1,13 @@
-import { 
-    LegalActionDTO, 
-    PlayerActionType, 
-    PlayerDTO, 
-    GameOptionsDTO, 
-    TexasHoldemRound, 
-    GameType, 
+import {
+    LegalActionDTO,
+    PlayerActionType,
+    PlayerDTO,
+    GameOptionsDTO,
+    TexasHoldemRound,
+    GameType,
     ActionDTO,
     PlayerStatus,
-    GameOptionsResponse,
+    GameOptionsResponse
 } from "@bitcoinbrisbane/block52";
 
 // Base type for all hook returns with common loading and error state
@@ -229,6 +229,7 @@ export interface PlayerDataReturn extends BaseHookReturn {
     stackValue: number;
     isFolded: boolean;
     isAllIn: boolean;
+    isSittingOut: boolean;
     holeCards: string[];
     round: TexasHoldemRound | null;
 }
@@ -304,8 +305,9 @@ export interface VacantSeatResponse extends BaseHookReturn {
     isUserAlreadyPlaying: boolean;
     isSeatVacant: (seatIndex: number) => boolean;
     canJoinSeat: (seatIndex: number) => boolean;
+    emptySeatIndexes: number[];
+    availableSeatIndexes: number[];
 }
-
 
 export interface WinnerInfo {
     seat: number;
@@ -314,7 +316,6 @@ export interface WinnerInfo {
     formattedAmount: string;
     winType?: string;
 }
-
 
 export interface WinnerInfoReturn {
     winnerInfo: WinnerInfo[] | null;

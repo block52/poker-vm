@@ -1,7 +1,7 @@
 import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
-import { Range, TurnWithSeat } from "../types";
+import { Range } from "../types";
 
 class JoinAction extends BaseAction {
     get type(): NonPlayerActionType {
@@ -32,35 +32,14 @@ class JoinAction extends BaseAction {
             throw new Error("Player does not have enough or too many chips to join.");
         }
 
-        // Find an available seat or use the requested one
-        let seat: number;
-        if (requestedSeat === undefined || requestedSeat === "") {
-
-            // get all available seats
-            const availableSeats = this.game.getAvailableSeats();
-
-            // If all seats are occupied, throw an error
-            if (availableSeats.length === 0)
-                throw new Error("No available seats to join.");
-
-            // Choose randomly from the available seats
-            seat = Math.floor(Math.random() * availableSeats.length);
-        } else {
-            // Validate the requested seat
-            const seatRegex = /^\d+$/;
-            const seatMatch = requestedSeat.toString().match(seatRegex);
-            if (!seatMatch) {
-                throw new Error("Invalid seat number.");
-            }
-            seat = parseInt(seatMatch[0]);
+        if (!requestedSeat) {
+            throw new Error("Seat must be specified in the format 'seat=<number>'");
         }
 
+        // Find an available seat or use the requested one
+        const seat: number = this.getSeat(requestedSeat);
         this.game.joinAtSeat(player, seat);
-
         this.game.dealerManager.handlePlayerJoin(seat);
-
-        // Set this seat as the last acted seat to help determine next player
-        // this.game.setLastActedSeat(seat);
 
         // Add join action to history without the seat property (it will be added automatically in texasHoldem.ts)
         this.game.addNonPlayerAction(
@@ -72,6 +51,41 @@ class JoinAction extends BaseAction {
             },
             seat.toString()
         );
+    }
+
+    // Refactored method to handle seat assignment cleanly without legacy number support
+    private getSeat(data?: string): number {
+        let seat: number;
+
+        if (data === undefined || data === "" || data === null) {
+            // Get all available seats
+            const availableSeats = this.game.getAvailableSeats();
+
+            // If all seats are occupied, throw an error
+            if (availableSeats.length === 0)
+                throw new Error("No available seats to join.");
+
+            // Choose randomly from the available seats
+            const randomIndex = Math.floor(Math.random() * availableSeats.length);
+            seat = availableSeats[randomIndex];
+        } else {
+            // Parse seat number from "seat=X" format
+            const seatRegex = /seat=(\d+)/;
+            const match = data.match(seatRegex);
+
+            if (match && match[1]) {
+                seat = parseInt(match[1], 10);
+            } else {
+                throw new Error(`Invalid seat data format: ${data}. Expected format: "seat=<number>"`);
+            }
+        }
+
+        // Validate the seat number
+        if (!seat || isNaN(seat) || seat < 1) {
+            throw new Error(`Invalid seat number: ${seat}`);
+        }
+
+        return seat;
     }
 }
 

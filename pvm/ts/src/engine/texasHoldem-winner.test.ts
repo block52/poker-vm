@@ -1,8 +1,6 @@
-import { TexasHoldemRound, GameOptions } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 
-import { ethers } from "ethers";
-import { baseGameConfig, fromTestJson, gameOptions } from "./testConstants";
+import { fromTestJson } from "./testConstants";
 
 const test_json = {
     "id": "1",
@@ -87,7 +85,7 @@ const test_json = {
                 "KC",
                 "6D"
             ],
-            "deck": "9D-3D-5D-2D-AS-QD-JC-9C-4D-QC-AD-KC-5S-6D-[8D]-JD-7H-7D-10D-KD-2H-4H-AH-5H-10H-10S-6H-3H-JS-JH-8H-9H-5C-QH-4S-KH-3S-2S-4C-8S-6C-6S-7S-10C-9S-QS-8C-KS-AC-7C-2C-3C",
+            "deck": "9D-3D-5D-2D-AS-QD-JC-9C-4D-QC-AD-KC-5S-6D-[8D]-JD-7H-7D-TD-KD-2H-4H-AH-5H-TH-TS-6H-3H-JS-JH-8H-9H-5C-QH-4S-KH-3S-2S-4C-8S-6C-6S-7S-TC-9S-QS-8C-KS-AC-7C-2C-3C",
             "pots": [
                 "40000000000000000"
             ],
@@ -214,6 +212,33 @@ const test_json = {
 }
 
 describe("Texas Holdem - Winner", () => {
+
+    let game: TexasHoldemGame;
+
+    beforeEach(() => {
+        game = fromTestJson(test_json);
+    });
+
+    it("should not win with seven duce", () => {
+        expect(game).toBeDefined();
+
+        const cards = ["7S", "2C"];
+        const won: Boolean = game.findWinners(cards);
+
+        expect(won).toBeFalsy();
+    });
+
+    it("should not win with top set", () => {
+        expect(game).toBeDefined();
+
+        const cards = ["KC", "KD"];
+        const won: Boolean = game.findWinners(cards);
+
+        expect(won).toBeTruthy();
+    });
+});
+
+describe("Texas Holdem - Showdown", () => {
 
     let game: TexasHoldemGame;
 

@@ -35,11 +35,6 @@ export class MintCommand implements ISignedCommand<Transaction> {
         const bridgeAbi = ["function deposits(uint256) view returns (address account, uint256 amount)", "function underlying() view returns (address)"];
         this.underlyingAssetAbi = ["function decimals() view returns (uint8)"];
 
-        // const baseRPCUrl = process.env.RPC_URL;
-        // this.provider = new JsonRpcProvider(baseRPCUrl, undefined, {
-        //     staticNetwork: true
-        // });
-
         this.mempool = getMempoolInstance();
         this.transactionManagement = getTransactionInstance();
 
@@ -72,9 +67,25 @@ export class MintCommand implements ISignedCommand<Transaction> {
         }
 
         console.log("🔍 Fetching deposit details from bridge contract...");
+        console.log("📍 Bridge address:", CONTRACT_ADDRESSES.bridgeAddress);
+        console.log("📍 Deposit index (bigint):", this.index.toString());
+        console.log("📍 Provider URL:", this.provider._getConnection().url);
+        
         const [account, amount] = await this.bridge.deposits(this.index);
+        
+        console.log("📊 Raw deposit query result:", {
+            account,
+            amount: amount?.toString(),
+            isZeroAddress: account === ethers.ZeroAddress
+        });
+        
         if (account === ethers.ZeroAddress) {
-            throw new Error("Receiver must not be zero address");
+            console.error("❌ Deposit not found at index", this.index.toString());
+            console.error("📍 This could mean:");
+            console.error("  1. The deposit index is incorrect");
+            console.error("  2. The deposit hasn't been confirmed on-chain yet");
+            console.error("  3. The backend is looking at a different network");
+            throw new Error(`Receiver must not be zero address (deposit index: ${this.index.toString()})`);
         }
 
         if (amount <= 0) {
@@ -97,7 +108,8 @@ export class MintCommand implements ISignedCommand<Transaction> {
             const underlyingAsset = new ethers.Contract(underlyingAssetAddress, this.underlyingAssetAbi, this.provider);
             underlyingAssetDecimals = await underlyingAsset.decimals();
         }
-        const value: bigint = NativeToken.convertFromDecimals(amount, 6n);
+
+        const value: bigint = NativeToken.convertFromDecimals(amount, underlyingAssetDecimals);
         console.log("💰 Converted value:", {
             original: amount.toString(),
             converted: value.toString(),

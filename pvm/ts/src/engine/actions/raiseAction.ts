@@ -2,7 +2,6 @@ import { PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import { IAction, Range, Turn } from "../types";
-import { BetManager } from "../managers/betManager";
 
 class RaiseAction extends BaseAction implements IAction {
     get type(): PlayerActionType {
@@ -26,52 +25,58 @@ class RaiseAction extends BaseAction implements IAction {
         // 1. Perform basic validation (player active, player's turn, etc.)
         super.verify(player);
 
-        // 2. Cannot raise in the ANTE round
-        const currentRound = this.game.currentRound;
-        if (currentRound === TexasHoldemRound.ANTE) {
-            throw new Error("Cannot raise in the ante round. Only small and big blinds are allowed.");
-        }
+        // 1. Round state check: Cannot raise during ANTE, SHOWDOWN, or END rounds
+        this.validateNotInAnteRound();
+        this.validateNotInShowdownRound();
+        this.validateNotInEndRound();
 
-        if (currentRound === TexasHoldemRound.SHOWDOWN) {
-            throw new Error("Cannot raise in the showdown round.");
-        }
+        const currentRound = this.game.currentRound;
 
         // 3. Get the bets for the current round
         const includeBlinds = currentRound === TexasHoldemRound.PREFLOP;
+        const betManager = this.getBetManager(includeBlinds);
+        const currentBet: bigint = betManager.getLargestBet();
 
-        const actions = this.game.getActionsForRound(currentRound);
-        let newActions = [...actions];
-        if (includeBlinds) {
-            const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
-            newActions.push(...anteActions);
-        }
-
-        if (newActions.length < 2 && includeBlinds === true || newActions.length === 0 && includeBlinds === false) {
-            throw new Error("Cannot raise - no bets have been placed yet.");
-        }
-
-        const betManager = new BetManager(newActions);
-
-        const currentBet: bigint = betManager.current();
         if (currentBet === 0n) {
             throw new Error("Cannot raise - no bets have been placed yet.");
         }
 
         const playersBet: bigint = betManager.getTotalBetsForPlayer(player.address);
-        const minRaiseToAmount: bigint = playersBet + currentBet;
 
-        if (player.chips < minRaiseToAmount) {
+        // 4. Calculate the minimum raise amount for 3-bet/4-bet scenarios
+        // Use the actual last raise amount from bet manager
+        const lastRaiseAmount: bigint = betManager.getRaisedAmount();
+
+        // Minimum total bet amount after raise
+        const minTotalBetAmount: bigint = currentBet + lastRaiseAmount;
+
+        // Convert to additional amount needed  
+        const minRaiseAmount: bigint = minTotalBetAmount - playersBet;
+
+        if (player.chips < minRaiseAmount) {
             // Player can only go all-in
             return {
-                minAmount: player.chips, // Total amount if going all-in
+                minAmount: player.chips,
                 maxAmount: player.chips
             };
         }
 
         return {
-            minAmount: minRaiseToAmount,
+            minAmount: minRaiseAmount,  // Return additional amount needed, not total bet amount
             maxAmount: player.chips
         };
+    }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        // Verify the player can perform the raise action
+        if (amount <= 0n) {
+            throw new Error("Bet amount must be greater than zero.");
+        }
+
+        super.execute(player, index, amount);
+
+        // Set player state to ALL_IN if they have no chips left after the bet
+        this.setAllInWhenBalanceIsZero(player);
     }
 }
 

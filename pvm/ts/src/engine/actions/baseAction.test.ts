@@ -2,8 +2,8 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
 import TexasHoldemGame from "../texasHoldem";
-import { IUpdate, Turn } from "../types";
-import { getDefaultGame, mnemonic } from "../testConstants";
+import { IUpdate, TurnWithSeat } from "../types";
+import { getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
 
 // Test implementation of abstract BaseAction
 class TestAction extends BaseAction {
@@ -11,11 +11,33 @@ class TestAction extends BaseAction {
         return PlayerActionType.CHECK;
     }
 
-    public shouldReturnRange: boolean = false;
+    // Expose protected methods for testing
+    public testGetBetManager(includeBlinds?: boolean) {
+        return this.getBetManager(includeBlinds);
+    }
 
-    verify(player: Player) {
-        const baseResult = super.verify(player);
-        return this.shouldReturnRange ? { minAmount: 10n, maxAmount: 100n } : baseResult;
+    public testValidateNotInAnteRound() {
+        return this.validateNotInAnteRound();
+    }
+
+    public testValidateNotInShowdownRound() {
+        return this.validateNotInShowdownRound();
+    }
+
+    public testValidateInSpecificRound(round: TexasHoldemRound) {
+        return this.validateInSpecificRound(round);
+    }
+
+    public testValidateNotInSpecificRound(round: TexasHoldemRound) {
+        return this.validateNotInSpecificRound(round);
+    }
+
+    public testSetAllInWhenBalanceIsZero(player: Player) {
+        return this.setAllInWhenBalanceIsZero(player);
+    }
+
+    public testVerifyPlayerIsActive(player: Player) {
+        return this.verifyPlayerIsActive(player);
     }
 }
 
@@ -24,257 +46,195 @@ describe("BaseAction", () => {
     let updateMock: IUpdate;
     let action: TestAction;
     let player: Player;
-    let addedActions: Turn[];
 
     beforeEach(() => {
         // Setup initial game state
         const playerStates = new Map<number, Player | null>();
 
-        // Create player with correct constructor parameters
         const initialPlayer = new Player(
-            "0x980b8D8A16f5891F41871d878a479d81Da52334c", // address
-            undefined, // lastAction
-            1000n, // chips
-            undefined, // holeCards
-            PlayerStatus.ACTIVE // status
+            "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+            undefined,
+            ONE_THOUSAND_TOKENS,
+            undefined,
+            PlayerStatus.ACTIVE
         );
-        playerStates.set(0, initialPlayer);
+        playerStates.set(1, initialPlayer);
         game = getDefaultGame(playerStates);
 
-        addedActions = [];
         updateMock = {
-            addAction: (action: Turn) => {
-                addedActions.push(action);
-            }
+            addAction: jest.fn()
         };
 
         action = new TestAction(game, updateMock);
-        player = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 1000n, undefined, PlayerStatus.ACTIVE);
+        player = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
+
+        // Mock game state for basic functionality
+        jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+        jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+        jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+        jest.spyOn(game, "addAction").mockImplementation();
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     describe("verify", () => {
-        describe("game state validation", () => {
-            it.only("should throw error if player is not active", () => {
-                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
-                expect(() => action.verify(player)).toThrow("Must be currently active player.");
-            });
-
-            it.skip("should allow verification in non-showdown rounds", () => {
-                const rounds = [TexasHoldemRound.ANTE, TexasHoldemRound.PREFLOP, TexasHoldemRound.FLOP, TexasHoldemRound.TURN, TexasHoldemRound.RIVER];
-
-                rounds.forEach(round => {
-                    jest.spyOn(game, "currentRound", "get").mockReturnValue(round);
-                    jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                    jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
-
-                    expect(() => action.verify(player)).not.toThrow();
-                });
-            });
+        it("should allow verification for active player on their turn", () => {
+            const result = action.verify(player);
+            expect(result).toBeUndefined();
         });
 
-        describe("player validation", () => {
-            beforeEach(() => {
-                jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            });
+        it("should throw error if not player's turn", () => {
+            const differentPlayer = new Player("0x1234567890abcdef1234567890abcdef12345678", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(differentPlayer);
 
-            it("should throw error if not player's turn", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x456");
+            expect(() => action.verify(player)).toThrow("Must be currently active player.");
+        });
 
-                expect(() => action.verify(player)).toThrow("Must be currently active player.");
-            });
+        it("should throw error if player is not active", () => {
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
-            it("should throw error if player is not active", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+            expect(() => action.verify(player)).toThrow("Only active player can check.");
+        });
 
-                expect(() => action.verify(player)).toThrow("Must be currently active player.");
-            });
+        it("should allow ACTIVE players to act", () => {
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
-            it.skip("should allow verification for active player on their turn", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+            expect(() => action.verify(player)).not.toThrow();
+        });
 
-                expect(() => action.verify(player)).not.toThrow();
-            });
+        it("should throw error if player has no chips and action doesn't allow zero chips", () => {
+            const brokePlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 0n, undefined, PlayerStatus.ACTIVE);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(brokePlayer);
+
+            expect(() => action.verify(brokePlayer)).toThrow("Player has no chips left and cannot perform this action.");
         });
     });
 
-    describe.skip("execute", () => {
-        beforeEach(() => {
-            // Setup for successful verification
-            jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+    describe("execute", () => {
+        it("should deduct chips from player", () => {
+            const initialChips = player.chips;
+            action.execute(player, 1, 100n);
+
+            expect(player.chips).toBe(initialChips - 100n);
         });
 
-        describe("amount validation", () => {
-            it("should throw error if amount provided but not required", () => {
-                action.shouldReturnRange = false;
-                expect(() => action.execute(player, 0, 50n)).toThrow("Amount should not be specified for check");
-            });
+        it("should throw error if player has insufficient chips", () => {
+            const poorPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
 
-            it("should throw error if amount is less than minimum", () => {
-                action.shouldReturnRange = true;
-                expect(() => action.execute(player, 0, 5n)).toThrow("Amount is less than minimum allowed.");
-            });
-
-            it("should throw error if amount is greater than maximum", () => {
-                action.shouldReturnRange = true;
-                expect(() => action.execute(player, 0, 150n)).toThrow("Amount is greater than maximum allowed.");
-            });
-
-            it("should accept amount within valid range", () => {
-                action.shouldReturnRange = true;
-                expect(() => action.execute(player, 0, 50n)).not.toThrow();
-            });
+            expect(() => action.execute(poorPlayer, 1, 100n)).toThrow("Player has insufficient chips to check.");
         });
 
-        describe("chip handling", () => {
-            it("should throw error if player has insufficient chips", () => {
-                action.shouldReturnRange = true;
-                const poorPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 5n, undefined, PlayerStatus.ACTIVE);
+        it("should add action to game", () => {
+            action.execute(player, 1, 100n);
 
-                expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check.");
-            });
-
-            it("should deduct correct amount from player chips", () => {
-                action.shouldReturnRange = true;
-                const initialChips = player.chips;
-                action.execute(player, 0, 50n);
-                expect(player.chips).toBe(initialChips - 50n);
-            });
-
-            it("should handle all-in scenario", () => {
-                action.shouldReturnRange = true;
-                const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
-                action.execute(allInPlayer, 0, 50n);
-
-                expect(allInPlayer.chips).toBe(0n);
-                expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
-            });
+            expect(game.addAction).toHaveBeenCalledWith({
+                playerId: player.address,
+                action: PlayerActionType.CHECK,
+                amount: 100n,
+                index: 1
+            }, TexasHoldemRound.PREFLOP);
         });
 
-        describe("action recording", () => {
-            it("should record normal action", () => {
-                action.shouldReturnRange = true;
-                action.execute(player, 0, 50n);
+        it("should convert to ALL_IN when player uses all chips", () => {
+            const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 100n, undefined, PlayerStatus.ACTIVE);
+            action.execute(allInPlayer, 1, 100n);
 
-                expect(addedActions[0]).toEqual({
-                    playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    action: PlayerActionType.CHECK,
-                    amount: 50n
-                });
-            });
-
-            it("should record action without amount when not required", () => {
-                action.shouldReturnRange = false;
-                action.execute(player, 0, 0n);
-
-                expect(addedActions[0]).toEqual({
-                    playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
-                    action: PlayerActionType.CHECK,
-                    amount: 0n
-                });
-            });
+            expect(game.addAction).toHaveBeenCalledWith({
+                playerId: allInPlayer.address,
+                action: PlayerActionType.ALL_IN,
+                amount: 100n,
+                index: 1
+            }, TexasHoldemRound.PREFLOP);
         });
     });
 
-    describe.skip("round-specific behavior", () => {
-        beforeEach(() => {
-            jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-            jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+    describe("utility methods", () => {
+        describe("getBetManager", () => {
+            beforeEach(() => {
+                const mockActions: TurnWithSeat[] = [
+                    { playerId: player.address, action: PlayerActionType.BET, amount: 100n, index: 1, seat: 1, timestamp: Date.now() }
+                ];
+                jest.spyOn(game, "getActionsForRound").mockReturnValue(mockActions);
+            });
+
+            it("should return BetManager for current round", () => {
+                const betManager = action.testGetBetManager();
+                expect(betManager).toBeDefined();
+                expect(betManager.getLargestBet()).toBe(100n);
+            });
+
+            it("should include blinds when requested", () => {
+                const anteActions: TurnWithSeat[] = [
+                    { playerId: player.address, action: PlayerActionType.SMALL_BLIND, amount: 50n, index: 0, seat: 1, timestamp: Date.now() }
+                ];
+                jest.spyOn(game, "getActionsForRound").mockReturnValueOnce([]).mockReturnValueOnce(anteActions);
+
+                const betManager = action.testGetBetManager(true);
+                expect(betManager).toBeDefined();
+            });
         });
 
-        describe("ANTE round", () => {
-            beforeEach(() => {
+        describe("round validation methods", () => {
+            it("validateNotInAnteRound should throw error in ANTE round", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
+
+                expect(() => action.testValidateNotInAnteRound()).toThrow("Cannot check in the ante round.");
             });
 
-            it("should validate blind actions during ANTE", () => {
-                action.shouldReturnRange = true;
-                expect(() => action.verify(player)).not.toThrow();
-            });
-        });
-
-        describe("PREFLOP round", () => {
-            beforeEach(() => {
+            it("validateNotInAnteRound should not throw error in other rounds", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+
+                expect(() => action.testValidateNotInAnteRound()).not.toThrow();
             });
 
-            it("should validate betting actions", () => {
-                action.shouldReturnRange = true;
-                expect(() => action.verify(player)).not.toThrow();
-            });
-        });
-
-        describe("betting sequence validation", () => {
-            it("should handle all-in situations correctly", () => {
-                const shortStackPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 25n, undefined, PlayerStatus.ACTIVE);
-                action.shouldReturnRange = true;
-                action.execute(shortStackPlayer, 0, 25n);
-                expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
-            });
-        });
-    });
-
-    describe.skip("BaseAction core functions", () => {
-        describe("verify function", () => {
-            it("should check game round is not SHOWDOWN", () => {
+            it("validateNotInShowdownRound should throw error in SHOWDOWN round", () => {
                 jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
 
-                expect(() => action.verify(player)).toThrow("Hand has ended.");
+                expect(() => action.testValidateNotInShowdownRound()).toThrow("Cannot check in the showdown round.");
             });
 
-            it("should check if it's player's turn", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x456"); // different player ID
+            it("validateInSpecificRound should throw error if not in required round", () => {
+                jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
 
-                expect(() => action.verify(player)).toThrow("Must be currently active player.");
+                expect(() => action.testValidateInSpecificRound(TexasHoldemRound.ANTE)).toThrow("check can only be performed during ante round.");
             });
 
-            it("should check if player is active", () => {
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+            it("validateNotInSpecificRound should throw error if in forbidden round", () => {
+                jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.SHOWDOWN);
 
-                expect(() => action.verify(player)).toThrow("Only active player can check.");
+                expect(() => action.testValidateNotInSpecificRound(TexasHoldemRound.SHOWDOWN)).toThrow("check action is not allowed during showdown round.");
             });
         });
 
-        describe("execute function", () => {
-            beforeEach(() => {
-                // Setup for successful verification
-                jest.spyOn(game, "currentPlayerId", "get").mockReturnValue("0x980b8D8A16f5891F41871d878a479d81Da52334c");
-                jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-                jest.spyOn(game as any, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+        describe("setAllInWhenBalanceIsZero", () => {
+            it("should set player status to ALL_IN when chips are zero", () => {
+                const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 0n, undefined, PlayerStatus.ACTIVE);
+                action.testSetAllInWhenBalanceIsZero(allInPlayer);
+
+                expect(allInPlayer.status).toBe(PlayerStatus.ALL_IN);
             });
 
-            it("should validate amount when range is provided", () => {
-                action.shouldReturnRange = true;
-                expect(() => action.execute(player, 0, 5n)).toThrow("Amount is less than minimum allowed.");
+            it("should not change status when player has chips", () => {
+                action.testSetAllInWhenBalanceIsZero(player);
+                expect(player.status).toBe(PlayerStatus.ACTIVE);
+            });
+        });
+
+        describe("verifyPlayerIsActive", () => {
+            it("should not throw error for active player", () => {
+                expect(() => action.testVerifyPlayerIsActive(player)).not.toThrow();
             });
 
-            it("should not allow amount when range is undefined", () => {
-                action.shouldReturnRange = false;
-                expect(() => action.execute(player, 0, 50n)).toThrow("Amount should not be specified for check");
+            it("should not throw error for ACTIVE player", () => {
+                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+                expect(() => action.testVerifyPlayerIsActive(player)).not.toThrow();
             });
 
-            it("should check if player has sufficient chips", () => {
-                action.shouldReturnRange = true;
-                const poorPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 5n, undefined, PlayerStatus.ACTIVE);
-                expect(() => action.execute(poorPlayer, 0, 50n)).toThrow("Player has insufficient chips to check");
-            });
-
-            it("should deduct chips correctly", () => {
-                action.shouldReturnRange = true;
-                const initialChips = player.chips;
-                action.execute(player, 0, 50n);
-                expect(player.chips).toBe(initialChips - 50n);
-            });
-
-            it("should convert to ALL_IN when player uses all chips", () => {
-                action.shouldReturnRange = true;
-                const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 50n, undefined, PlayerStatus.ACTIVE);
-                action.execute(allInPlayer, 0, 50n);
-                expect(addedActions[0].action).toBe(PlayerActionType.ALL_IN);
+            it("should throw error for folded player", () => {
+                jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
+                expect(() => action.testVerifyPlayerIsActive(player)).toThrow("Only active player can check.");
             });
         });
     });

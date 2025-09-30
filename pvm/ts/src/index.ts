@@ -27,6 +27,16 @@ app.get("/", (req: Request, res: Response) => {
     res.send(`PVM RPC Server v${version}`);
 });
 
+// Health check endpoint for Docker
+app.get("/health", (req: Request, res: Response) => {
+    res.json({
+        status: "healthy",
+        version: version,
+        timestamp: new Date().toISOString(),
+        service: "pvm-rpc-server"
+    });
+});
+
 // WebSocket status endpoint
 app.get("/socket-status", (req: Request, res: Response) => {
     res.json({

@@ -31,10 +31,14 @@ export interface IDealerGameInterface {
     // setDealerPosition(seat: number): void;
 }
 
+export interface IPositionManager {
+    findNextActivePlayer(currentSeat: number): Player | undefined;
+}
+
 /**
  * Interface defining the dealer position management contract
  */
-export interface IDealerPositionManager {
+export interface IDealerPositionManager extends IPositionManager {
     // Core dealer position methods
     getDealerPosition(): number;
     
@@ -44,6 +48,7 @@ export interface IDealerPositionManager {
     handleNewHand(): number;
     
     // Position getters
+    getPosition(name: string): number;
     getSmallBlindPosition(): number;
     getBigBlindPosition(): number;
     
@@ -102,3 +107,9 @@ export type Winner = {
     name: string | undefined;
     description: string | undefined;
 };
+
+export type Result = {
+    place: number;
+    playerId: string;
+    payout: bigint;
+}

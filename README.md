@@ -1,172 +1,226 @@
+# Poker VM
+
 [![PVM UnitTests](https://github.com/block52/poker-vm/actions/workflows/main.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/main.yml)
 
-# poker-vm
-
-The Layer 2 poker game virtual machine.
+The Layer 2 poker game virtual machine for the Block52 network.
 
 ![image](https://github.com/user-attachments/assets/29412b57-3419-4177-b265-1e74e7c7c2e9)
 
+## Architecture
 
-## CVM
+### CVM (Card Virtual Machine)
 
-The CVM is a virtual card game machine that runs on the Block52 network. It is responsible for executing the card game logic.
+The CVM is a virtual card game machine that runs on the Block52 network, responsible for executing card game logic.
 
-## PVM
+### PVM (Poker Virtual Machine)
 
-The PVM is a virtual poker game machine that runs inside the CVM. It is responsible for executing the poker game logic.
+The PVM runs inside the CVM and handles poker-specific game logic.
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose installed on your machine
-- Git
+-   Docker and Docker Compose
+-   Git
+-   Node.js 20+ (for local development)
+-   Yarn
 
-### Setup and Running
+### Docker Setup (Recommended)
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/block52/poker-vm.git
-   cd block52-proxy
-   ```
+1. **Clone the repository:**
 
-3. Start the services:
-   ```bash
-   docker compose up
-   ```
+    ```bash
+    git clone https://github.com/block52/poker-vm.git
+    cd poker-vm
+    ```
 
-4. The services will be available at:
-   - PVM RPC: http://localhost:3000
-   - API Documentation: http://localhost:3000/docs
-   - MongoDB: localhost:27017
+2. **Start with Docker (one command):**
 
-### Development
+    ```bash
+    ./start-docker.sh
+    ```
 
-The API service is configured with volume mapping, so any changes you make to the code will be reflected immediately without needing to rebuild the container.
+    Or manually:
 
-To run only specific services:
+    ```bash
+    # Copy environment template
+    cp .env.example .env
 
-## Running PVM Locally
+    # Start all services
+    make up
+    # OR
+    docker compose up -d
+    ```
 
-To run the PVM locally for development and testing:
+3. **Access services:**
+    - 🎰 **Poker UI**: http://localhost:5173
+    - 🔧 **PVM API**: http://localhost:8545
+    - 🔧 **API Health**: http://localhost:8545/health
+    - 🗄️ **MongoDB**: mongodb://localhost:27017
 
-1. Navigate to the PVM directory:
-   ```bash
-   cd pvm/ts
-   ```
+### Manual Setup (Development)
 
-2. Start the local MongoDB instance using the local Docker Compose file:
-   ```bash
-   docker compose up
-   ```
+## Development
 
-3. Connect to the local MongoDB database:
-   - **Connection string**: `DB_URL=mongodb://node1:Passw0rd123@localhost:27017`
-   - **For GUI tools** (like DataGrip, MongoDB Compass):
-     - Host: `localhost`
-     - Port: `27019`
-     - Database: `pvm`
-     - Authentication: None (or as configured)
+### Local PVM Development
 
-4. Start the PVM application:
-   ```bash
-   yarn run dev
-   ```
-   
-5. The local PVM will be available at:
-   - API: http://localhost:3000
+1. **Navigate to PVM directory:**
 
-6. To stop the local MongoDB instance:
-   ```bash
-   docker compose down
-   ```
+    ```bash
+    cd pvm/ts
+    ```
 
-## Running in Production
+2. **Start local MongoDB:**
 
-*[Production deployment instructions and connection to Block52 network will be added in the future]*
+    ```bash
+    docker compose up
+    ```
 
-## Game Start Countdown
+3. **Start PVM application:**
 
-The poker table includes a countdown timer feature for coordinating synchronized game starts. This is particularly useful for testing and tournament scenarios where multiple players need to begin at the exact same time.
+    ```bash
+    yarn install
+    yarn run dev
+    ```
 
-### Usage
+4. **Local services:**
+    - API: http://localhost:8545
+    - MongoDB: `mongodb://node1:Passw0rd123@localhost:27017`
 
-Add the `gameStart` URL parameter to any table link to automatically display a countdown modal:
+### Testing
 
-```
-http://localhost:3000/table/0x123abc?gameStart=2025-06-16T15:30:00
-```
-
-### URL Parameter Format
-
-**Parameter:** `gameStart`  
-**Value:** Any valid date/time string that JavaScript's `new Date()` can parse
-
-**⚠️ Important:** When using timezone offsets with `+`, you must URL encode the `+` as `%2B` in the browser address bar.
-
-#### Valid Examples:
+Run unit tests:
 
 ```bash
-# Simple format (no timezone issues)
-?gameStart=2025-06-16T15:30:00
-
-# With UTC timezone 
-?gameStart=2025-06-16T15:30:00Z
-
-# Brisbane timezone (URL encoded + sign)
-?gameStart=2025-06-16T15:30:00%2B10:00
-
-# Simple date/time
-?gameStart=2025-06-16 15:30:00
-
-# Unix timestamp (milliseconds)
-?gameStart=1718524200000
+cd pvm/ts
+yarn test
 ```
 
-### Testing Examples
+### Building for Production
 
-#### Quick Test (30 seconds from now):
-
-```javascript
-// Run in browser console to generate test URL:
-const futureTime = new Date(Date.now() + 30000).toISOString();
-console.log(`/table/YOUR_TABLE_ID?gameStart=${futureTime}`);
-```
-
-#### Simple Test Examples:
 ```bash
-# 5 minutes from now (no timezone issues)
-?gameStart=2025-06-16T15:35:00
-
-# Tomorrow at 2:00 PM UTC
-?gameStart=2025-06-17T14:00:00Z
-
-# Brisbane time (URL encoded)
-?gameStart=2025-06-17T14:00:00%2B10:00
+cd pvm/ts
+yarn build
 ```
 
-### Coordination Workflow
+## Docker Deployment
 
-1. **Create a table** through the normal process
-2. **Get the table ID** from the URL: `/table/0x123abc`
-3. **Add countdown parameter:** `/table/0x123abc?gameStart=2025-06-16T20:00:00Z`
-4. **Share this URL** with all testers
-5. **All players** see synchronized countdown
-6. **Modal disappears** when countdown reaches zero
+### Quick Docker Setup
 
-### Features
+The easiest way to run the entire stack:
 
-- ✅ **Screen lock** until countdown completes
-- ✅ **Brisbane timezone** calculation and display  
-- ✅ **Live countdown** with days, hours, minutes, seconds
-- ✅ **Auto-cleanup** - removes URL parameter when done
-- ✅ **Dev skip button** - only shows in development mode
-- ✅ **Graceful fallback** - invalid dates are ignored
+```bash
+# One-command setup
+./start-docker.sh
 
+# Or step by step
+cp .env.example .env  # Configure as needed
+make up               # Start all services
+make health           # Check service health
+```
 
-# SDK
+### Docker Services
 
-To publish the SDK.
+| Service      | Port  | Description                                  |
+| ------------ | ----- | -------------------------------------------- |
+| **PVM**      | 8545  | Poker Virtual Machine (Node.js + TypeScript) |
+| **Frontend** | 5173  | React UI with hot reload                     |
+| **MongoDB**  | 27017 | Game state database                          |
+| **Redis**    | 6379  | Caching and sessions                         |
+
+### Docker Commands
+
+```bash
+# Service management
+make build          # Build all images
+make up             # Start services
+make down           # Stop services
+make logs           # View logs
+make restart        # Restart services
+
+# Environment-specific
+make dev            # Development mode
+make prod           # Production mode
+
+# Utilities
+make health         # Check service health
+make clean          # Clean up containers/volumes
+make mongo-shell    # Connect to MongoDB
+make redis-cli      # Connect to Redis
+```
+
+### Production Deployment
+
+```bash
+# Production mode with Nginx + optimized builds
+NODE_ENV=production make prod
+
+# Or manually
+docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
+```
+
+For detailed Docker documentation, see [DOCKER.md](./DOCKER.md).
+
+## Game Features
+
+### Player Status
+
+The PVM tracks various player states throughout the game:
+
+| Status        | Description                          | Can Act | Receives Cards | Notes                                |
+| ------------- | ------------------------------------ | ------- | -------------- | ------------------------------------ |
+| `SEATED`      | Player has joined but not yet active | ❌      | ❌             | Waiting for next hand to start       |
+| `ACTIVE`      | Player is actively participating     | ✅      | ✅             | Default status for joined players    |
+| `BUSTED`      | Player has no chips left             | ❌      | ❌             | Eliminated from tournament/cash game |
+| `FOLDED`      | Player has folded their hand         | ❌      | ❌             | Cannot act until next hand           |
+| `ALL_IN`      | Player has bet all their chips       | ❌      | ✅             | Eligible for side pots               |
+| `SITTING_OUT` | Player is temporarily away           | ❌      | ❌             | Preserves seat, skipped in dealing   |
+| `SITTING_IN`  | Player is returning from sitting out | ✅      | ✅             | Transitioning back to active         |
+| `SHOWING`     | Player is showing cards at showdown  | ❌      | ✅             | Cards revealed to table              |
+
+**Status Transitions:**
+
+-   `SEATED` → `ACTIVE` (when hand begins)
+-   `ACTIVE` → `FOLDED` (fold action)
+-   `ACTIVE` → `ALL_IN` (bet all chips)
+-   `ACTIVE` → `SITTING_OUT` (sit out action)
+-   `SITTING_OUT` → `SITTING_IN` (sit in action)
+-   `SITTING_IN` → `ACTIVE` (next hand starts)
+-   `ACTIVE` → `SHOWING` (showdown phase)
+-   `ACTIVE` → `BUSTED` (lose all chips)
+
+### Countdown Timer
+
+Coordinate synchronized game starts using the `gameStart` URL parameter:
+
+```
+http://localhost:8545/table/0x123abc?gameStart=2025-06-16T15:30:00Z
+```
+
+**Parameter formats:**
+
+-   ISO 8601: `2025-06-16T15:30:00Z`
+-   With timezone: `2025-06-16T15:30:00%2B10:00` (URL encoded)
+-   Unix timestamp: `1718524200000`
+
+**Features:**
+
+-   Screen lock until countdown completes
+-   Live countdown display
+-   Auto-cleanup when complete
+-   Dev skip button (development mode only)
+
+### Bitcoin Payments
+
+Enable Bitcoin payments by setting in `.env`:
+
+```
+BTC_PAY_SERVER_URL=http://localhost:3001
+```
+
+## SDK
+
+### Publishing
 
 ```bash
 cd sdk
@@ -174,49 +228,23 @@ nvm use 20.18
 yarn prepare && yarn publish
 ```
 
-# Node
-## Creating the transaction
+## Blockchain Integration
 
--   Transactions are sent to the node
--   Node validates the transaction signature
--   Node validates the transaction nonce
--   Node validates the transaction balance, via the account state manager
--   Transaction is added to the transaction mem pool
+### Smart Contracts
 
-## Creating the block
+| Contract | Description                 | Address                                      | Network |
+| -------- | --------------------------- | -------------------------------------------- | ------- |
+| Bridge   | Deposit stables to poker VM | `0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d` | mainnet |
+| Vault    | Validator staking           | `0x893c26846d7cE76445230B2b6285a663BF4C3BF5` | mainnet |
 
--   Nodes are selected in a round robin fashion
--   Transactions are pulled from the mem pool
--   Transactions are replayed in the order they were received, and by the nonce
--   The account state manager is updated with the new balances
--   The block is created and signed by the node
--   The block is sent to the network
+### Test Accounts
 
-## Receiving the block
+-   Alice: `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
+-   Bob: `0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8`
 
--   The block is received by another node
--   The block is validated by the node, with validators public key, merkle root, and signature
--   The block is added to the block state manager
+### Genesis Block
 
-## Scripts
-
-### Test accounts
-
-Alice `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
-Bob `0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8`
-
-
-### Tokens and contracts
-
-| Contract | Description                            | Address                                      | Network |
-| -------- | -------------------------------------- | -------------------------------------------- | ------- |
-| `Token`  | The token used for the poker game      | ``                                           | ``      |
-| `Bridge` | The bridge contract to deposit stables to the poker VM | `0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d` | `mainnet`  |
-| `Vault`  | The vault contract for validators to stake | `0x893c26846d7cE76445230B2b6285a663BF4C3BF5` | `mainnet`  |
-
-## Genesis block
-
-Genesis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
+Genesis account: `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 
 ```json
 {
@@ -231,17 +259,39 @@ Genesis account `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
 }
 ```
 
-```json
-{
-    "address": "0x513d31f0aa9380c5a0f16a996850b9538f74f936",
-    "msg": "0x513d31f0aA9380C5A0F16A996850B9538f74F936",
-    "sig": "9994fe4ba79f3a919b8b17263575f8362d7c67ca46febfa874699fa210cf87563c042de9b07bdc33c80727eb73e93394c6064c7989ebeb0aca79f4c5276cfd8e1c",
-    "version": "3",
-    "signer": "MEW"
-}
+## Node Architecture
+
+### Transaction Processing
+
+1. Transactions sent to node
+2. Node validates signature, nonce, and balance
+3. Transaction added to mempool
+
+### Block Creation
+
+1. Nodes selected in round-robin fashion
+2. Transactions pulled from mempool
+3. Transactions replayed by order and nonce
+4. Account state updated
+5. Block created and signed
+6. Block broadcast to network
+
+### Block Validation
+
+1. Block received by nodes
+2. Validated using public key, merkle root, and signature
+3. Block added to blockchain state
+
+## Docker
+
+### Building Image
+
+```bash
+cd pvm/ts
+docker build -t poker-vm .
+docker run -p 8545:8545 poker-vm
 ```
 
+## License
 
-## Notes
-
-RANDO https://eth2book.info/capella/part2/building_blocks/randomness/#the-randao
+[License information needed]

@@ -41,3 +41,12 @@ export type BurnResponseDTO = {
     };
     burnTransaction: TransactionDTO;
 };
+
+export type WithdrawResponseDTO = {
+    nonce: string;
+    receiver: string;
+    amount: string;
+    signature: string;
+    timestamp: string;
+    withdrawSignature: string;
+};

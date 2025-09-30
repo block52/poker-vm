@@ -1,11 +1,9 @@
-
 import { createSign } from "crypto";
 import { ICommand } from "./interfaces";
 
 export class SignCommand implements ICommand<String> {
-
     private privateKey: string;
-    private hashAlgorithm: string = 'SHA256';
+    private hashAlgorithm: string = "SHA256";
 
     constructor(readonly message: string) {
         this.message = message;
@@ -23,7 +21,7 @@ IGxwPjFJZyl5BbHKhgjZBBkGieTthxtX0FSOB3Pcy/W8ZMkP6AvUMqZ7
         sign.end();
 
         // Sign the message using the private key
-        const signature = sign.sign(this.privateKey, 'hex');
+        const signature = sign.sign(this.privateKey, "hex");
         return signature;
     }
 }

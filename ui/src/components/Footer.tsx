@@ -1,45 +1,50 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import * as React from "react";
-import { ActionDTO, NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
-import { useTableState } from "../hooks/useTableState";
+import React, { useEffect, useState, useMemo } from "react";
+import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useParams } from "react-router-dom";
+import { colors } from "../utils/colorConfig";
+import { ethers } from "ethers";
 
-// Import our custom hooks
+// Import hooks from barrel file
+import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
+
+// Import specific hooks not in barrel
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
-import { dealCards } from "../hooks/playerActions/dealCards";
-import { checkHand } from "../hooks/playerActions/checkHand";
-import { foldHand } from "../hooks/playerActions/foldHand";
-import { raiseHand } from "../hooks/playerActions/raiseHand";
-import { postSmallBlind } from "../hooks/playerActions/postSmallBlind";
-import { postBigBlind } from "../hooks/playerActions/postBigBlind";
-import { useNextToActInfo } from "../hooks/useNextToActInfo";
-import { callHand } from "../hooks/playerActions/callHand";
-import { betHand } from "../hooks/playerActions/betHand";
-import { muckCards } from "../hooks/playerActions/muckCards";
-import { showCards } from "../hooks/playerActions/showCards";
-import { startNewHand } from "../hooks/playerActions/startNewHand";
-import { usePlayerTimer } from "../hooks/usePlayerTimer";
-import { useGameOptions } from "../hooks/useGameOptions";
 import { useGameStateContext } from "../context/GameStateContext";
 
-import { ethers } from "ethers";
-;
+// Import action handlers (removing unused ones)
+import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import { getActionByType, hasAction } from "../utils/actionUtils";
+import { getRaiseToAmount } from "../utils/raiseUtils";
+import "./Footer.css";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
 
-    // Add ref to track if we're already attempting to auto-deal
-    const attemptToAutoDeal = useRef<boolean>(false);
+    // Detect mobile landscape orientation
+    const [isMobileLandscape, setIsMobileLandscape] = useState(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
+
+    useEffect(() => {
+        const checkOrientation = () => {
+            setIsMobileLandscape(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
+        };
+
+        window.addEventListener("resize", checkOrientation);
+        window.addEventListener("orientationchange", checkOrientation);
+
+        return () => {
+            window.removeEventListener("resize", checkOrientation);
+            window.removeEventListener("orientationchange", checkOrientation);
+        };
+    }, []);
 
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions();
     const { gameOptions } = useGameOptions();
-    // Direct function imports - no hook destructuring needed
 
     // Use the useNextToActInfo hook
-    const { isCurrentUserTurn, timeRemaining } = useNextToActInfo(tableId);
+    const { isCurrentUserTurn } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
     const { currentRound, formattedTotalPot } = useTableState();
@@ -59,22 +64,17 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Replace userPlayer with direct checks from our hook data
     const userPlayer = players?.find((player: PlayerDTO) => player.address?.toLowerCase() === userAddress);
 
-    // Helper function to check if an action exists in legal actions (handles both string and enum types)
-    const hasAction = (actionType: string | PlayerActionType | NonPlayerActionType) => {
-        return legalActions?.some(action => action.action === actionType || action.action?.toString() === actionType?.toString());
-    };
-
     // Check if actions are available using the helper function
-    const hasSmallBlindAction = hasAction(PlayerActionType.SMALL_BLIND);
-    const hasBigBlindAction = hasAction(PlayerActionType.BIG_BLIND);
-    const hasFoldAction = hasAction(PlayerActionType.FOLD);
-    const hasCheckAction = hasAction(PlayerActionType.CHECK);
-    const hasCallAction = hasAction(PlayerActionType.CALL);
-    const hasBetAction = hasAction(PlayerActionType.BET);
-    const hasRaiseAction = hasAction(PlayerActionType.RAISE);
-    const hasMuckAction = hasAction(PlayerActionType.MUCK);
-    const hasShowAction = hasAction(PlayerActionType.SHOW);
-    const hasDealAction = hasAction(NonPlayerActionType.DEAL);
+    const hasSmallBlindAction = hasAction(legalActions, PlayerActionType.SMALL_BLIND);
+    const hasBigBlindAction = hasAction(legalActions, PlayerActionType.BIG_BLIND);
+    const hasFoldAction = hasAction(legalActions, PlayerActionType.FOLD);
+    const hasCheckAction = hasAction(legalActions, PlayerActionType.CHECK);
+    const hasCallAction = hasAction(legalActions, PlayerActionType.CALL);
+    const hasBetAction = hasAction(legalActions, PlayerActionType.BET);
+    const hasRaiseAction = hasAction(legalActions, PlayerActionType.RAISE);
+    const hasMuckAction = hasAction(legalActions, PlayerActionType.MUCK);
+    const hasShowAction = hasAction(legalActions, PlayerActionType.SHOW);
+    const hasDealAction = hasAction(legalActions, NonPlayerActionType.DEAL);
 
     // Show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction && isUsersTurn;
@@ -82,16 +82,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Hide other buttons when deal is available since dealing should be prioritized
     const hideOtherButtons = shouldShowDealButton;
 
-    // Find the specific actions
-    const getActionByType = (actionType: string | PlayerActionType | NonPlayerActionType) => {
-        return legalActions?.find(action => action.action === actionType || action.action?.toString() === actionType?.toString());
-    };
-
-    const smallBlindAction = getActionByType(PlayerActionType.SMALL_BLIND);
-    const bigBlindAction = getActionByType(PlayerActionType.BIG_BLIND);
-    const callAction = getActionByType(PlayerActionType.CALL);
-    const betAction = getActionByType(PlayerActionType.BET);
-    const raiseAction = getActionByType(PlayerActionType.RAISE);
+    const smallBlindAction = getActionByType(legalActions, PlayerActionType.SMALL_BLIND);
+    const bigBlindAction = getActionByType(legalActions, PlayerActionType.BIG_BLIND);
+    const callAction = getActionByType(legalActions, PlayerActionType.CALL);
+    const betAction = getActionByType(legalActions, PlayerActionType.BET);
+    const raiseAction = getActionByType(legalActions, PlayerActionType.RAISE);
 
     // Convert values to USDC for faster display
     const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
@@ -105,103 +100,52 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     const getStep = () => {
         return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
-    }
-
-    const getRaiseToAmount = (): number => {
-        // Get players previous actions
-        const previousActions = gameState?.previousActions.filter(action => action.playerId?.toLowerCase() === userAddress?.toLowerCase());
-
-        if (!previousActions || previousActions.length === 0) {
-            // If no previous actions, return the minimum raise amount
-            return minRaise;
-        }
-
-        if (!gameState || !gameState.round) {
-            console.error("Game state is not available");
-            return minRaise;
-        }
-
-        const currentRoundActions: ActionDTO[] = previousActions.filter(action => action.round === gameState.round);
-
-        // If the current round is PREFLOP, include ante actions
-        if (gameState.round === TexasHoldemRound.PREFLOP) {
-            const anteAction = previousActions.find(action => action.action === PlayerActionType.SMALL_BLIND || action.action === PlayerActionType.BIG_BLIND);
-            if (anteAction) {
-                // Add ante action to the current round actions
-                currentRoundActions.push(anteAction);
-            }
-        }
-
-        // Filter by bet and raise actions only
-        const previousBetsAndRaises: ActionDTO[] = currentRoundActions.filter(
-            action =>
-                action.action === PlayerActionType.BET ||
-                action.action === PlayerActionType.RAISE ||
-                action.action === PlayerActionType.CALL ||
-                action.action === PlayerActionType.SMALL_BLIND ||
-                action.action === PlayerActionType.BIG_BLIND
-        );
-
-        // Sum the raise amount and previous bets/raises
-        const totalPreviousBetsAndRaises: number = previousBetsAndRaises.reduce((sum, action) => {
-            const amount = action.amount ? Number(ethers.formatUnits(action.amount, 18)) : 0;
-            return sum + amount;
-        }, 0);
-
-        // Calculate the raise amount based on previous bets/raises
-        return raiseAmount > 0 ? raiseAmount + totalPreviousBetsAndRaises : minRaise;
     };
 
-    // These are the delta amounts
-    const [raiseAmount, setRaiseAmount] = useState<number>(minRaise);
-    const [, setRaiseInputRaw] = useState<string>(minRaise.toFixed(2)); // or minBet
+    // These are the default amounts - initialize with proper minimum
+    const initialAmount = hasBetAction ? (minBet > 0 ? minBet : 0) : minRaise > 0 ? minRaise : 0;
+    const [raiseAmount, setRaiseAmount] = useState<number>(initialAmount);
+    const [, setRaiseInputRaw] = useState<string>(initialAmount.toFixed(2));
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
     // Handle raise amount changes from slider or input
+    const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], currentRound, userAddress || "");
+    console.log(`Raise action amount: ${raiseActionAmount}`);
+
     const isRaiseAmountInvalid = hasRaiseAction
-        ? getRaiseToAmount() < minRaise || getRaiseToAmount() > maxRaise
+        ? raiseAmount < minRaise || raiseAmount > maxRaise
         : hasBetAction
-        ? getRaiseToAmount() < minBet || getRaiseToAmount() > maxBet
+        ? raiseAmount < minBet || raiseAmount > maxBet
         : false;
 
     // Get total pot for percentage calculations
     const totalPot = Number(formattedTotalPot) || 0;
 
-    // Direct function imports - no hook destructuring needed for sit in/out
+    // Dynamic class names based on validation state
+    const inputFieldClassName = useMemo(() => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
-    // Add timer extension functionality for the footer button
-    const userSeat = userPlayer?.seat;
-    const { extendTime, canExtend } = usePlayerTimer(tableId, userSeat);
+    const minMaxTextClassName = useMemo(() => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
-    // Get the timeout duration from game options for display
-    const timeoutDuration = useMemo(() => {
-        if (!gameOptions?.timeout) return 30;
-        // Timeout now comes as milliseconds directly, convert to seconds
-        return Math.floor(gameOptions.timeout / 1000);
-    }, [gameOptions]);
+    // Memoize expensive computations
+    const formattedSmallBlindAmount = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
+    const formattedBigBlindAmount = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
+    const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
 
-    // Handler for footer extension button
-    const handleExtendTimeFromFooter = useCallback(() => {
-        if (!extendTime || !canExtend) {
-            console.log("Cannot extend time - not available or already used");
-            return;
-        }
+    // Removed formattedRaiseAmount - we use raiseAmount directly now
 
-        extendTime();
-        console.log(`⏰ Time extended by ${timeoutDuration} seconds from footer button`);
-    }, [extendTime, canExtend, timeoutDuration]);
+    const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
+
+    // Remove hover event handlers since we're using CSS hover states
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_public_key");
         if (!localKey) return setPublicKey(undefined);
-
         setPublicKey(localKey);
     }, [publicKey]);
 
     useEffect(() => {
         const localKey = localStorage.getItem("user_eth_private_key");
         if (!localKey) return setPrivateKey(undefined);
-
         setPrivateKey(localKey);
     }, [privateKey]);
 
@@ -214,15 +158,18 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         const newRaiseAmount = currentRaiseAmount + delta;
         setRaiseAmount(newRaiseAmount);
-    }
+    };
 
-    // Min Raise Text Prefill
+    const setRaiseAmountAbsolute = (amount: number) => {
+        setRaiseAmount(amount);
+    };
+
+    // Min Raise Text Prefill - Always set to minimum when actions become available
     useEffect(() => {
         if (hasRaiseAction && minRaise > 0) {
             setRaiseAmount(minRaise);
             setRaiseInputRaw(minRaise.toFixed(2));
-        } 
-        if (hasBetAction && minBet > 0) {
+        } else if (hasBetAction && minBet > 0) {
             setRaiseAmount(minBet);
             setRaiseInputRaw(minBet.toFixed(2));
         }
@@ -235,7 +182,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
         if (!smallBlindAmount) return;
 
-        // Simple call - let errors bubble up naturally
         await postSmallBlind(tableId, smallBlindAmount);
     };
 
@@ -245,53 +191,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
         if (!bigBlindAmount) return;
 
-        // Simple call - let errors bubble up naturally
         await postBigBlind(tableId, bigBlindAmount);
-    };
-
-    const handleCheck = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await checkHand(tableId);
-        } catch (error: any) {
-            console.error("Failed to check:", error);
-        }
-    };
-
-    const handleFold = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await foldHand(tableId);
-        } catch (error: any) {
-            console.error("Failed to fold:", error);
-        }
-    };
-
-    const handleCall = async () => {
-        if (!tableId) {
-            console.error("Private key or table ID not available");
-            return;
-        }
-
-        if (callAction) {
-            try {
-                // Use our function to bet with the current raiseAmount
-                const amountWei = ethers.parseUnits(callAmount.toString(), 18).toString();
-                await callHand(tableId, amountWei);
-            } catch (error: any) {
-                console.error("Failed to call:", error);
-            }
-        } else {
-            console.error("Call action not available");
-        }
     };
 
     const handleBet = async () => {
@@ -300,7 +200,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        // Use our function to bet with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         try {
@@ -316,7 +215,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        // Use our function to raise with the current raiseAmount
         const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
 
         try {
@@ -344,114 +242,23 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
     const showBigBlindButton = shouldShowBigBlindButton && showButtons;
 
-    // Handler for muck action
-    const handleMuck = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await muckCards(tableId);
-        } catch (error: any) {
-            console.error("Failed to muck cards:", error);
-        }
-    };
-
-    // Handler for show action
-    const handleShow = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await showCards(tableId);
-        } catch (error: any) {
-            console.error("Failed to show cards:", error);
-        }
-    };
-
-    // Handler for deal action
-    const handleDeal = async () => {
-        if (!tableId) {
-            console.error("Table ID not available");
-            return;
-        }
-
-        try {
-            await dealCards(tableId);
-            console.log("Deal completed successfully");
-        } catch (error: any) {
-            console.error("Failed to deal:", error);
-        }
-    };
-
-    // Add the handleStartNewHand function after the other handler functions
-    const handleStartNewHand = async () => {
-        if (!tableId) return;
-
-        // Simple call - let errors bubble up naturally
-        await startNewHand(tableId);
-    };
-
-    // Check if player is sitting out
-    const isPlayerSittingOut = useMemo(() => userPlayer?.status === PlayerStatus.SITTING_OUT, [userPlayer]);
-
-    // Auto-deal logic: Automatically deal when DEAL action is available for current user
-    // useEffect(() => {
-    //     // Early return if it's not the user's turn - no need to check anything else
-    //     if (!isCurrentUserTurn) {
-    //         return;
-    //     }
-
-    //     // Only proceed if we have the necessary data
-    //     if (!legalActions || !dealCards || isDealing || attemptToAutoDeal.current) {
-    //         return;
-    //     }
-
-    //     // Check if DEAL action is available in legal actions
-    //     const hasDealAction = legalActions.some(action => action.action === NonPlayerActionType.DEAL);
-
-    //     if (hasDealAction) {
-    //         // Set flag to prevent multiple attempts
-    //         attemptToAutoDeal.current = true;
-
-    //         // Small delay to ensure state is settled before dealing
-    //         const dealTimeout = setTimeout(() => {
-    //             dealCards()
-    //                 .then(() => {
-    //                     console.log("✅ Auto-deal completed successfully");
-    //                 })
-    //                 .catch(error => {
-    //                     console.error("❌ Auto-deal failed:", error);
-    //                 })
-    //                 .finally(() => {
-    //                     // Reset flag after attempt
-    //                     attemptToAutoDeal.current = false;
-    //                 });
-    //         }, 100);
-
-    //         // Cleanup timeout if component unmounts or dependencies change
-    //         return () => {
-    //             clearTimeout(dealTimeout);
-    //             attemptToAutoDeal.current = false;
-    //         };
-    //     }
-    // }, [dealCards, isCurrentUserTurn, isDealing, legalActions]); // Reduced dependencies - only what we actually need
-
     return (
-        <div className="fixed bottom-12 lg:bottom-1 left-0 right-0 text-white p-2 lg:p-1 pb-4 lg:pb-1 flex justify-center items-center relative">
-            <div className="flex flex-col w-full lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 justify-center rounded-lg relative z-10">
+        <div
+            className={`fixed left-0 right-0 text-white flex justify-center items-center relative ${
+                isMobileLandscape ? "bottom-0 p-0.5" : "bottom-12 lg:bottom-1 p-2 lg:p-1 pb-4 lg:pb-1"
+            }`}
+        >
+            <div
+                className={`flex flex-col w-full justify-center rounded-lg relative z-10 ${
+                    isMobileLandscape ? "mx-1 space-y-0.5 max-w-full" : "lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 max-w-full"
+                }`}
+            >
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleDeal}
-                            className="bg-gradient-to-r from-[#1e40af]/90 to-[#3b82f6]/90 hover:from-[#1e40af] hover:to-[#60a5fa] 
-                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base
-                            border border-[#3b82f6]/50 backdrop-blur-sm transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                            onClick={() => handleDeal(tableId)}
+                            className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -468,14 +275,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 )}
 
                 {/* New Hand Button - Show when the round is "end" */}
-                {currentRound === "end" && (
+                {currentRound === TexasHoldemRound.END && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleStartNewHand}
-                            className="bg-gradient-to-r from-[#6366f1] to-[#4f46e5] hover:from-[#4f46e5] hover:to-[#4338ca] 
-                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
-                            border-2 border-[#818cf8] transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
+                            onClick={() => handleStartNewHand(tableId)}
+                            className="btn-new-hand text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -494,11 +298,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {hasMuckAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleMuck}
-                            className="bg-gradient-to-r from-[#4b5563] to-[#374151] hover:from-[#374151] hover:to-[#1f2937] 
-                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
-                            border-2 border-[#6b7280] transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
+                            onClick={() => handleMuck(tableId)}
+                            className="btn-muck text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -517,11 +318,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {hasShowAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={handleShow}
-                            className="bg-gradient-to-r from-[#1e40af] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#60a5fa] 
-                            text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base
-                            border-2 border-[#3b82f6] transition-all duration-300 
-                            flex items-center justify-center gap-2 transform hover:scale-105"
+                            onClick={() => handleShow(tableId)}
+                            className="btn-show text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -541,17 +339,15 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {!hideOtherButtons && (
                     <>
                         {/* Player Action Buttons Container */}
-                        <div className="flex justify-center items-center gap-1 lg:gap-2">
+                        <div className={`flex justify-center items-center ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
                             {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostSmallBlind}
-                                    className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                    text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
-                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-1 lg:mr-2"
+                                    className="btn-small-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                 >
                                     <span className="mr-1">Post Small Blind</span>
-                                    <span className="bg-[#0f172a80] backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-[#60a5fa] text-xs border border-[#3a9188]/20">
-                                        ${Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2)}
+                                    <span className="btn-small-blind-amount backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border">
+                                        ${formattedSmallBlindAmount}
                                     </span>
                                 </button>
                             )}
@@ -559,31 +355,26 @@ const PokerActionPanel: React.FC = React.memo(() => {
                             {showBigBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostBigBlind}
-                                    className="bg-gradient-to-r from-[#2c7873] to-[#1e5954] hover:from-[#1e5954] hover:to-[#0f2e2b] 
-                                    text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm
-                                    border border-[#3a9188] hover:border-[#64ffda] flex items-center transform hover:scale-105 mr-1 lg:mr-2"
+                                    className="btn-big-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
                                 >
                                     <span className="mr-1">Post Big Blind</span>
-                                    <span className="bg-[#0f172a80] px-1 lg:px-2 py-1 rounded text-[#60a5fa] text-xs">
-                                        ${Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2)}
+                                    <span className="btn-big-blind-amount backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border">
+                                        ${formattedBigBlindAmount}
                                     </span>
                                 </button>
                             )}
                             {canFoldAnytime && (!showActionButtons || showSmallBlindButton || showBigBlindButton) && (
                                 <button
-                                    className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]
-hover:from-[#991b1b] hover:to-[#b91c1c]
-active:bg-white/10 active:scale-105
-px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border border-[#3a546d] text-xs lg:text-sm
-hover:border-[#ef4444] hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]
+                                    className="btn-fold cursor-pointer active:scale-105
+px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm
 transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
-                                    onClick={handleFold}
+                                    onClick={() => handleFold(tableId)}
                                 >
                                     FOLD
                                 </button>
                             )}
                             {/* Show a message if the player has folded */}
-                            {userPlayer?.status === "folded" && (
+                            {userPlayer?.status === PlayerStatus.FOLDED && (
                                 <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
                                     You have folded this hand
                                 </div>
@@ -593,22 +384,21 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                         {/* Only show other action buttons if it's the player's turn, they have legal actions, and it's not time to post blinds */}
                         {showActionButtons && !showSmallBlindButton && !showBigBlindButton ? (
                             <>
-                                <div className="flex justify-between gap-1 lg:gap-2">
+                                <div className={`flex justify-between ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
                                     {canFoldAnytime && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155]
-hover:from-[#991b1b] hover:to-[#b91c1c]
-active:bg-white/10 active:scale-105
-px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border border-[#3a546d] text-xs lg:text-sm
-hover:border-[#ef4444] hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]
-transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
-                                            onClick={handleFold}
+                                            className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium ${
+                                                isMobileLandscape
+                                                    ? "px-2 py-0.5 text-[10px] min-w-[50px]"
+                                                    : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]"
+                                            }`}
+                                            onClick={() => handleFold(tableId)}
                                         >
                                             FOLD
                                         </button>
                                     )}
                                     {/* Show a message if the player has folded */}
-                                    {userPlayer?.status === "folded" && (
+                                    {userPlayer?.status === PlayerStatus.FOLDED && (
                                         <div className="text-gray-400 py-1.5 lg:py-2 px-2 lg:px-4 bg-gray-800 bg-opacity-50 rounded-lg text-xs lg:text-sm">
                                             You have folded this hand
                                         </div>
@@ -616,35 +406,36 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
 
                                     {hasCheckAction && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
-                                            px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
-                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                                            onClick={handleCheck}
+                                            className={`cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
+                                            rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)] ${
+                                                isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
+                                            }`}
+                                            onClick={() => handleCheck(tableId)}
                                         >
                                             CHECK
                                         </button>
                                     )}
                                     {hasCallAction && (
                                         <button
-                                            className="cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e40af]/90 hover:to-[#3b82f6]/90 active:from-[#3b82f6] active:to-[#60a5fa]
-                                            px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] hover:border-[#1e40af]/50 active:border-[#60a5fa]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
-                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                                            onClick={handleCall}
+                                            className={`btn-call cursor-pointer rounded-lg w-full border shadow-md backdrop-blur-sm
+                                            transition-all duration-200 font-medium transform active:scale-105 ${
+                                                isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
+                                            }`}
+                                            onClick={() => handleCall(callAction, callAmount, tableId)}
                                         >
-                                            CALL <span className="text-[#ffffff]">${callAmount.toFixed(2)}</span>
+                                            CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span>
                                         </button>
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
                                         <button
                                             onClick={hasRaiseAction ? handleRaise : handleBet}
-                                            disabled={isRaiseAmountInvalid || !isPlayerTurn}
-                                            className={`${
-                                                isRaiseAmountInvalid || !isPlayerTurn ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"
-                                            } bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce]/90 hover:to-[#9333ea]/90 active:from-[#9333ea] active:to-[#a855f7]
-    px-2 lg:px-4 py-1.5 lg:py-2 rounded-lg w-full border border-[#3a546d] active:border-[#7e22ce]/50 active:border-[#c084fc]/70 shadow-md backdrop-blur-sm text-xs lg:text-sm
-    transition-all duration-200 font-medium active:shadow-[0_0_15px_rgba(192,132,252,0.2)]`}
+                                            disabled={hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn}
+                                            className={`cursor-pointer hover:scale-105 btn-raise rounded-lg w-full border shadow-md backdrop-blur-sm transition-all duration-200 font-medium ${
+                                                isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
+                                            }`}
                                         >
-                                            {hasRaiseAction ? "RAISE TO" : "BET"} <span className="text-[#ffffff]">${getRaiseToAmount().toFixed(2)}</span>
+                                            {hasRaiseAction ? "RAISE" : "BET"} <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span>
                                         </button>
                                     )}
                                 </div>
@@ -652,13 +443,27 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                 {/* Only show slider and betting options if player can bet or raise */}
                                 {(hasBetAction || hasRaiseAction) && (
                                     <>
-                                        {/* Slider and Controls */}
-                                        <div className="flex items-center space-x-2 lg:space-x-4 bg-[#0f172a40] backdrop-blur-sm p-2 lg:p-3 rounded-lg border border-[#3a546d]/50 shadow-inner">
+                                        {/* Slider and Controls - Compact for mobile landscape */}
+                                        <div
+                                            className={`flex items-center bg-[#0f172a40] backdrop-blur-sm rounded-lg border border-[#3a546d]/50 shadow-inner ${
+                                                isMobileLandscape ? "gap-1 px-1 py-0.5 h-8" : "space-x-2 lg:space-x-4 p-2 lg:p-3"
+                                            }`}
+                                        >
+                                            {/* Min/Max text - placed first in mobile landscape */}
+                                            {isMobileLandscape && (
+                                                <div className="flex items-center text-[9px] text-gray-400 whitespace-nowrap">
+                                                    <span>Min:${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</span>
+                                                    <span className="mx-1">/</span>
+                                                    <span>Max:${formattedMaxBetAmount}</span>
+                                                </div>
+                                            )}
+
                                             <button
-                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-    py-1 px-2 lg:px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda] text-xs lg:text-sm
-    transition-all duration-200"
-                                                // onClick={() => handleRaiseChange(Math.max(getRaiseToAmount() - step, hasBetAction ? minBet : minRaise))}
+                                                className={
+                                                    isMobileLandscape
+                                                        ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
+                                                        : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                }
                                                 onClick={() => handleRaiseChange(-getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
@@ -668,22 +473,26 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? getRaiseToAmount() : minRaise}
+                                                min={hasBetAction ? minBet : minRaise}
                                                 max={hasBetAction ? maxBet : maxRaise}
                                                 step={step}
-                                                value={getRaiseToAmount()}
+                                                value={raiseAmount}
                                                 onChange={e => {
-                                                    handleRaiseChange(Number(e.target.value));
+                                                    setRaiseAmountAbsolute(Number(e.target.value));
                                                     setLastAmountSource("slider");
                                                 }}
-                                                className="flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
+                                                className={
+                                                    isMobileLandscape
+                                                        ? "flex-1 accent-[#64ffda] h-1 rounded-full transition-all duration-200"
+                                                        : "flex-1 accent-[#64ffda] h-2 rounded-full transition-all duration-200"
+                                                }
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
-                                                        ((getRaiseToAmount() - (hasBetAction ? minBet : minRaise)) /
-                                                            ((getRaiseToAmount() ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
+                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
+                                                            ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b ${
-                                                        ((getRaiseToAmount() - (hasBetAction ? minBet : minRaise)) /
+                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
                                                             ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
                                                         100
                                                     }%, #1e293b 100%)`
@@ -691,29 +500,66 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 disabled={!isPlayerTurn}
                                             />
                                             <button
-                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-    py-1 px-2 lg:px-4 rounded-lg border border-[#3a546d] hover:border-[#64ffda] text-xs lg:text-sm
-    transition-all duration-200"
-                                                // onClick={() => handleRaiseChange(Math.min(getRaiseToAmount() + step, hasBetAction ? maxBet : maxRaise))}
+                                                className={
+                                                    isMobileLandscape
+                                                        ? "btn-slider py-0.5 px-1.5 rounded border text-[10px] transition-all duration-200"
+                                                        : "btn-slider py-1 px-2 lg:px-4 rounded-lg border text-xs lg:text-sm transition-all duration-200"
+                                                }
                                                 onClick={() => handleRaiseChange(getStep())}
                                                 disabled={!isPlayerTurn}
                                             >
                                                 +
                                             </button>
 
-                                            {/* Inline Input Box and Min/Max */}
-                                            <div className="flex flex-col items-end gap-1 w-[100px] lg:w-[120px]">
+                                            {/* Inline Input Box - compact for mobile landscape */}
+                                            {!isMobileLandscape && (
+                                                <div className="flex flex-col items-end gap-1 min-w-0">
+                                                    <input
+                                                        type="text"
+                                                        inputMode="decimal"
+                                                        value={raiseAmount.toFixed(2)}
+                                                        onChange={e => {
+                                                            const raw = e.target.value;
+
+                                                            // Always allow clearing the field
+                                                            if (raw === "") {
+                                                                setRaiseInputRaw("");
+                                                                setRaiseAmount(0);
+                                                                return;
+                                                            }
+
+                                                            // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
+                                                            if (/^\d*\.?\d{0,2}$/.test(raw)) {
+                                                                setRaiseInputRaw(raw);
+
+                                                                // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
+                                                                if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
+                                                                    setRaiseAmount(parseFloat(raw));
+                                                                    setLastAmountSource("input");
+                                                                }
+                                                            }
+                                                        }}
+                                                        className={`${inputFieldClassName} px-1 lg:px-2 py-1 rounded text-xs lg:text-sm w-[80px] lg:w-[100px] transition-all duration-200 border`}
+                                                        disabled={!isPlayerTurn}
+                                                    />
+                                                    <div className={`${minMaxTextClassName} text-[8px] lg:text-[10px] text-right leading-snug`}>
+                                                        <div>Min: ${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</div>
+                                                        <div>Max: ${formattedMaxBetAmount}</div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {isMobileLandscape && (
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
-                                                    value={getRaiseToAmount().toFixed(2)}
+                                                    value={raiseAmount.toFixed(2)}
                                                     onChange={e => {
                                                         const raw = e.target.value;
 
                                                         // Always allow clearing the field
                                                         if (raw === "") {
                                                             setRaiseInputRaw("");
-                                                            // setRaiseToAmount(0);
                                                             setRaiseAmount(0);
                                                             return;
                                                         }
@@ -724,120 +570,82 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
 
                                                             // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
                                                             if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
-                                                                // setRaiseToAmount(parseFloat(raw));
                                                                 setRaiseAmount(parseFloat(raw));
                                                                 setLastAmountSource("input");
                                                             }
                                                         }
                                                     }}
-                                                    className={`px-1 lg:px-2 py-1 rounded text-xs lg:text-sm w-full bg-[#1e293b] transition-all duration-200 border ${
-                                                        isRaiseAmountInvalid ? "border-red-500 text-red-400 focus:ring-red-500" : "border-[#3a546d] text-white"
-                                                    }`}
+                                                    className={`${inputFieldClassName} px-1 py-0.5 rounded text-[10px] w-[50px] transition-all duration-200 border`}
                                                     disabled={!isPlayerTurn}
                                                 />
-
-                                                <div
-                                                    className={`text-[8px] lg:text-[10px] w-full text-right leading-snug ${
-                                                        isRaiseAmountInvalid ? "text-red-400" : "text-gray-400"
-                                                    }`}
-                                                >
-                                                    <div>Min: ${getRaiseToAmount().toFixed(2)}</div>
-                                                    <div>Max: ${hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Additional Options */}
-                                        <div className="flex justify-between gap-1 lg:gap-2 mb-1">
-                                            <button
-                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                1/4 Pot
-                                            </button>
-                                            <button
-                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                1/2 Pot
-                                            </button>
-                                            <button
-                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                3/4 Pot
-                                            </button>
-                                            <button
-                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#334155] hover:to-[#475569]
-                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#64ffda] shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 transform hover:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                Pot
-                                            </button>
-                                            <button
-                                                className="bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#7e22ce] hover:to-[#9333ea] active:from-[#9333ea] active:to-[#a855f7]
-                                                px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border border-[#3a546d] hover:border-[#7e22ce] active:border-[#c084fc] shadow-md text-[10px] lg:text-xs
-                                                transition-all duration-200 font-medium transform active:scale-105"
-                                                onClick={() => {
-                                                    const newAmt = hasBetAction ? maxBet : maxRaise;
-                                                    handleRaiseChange(newAmt);
-                                                    setLastAmountSource("button");
-                                                }}
-                                                disabled={!isPlayerTurn}
-                                            >
-                                                ALL-IN
-                                            </button>
-                                            {/* COMMENTED OUT - Time extension button disabled
-                                            {canExtend && isUsersTurn && (
-                                                <button
-                                                    onClick={handleExtendTimeFromFooter}
-                                                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600
-                                                    px-2 py-1.5 rounded-lg w-full border border-blue-400 hover:border-blue-300 shadow-md
-                                                    transition-all duration-200 text-xs font-medium transform hover:scale-105 flex items-center justify-center gap-1"
-                                                >
-                                                    <svg 
-                                                        className="w-3 h-3 text-white" 
-                                                        fill="none" 
-                                                        stroke="currentColor" 
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <circle cx="12" cy="12" r="8" strokeWidth="2"/>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2"/>
-                                                        <circle cx="18" cy="6" r="3" fill="currentColor"/>
-                                                        <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 6h2M18 5v2"/>
-                                                    </svg>
-                                                    +{timeoutDuration}s
-                                                </button>
                                             )}
-                                            */}
                                         </div>
+
+                                        {/* Additional Options - Hide in mobile landscape to save space */}
+                                        {!isMobileLandscape && (
+                                            <div className="flex justify-between gap-1 lg:gap-2 mb-1">
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
+                                                        setRaiseAmountAbsolute(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    1/4 Pot
+                                                </button>
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
+                                                        setRaiseAmountAbsolute(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    1/2 Pot
+                                                </button>
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
+                                                        setRaiseAmountAbsolute(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    3/4 Pot
+                                                </button>
+                                                <button
+                                                    className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 transform hover:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
+                                                        setRaiseAmountAbsolute(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    Pot
+                                                </button>
+                                                <button
+                                                    className="btn-all-in px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
+                                                    transition-all duration-200 font-medium transform active:scale-105"
+                                                    onClick={() => {
+                                                        const newAmt = hasBetAction ? maxBet : maxRaise;
+                                                        setRaiseAmountAbsolute(newAmt);
+                                                        setLastAmountSource("button");
+                                                    }}
+                                                    disabled={!isPlayerTurn}
+                                                >
+                                                    ALL-IN
+                                                </button>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </>
@@ -850,29 +658,3 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
 });
 
 export default PokerActionPanel;
-
-/*
- * ======================== MIGRATION SUMMARY ========================
- * We've successfully migrated these features from TableContext to custom hooks:
- *
- * 1. playerLegalActions -> usePlayerLegalActions().legalActions
- * 2. isPlayerTurn -> usePlayerLegalActions().isPlayerTurn
- * 3. canDeal -> Now uses currentUserCanDeal (from legalActions)
- * 4. dealCards -> useTableDeal().dealCards (replaced dealTable)
- * 5. nonce -> useTableNonce().nonce
- * 6. refreshNonce -> useTableNonce().refreshNonce
- *
- * All user actions now use their respective hooks:
- * - Check: useTableCheck().checkHand
- * - Fold: useTableFold().foldHand
- * - Post Small Blind: useTablePostSmallBlind().postSmallBlind
- * - Post Big Blind: useTablePostBigBlind().postBigBlind
- * - Call: useTableCall().callHand
- * - Bet: useTableBet().betHand
- * - Raise: useTableRaise().raiseHand
- * - Deal: useTableDeal().dealCards
- *
- * TO DO:
- * - Remove the TableContext dependency completely
- * - Potentially consolidate these hooks into a more organized structure
- */

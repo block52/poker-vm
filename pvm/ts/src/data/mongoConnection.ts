@@ -14,9 +14,20 @@ class MongoDatabaseConnection implements IDB {
         return MongoDatabaseConnection.instance;
     }
 
-    public async connect(uri: string = "mongodb://localhost:27017/pvm"): Promise<void> {
+    /**
+     * Connects to the MongoDB database using the provided URI.
+     * If already connected, it does nothing.
+     * Handles connection errors and sets up event listeners for connection events.
+     * @param uri - The MongoDB connection URI.
+     */
+    public async connect(uri?: string): Promise<void> {
         if (this.isConnected) {
             return;
+        }
+        
+        if (!uri) {
+            console.error("No database connection string provided. Please set the DB_URL environment variable.");
+            process.exit(1);
         }
 
         try {

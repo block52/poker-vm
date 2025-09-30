@@ -2,54 +2,58 @@ import { getClient } from "../../utils/b52AccountUtils";
 import { JoinTableOptions } from "./types";
 
 /**
- * Join a poker table with the specified buy-in amount and seat preference.
+ * Joins a poker table with the specified options.
  * 
- * Seat Selection Logic:
- * - If VITE_RANDOMISE_SEAT_SELECTION=true: Uses Math.random() to select a random seat (0 to maxPlayers-1)
- * - If VITE_RANDOMISE_SEAT_SELECTION=false: Uses the seatNumber passed from the component
- * - If no seatNumber is provided and random selection is disabled, defaults to seat 0
- * 
- * @param tableId - The ID of the table to join
- * @param options - Join table options including buyInAmount and optional seatNumber
- * @param maxPlayers - Maximum number of players at the table (from game options)
- * @returns Promise with the join table response
- * @throws Error if private key is missing or if the join operation fails
+ * @param {string} tableId - The ID of the table to join.
+ * @param {JoinTableOptions} options - Options for joining the table, including buy-in amount and seat number.
+ * @returns {Promise<any>} - The response from the join operation.
+ * @throws {Error} - If the table ID is not provided or if an error occurs during the join operation.
  */
-export async function joinTable(tableId: string, options: JoinTableOptions, maxPlayers: number = 9) {
-    const { buyInAmount, actionIndex = 0, seatNumber } = options;
-
+export async function joinTable(tableId: string, options: JoinTableOptions): Promise<any> {
     // Get the singleton client instance
     const client = getClient();
 
-    // Determine seat selection based on environment variable
-    const shouldRandomiseSeat = import.meta.env.VITE_RANDOMISE_SEAT_SELECTION === "true";
-    let finalSeatNumber: number;
+    console.log("🎮 joinTable hook - Full details:");
+    console.log("  tableId:", tableId);
+    console.log("  options.amount (string):", options.amount);
+    console.log("  options.seatNumber:", options.seatNumber);
+    console.log("  amount type:", typeof options.amount);
+    console.log("  amount length:", options.amount.length);
 
-    if (shouldRandomiseSeat) {
-        // Use random seat selection (0 to maxPlayers-1)
-        finalSeatNumber = Math.floor(Math.random() * maxPlayers);
-        console.log("🎮 Using randomised seat selection:", finalSeatNumber, `(max players: ${maxPlayers})`);
-    } else {
-        // Use the seat number provided by the component, or default to 0
-        finalSeatNumber = seatNumber !== undefined ? seatNumber : 0;
-        console.log("🎮 Using specified seat number:", finalSeatNumber);
+    // Use the client's playerJoin method (let SDK handle nonce internally)
+    if (!tableId) {
+        throw new Error("Table ID is required to join a table");
     }
 
-    console.log("🎮 Join table attempt");
-    console.log("🎮 Using action index:", actionIndex);
-    console.log("🎮 Buy-in amount:", buyInAmount);
-    console.log("🎮 Seat randomisation enabled:", shouldRandomiseSeat);
+    // If seatNumber is not provided, default to 0
+    if (options.seatNumber === undefined || options.seatNumber === null) {
+        console.log("🎮 Calling SDK playerJoinRandomSeat with:");
+        console.log("  tableId:", tableId);
+        console.log("  amount:", options.amount);
+        
+        // DEBUG: Let's see what the SDK method looks like
+        console.log("🔍 SDK client methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(client)));
+        console.log("🔍 playerJoinRandomSeat type:", typeof client.playerJoinRandomSeat);
+        
+        const response = await client.playerJoinRandomSeat(
+            tableId,
+            options.amount
+        );
+        console.log("🎮 SDK playerJoinRandomSeat response:", response);
+        return response;
+    }
 
-    // Convert the buyInAmount from string to bigint
-    const buyInAmountBigInt = BigInt(buyInAmount);
+    console.log("🎮 Calling SDK playerJoin with:");
+    console.log("  tableId:", tableId);
+    console.log("  amount:", options.amount);
+    console.log("  seatNumber:", options.seatNumber);
     
-    // Use the client's playerJoin method (let SDK handle nonce internally)
     const response = await client.playerJoin(
         tableId,
-        buyInAmountBigInt,
-        finalSeatNumber
+        options.amount,
+        options.seatNumber
     );
 
-    console.log("🎮 Join table response:", response);
+    console.log("🎮 SDK playerJoin response:", response);
     return response;
 }

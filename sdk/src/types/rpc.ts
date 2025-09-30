@@ -51,7 +51,8 @@ export enum RPCMethods {
     SHUTDOWN = "shutdown",
     START = "start",
     STOP = "stop",
-    TRANSFER = "transfer"
+    TRANSFER = "transfer",
+    WITHDRAW = "withdraw"
 }
 
 export type RPCRequestParams = {
@@ -88,4 +89,5 @@ export type RPCRequestParams = {
     [RPCMethods.START]: []; // No parameters
     [RPCMethods.STOP]: []; // No parameters
     [RPCMethods.TRANSFER]: [string, string, string, number, string | null]; // [from, to, amount, nonce, data]
+    [RPCMethods.WITHDRAW]: [string, string, string, number]; // [from, to, amount, nonce]
 };

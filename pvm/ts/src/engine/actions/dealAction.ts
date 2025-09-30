@@ -9,7 +9,13 @@ class DealAction extends BaseAction implements IAction {
     }
 
     verify(player: Player): Range {
-        // Check base conditions (hand active, player's turn, player active)
+
+        // Check minimum players: TODO change this to use gameStatus
+        if (this.game.getActivePlayerCount() < this.game.minPlayers) {
+            throw new Error("Not enough active players");
+        }
+
+        // Any one can deal
         super.verify(player);
 
         // 6. Card state check: Make sure cards haven't been dealt already
@@ -19,9 +25,7 @@ class DealAction extends BaseAction implements IAction {
         }
 
         // 1. Round state check: Can only deal when in ANTE round
-        if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Dealing can only occur after blinds are posted in the ANTE round.");
-        }
+        this.validateInSpecificRound(TexasHoldemRound.ANTE);
 
         // 2. Player count check: Need at least minimum players
         const count = this.game.getPlayerCount();
@@ -31,7 +35,7 @@ class DealAction extends BaseAction implements IAction {
 
         // 3. Blind posting check: Both blinds must be posted
         const anteActions = this.game.getActionsForRound(TexasHoldemRound.ANTE);
-        
+
         // Check if small blind has been posted
         const smallBlindAction = anteActions.some(a => a.action === PlayerActionType.SMALL_BLIND);
         if (!smallBlindAction) {
@@ -42,16 +46,6 @@ class DealAction extends BaseAction implements IAction {
         const bigBlindAction = anteActions.some(a => a.action === PlayerActionType.BIG_BLIND);
         if (!bigBlindAction) {
             throw new Error("Big blind must be posted before dealing.");
-        }
-
-        // 4. Dealer position check: In traditional poker, the dealer initiates the deal
-        // However, the small blind also commonly does this in online poker
-        const playerSeat = this.game.getPlayerSeatNumber(player.address);
-        const isDealer = playerSeat === this.game.dealerPosition;
-        const isSmallBlind = playerSeat === this.game.smallBlindPosition;
-        
-        if (!isDealer && !isSmallBlind) {
-            throw new Error("Only the dealer or small blind can initiate the deal.");
         }
 
         return { minAmount: 0n, maxAmount: 0n };

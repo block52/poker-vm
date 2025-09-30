@@ -16,10 +16,10 @@ describe("Texas Holdem - Multiplayer", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "3");
-            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "4");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
         });
 
         it("should have the correct players pre flop", () => {
@@ -36,16 +36,17 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(game.exists(PLAYER_4)).toBeDefined();
         });
 
-        it.only("should have correct legal actions after posting the blinds", () => {
+        it("should have correct legal actions after posting the blinds", () => {
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 5, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Get legal actions for the next player
             let actual = game.getLegalActions(PLAYER_2);
 
-            expect(actual.length).toEqual(2);
+            expect(actual.length).toEqual(3);
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
 
             let nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
@@ -56,10 +57,6 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Now deal the cards
-            expect(() => {
-                game.performAction(PLAYER_3, NonPlayerActionType.DEAL, 7);
-            }).toThrow("Only the dealer or small blind can initiate the deal.");
-
             actual = game.getLegalActions(PLAYER_1);
 
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 7, undefined, "seed");

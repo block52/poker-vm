@@ -22,9 +22,9 @@ export const useGameStartCountdown = (): UseGameStartCountdownReturn => {
         let cleanedParam = gameStartParam;
         
         // Handle URL encoding issues with + signs in timezone offsets
-        if (cleanedParam.includes(' ') && !cleanedParam.includes('+')) {
+        if (cleanedParam.includes(" ") && !cleanedParam.includes("+")) {
           // If we have a space but no +, it might be a URL-decoded timezone offset
-          cleanedParam = cleanedParam.replace(/\s(\d{2}:\d{2})$/, '+$1');
+          cleanedParam = cleanedParam.replace(/\s(\d{2}:\d{2})$/, "+$1");
         }
         
         console.log("Original gameStart param:", gameStartParam);

@@ -10,9 +10,7 @@ const DEPOSIT_ADDRESS = "0xADB8401D85E203F101aC715D5Aa7745a0ABcd42C";  // Your m
 
 // Using Sepolia RPC URL from hardhat.config.ts
 const RPC_URL = "https://mainnet.infura.io/v3/4a91824fbc7d402886bf0d302677153f";
-const PRIVATE_KEY = process.env.DEPOSIT_PRIVATE_KEY;
 const provider = new ethers.JsonRpcProvider(RPC_URL);
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 // Add this function to handle the token transfer
 async function handleTokenTransfer(amount, userAddress) {
@@ -43,12 +41,12 @@ async function handleTokenTransfer(amount, userAddress) {
         
         const wallet = new ethers.Wallet(process.env.DEPOSIT_PRIVATE_KEY, provider);
         
-        // Create contract instance with interface
-        const depositContract = new ethers.Contract(
-            DEPOSIT_ADDRESS,
-            depositInterface,
-            wallet
-        );
+        // // Create contract instance with interface
+        // const depositContract = new ethers.Contract(
+        //     DEPOSIT_ADDRESS,
+        //     depositInterface,
+        //     wallet
+        // );
 
         console.log("Attempting forwardDepositUnderlying with:");
         console.log("- User:", userAddress);
@@ -155,6 +153,20 @@ router.post("/", async (req, res) => {
         res.status(500).json({ error: "Failed to create deposit session" });
     }
 });
+
+// NOTE: Bitcoin webhook handling moved to /bitcoin/webhooks/btcpayWebhook.js
+// This incomplete route is commented out to avoid conflicts
+/*
+// router.post("/bitcoin", async (req, res) => {
+    const secret = req.header["x-api-key"];
+
+    if (secret !== process.env.BTC_PAY_SERVER_SECRET) {
+        res.send("UnAuth", 403);
+    }
+
+    const wallet = new ethers.Wallet(process.env.DEPOSIT_PRIVATE_KEY, provider);
+})
+*/
 
 // Get active session for user with detailed status
 router.get("/user/:userAddress", async (req, res) => {

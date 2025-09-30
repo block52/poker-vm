@@ -16,7 +16,7 @@ bash showdown-shows.sh
 sleep 1
 
 ## Player 2 shows
-curl --location 'http://localhost:3000' \
+curl --location 'http://localhost:8545' \
 --header 'Content-Type: application/json' \
 --data '{
     "method": "perform_action",

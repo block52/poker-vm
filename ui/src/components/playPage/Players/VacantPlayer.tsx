@@ -59,10 +59,11 @@ import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import { joinTable } from "../../../hooks/playerActions/joinTable";
 import { useGameOptions } from "../../../hooks/useGameOptions";
 import CustomDealer from "../../../assets/CustomDealer.svg";
+import { colors } from "../../../utils/colorConfig";
 
-const VacantPlayer: React.FC<VacantPlayerProps> = memo(
-    ({ left, top, index, onJoin }) => {
-        const { isUserAlreadyPlaying, isSeatVacant: checkSeatVacant, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
+const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo(
+    ({ left, top, index, onJoin, uiPosition }) => {
+        const { isUserAlreadyPlaying, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
         const userAddress = localStorage.getItem("user_eth_public_key");
@@ -72,7 +73,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
         const [joinSuccess, setJoinSuccess] = useState(false);
-        const [joinResponse, setJoinResponse] = useState<any>(null);
+        const [, setJoinResponse] = useState<any>(null);
         const [isCardVisible, setIsCardVisible] = useState(false);
 
         const { dealerSeat } = useDealerPosition();
@@ -81,7 +82,6 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
         const isDealer = dealerSeat === index;
 
         // Memoize seat status checks
-        const isSeatVacant = useMemo(() => checkSeatVacant(index), [checkSeatVacant, index]);
         const canJoinThisSeat = useMemo(() => checkCanJoinSeat(index), [checkCanJoinSeat, index]);
 
         // Memoize handlers
@@ -107,10 +107,17 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 return;
             }
 
-            const storedAmount = localStorage.getItem("buy_in_amount");
-            if (!storedAmount) {
-                setJoinError("Missing buy-in amount");
-                return;
+            let buyInAmount = localStorage.getItem("buy_in_amount");
+            if (!buyInAmount) {
+                // No saved amount, use max buy-in from game options
+                const maxBuyInWei = gameOptions?.maxBuyIn;
+                if (!maxBuyInWei) {
+                    setJoinError("Unable to determine buy-in amount");
+                    return;
+                }
+                // Convert from Wei to regular units and save it
+                buyInAmount = ethers.formatUnits(maxBuyInWei, 18);
+                localStorage.setItem("buy_in_amount", buyInAmount);
             }
 
             setIsJoining(true);
@@ -119,15 +126,12 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
             try {
                 // Convert amount to Wei for the join function
-                const buyInWei = ethers.parseUnits(storedAmount, 18).toString();
-                
-                // Use actual maxPlayers from game options, fallback to 9 if not available
-                const maxPlayers = gameOptions?.maxPlayers || 9;
+                const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
                 
                 const response = await joinTable(tableId, {
-                    buyInAmount: buyInWei,
+                    amount: buyInWei,
                     seatNumber: index
-                }, maxPlayers);
+                });
                 
                 setJoinResponse(response);
                 setJoinSuccess(true);
@@ -143,7 +147,8 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxPlayers]);
+        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxBuyIn]);
+
 
         // Memoize container styles
         const containerStyle = useMemo(() => ({
@@ -174,15 +179,23 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
 
         return (
             <>
-                <div 
-                    className="absolute cursor-pointer" 
+                <div
+                    className="absolute cursor-pointer"
                     style={containerStyle}
                     onClick={handleSeatClick}
                 >
+                    {/* Development Mode Debug Info */}
+                    {import.meta.env.VITE_NODE_ENV === "development" && (
+                        <div className="absolute top-[-50px] left-1/2 transform -translate-x-1/2 bg-gray-600 bg-opacity-80 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap z-50 border border-gray-400">
+                            <div className="text-gray-300">UI Pos: {uiPosition ?? "N/A"}</div>
+                            <div className="text-yellow-300">Vacant Seat: {index}</div>
+                            <div className="text-gray-300">XY: {left}, {top}</div>
+                        </div>
+                    )}
                     <div className="flex justify-center mb-2">
                         <img src={PokerProfile} className="w-12 h-12" alt="Vacant Seat" />
                     </div>
-                    <div className="text-white text-center">
+                    <div className="text-center" style={{ color: "white" }}>
                         <div className="text-lg sm:text-sm mb-1 whitespace-nowrap font-medium">{seatText.title}</div>
                         {seatText.subtitle && <div className="text-base sm:text-xs whitespace-nowrap">{seatText.subtitle}</div>}
                     </div>
@@ -223,33 +236,52 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                         onClick={() => !isJoining && setShowConfirmModal(false)}
                     >
                         <div
-                            className="bg-gray-800 p-6 rounded-xl w-96 shadow-2xl border border-blue-400/20"
+                            className="p-6 rounded-xl w-96 shadow-2xl"
+                            style={{
+                                backgroundColor: colors.ui.bgDark,
+                                border: `1px solid ${colors.ui.borderColor}`
+                            }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-bold text-white mb-4">Join Seat {index}</h3>
+                            <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>Join Seat {index}</h3>
                             
                             {joinError && (
-                                <div className="mb-4 p-3 bg-red-900/30 text-red-200 rounded-lg text-sm border border-red-500/20">
+                                <div 
+                                    className="mb-4 p-3 rounded-lg text-sm"
+                                    style={{
+                                        backgroundColor: colors.accent.danger + "30",
+                                        color: colors.accent.danger + "aa",
+                                        border: `1px solid ${colors.accent.danger}20`
+                                    }}
+                                >
                                     {joinError}
                                 </div>
                             )}
                             
-                            <p className="text-gray-300 mb-6 text-center">
+                            <p className="mb-6 text-center" style={{ color: colors.ui.textSecondary + "dd" }}>
                                 Ready to join at seat {index}?
                             </p>
 
                             <div className="flex justify-center space-x-3">
                                 <button
                                     onClick={() => setShowConfirmModal(false)}
-                                    className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 shadow-inner"
+                                    style={{
+                                        backgroundColor: colors.ui.textSecondary,
+                                        color: "white"
+                                    }}
                                     disabled={isJoining}
                                 >
-                                    Cancel
+                                    No
                                 </button>
                                 <button
                                     onClick={handleConfirmSeat}
                                     disabled={isJoining}
-                                    className="px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md border border-blue-500/20 flex items-center"
+                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 transform shadow-md flex items-center"
+                                    style={{
+                                        background: colors.brand.primary,
+                                        color: "white",
+                                    }}
                                 >
                                     {isJoining ? (
                                         <>
@@ -269,7 +301,7 @@ const VacantPlayer: React.FC<VacantPlayerProps> = memo(
                                             Joining...
                                         </>
                                     ) : (
-                                        "Join Seat"
+                                        "Yes"
                                     )}
                                 </button>
                             </div>

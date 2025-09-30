@@ -12,8 +12,8 @@ describe("Texas Holdem Game - Bet after flop", () => {
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         // Add minimum required players
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
         // Post blinds
         game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
         game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);

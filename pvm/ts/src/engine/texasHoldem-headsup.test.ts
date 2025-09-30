@@ -1,4 +1,5 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, seed, TWO_TOKENS } from "./testConstants";
 
@@ -20,13 +21,13 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         });
 
         it("should not allow player to join with insufficient funds", () => {
-            expect(() => game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, 10n)).toThrow(
+            expect(() => game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, 10n, "seat=1")).toThrow(
                 "Player does not have enough or too many chips to join."
             );
         });
 
         it("should allow a player to join", () => {
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
             expect(game.getPlayerCount()).toEqual(1);
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
             expect(game.exists("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeTruthy();
@@ -42,8 +43,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
         });
 
         it("should have the correct players pre flop", () => {
@@ -58,9 +59,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         it("should have correct legal actions after posting the small blind", () => {
             // Get legal actions for the next player
             let actual = game.getLegalActions(SMALL_BLIND_PLAYER);
-            expect(actual.length).toEqual(2);
+            expect(actual.length).toEqual(3);
             expect(actual[0].action).toEqual(PlayerActionType.SMALL_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
 
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
@@ -68,9 +70,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             actual = game.getLegalActions(BIG_BLIND_PLAYER);
 
-            expect(actual.length).toEqual(2);
+            expect(actual.length).toEqual(3);
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
@@ -84,9 +87,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             const actual = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
 
-            expect(actual.length).toEqual(2);
+            expect(actual.length).toEqual(3);
             expect(actual[0].action).toEqual(NonPlayerActionType.DEAL);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
         });
 
         it("should have correct legal actions after posting blinds", () => {
@@ -126,10 +130,31 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+            // Custom mnemonic where Small Blind has AA and Big Blind has KK
+            // This ensures Small Blind wins and Big Blind can muck after Small Blind shows
+            const customMnemonic =
+                "AS-KC-AH-KH-2S-7C-9H-TD-JD-" +                    // Player cards + community
+                "2C-3C-4C-5C-6C-8C-9C-TC-JC-QC-AC-" +             // Clubs (avoiding duplicates)
+                "2D-3D-4D-5D-6D-7D-8D-9D-QD-KD-AD-" +             // Diamonds
+                "2H-3H-4H-5H-6H-7H-8H-TH-JH-QH-" +                // Hearts  
+                "3S-4S-5S-6S-7S-8S-9S-TS-JS-QS-KS";               // Spades
+
+            game = new TexasHoldemGame(
+                ethers.ZeroAddress,
+                gameOptions,
+                9, // dealer
+                [],
+                1, // handNumber
+                0, // actionCount
+                TexasHoldemRound.ANTE,
+                [], // communityCards
+                [0n], // pot
+                new Map(),
+                customMnemonic
+            );
             expect(game.handNumber).toEqual(1);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
 
             const json: TexasHoldemStateDTO = game.toJson();
             expect(json).toBeDefined();
@@ -163,8 +188,8 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.DEAL, 5);
             expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
-            // Both check
-            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CHECK, 6, 0n);
+            // Perform actions for the small blind player
+            game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 6, ONE_TOKEN);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.CHECK, 7, 0n);
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
@@ -227,10 +252,31 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         let game: TexasHoldemGame;
 
         beforeEach(() => {
-            game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+            // Custom mnemonic where Small Blind has AA and Big Blind has KK
+            // This ensures Small Blind wins and Big Blind can muck after Small Blind shows
+            const customMnemonic =
+                "AS-KC-AH-KH-2S-7C-9H-TD-JD-" +                    // Player cards + community
+                "2C-3C-4C-5C-6C-8C-9C-TC-JC-QC-AC-" +             // Clubs (avoiding duplicates)
+                "2D-3D-4D-5D-6D-7D-8D-9D-QD-KD-AD-" +             // Diamonds
+                "2H-3H-4H-5H-6H-7H-8H-TH-JH-QH-" +                // Hearts  
+                "3S-4S-5S-6S-7S-8S-9S-TS-JS-QS-KS";               // Spades
+
+            game = new TexasHoldemGame(
+                ethers.ZeroAddress,
+                gameOptions,
+                9, // dealer
+                [],
+                1, // handNumber
+                0, // actionCount
+                TexasHoldemRound.ANTE,
+                [], // communityCards
+                [0n], // pot
+                new Map(),
+                customMnemonic
+            );
             expect(game.handNumber).toEqual(1);
-            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+            game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
         });
 
         it("should do end to end with legal actions", () => {
@@ -247,14 +293,14 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             // Do the small blind
             let actions = game.getLegalActions(SMALL_BLIND_PLAYER);
-            expect(actions.length).toEqual(2);
+            expect(actions.length).toEqual(3);
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(ONE_TOKEN);
 
             // Do the big blind
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
-            expect(actions.length).toEqual(2);
+            expect(actions.length).toEqual(3);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(THREE_TOKENS);

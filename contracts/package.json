@@ -12,11 +12,17 @@
         "hh:deploy:vault": "npx hardhat ignition deploy ./ignition/modules/Vault.ts --network mainnet --verify",
         "hh:deploy:bridge": "npx hardhat ignition deploy ./ignition/modules/Bridge.ts --network mainnet --verify",
         "hh:deploy:deposit": "npx hardhat ignition deploy ./ignition/modules/Deposit.ts --network mainnet --verify",
+        "hh:deploy:rio": "npx hardhat ignition deploy ./ignition/modules/RIOToken.ts --network mainnet --verify",
+        "gen:wallet": "node -e \"const { ethers } = require('ethers'); const wallet = ethers.Wallet.createRandom(); console.log('🔑 Private Key:', wallet.privateKey); console.log('📍 Address:', wallet.address); console.log('⚠️  SAVE THIS PRIVATE KEY SECURELY!');\"",
         "hh:wipe:token": "npx hardhat ignition wipe chain-8453 TokenModule#Token",
         "hh:wipe:vault": "npx hardhat ignition wipe chain-8453 VaultModule#Vault",
         "hh:wipe:bridge": "npx hardhat ignition wipe chain-1 BridgeModule#Bridge",
         "hh:deploy:hello": "npx hardhat ignition deploy ./ignition/modules/HelloWorld.ts --network sepolia --verify",
-        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify"
+        "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify",
+        "hh:deploy:validatornft:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorNFT.ts --network base --verify",
+        "hh:deploy:validatorsale:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorSale.ts --network base --verify",
+        "hh:deploy:validatornft1usdc:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorNFTBase.ts --network base --verify",
+        "hh:deploy:validatorsale1usdc:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorSale1USDC.ts --network base --verify"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
@@ -42,7 +48,7 @@
         "typescript": ">=4.5.0"
     },
     "dependencies": {
-        "@openzeppelin/contracts": "^5.0.2",
+        "@openzeppelin/contracts": "^5.4.0",
         "@uniswap/v3-periphery": "^1.4.4"
     }
 }

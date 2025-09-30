@@ -29,7 +29,8 @@ import {
     ShutdownCommand,
     StartServerCommand,
     StopServerCommand,
-    TransferCommand
+    TransferCommand,
+    WithdrawCommand
 } from "./commands";
 
 import { makeErrorRPCResponse } from "./types/response";
@@ -40,7 +41,6 @@ import { GameManagement } from "./state/mongodb/gameManagement";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
-        // console.log(request);
         if (!request) {
             throw new Error("Null request");
         }
@@ -133,7 +133,7 @@ export class RPC {
                     if (!request.params) {
                         return makeErrorRPCResponse(id, "Invalid params");
                     }
-                    let command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
+                    const command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
@@ -331,9 +331,9 @@ export class RPC {
                 }
 
                 case RPCMethods.PERFORM_ACTION: {
-                    const [from, to, action, amount, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
+                    const [from, to, action, value, nonce, index, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
                     const _action = action as PlayerActionType | NonPlayerActionType;
-                    const command = new PerformActionCommandWithResult(from, to, Number(index), BigInt(amount || "0"), _action, Number(nonce), validatorPrivateKey, data);
+                    const command = new PerformActionCommandWithResult(from, to, Number(index), BigInt(value || "0"), _action, Number(nonce), validatorPrivateKey, data);
                     result = await command.execute();
                     break;
                 }
@@ -347,15 +347,15 @@ export class RPC {
                 }
 
                 case RPCMethods.NEW_TABLE: {
-                    // The SDK sends [schemaAddress, owner, nonce] but we now also accept timestamp for uniqueness
-                    const [gameOptionsString, owner, nonce, timestamp] = request.params as [string, string, number, string];
+                    // The SDK sends [schemaAddress, owner, nonce]
+                    const [gameOptionsString, owner, nonce] = request.params as [string, string, number, string];
+
+                    if (!gameOptionsString || nonce === undefined) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+
                     const gameOptions: GameOptions = GameManagement.parseSchema(gameOptionsString);
-                    console.log("🏗️ NEW_TABLE RPC called:");
-                    console.log(`Game Options: ${gameOptionsString}`);
-                    console.log(`Owner: ${owner}`);
-                    console.log(`Nonce: ${nonce}`);
-                    console.log(`Timestamp: ${timestamp || "not provided"}`);
-                    const command = new NewTableCommand(owner, gameOptions, BigInt(nonce || 0), validatorPrivateKey, timestamp);
+                    const command = new NewTableCommand(owner, gameOptions, BigInt(nonce), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }
@@ -377,6 +377,17 @@ export class RPC {
                     const blockHash = request.params[0] as string;
                     const nodeUrl = request.params[1] as string;
                     const command = new ReceiveMinedBlockHashCommand(blockHash, nodeUrl, validatorPrivateKey);
+                    result = await command.execute();
+                    break;
+                }
+
+                case RPCMethods.WITHDRAW: {
+                    if (request.params?.length !== 4) {
+                        return makeErrorRPCResponse(id, "Invalid params");
+                    }
+                    const [from, receiver, amountString, nonce] = request.params as RPCRequestParams[RPCMethods.WITHDRAW];
+                    const amount = BigInt(amountString);    // JSON doesn't allow BigInts
+                    const command = new WithdrawCommand(from, receiver, amount, Number(nonce), validatorPrivateKey);
                     result = await command.execute();
                     break;
                 }

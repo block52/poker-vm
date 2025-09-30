@@ -30,7 +30,11 @@ export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
   try {
     // Extract game options from the game state
     const gameOptions = gameState.gameOptions;
-    
+
+    console.log("🎰 useMinAndMaxBuyIns - Game Options:");
+    console.log("  Full gameOptions:", gameOptions);
+    console.log("  Game type:", gameOptions?.type);
+
     if (!gameOptions) {
       console.warn("No game options found in game state");
       return defaultValues;
@@ -39,6 +43,12 @@ export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
     // Get min and max buy-in values
     const minBuyInWei = gameOptions.minBuyIn || defaultValues.minBuyInWei;
     const maxBuyInWei = gameOptions.maxBuyIn || defaultValues.maxBuyInWei;
+
+    console.log("🎰 useMinAndMaxBuyIns - Buy-in values:");
+    console.log("  minBuyIn from gameOptions:", gameOptions.minBuyIn);
+    console.log("  maxBuyIn from gameOptions:", gameOptions.maxBuyIn);
+    console.log("  minBuyInWei (final):", minBuyInWei);
+    console.log("  maxBuyInWei (final):", maxBuyInWei);
 
     const result: MinAndMaxBuyInsReturn = {
       minBuyInWei,

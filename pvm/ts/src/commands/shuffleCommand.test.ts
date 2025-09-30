@@ -1,6 +1,5 @@
-import { Card } from "@bitcoinbrisbane/block52";
+import { Card, Deck } from "@bitcoinbrisbane/block52";
 import { ShuffleCommand } from "./shuffleCommand";
-import { Deck } from "../models/deck";
 import { RandomCommand } from "./randomCommand";
 import { signResult } from "./abstractSignedCommand";
 
