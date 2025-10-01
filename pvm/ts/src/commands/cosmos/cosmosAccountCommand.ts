@@ -1,3 +1,4 @@
+import { IAccountDocument } from "../../models/interfaces";
 import { DEFAULT_COSMOS_CONFIG } from "../../state/cosmos/config";
 import { CosmosClient, CosmosConfig, getCosmosClient } from "../../state/cosmos/cosmosClient";
 import { signResult } from "../abstractSignedCommand";
@@ -17,21 +18,17 @@ export interface CosmosAccountInfo {
 }
 
 // TODO:  Should return same Object as the old account info
-export class CosmosAccountCommand implements ISignedCommand<CosmosAccountInfo> {
+export class CosmosAccountCommand implements ISignedCommand<IAccountDocument> {
     private readonly cosmosRpcUrl: string;
     private readonly address: string;
 
-    constructor(
-        cosmosRpcUrl: string,
-        address: string,
-        private readonly privateKey: string
-    ) {
+    constructor(cosmosRpcUrl: string, address: string, private readonly privateKey: string) {
         this.cosmosRpcUrl = cosmosRpcUrl;
         this.address = address;
         this.privateKey = privateKey;
     }
 
-    public async execute(): Promise<ISignedResponse<CosmosAccountInfo>> {
+    public async execute(): Promise<ISignedResponse<IAccountDocument>> {
         try {
             // Create cosmos config with injected RPC URL
             const config = {
@@ -43,10 +40,7 @@ export class CosmosAccountCommand implements ISignedCommand<CosmosAccountInfo> {
             const cosmosClient = getCosmosClient(config);
 
             // Get account info and balances
-            const [account, balances] = await Promise.all([
-                cosmosClient.getAccount(this.address),
-                cosmosClient.getAllBalances(this.address)
-            ]);
+            const [account, balances] = await Promise.all([cosmosClient.getAccount(this.address), cosmosClient.getAllBalances(this.address)]);
 
             // Transform the account data into our interface
             const accountInfo: CosmosAccountInfo = {
@@ -58,12 +52,19 @@ export class CosmosAccountCommand implements ISignedCommand<CosmosAccountInfo> {
                 sequence: account?.sequence || 0,
                 accountNumber: account?.accountNumber || 0,
                 pubKey: account?.pubkey?.value || undefined,
-                type: (account as any)?.['@type'] || 'cosmos-sdk/BaseAccount'
+                type: (account as any)?.["@type"] || "cosmos-sdk/BaseAccount"
             };
 
-            return signResult(accountInfo, this.privateKey);
+            const response: IAccountDocument = {
+                address: accountInfo.address,
+                balance: accountInfo.balances[0].amount,
+                nonce: accountInfo.sequence
+                // You can add other fields as necessary
+            };
+
+            return signResult(response, this.privateKey);
         } catch (error) {
-            throw new Error(`Failed to fetch Cosmos account: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Failed to fetch Cosmos account: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     }
 }
