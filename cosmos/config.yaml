@@ -8,9 +8,11 @@ accounts:
     - name: alice
       coins:
           - 100000000b52USD
+      mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
     - name: bob
       coins:
           - 100000000b52USD
+      mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon"
     - name: charlie
       coins:
           - 100000000b52USD
