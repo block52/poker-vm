@@ -1,5 +1,5 @@
-import { CosmosAccountCommand, CosmosAccountInfo } from "./cosmosAccountCommand";
-import { CosmosConfig } from "../../state/cosmos/cosmosClient";
+import { CosmosAccountCommand } from './cosmosAccountCommand';
+import { CosmosConfig } from "@bitcoinbrisbane/block52";
 
 describe("CosmosAccountCommand", () => {
     const mockCosmosConfig: CosmosConfig = {

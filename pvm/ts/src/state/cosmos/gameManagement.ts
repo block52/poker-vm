@@ -1,7 +1,7 @@
 import { IGameManagement } from "../interfaces";
 import { IGameStateDocument, IJSONModel } from "../../models/interfaces";
 import { GameOptions, TexasHoldemGameState, TexasHoldemRound, GameOptionsDTO, GameType } from "@bitcoinbrisbane/block52";
-import { CosmosClient, getCosmosClient } from "./cosmosClient";
+import { CosmosClient, getCosmosClient } from "@bitcoinbrisbane/block52";
 import { createAddress } from "../../utils/crypto";
 import { Deck } from "../../models";
 import { ethers } from "ethers";

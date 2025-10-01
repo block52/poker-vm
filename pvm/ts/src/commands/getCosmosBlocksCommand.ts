@@ -19,7 +19,7 @@
 
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getCosmosClient } from "../state/cosmos/cosmosClient";
+import { getCosmosClient } from "@bitcoinbrisbane/block52";
 import { DEFAULT_COSMOS_CONFIG } from "../state/cosmos/config";
 
 export interface CosmosBlockInfo {

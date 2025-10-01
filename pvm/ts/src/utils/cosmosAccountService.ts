@@ -1,5 +1,5 @@
-import { CosmosAccountCommand, CosmosAccountInfo } from '../commands/cosmos/cosmosAccountCommand';
-import { CosmosConfig } from '../state/cosmos/cosmosClient';
+import { CosmosAccountCommand, CosmosAccountInfo } from "../commands/cosmos/cosmosAccountCommand";
+import { CosmosConfig } from "@bitcoinbrisbane/block52";
 
 /**
  * Service for managing Cosmos account operations
@@ -28,7 +28,7 @@ export class CosmosAccountService {
     async getBalance(address: string, denom: string): Promise<string> {
         const accountInfo = await this.getAccountInfo(address);
         const balance = accountInfo.balances.find(b => b.denom === denom);
-        return balance?.amount || '0';
+        return balance?.amount || "0";
     }
 
     /**
@@ -63,23 +63,23 @@ export class CosmosAccountService {
 // Example usage
 async function example() {
     const config: CosmosConfig = {
-        rpcEndpoint: 'https://node1.block52.xyz',
-        chainId: 'poker-chain',
-        prefix: 'poker',
-        denom: 'upoker',
-        gasPrice: '0.025upoker'
+        rpcEndpoint: "https://node1.block52.xyz",
+        chainId: "poker-chain",
+        prefix: "poker",
+        denom: "upoker",
+        gasPrice: "0.025upoker"
     };
 
-    const privateKey = 'your-private-key-here';
+    const privateKey = "your-private-key-here";
     const accountService = new CosmosAccountService(config, privateKey);
 
     try {
-        const address = 'poker1example...';
+        const address = "poker1example...";
 
-        console.log('Fetching account info for:', address);
+        console.log("Fetching account info for:", address);
         const accountInfo = await accountService.getAccountInfo(address);
 
-        console.log('Account Info:', {
+        console.log("Account Info:", {
             address: accountInfo.address,
             balances: accountInfo.balances,
             sequence: accountInfo.sequence,
@@ -88,19 +88,18 @@ async function example() {
         });
 
         // Get specific balance
-        const pokerBalance = await accountService.getBalance(address, 'upoker');
-        console.log('POKER balance:', pokerBalance);
+        const pokerBalance = await accountService.getBalance(address, "upoker");
+        console.log("POKER balance:", pokerBalance);
 
         // Check if account exists
         const exists = await accountService.accountExists(address);
-        console.log('Account exists:', exists);
+        console.log("Account exists:", exists);
 
         // Get next sequence
         const nextSeq = await accountService.getNextSequence(address);
-        console.log('Next sequence number:', nextSeq);
-
+        console.log("Next sequence number:", nextSeq);
     } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
     }
 }
 

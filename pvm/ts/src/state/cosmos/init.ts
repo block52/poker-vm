@@ -1,4 +1,4 @@
-import { initializeCosmosClient } from "./cosmosClient";
+import { initializeCosmosClient } from "@bitcoinbrisbane/block52";
 import { getCosmosConfig, validateCosmosConfig } from "./config";
 import { getCosmosAccountManagementInstance } from "./accountManagement";
 import { getCosmosBlockchainManagementInstance } from "./blockchainManagement";

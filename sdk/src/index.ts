@@ -5,6 +5,7 @@ export * from "./client";
 export * from "./deck";
 export * from "./pokerSolver";
 export * from "./pokerGameIntegration";
+export * from "./cosmosClient";
 
 export enum KEYS {
     ACTION_TYPE = "actiontype",

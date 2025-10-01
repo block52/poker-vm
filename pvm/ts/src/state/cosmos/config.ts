@@ -1,4 +1,4 @@
-import { CosmosConfig } from "./cosmosClient";
+import { CosmosConfig } from "@bitcoinbrisbane/block52";
 
 /**
  * Default Cosmos SDK configuration for poker VM

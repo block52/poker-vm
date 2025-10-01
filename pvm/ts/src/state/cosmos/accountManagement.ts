@@ -1,7 +1,7 @@
 import { IAccountManagement } from "../interfaces";
 import { Account } from "../../models/account";
 import { Transaction } from "../../models/transaction";
-import { CosmosClient, getCosmosClient } from "./cosmosClient";
+import { CosmosClient, getCosmosClient } from "@bitcoinbrisbane/block52";
 import { Coin } from "@cosmjs/amino";
 
 export class CosmosAccountManagement implements IAccountManagement {

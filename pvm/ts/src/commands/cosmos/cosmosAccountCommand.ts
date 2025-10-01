@@ -1,6 +1,5 @@
-import { IAccountDocument } from "../../models/interfaces";
 import { DEFAULT_COSMOS_CONFIG } from "../../state/cosmos/config";
-import { CosmosClient, CosmosConfig, getCosmosClient } from "../../state/cosmos/cosmosClient";
+import { getCosmosClient } from "@bitcoinbrisbane/block52";
 import { signResult } from "../abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "../interfaces";
 import { Coin } from "@cosmjs/amino";
@@ -18,7 +17,7 @@ export interface CosmosAccountInfo {
 }
 
 // TODO:  Should return same Object as the old account info
-export class CosmosAccountCommand implements ISignedCommand<IAccountDocument> {
+export class CosmosAccountCommand implements ISignedCommand<CosmosAccountInfo> {
     private readonly cosmosRpcUrl: string;
     private readonly address: string;
 
@@ -28,7 +27,7 @@ export class CosmosAccountCommand implements ISignedCommand<IAccountDocument> {
         this.privateKey = privateKey;
     }
 
-    public async execute(): Promise<ISignedResponse<IAccountDocument>> {
+    public async execute(): Promise<ISignedResponse<CosmosAccountInfo>> {
         try {
             // Create cosmos config with injected RPC URL
             const config = {
@@ -55,14 +54,7 @@ export class CosmosAccountCommand implements ISignedCommand<IAccountDocument> {
                 type: (account as any)?.["@type"] || "cosmos-sdk/BaseAccount"
             };
 
-            const response: IAccountDocument = {
-                address: accountInfo.address,
-                balance: accountInfo.balances[0].amount,
-                nonce: accountInfo.sequence
-                // You can add other fields as necessary
-            };
-
-            return signResult(response, this.privateKey);
+            return signResult(accountInfo, this.privateKey);
         } catch (error) {
             throw new Error(`Failed to fetch Cosmos account: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
