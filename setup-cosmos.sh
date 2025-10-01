@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 # Configuration
 CHAIN_ID="poker-vm-1"
 CHAIN_NAME="poker"
-TOKEN_DENOM="upvm"
+TOKEN_DENOM="b52USD"
 GENESIS_AMOUNT="52000000000000" # 52 million tokens with 6 decimals (52,000,000 * 1,000,000)
 VALIDATOR_NAME="validator"
 KEY_NAME="alice"

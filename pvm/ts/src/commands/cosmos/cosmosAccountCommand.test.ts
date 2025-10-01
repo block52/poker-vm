@@ -6,8 +6,8 @@ describe("CosmosAccountCommand", () => {
         rpcEndpoint: "https://node1.block52.xyz",
         chainId: "poker-chain",
         prefix: "poker",
-        denom: "upoker",
-        gasPrice: "0.025upoker"
+        denom: "b52USD",
+        gasPrice: "0.025b52USD"
     };
 
     const testAddress = "poker1test...address";
@@ -30,8 +30,7 @@ describe("CosmosAccountCommand", () => {
         };
 
         const mockBalances = [
-            { denom: "upoker", amount: "1000000" },
-            { denom: "ustake", amount: "500000" }
+            { denom: "b52USD", amount: "1000000" }
         ];
 
         // Note: In a real test, you'd mock the CosmosClient

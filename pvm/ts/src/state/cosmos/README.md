@@ -6,10 +6,10 @@ This directory contains the Cosmos SDK integration for the Poker Virtual Machine
 
 The Cosmos SDK integration provides:
 
-- **Account Management**: Blockchain-native account balances using Cosmos Bank module
-- **Game State Management**: Game states stored on-chain or in custom modules
-- **Blockchain Management**: Direct integration with Cosmos SDK blockchain
-- **Transaction Handling**: Native Cosmos transactions for all operations
+-   **Account Management**: Blockchain-native account balances using Cosmos Bank module
+-   **Game State Management**: Game states stored on-chain or in custom modules
+-   **Blockchain Management**: Direct integration with Cosmos SDK blockchain
+-   **Transaction Handling**: Native Cosmos transactions for all operations
 
 ## Quick Start
 
@@ -25,8 +25,8 @@ export DB_URL="cosmos://localhost:26657"
 export COSMOS_RPC_ENDPOINT="http://localhost:26657"
 export COSMOS_CHAIN_ID="poker-vm-1"
 export COSMOS_PREFIX="poker"
-export COSMOS_DENOM="upvm"
-export COSMOS_GAS_PRICE="0.025upvm"
+export COSMOS_DENOM="b52USD"
+export COSMOS_GAS_PRICE="0.025b52USD"
 
 # Optional: For signing transactions
 export COSMOS_MNEMONIC="your mnemonic here"
@@ -35,7 +35,7 @@ export COSMOS_MNEMONIC="your mnemonic here"
 ### 2. Initialize Cosmos SDK
 
 ```typescript
-import { initializeCosmos } from './state/cosmos/init';
+import { initializeCosmos } from "./state/cosmos/init";
 
 // Initialize the Cosmos SDK integration
 const cosmos = await initializeCosmos();
@@ -50,11 +50,7 @@ console.log(`Connected to chain at height: ${height}`);
 The Cosmos implementation uses the same interfaces as MongoDB/Redis:
 
 ```typescript
-import { 
-    getAccountManagementInstance,
-    getBlockchainInstance,
-    getGameManagementInstance 
-} from './state';
+import { getAccountManagementInstance, getBlockchainInstance, getGameManagementInstance } from "./state";
 
 // These will automatically use Cosmos SDK when DB_URL starts with "cosmos://"
 const accountMgmt = getAccountManagementInstance();
@@ -69,17 +65,17 @@ const balance = await accountMgmt.getBalance("poker1abc123...");
 
 ### Core Components
 
-- **`cosmosClient.ts`** - Main Cosmos SDK client wrapper
-- **`accountManagement.ts`** - Account balance management using Cosmos Bank
-- **`gameManagement.ts`** - Game state management (hybrid approach)
-- **`blockchainManagement.ts`** - Blockchain operations
-- **`config.ts`** - Configuration management
-- **`init.ts`** - Initialization and setup functions
+-   **`cosmosClient.ts`** - Main Cosmos SDK client wrapper
+-   **`accountManagement.ts`** - Account balance management using Cosmos Bank
+-   **`gameManagement.ts`** - Game state management (hybrid approach)
+-   **`blockchainManagement.ts`** - Blockchain operations
+-   **`config.ts`** - Configuration management
+-   **`init.ts`** - Initialization and setup functions
 
 ### Utilities
 
-- **`example.ts`** - Complete usage examples
-- **`README.md`** - This documentation
+-   **`example.ts`** - Complete usage examples
+-   **`README.md`** - This documentation
 
 ## Architecture
 
@@ -118,8 +114,8 @@ export const DEV_CONFIG = {
     rpcEndpoint: "http://localhost:26657",
     chainId: "poker-vm-dev",
     prefix: "poker",
-    denom: "upvm",
-    gasPrice: "0.025upvm"
+    denom: "b52USD",
+    gasPrice: "0.025b52USD"
 };
 ```
 
@@ -141,37 +137,41 @@ export const PROD_CONFIG = {
 
 The system automatically detects the database type from `DB_URL`:
 
-- `mongodb://` - Uses MongoDB
-- `redis://` - Uses Redis  
-- `cosmos://` - Uses Cosmos SDK
+-   `mongodb://` - Uses MongoDB
+-   `redis://` - Uses Redis
+-   `cosmos://` - Uses Cosmos SDK
 
 ### Migration Steps
 
 1. **Export existing data**:
-   ```bash
-   npm run export-data
-   ```
+
+    ```bash
+    npm run export-data
+    ```
 
 2. **Setup Cosmos chain**:
-   ```bash
-   # Start local Cosmos chain
-   npm run start-cosmos
-   ```
+
+    ```bash
+    # Start local Cosmos chain
+    npm run start-cosmos
+    ```
 
 3. **Import data**:
-   ```bash
-   npm run import-to-cosmos
-   ```
+
+    ```bash
+    npm run import-to-cosmos
+    ```
 
 4. **Update configuration**:
-   ```bash
-   export DB_URL="cosmos://localhost:26657"
-   ```
+
+    ```bash
+    export DB_URL="cosmos://localhost:26657"
+    ```
 
 5. **Test migration**:
-   ```bash
-   npm run test-cosmos
-   ```
+    ```bash
+    npm run test-cosmos
+    ```
 
 ## Testing
 
@@ -190,20 +190,20 @@ npm run test:integration:cosmos
 ### Manual Testing
 
 ```typescript
-import { testCosmosIntegration } from './state/cosmos/init';
+import { testCosmosIntegration } from "./state/cosmos/init";
 
 // Run comprehensive test
 const success = await testCosmosIntegration();
-console.log(`Integration test: ${success ? 'PASSED' : 'FAILED'}`);
+console.log(`Integration test: ${success ? "PASSED" : "FAILED"}`);
 ```
 
 ## Performance Considerations
 
 ### Blockchain Operations
 
-- **Read operations** - Very fast (local client cache)
-- **Write operations** - ~6 second block time
-- **Batch operations** - Multiple transactions per block
+-   **Read operations** - Very fast (local client cache)
+-   **Write operations** - ~6 second block time
+-   **Batch operations** - Multiple transactions per block
 
 ### Optimization Strategies
 
@@ -218,15 +218,15 @@ console.log(`Integration test: ${success ? 'PASSED' : 'FAILED'}`);
 try {
     const cosmos = await initializeCosmos();
 } catch (error) {
-    if (error.message.includes('connection')) {
+    if (error.message.includes("connection")) {
         // Handle connection errors
-        console.error('Failed to connect to Cosmos chain');
-    } else if (error.message.includes('mnemonic')) {
+        console.error("Failed to connect to Cosmos chain");
+    } else if (error.message.includes("mnemonic")) {
         // Handle wallet errors
-        console.error('Invalid mnemonic or wallet setup');
+        console.error("Invalid mnemonic or wallet setup");
     } else {
         // Handle other errors
-        console.error('Cosmos initialization failed:', error);
+        console.error("Cosmos initialization failed:", error);
     }
 }
 ```
@@ -297,28 +297,32 @@ pub fn execute(
 ### Common Issues
 
 1. **Connection Failed**
-   ```
-   Error: Failed to connect to Cosmos chain
-   ```
-   - Check RPC endpoint is accessible
-   - Verify chain is running
-   - Check network connectivity
+
+    ```
+    Error: Failed to connect to Cosmos chain
+    ```
+
+    - Check RPC endpoint is accessible
+    - Verify chain is running
+    - Check network connectivity
 
 2. **Invalid Mnemonic**
-   ```
-   Error: Invalid mnemonic phrase
-   ```
-   - Verify mnemonic format (24 words)
-   - Check environment variable is set correctly
-   - Ensure mnemonic corresponds to expected address prefix
+
+    ```
+    Error: Invalid mnemonic phrase
+    ```
+
+    - Verify mnemonic format (24 words)
+    - Check environment variable is set correctly
+    - Ensure mnemonic corresponds to expected address prefix
 
 3. **Gas Estimation Failed**
-   ```
-   Error: Gas estimation failed
-   ```
-   - Check account has sufficient balance
-   - Verify gas price is appropriate
-   - Ensure transaction is valid
+    ```
+    Error: Gas estimation failed
+    ```
+    - Check account has sufficient balance
+    - Verify gas price is appropriate
+    - Ensure transaction is valid
 
 ### Debug Mode
 
@@ -343,8 +347,8 @@ When adding new features to the Cosmos integration:
 
 ## Future Enhancements
 
-- **IBC Integration** - Cross-chain poker tournaments
-- **Governance** - On-chain parameter updates
-- **Staking** - Validator staking for poker nodes
-- **NFTs** - Unique poker cards and achievements
-- **DeFi Integration** - Yield farming with poker winnings
+-   **IBC Integration** - Cross-chain poker tournaments
+-   **Governance** - On-chain parameter updates
+-   **Staking** - Validator staking for poker nodes
+-   **NFTs** - Unique poker cards and achievements
+-   **DeFi Integration** - Yield farming with poker winnings

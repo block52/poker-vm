@@ -6,8 +6,8 @@ describe("CosmosClient", () => {
         rpcEndpoint: "https://node1.block52.xyz",
         chainId: "pokerchain",
         prefix: "poker",
-        denom: "upoker",
-        gasPrice: "0.025upoker"
+        denom: "b52USD",
+        gasPrice: "0.025b52USD"
     };
 
     beforeEach(() => {

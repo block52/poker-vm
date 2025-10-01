@@ -4,24 +4,22 @@ import { CosmosConfig } from "@bitcoinbrisbane/block52";
  * Default Cosmos SDK configuration for poker VM
  */
 export const DEFAULT_COSMOS_CONFIG: CosmosConfig = {
-    rpcEndpoint: process.env.COSMOS_RPC_ENDPOINT || "http://localhost:26657",
-    chainId: process.env.COSMOS_CHAIN_ID || "poker-vm-1",
-    prefix: process.env.COSMOS_PREFIX || "poker",
-    denom: process.env.COSMOS_DENOM || "upvm", // micro poker vm token
-    gasPrice: process.env.COSMOS_GAS_PRICE || "0.025upvm",
-    mnemonic: process.env.COSMOS_MNEMONIC
+    prefix: "b52",
+    rpcEndpoint: "http://localhost:26657",
+    chainId: "pokerchain",
+    denom: "b52USD",
+    gasPrice: "0.025",
 };
 
 /**
  * Test configuration for local development
  */
 export const TEST_COSMOS_CONFIG: CosmosConfig = {
-    rpcEndpoint: "http://localhost:26657",
-    chainId: "poker-vm-test",
-    prefix: "poker",
-    denom: "upvm",
-    gasPrice: "0.025upvm",
-    mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+    prefix: "b52",
+    rpcEndpoint: "http://localhost:36657",
+    chainId: "pokerchain-test",
+    denom: "b52USD",
+    gasPrice: "0.01",
 };
 
 /**

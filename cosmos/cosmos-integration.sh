@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 CHAIN_ID="poker-vm-1"
-TOKEN_DENOM="upvm"
+TOKEN_DENOM="b52USD"
 RPC_ENDPOINT="http://localhost:26657"
 REST_ENDPOINT="http://localhost:1317"
 GRPC_ENDPOINT="localhost:9090"

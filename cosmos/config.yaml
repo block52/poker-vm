@@ -2,98 +2,93 @@ version: 1
 
 # Account prefix: b52 (set in app/app.go)
 # All addresses will use the b52 prefix (e.g., b521abc...)
+# Single token denomination: b52USD
 
 accounts:
-  - name: alice
-    coins:
-      - 100000000stake
-      - 10000000token
-  - name: bob
-    coins:
-      - 100000000stake
-      - 10000000token
-  - name: charlie
-    coins:
-      - 100000000stake
-      - 10000000token
-  - name: dave
-    coins:
-      - 100000000stake
-      - 10000000token
+    - name: alice
+      coins:
+          - 100000000b52USD
+    - name: bob
+      coins:
+          - 100000000b52USD
+    - name: charlie
+      coins:
+          - 100000000b52USD
+    - name: dave
+      coins:
+          - 100000000b52USD
 
 validator:
-  name: alice
-  staked: 100000000stake
+    name: alice
+    staked: 100000000b52USD
 
 faucet:
-  name: bob
-  coins:
-    - 10000000stake
-    - 5000000token
-  coins_max:
-    - 1000000stake
-    - 500000token
+    name: bob
+    coins:
+        - 10000000b52USD
+    coins_max:
+        - 1000000b52USD
 
 genesis:
-  app_state:
-    staking:
-      params:
-        bond_denom: stake
-        unbonding_time: "1814400s" # 21 days
-        max_validators: 100
-        max_entries: 7
-        historical_entries: 10000
-    bank:
-      params:
-        send_enabled: true
-        default_send_enabled: true
-    crisis:
-      constant_fee:
-        denom: stake
-        amount: "1000"
-    gov:
-      voting_params:
-        voting_period: "172800s" # 2 days
-      deposit_params:
-        min_deposit:
-          - denom: stake
-            amount: "10000000"
-        max_deposit_period: "172800s"
-    mint:
-      params:
-        mint_denom: stake
-        inflation_rate_change: "0.130000000000000000"
-        inflation_max: "0.200000000000000000"
-        inflation_min: "0.070000000000000000"
-        goal_bonded: "0.670000000000000000"
-        blocks_per_year: "6311520"
-    poker:
-      # Initial poker module state
-      games: []
-      player_states: []
-      action_history: []
-      game_count: 0
+    app_state:
+        staking:
+            params:
+                bond_denom: b52USD
+                unbonding_time: "1814400s" # 21 days
+                max_validators: 100
+                max_entries: 7
+                historical_entries: 10000
+        bank:
+            params:
+                send_enabled: true
+                default_send_enabled: true
+        crisis:
+            constant_fee:
+                denom: b52USD
+                amount: "1000"
+        gov:
+            voting_params:
+                voting_period: "172800s" # 2 days
+            deposit_params:
+                min_deposit:
+                    - denom: b52USD
+                      amount: "10000000"
+                max_deposit_period: "172800s"
+        mint:
+            params:
+                mint_denom: stake
+                inflation_rate_change: "0.130000000000000000"
+                inflation_max: "0.200000000000000000"
+                inflation_min: "0.070000000000000000"
+                goal_bonded: "0.670000000000000000"
+                blocks_per_year: "6311520"
+        poker:
+            # Initial poker module state
+            games: []
+            player_states: []
+            action_history: []
+            game_count: 0
 
 client:
-  openapi:
-    path: docs/static/openapi.yml
-  typescript:
-    path: ts-client
+    openapi:
+        path: docs/static/openapi.yml
+    typescript:
+        path: ts-client
 
 host:
-  rpc: ":26657"
-  p2p: ":26656"
-  prof: ":6060"
-  grpc: ":9090"
-  grpc-web: ":9091"
-  api: ":1317"
-  frontend: ":5173"
-  dev-ui: false
+    rpc: ":26657"
+    p2p: ":26656"
+    prof: ":6060"
+    grpc: ":9090"
+    grpc-web: ":9091"
+    api: ":1317"
+    frontend: ":5173"
+    dev-ui: false
 
 build:
-  binary: "pokerchaind"
-  main: "cmd/pokerchaind"
-  proto:
-    path: "proto"
-    third_party_paths:
-      - "proto_vendor"
+    binary: "pokerchaind"
+    main: "cmd/pokerchaind"
+    proto:
+        path: "proto"
+        third_party_paths:
+            - "proto_vendor"
