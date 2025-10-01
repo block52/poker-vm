@@ -3,14 +3,15 @@ import { getMempoolInstance, Mempool } from "../core/mempool";
 import { Transaction } from "../models";
 import { signResult } from "./abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
-import { getGameManagementInstance } from "../state/index";
+import { getGameManagementInstance, getTransactionInstance } from "../state/index";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { Result } from "../engine/types";
-import { IGameManagement } from "../state/interfaces";
+import { IGameManagement, ITransactionManagement } from "../state/interfaces";
 
 export class ClaimCommand implements ISignedCommand<Transaction> {
     private readonly mempool: Mempool;
     private readonly gameManagement: IGameManagement;
+    private readonly transactionManagement: ITransactionManagement;
 
     constructor(
         readonly playerAddress: string,  // Player claiming winnings
@@ -22,6 +23,7 @@ export class ClaimCommand implements ISignedCommand<Transaction> {
     ) {
         this.mempool = getMempoolInstance();
         this.gameManagement = getGameManagementInstance();
+        this.transactionManagement = getTransactionInstance();
     }
 
     public async execute(): Promise<ISignedResponse<Transaction>> {
@@ -61,9 +63,19 @@ export class ClaimCommand implements ISignedCommand<Transaction> {
         });
 
         // 3. Create claim transaction data
-        const data = `CLAIM_${this.actionIndex}_${result.place}`;
+        const data = `CLAIM_${this.tableAddress}_${this.playerAddress}_${result.place}`;
 
-        // 4. Create transaction: FROM table TO player with payout amount
+        // 4. Check if this claim has already been processed to prevent duplicates
+        console.log("📝 Checking for existing claim transaction with data:", data);
+        const exists = await this.transactionManagement.getTransactionByData(data);
+
+        if (exists) {
+            console.log("ℹ️ Claim transaction already exists in blockchain, returning existing transaction");
+            // Return the existing transaction instead of throwing an error
+            return signResult(exists, this.privateKey);
+        }
+
+        // 5. Create transaction: FROM table TO player with payout amount
         // This is the key: funds flow FROM the table TO the player
         const claimTx: Transaction = await Transaction.create(
             this.playerAddress,      // to: player receives the funds
@@ -82,13 +94,13 @@ export class ClaimCommand implements ISignedCommand<Transaction> {
             data: claimTx.data
         });
 
-        // 5. Add to mempool if requested
+        // 6. Add to mempool if requested
         if (this.addToMempool && !this.mempool.has(claimTx.hash)) {
             await this.mempool.add(claimTx);
             console.log(`✅ Added claim transaction to mempool: ${claimTx.hash}`);
         }
 
-        // 6. Also execute the claim action in the game to mark it as claimed
+        // 7. Also execute the claim action in the game to mark it as claimed
         // This prevents double claims
         try {
             // Try to mark the claim in the game state
