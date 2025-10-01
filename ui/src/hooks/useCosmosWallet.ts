@@ -7,7 +7,8 @@ import {
     setCosmosAddress,
     clearCosmosData,
     createCosmosClient,
-    getDefaultCosmosConfig
+    getDefaultCosmosConfig,
+    getTestAddresses
 } from "../utils/cosmosUtils";
 
 interface CosmosBalance {
@@ -36,6 +37,9 @@ interface CosmosWalletResult {
 
     // Transaction functions
     sendTokens: (recipientAddress: string, amount: string) => Promise<string>;
+
+    // Debug functions
+    testChainAddresses: () => Promise<any>;
 }
 
 const useCosmosWallet = (): CosmosWalletResult => {
@@ -152,6 +156,11 @@ const useCosmosWallet = (): CosmosWalletResult => {
         }
     }, [cosmosClient, address, refreshBalance]);
 
+    // Test chain addresses 
+    const testChainAddresses = useCallback(async () => {
+        return await getTestAddresses();
+    }, []);
+
     // Initialize on mount
     useEffect(() => {
         initializeWallet();
@@ -167,6 +176,7 @@ const useCosmosWallet = (): CosmosWalletResult => {
         clearWallet,
         refreshBalance,
         sendTokens,
+        testChainAddresses,
     };
 };
 

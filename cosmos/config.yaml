@@ -8,17 +8,11 @@ accounts:
     - name: alice
       coins:
           - 100000000b52USD
-      mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+      mnemonic: "mammal aim member plastic cage worth planet earth custom youth goose hawk"
     - name: bob
       coins:
           - 100000000b52USD
-      mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon"
-    - name: charlie
-      coins:
-          - 100000000b52USD
-    - name: dave
-      coins:
-          - 100000000b52USD
+      mnemonic: "predict stamp narrow pencil trigger fiction legal devote omit hungry basket jaguar"
 
 validator:
     name: alice
