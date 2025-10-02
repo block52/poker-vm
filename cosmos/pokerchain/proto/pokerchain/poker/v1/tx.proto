@@ -6,6 +6,7 @@ import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 import "pokerchain/poker/v1/params.proto";
 import "pokerchain/poker/v1/game.proto";
 
@@ -20,10 +21,20 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 
   // CreateGame defines the CreateGame RPC.
-  rpc CreateGame(MsgCreateGame) returns (MsgCreateGameResponse);
+  rpc CreateGame(MsgCreateGame) returns (MsgCreateGameResponse) {
+    option (google.api.http) = {
+      post: "/pokerchain/poker/v1/create_game"
+      body: "*"
+    };
+  };
 
   // CreateTable defines the CreateTable RPC.
-  rpc CreateTable(MsgCreateTable) returns (MsgCreateTableResponse);
+  rpc CreateTable(MsgCreateTable) returns (MsgCreateTableResponse) {
+    option (google.api.http) = {
+      post: "/pokerchain/poker/v1/create_table"
+      body: "*"
+    };
+  };
 
   // JoinGame defines the JoinGame RPC.
   rpc JoinGame(MsgJoinGame) returns (MsgJoinGameResponse);

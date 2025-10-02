@@ -66,6 +66,9 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtim
 	if err := types.RegisterQueryHandlerClient(clientCtx.CmdContext, mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
+	if err := types.RegisterMsgHandlerClient(clientCtx.CmdContext, mux, types.NewMsgClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInterfaces registers a module's interface types and their concrete implementations as proto.Message.
