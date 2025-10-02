@@ -4,7 +4,7 @@
 # curl https://get.ignite.com/cli! | bash
 
 # Create a new Cosmos chain
-ignite scaffold chain github.com/yourusername/pokerchain
+ignite scaffold chain github.com/block52/pokerchain
 
 cd pokerchain
 
