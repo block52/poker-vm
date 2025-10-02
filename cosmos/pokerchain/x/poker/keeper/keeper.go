@@ -26,6 +26,7 @@ type Keeper struct {
 	stakingKeeper types.StakingKeeper
 	PlayerState   collections.Map[string, types.PlayerState]
 	ActionHistory collections.Map[string, types.ActionHistory]
+	Games         collections.Map[string, types.Game]
 }
 
 func NewKeeper(
@@ -52,7 +53,10 @@ func NewKeeper(
 		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		PlayerState:   collections.NewMap(sb, types.PlayerStateKey, "playerState", collections.StringKey, codec.CollValue[types.PlayerState](cdc)), ActionHistory: collections.NewMap(sb, types.ActionHistoryKey, "actionHistory", collections.StringKey, codec.CollValue[types.ActionHistory](cdc))}
+		PlayerState:   collections.NewMap(sb, types.PlayerStateKey, "playerState", collections.StringKey, codec.CollValue[types.PlayerState](cdc)), 
+		ActionHistory: collections.NewMap(sb, types.ActionHistoryKey, "actionHistory", collections.StringKey, codec.CollValue[types.ActionHistory](cdc)),
+		Games:         collections.NewMap(sb, types.GameKey, "games", collections.StringKey, codec.CollValue[types.Game](cdc)),
+	}
 
 	schema, err := sb.Build()
 	if err != nil {

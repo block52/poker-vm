@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package pokerchain.poker.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/yourusername/pokerchain/x/poker/types";
+
+// TableType defines the different types of poker tables
+enum TableType {
+  TABLE_TYPE_UNSPECIFIED = 0;
+  SIT_AND_GO = 1;
+  CASH_GAME = 2;
+  TOURNAMENT = 3;
+}
+
+// GameStatus defines the current status of a game
+enum GameStatus {
+  GAME_STATUS_UNSPECIFIED = 0;
+  WAITING = 1;
+  ACTIVE = 2;
+  FINISHED = 3;
+  PAUSED = 4;
+}
+
+// Player represents a player in a game
+message Player {
+  string address = 1;
+  uint64 buy_in = 2;
+  uint64 chips = 3;
+  uint32 seat = 4;
+  bool is_active = 5;
+}
+
+// Game represents a poker game/table
+message Game {
+  string table_address = 1;
+  TableType table_type = 2;
+  uint64 buy_in = 3;
+  repeated Player players = 4 [(gogoproto.nullable) = false];
+  GameStatus status = 5;
+  uint64 small_blind = 6;
+  uint64 big_blind = 7;
+  uint32 max_players = 8;
+  uint32 min_players = 9;
+  uint64 created_at = 10;
+}
