@@ -18,6 +18,11 @@ func (k Keeper) InitGenesis(ctx context.Context, genState types.GenesisState) er
 			return err
 		}
 	}
+	for _, elem := range genState.Games {
+		if err := k.Games.Set(ctx, elem.TableAddress, elem); err != nil {
+			return err
+		}
+	}
 
 	return k.Params.Set(ctx, genState.Params)
 }
@@ -39,6 +44,12 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	}
 	if err := k.ActionHistory.Walk(ctx, nil, func(_ string, val types.ActionHistory) (stop bool, err error) {
 		genesis.ActionHistoryMap = append(genesis.ActionHistoryMap, val)
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.Games.Walk(ctx, nil, func(_ string, val types.Game) (stop bool, err error) {
+		genesis.Games = append(genesis.Games, val)
 		return false, nil
 	}); err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/yourusername/pokerchain/x/poker/types"
@@ -26,7 +27,7 @@ func (k msgServer) CreateTable(ctx context.Context, msg *types.MsgCreateTable) (
 		TableAddress: msg.TableAddress,
 		TableType:    msg.TableType,
 		BuyIn:        msg.BuyIn,
-		Players:      []*types.Player{},
+		Players:      []types.Player{},
 		Status:       types.GameStatus_WAITING,
 		SmallBlind:   msg.SmallBlind,
 		BigBlind:     msg.BigBlind,
@@ -48,7 +49,7 @@ func (k msgServer) CreateTable(ctx context.Context, msg *types.MsgCreateTable) (
 			sdk.NewAttribute("table_address", msg.TableAddress),
 			sdk.NewAttribute("creator", msg.Creator),
 			sdk.NewAttribute("table_type", msg.TableType.String()),
-			sdk.NewAttribute("buy_in", sdk.NewInt(int64(msg.BuyIn)).String()),
+			sdk.NewAttribute("buy_in", strconv.FormatUint(msg.BuyIn, 10)),
 		),
 	)
 
