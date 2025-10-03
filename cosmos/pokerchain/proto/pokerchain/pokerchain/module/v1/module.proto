@@ -3,11 +3,11 @@ package pokerchain.pokerchain.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 
-option go_package = "github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/types";
+option go_package = "pokerchain/x/pokerchain/types";
 
 // Module is the config object for the module.
 message Module {
-  option (cosmos.app.v1alpha1.module) = {go_import: "github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain"};
+  option (cosmos.app.v1alpha1.module) = {go_import: "pokerchain/x/pokerchain"};
 
   // authority defines the custom module authority.
   // If not set, defaults to the governance module.

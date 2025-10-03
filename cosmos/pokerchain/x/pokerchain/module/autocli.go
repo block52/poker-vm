@@ -3,7 +3,7 @@ package pokerchain
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
-	"github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/types"
+	"pokerchain/x/pokerchain/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

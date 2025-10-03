@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/keeper"
-	"github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/types"
+	"pokerchain/x/pokerchain/keeper"
+	"pokerchain/x/pokerchain/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}

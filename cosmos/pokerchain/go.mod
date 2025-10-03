@@ -1,4 +1,4 @@
-module github.com/block52/poker-vm/cosmos/pokerchain
+module pokerchain
 
 go 1.24.0
 

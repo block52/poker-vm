@@ -4,7 +4,7 @@ package pokerchain.pokerchain.v1;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/types";
+option go_package = "pokerchain/x/pokerchain/types";
 
 // Params defines the parameters for the module.
 message Params {

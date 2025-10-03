@@ -13,9 +13,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/keeper"
-	module "github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/module"
-	"github.com/block52/poker-vm/cosmos/pokerchain/x/pokerchain/types"
+	"pokerchain/x/pokerchain/keeper"
+	module "pokerchain/x/pokerchain/module"
+	"pokerchain/x/pokerchain/types"
 )
 
 type fixture struct {

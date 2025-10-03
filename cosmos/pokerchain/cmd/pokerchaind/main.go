@@ -7,8 +7,8 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"github.com/block52/poker-vm/cosmos/pokerchain/app"
-	"github.com/block52/poker-vm/cosmos/pokerchain/cmd/pokerchaind/cmd"
+	"pokerchain/app"
+	"pokerchain/cmd/pokerchaind/cmd"
 )
 
 func main() {

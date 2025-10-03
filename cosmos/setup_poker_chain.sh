@@ -19,7 +19,8 @@ fi
 
 # Create a new Cosmos chain
 echo "Creating new Cosmos chain..."
-ignite scaffold chain github.com/block52/poker-vm/cosmos/pokerchain --address-prefix b52
+# ignite scaffold chain github.com/block52/poker-vm/cosmos/pokerchain --address-prefix b52
+ignite scaffold chain pokerchain --address-prefix b52
 
 cd pokerchain
 
@@ -28,8 +29,8 @@ echo "Scaffolding poker module..."
 ignite scaffold module poker --dep bank,staking
 
 # Scaffold message types for poker table management
-echo "Scaffolding CreateGame message..."
-ignite scaffold message create-game \
+echo "Scaffolding CreateTable message..."
+ignite scaffold message create-table \
   gameId:string \
   minBuyIn:uint \
   maxBuyIn:uint \
