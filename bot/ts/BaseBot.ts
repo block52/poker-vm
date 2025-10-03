@@ -7,7 +7,7 @@ export abstract class BaseBot {
     public readonly me: string;
     public isPlaying: boolean = false;
 
-    constructor(readonly tableAddress: string, private nodeUrl: string, private privateKey: string) {
+    constructor(readonly tableAddress: string, private nodeUrl: string, privateKey: string) {
         this.client = new NodeRpcClient(nodeUrl, privateKey);
         const wallet = new Wallet(privateKey);
         this.me = wallet.address;
@@ -153,7 +153,7 @@ export abstract class BaseBot {
             // const defaultBuyIn = BigInt("1000000000000000000"); // BigInt(gameState.gameOptions.minBuyIn || "1000000000000000000"); // minimum buy-in
             const defaultBuyIn = gameState.gameOptions.minBuyIn || "1000000000000000000"; // minimum buy-in
 
-            const result = await this.client.playerJoin(this.tableAddress, defaultBuyIn, seats[0]);
+            const result = await this.client.playerJoin(this.tableAddress, BigInt(defaultBuyIn), seats[0]);
             console.log(chalk.cyan("Join result:", result));
             if (!result || !result.hash) {
                 console.error(chalk.red("Failed to join game: No transaction hash returned."));
