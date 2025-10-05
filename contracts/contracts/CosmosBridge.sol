@@ -38,7 +38,7 @@ contract CosmosBridge {
         return IERC20(underlying).balanceOf(_self);
     }
 
-    constructor(address underlying_, address vault_, address router_) Ownable(msg.sender) {
+    constructor(address underlying_, address vault_, address router_) {
         underlying = underlying_;
         vault = vault_;
         router = router_;
