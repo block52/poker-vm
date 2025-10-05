@@ -5383,3 +5383,363 @@ export const test_1158 = {
         "signature": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     }
 }
+
+export const test_1173 = {
+    "id": "1",
+    "result": {
+        "data": {
+            "type": "sit-and-go",
+            "address": "0x9d4fac59d891bee2221dcaf72c2678fba44f4045",
+            "gameOptions": {
+                "minBuyIn": "1000000000000000000",
+                "maxBuyIn": "1000000000000000000",
+                "maxPlayers": 4,
+                "minPlayers": 4,
+                "smallBlind": "100000000000000000000",
+                "bigBlind": "200000000000000000000",
+                "timeout": 300000,
+                "type": "sit-and-go"
+            },
+            "smallBlindPosition": 3,
+            "bigBlindPosition": 4,
+            "dealer": 2,
+            "players": [
+                {
+                    "address": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 1,
+                    "stack": "9400000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "status": "active",
+                    "legalActions": [
+                        {
+                            "action": "new-hand",
+                            "min": "0",
+                            "max": "0",
+                            "index": 70
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "stack": "12700000000000000000000",
+                    "isSmallBlind": true,
+                    "isBigBlind": false,
+                    "isDealer": false,
+                    "status": "active",
+                    "legalActions": [
+                        {
+                            "action": "fold",
+                            "min": "0",
+                            "max": "0",
+                            "index": 70
+                        },
+                        {
+                            "action": "new-hand",
+                            "min": "0",
+                            "max": "0",
+                            "index": 70
+                        }
+                    ],
+                    "sumOfBets": "100000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0x2B6be678D732346c364c98905A285C938056b0A8",
+                    "seat": 2,
+                    "stack": "0",
+                    "isSmallBlind": false,
+                    "isBigBlind": false,
+                    "isDealer": true,
+                    "status": "busted",
+                    "legalActions": [
+                        {
+                            "action": "new-hand",
+                            "min": "0",
+                            "max": "0",
+                            "index": 70
+                        }
+                    ],
+                    "sumOfBets": "0",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                    "address": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "stack": "17900000000000000000000",
+                    "isSmallBlind": false,
+                    "isBigBlind": true,
+                    "isDealer": false,
+                    "status": "active",
+                    "legalActions": [
+                        {
+                            "action": "new-hand",
+                            "min": "0",
+                            "max": "0",
+                            "index": 70
+                        }
+                    ],
+                    "sumOfBets": "200000000000000000000",
+                    "timeout": 0,
+                    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ],
+            "communityCards": [
+                "4C",
+                "5D",
+                "8H",
+                "5C",
+                "2H"
+            ],
+            "deck": "JS-QH-3H-6H-7S-6C-5S-AH-9S-QS-8S-TS-2S-AC-3S-3D-6D-KS-7H-TC-QC-4C-5D-8H-8C-5C-6S-2H-[8D]-4D-KC-AS-2C-QD-9H-9C-2D-TD-4H-AD-JH-9D-3C-JD-KH-5H-TH-JC-7C-7D-4S-KD",
+            "pots": [
+                "10200000000000000000000"
+            ],
+            "lastActedSeat": 1,
+            "actionCount": 45,
+            "handNumber": 3,
+            "nextToAct": 3,
+            "previousActions": [
+                {
+                    "playerId": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "action": "post-small-blind",
+                    "amount": "100000000000000000000",
+                    "round": "ante",
+                    "index": 46,
+                    "timestamp": 1759450142436
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "action": "post-big-blind",
+                    "amount": "200000000000000000000",
+                    "round": "ante",
+                    "index": 47,
+                    "timestamp": 1759450142436
+                },
+                {
+                    "playerId": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 1,
+                    "action": "deal",
+                    "amount": "",
+                    "round": "ante",
+                    "index": 48,
+                    "timestamp": 1759450142436
+                },
+                {
+                    "playerId": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 1,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "preflop",
+                    "index": 49,
+                    "timestamp": 1759450142436
+                },
+                {
+                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
+                    "seat": 2,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "preflop",
+                    "index": 50,
+                    "timestamp": 1759450157414
+                },
+                {
+                    "playerId": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "action": "call",
+                    "amount": "100000000000000000000",
+                    "round": "preflop",
+                    "index": 51,
+                    "timestamp": 1759450157414
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "preflop",
+                    "index": 52,
+                    "timestamp": 1759450157414
+                },
+                {
+                    "playerId": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 53,
+                    "timestamp": 1759450172442
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 54,
+                    "timestamp": 1759450172442
+                },
+                {
+                    "playerId": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 1,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 55,
+                    "timestamp": 1759450172442
+                },
+                {
+                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
+                    "seat": 2,
+                    "action": "check",
+                    "amount": "",
+                    "round": "flop",
+                    "index": 56,
+                    "timestamp": 1759450172442
+                },
+                {
+                    "playerId": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "action": "check",
+                    "amount": "",
+                    "round": "turn",
+                    "index": 57,
+                    "timestamp": 1759450187426
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "turn",
+                    "index": 58,
+                    "timestamp": 1759450187426
+                },
+                {
+                    "playerId": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 1,
+                    "action": "bet",
+                    "amount": "200000000000000000000",
+                    "round": "turn",
+                    "index": 59,
+                    "timestamp": 1759450187426
+                },
+                {
+                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
+                    "seat": 2,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "turn",
+                    "index": 60,
+                    "timestamp": 1759450187426
+                },
+                {
+                    "playerId": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "turn",
+                    "index": 61,
+                    "timestamp": 1759450187426
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "action": "call",
+                    "amount": "200000000000000000000",
+                    "round": "turn",
+                    "index": 62,
+                    "timestamp": 1759450202560
+                },
+                {
+                    "playerId": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "action": "check",
+                    "amount": "",
+                    "round": "river",
+                    "index": 63,
+                    "timestamp": 1759450202560
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "action": "check",
+                    "amount": "",
+                    "round": "river",
+                    "index": 64,
+                    "timestamp": 1759450217399
+                },
+                {
+                    "playerId": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 1,
+                    "action": "check",
+                    "amount": "",
+                    "round": "river",
+                    "index": 65,
+                    "timestamp": 1759450232435
+                },
+                {
+                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
+                    "seat": 2,
+                    "action": "all-in",
+                    "amount": "8600000000000000000000",
+                    "round": "river",
+                    "index": 66,
+                    "timestamp": 1759450232435
+                },
+                {
+                    "playerId": "0xf20d09D3ef43315C392d4879e253142557363A2C",
+                    "seat": 3,
+                    "action": "show",
+                    "amount": "",
+                    "round": "showdown",
+                    "index": 67,
+                    "timestamp": 1759450232435
+                },
+                {
+                    "playerId": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "seat": 4,
+                    "action": "show",
+                    "amount": "",
+                    "round": "showdown",
+                    "index": 68,
+                    "timestamp": 1759450247410
+                },
+                {
+                    "playerId": "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8",
+                    "seat": 1,
+                    "action": "muck",
+                    "amount": "",
+                    "round": "showdown",
+                    "index": 69,
+                    "timestamp": 1759450247411
+                }
+            ],
+            "round": "end",
+            "winners": [
+                {
+                    "address": "0x4260E88e81E60113146092Fb9474b61C59f7552e",
+                    "amount": "10200000000000000000000",
+                    "cards": [
+                        "6H",
+                        "AH"
+                    ],
+                    "name": "Pair of 5s",
+                    "description": "Pair of 5s"
+                }
+            ],
+            "results": [],
+            "signature": "0x0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "signature": "0xf84cf89833c9bcf409f47e8a386360c6aaf47f421731bb563b359473fee1fcf32b8fd97f2768d01cf469a0e757ff4833ea1362da5bc6a9d72e781db37d50e3881c"
+    }
+}
