@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useAccount, useWalletClient, usePublicClient } from "wagmi";
+import { useAccount, useWalletClient, usePublicClient, useSwitchChain } from "wagmi";
 import { parseUnits, formatUnits, parseAbi } from "viem";
 import { colors, hexToRgba } from "../utils/colorConfig";
-import { useMintTokens } from "../rpc_calls/useMintTokens";
-import { getPublicKey } from "../utils/b52AccountUtils";
+import { BASE_USDC_ADDRESS, COSMOS_BRIDGE_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
+import { getCosmosAddress } from "../utils/cosmosUtils";
 
 interface USDCDepositModalProps {
     isOpen: boolean;
@@ -11,11 +11,11 @@ interface USDCDepositModalProps {
     onSuccess?: () => void;
 }
 
-// Bridge contract address from deployment
-const BRIDGE_ADDRESS = "0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d";
+// CosmosBridge contract on Base Chain
+const BRIDGE_ADDRESS = COSMOS_BRIDGE_ADDRESS;
 
-// USDC contract address on Ethereum mainnet
-const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+// USDC contract on Base Chain
+const USDC_ADDRESS = BASE_USDC_ADDRESS;
 
 // Contract ABIs - using parseAbi to convert from human-readable to JSON format
 const USDC_ABI = parseAbi([
@@ -26,8 +26,8 @@ const USDC_ABI = parseAbi([
 ]);
 
 const BRIDGE_ABI = parseAbi([
-    "function depositUnderlying(uint256 amount, address receiver) external returns(uint256)",
-    "event Deposited(address indexed receiver, uint256 amount, uint256 indexed index)"
+    "function depositUnderlying(uint256 amount, string calldata receiver) external returns(uint256)",
+    "event Deposited(string indexed account, uint256 amount, uint256 index)"
 ]);
 
 const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -39,21 +39,26 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
     const [allowance, setAllowance] = useState<bigint>(0n);
     const [needsApproval, setNeedsApproval] = useState(false);
 
-    const { address: walletAddress, isConnected } = useAccount();
+    const { address: walletAddress, isConnected, chain } = useAccount();
     const { data: walletClient } = useWalletClient();
     const publicClient = usePublicClient();
-    const { mint } = useMintTokens();
+    const { switchChain } = useSwitchChain();
 
-    // Get game account address (where tokens will be minted)
-    const gameAccountAddress = getPublicKey();
+    // Get Cosmos address from localStorage (where b52USDC will be minted)
+    const cosmosAddress = getCosmosAddress();
     
     console.log("📍 [1] USDCDepositModal initialized:", {
         walletAddress,
-        gameAccountAddress,
+        cosmosAddress,
         isConnected,
+        chainId: chain?.id,
+        expectedChainId: BASE_CHAIN_ID,
         bridgeAddress: BRIDGE_ADDRESS,
         usdcAddress: USDC_ADDRESS
     });
+
+    // Check if we need to switch to Base Chain
+    const needsNetworkSwitch = chain?.id !== BASE_CHAIN_ID;
 
     // Fetch USDC balance and allowance
     useEffect(() => {
@@ -161,18 +166,30 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
     };
 
     const handleDeposit = async () => {
-        console.log("📍 [9] Starting USDC deposit process");
-        console.log("📍 [10] CRITICAL - Game account (receiver):", gameAccountAddress);
+        console.log("📍 [9] Starting USDC deposit to CosmosBridge on Base Chain");
+        console.log("📍 [10] CRITICAL - Cosmos address (receiver):", cosmosAddress);
         console.log("📍 [11] Web3 wallet (sender):", walletAddress);
-        
-        if (!walletClient || !walletAddress || !gameAccountAddress || !publicClient) {
-            console.error("❌ [12] Missing required components:", {
+        console.log("📍 [12] Current chain:", chain?.id, "Expected:", BASE_CHAIN_ID);
+
+        if (!walletClient || !walletAddress || !cosmosAddress || !publicClient) {
+            console.error("❌ [13] Missing required components:", {
                 walletClient: !!walletClient,
                 walletAddress,
-                gameAccountAddress,
+                cosmosAddress,
                 publicClient: !!publicClient
             });
-            setError("Please connect both wallets");
+            setError("Please connect MetaMask and generate a Cosmos wallet first");
+            return;
+        }
+
+        // Check if on correct network
+        if (needsNetworkSwitch) {
+            setError(`Please switch to Base Chain (Chain ID: ${BASE_CHAIN_ID})`);
+            try {
+                await switchChain({ chainId: BASE_CHAIN_ID });
+            } catch (err) {
+                console.error("Failed to switch network:", err);
+            }
             return;
         }
 
@@ -186,21 +203,22 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
 
         try {
             const amountInUnits = parseUnits(amount, 6);
-            console.log("📍 [13] Deposit parameters:", {
+            console.log("📍 [14] Deposit parameters:", {
                 amount: amount,
                 amountInUnits: amountInUnits.toString(),
                 amountInUSDC: parseFloat(amount),
-                receiver: gameAccountAddress,
-                bridgeContract: BRIDGE_ADDRESS
+                cosmosReceiver: cosmosAddress,
+                bridgeContract: BRIDGE_ADDRESS,
+                chainId: chain?.id
             });
 
-            // Call depositUnderlying on Bridge contract
-            console.log("📍 [14] Simulating depositUnderlying call...");
+            // Call depositUnderlying on CosmosBridge contract
+            console.log("📍 [15] Simulating depositUnderlying call...");
             const { request } = await publicClient.simulateContract({
                 address: BRIDGE_ADDRESS,
                 abi: BRIDGE_ABI,
                 functionName: "depositUnderlying",
-                args: [amountInUnits, gameAccountAddress as `0x${string}`],
+                args: [amountInUnits, cosmosAddress], // receiver is string (Cosmos address)
                 account: walletAddress
             });
 
@@ -210,140 +228,22 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
 
             // Wait for transaction confirmation
             const receipt = await publicClient.waitForTransactionReceipt({ hash });
-            console.log("📍 [17] Deposit transaction confirmed:", {
+            console.log("✅ [17] Deposit transaction confirmed on Base Chain:", {
                 transactionHash: hash,
-                blockNumber: receipt.blockNumber,
+                blockNumber: receipt.blockNumber.toString(),
                 status: receipt.status,
-                gasUsed: receipt.gasUsed.toString(),
-                logs: receipt.logs.length
+                gasUsed: receipt.gasUsed.toString()
             });
 
-            // Get the deposit index from the event logs
-            console.log("📍 [18] Parsing event logs to find deposit index...");
-            console.log("📍 [18a] All receipt logs:", receipt.logs);
-            
-            const depositEvent = receipt.logs.find(log => 
-                log.address.toLowerCase() === BRIDGE_ADDRESS.toLowerCase()
-            );
-            
-            console.log("📍 [19] Deposit event found:", {
-                eventFound: !!depositEvent,
-                address: depositEvent?.address,
-                topics: depositEvent?.topics,
-                topicsHex: depositEvent?.topics?.map((t: any) => ({ 
-                    raw: t, 
-                    decimal: t ? BigInt(t).toString() : "null" 
-                })),
-                data: depositEvent?.data,
-                dataLength: depositEvent?.data?.length,
-                topicsLength: depositEvent?.topics?.length
-            });
+            console.log("🎉 [18] Deposit successful!");
+            console.log("📍 [19] Bridge listener will detect this deposit and mint b52USDC to:", cosmosAddress);
+            console.log("📍 [20] Transaction hash:", hash);
+            console.log("📍 [21] View on Basescan: https://basescan.org/tx/" + hash);
 
-            // The event is: event Deposited(address indexed receiver, uint256 amount, uint256 indexed index)
-            // topics[0] = event signature hash
-            // topics[1] = indexed receiver address (padded to 32 bytes)
-            // topics[2] = indexed index value (if it exists)
-            // data = amount (if index is indexed) OR amount + index (if index is not indexed)
-            
-            let depositIndex: string | undefined;
-            
-            if (depositEvent) {
-                // Debug: Show all possible locations
-                console.log("📍 [19a] Debugging event structure:");
-                if (depositEvent.topics) {
-                    depositEvent.topics.forEach((topic: any, i: number) => {
-                        console.log(`  topics[${i}]:`, topic, "=>", topic ? BigInt(topic).toString() : "null");
-                    });
-                }
-                if (depositEvent.data && depositEvent.data !== "0x") {
-                    const dataHex = depositEvent.data.slice(2);
-                    console.log("  data (hex):", depositEvent.data);
-                    console.log("  data length:", dataHex.length, "chars (", dataHex.length / 64, "words)");
-                    
-                    // Parse each 32-byte word in data
-                    for (let i = 0; i < dataHex.length; i += 64) {
-                        const word = "0x" + dataHex.slice(i, i + 64);
-                        console.log(`  data word ${i/64}:`, word, "=>", BigInt(word).toString());
-                    }
-                }
-                
-                // Try multiple extraction methods
-                // Method 1: Check if index is in topics[2] (indexed)
-                if (depositEvent.topics && depositEvent.topics.length > 2 && depositEvent.topics[2]) {
-                    depositIndex = BigInt(depositEvent.topics[2]).toString();
-                    console.log("📍 [20a] Deposit index from topics[2]:", depositIndex);
-                } 
-                // Method 2: Parse from data field
-                else if (depositEvent.data && depositEvent.data !== "0x") {
-                    const dataHex = depositEvent.data.slice(2); // Remove 0x
-                    
-                    // If data has 2 words (128 chars), second word is likely the index
-                    if (dataHex.length === 128) {
-                        const indexHex = "0x" + dataHex.slice(64, 128);
-                        depositIndex = BigInt(indexHex).toString();
-                        console.log("📍 [20b] Deposit index from data (2nd word):", depositIndex);
-                    }
-                    // If data has 1 word (64 chars), it might be just the amount
-                    else if (dataHex.length === 64) {
-                        console.log("📍 [20c] Data only contains amount, index must be in topics");
-                        // Index should be in topics[2] but wasn't found
-                    }
-                }
-                
-                // Method 3: Fallback - try to use transaction hash as a temporary index
-                if (!depositIndex) {
-                    console.log("📍 [20d] WARNING: Could not extract deposit index from event!");
-                    console.log("📍 [20e] Event structure doesn't match expected format");
-                    
-                    // For debugging, let's try using a hash of the transaction as index
-                    // This is a temporary workaround
-                    const txHashAsNumber = BigInt("0x" + hash.slice(2, 10)); // Use first 8 chars of hash
-                    depositIndex = txHashAsNumber.toString();
-                    console.log("📍 [20f] Using transaction hash prefix as fallback index:", depositIndex);
-                }
-            }
-
-            if (depositIndex) {
-                console.log("📍 [20] Final deposit index from event:", depositIndex);
-                
-                // IMPORTANT: The event returns the NEXT index, we need to use index - 1
-                const actualDepositIndex = (BigInt(depositIndex) - 1n).toString();
-                console.log("📍 [20a] Adjusted deposit index (event index - 1):", actualDepositIndex);
-                
-                console.log("📍 [21] Calling mint RPC with:", {
-                    depositIndex: actualDepositIndex,
-                    transactionHash: hash,
-                    receiver: gameAccountAddress
-                });
-
-                // Call mint RPC to credit tokens to game account
-                try {
-                    const mintResult = await mint({
-                        depositIndex: actualDepositIndex
-                    });
-                    
-                    console.log("✅ [22] Mint RPC response:", mintResult);
-                    console.log("🎉 [23] COMPLETE - Tokens should be minted to:", gameAccountAddress);
-                    
-                    // Close modal and trigger success callback
-                    onSuccess?.();
-                    onClose();
-                    setAmount("");
-                } catch (mintError) {
-                    console.error("❌ [22a] Mint RPC failed:", mintError);
-                    console.log("📍 [22b] Deposit was successful but minting failed");
-                    console.log("📍 [22c] You may need to manually mint with deposit index:", depositIndex);
-                    
-                    // Still close the modal since deposit succeeded
-                    setError(`Deposit successful but minting failed. Please contact support with deposit index: ${depositIndex}`);
-                    
-                    // Don't close modal so user can see the error
-                    // onClose();
-                }
-            } else {
-                console.error("❌ [24] Failed to extract deposit index from event");
-                throw new Error("Could not extract deposit index from transaction");
-            }
+            // Show success and close modal
+            onSuccess?.();
+            onClose();
+            setAmount("");
         } catch (err) {
             console.error("❌ Deposit error:", err);
             setError(err instanceof Error ? err.message : "Failed to deposit USDC");
@@ -408,13 +308,26 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                         </div>
                     )}
 
-                    {/* Game Account Display */}
+                    {/* Cosmos Address Display */}
                     <div className="bg-gray-800 rounded-lg p-3">
-                        <div className="text-sm text-gray-400">Tokens will be minted to:</div>
+                        <div className="text-sm text-gray-400">
+                            {cosmosAddress
+                                ? "b52USDC will be minted to your Cosmos address:"
+                                : "⚠️ No Cosmos wallet found"}
+                        </div>
                         <div className="text-xs font-mono text-gray-300 truncate">
-                            {gameAccountAddress}
+                            {cosmosAddress || "Visit /wallet to generate a Cosmos wallet first"}
                         </div>
                     </div>
+
+                    {/* Network Display */}
+                    {needsNetworkSwitch && (
+                        <div className="bg-yellow-900 bg-opacity-50 border border-yellow-500 rounded-lg p-3">
+                            <p className="text-yellow-300 text-sm">
+                                ⚠️ Please switch to Base Chain (Chain ID: {BASE_CHAIN_ID})
+                            </p>
+                        </div>
+                    )}
 
                     {/* Action Buttons */}
                     <div className="flex gap-3">
