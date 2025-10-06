@@ -9,6 +9,7 @@ import { mainnet } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import QRDeposit from "./components/QRDeposit";
+import CosmosWalletPage from "./components/CosmosWalletPage";
 import { GameStateProvider } from "./context/GameStateContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
@@ -52,6 +53,7 @@ function AppContent() {
                 <Route path="/table/:id" element={<Table />} />
                 <Route path="/deposit" element={<Deposit />} />
                 <Route path="/qr-deposit" element={<QRDeposit />} />
+                <Route path="/wallet" element={<CosmosWalletPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer

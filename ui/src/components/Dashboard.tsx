@@ -6,9 +6,9 @@ import "./Dashboard.css"; // Import the CSS file with animations
 // Web3 Wallet Imports
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; //  Keep for Web3 wallet
 import { Wallet, ethers } from "ethers";
-import { TOKEN_ADDRESS } from "../config/constants";
+import { BASE_RPC_URL, BASE_USDC_ADDRESS } from "../config/constants";
 
-const RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL || "https://eth.llamarpc.com";
+const RPC_URL = import.meta.env.VITE_NODE_RPC_URL || BASE_RPC_URL; // Use Base Chain RPC
 const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
 
 import BuyInModal from "./playPage/BuyInModal";
@@ -246,19 +246,19 @@ const Dashboard: React.FC = () => {
     const [transferError, setTransferError] = useState("");
     const [isTransferring, setIsTransferring] = useState(false);
 
-    // Function to get USDC balance of connected wallet
+    // Function to get USDC balance on Base Chain
     const fetchWeb3Balance = useCallback(async () => {
         if (!address) return;
 
         try {
             const provider = new ethers.JsonRpcProvider(RPC_URL);
-            const usdcContract = new ethers.Contract(TOKEN_ADDRESS, USDC_ABI, provider);
+            const usdcContract = new ethers.Contract(BASE_USDC_ADDRESS, USDC_ABI, provider);
             const balance = await usdcContract.balanceOf(address);
             const formattedBalance = ethers.formatUnits(balance, 6); // USDC has 6 decimals
             const roundedBalance = parseFloat(formattedBalance).toFixed(2);
             setWeb3Balance(roundedBalance);
         } catch (error) {
-            console.error("Error fetching USDC balance:", error);
+            console.error("Error fetching Base Chain USDC balance:", error);
             setWeb3Balance("0.00");
         }
     }, [address]);
