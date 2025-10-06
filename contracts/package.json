@@ -17,7 +17,7 @@
         "hh:wipe:token": "npx hardhat ignition wipe chain-8453 TokenModule#Token",
         "hh:wipe:vault": "npx hardhat ignition wipe chain-8453 VaultModule#Vault",
         "hh:wipe:bridge": "npx hardhat ignition wipe chain-1 BridgeModule#Bridge",
-        "hh:deploy:hello": "npx hardhat ignition deploy ./ignition/modules/HelloWorld.ts --network sepolia --verify",
+        "hh:deploy:cosmos-bridge:base": "npx hardhat ignition deploy ./ignition/modules/CosmosBridge.ts --network base --verify",
         "hh:deploy:qrtest": "npx hardhat ignition deploy ./ignition/modules/QRCodeTest.ts --network sepolia --verify",
         "hh:deploy:validatornft:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorNFT.ts --network base --verify",
         "hh:deploy:validatorsale:base": "npx hardhat ignition deploy ./ignition/modules/ValidatorSale.ts --network base --verify",

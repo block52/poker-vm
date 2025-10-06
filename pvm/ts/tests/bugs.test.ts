@@ -1,6 +1,8 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, Deck } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS, TWO_TOKENS } from "../src/engine/testConstants";
+import { Winner } from "../src/engine/types";
+import { Player } from "../src/models/player";
 import {
     test_json,
     test_735,
@@ -27,6 +29,8 @@ import {
     test_1130_edited,
     test_1137,
     test_1158,
+    test_1173,
+    test_1176
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -359,7 +363,6 @@ describe("Texas Holdem - Data driven", () => {
 
             expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         });
-
     });
 
     describe("Bug 1137 - Should allow seat 1 to start new hand after tournament end", () => {
@@ -434,41 +437,30 @@ describe("Texas Holdem - Data driven", () => {
         it.skip("should test bug 1159 - poker solver inconsistency", () => {
             // DISCOVERED BUG: pokersolver compare() and winners() methods are inconsistent
             // This test demonstrates the original bug and is skipped since we now use our custom solver
-
             // const PokerSolver = require("pokersolver");
-
             // Community cards from test data issue #1159
             // const community = ["7D", "3C", "TC", "6D", "8H"];
-
             // Player hands from test data
             // const player1Cards = ["TD", "5C"].concat(community); // Should make pair of 10's
             // const player2Cards = ["5D", "5H"].concat(community); // Should make pair of 5's
-
             // const player1Hand = PokerSolver.Hand.solve(player1Cards);
             // const player2Hand = PokerSolver.Hand.solve(player2Cards);
-
             // console.log("Player 1:", player1Hand.descr, "- cards:", player1Hand.cards.map((c: any) => c.toString()));
             // console.log("Player 2:", player2Hand.descr, "- cards:", player2Hand.cards.map((c: any) => c.toString()));
-
             // Test the bug: compare() vs winners() inconsistency
             // const comparison = player1Hand.compare(player2Hand);
             // const winners = PokerSolver.Hand.winners([player1Hand, player2Hand]);
-
             // console.log("compare() result:", comparison, "(1=P1 wins, -1=P2 wins, 0=tie)");
             // console.log("winners() result:", winners.map((w: any) => w.descr));
-
             // const winnerIsPlayer1 = winners.includes(player1Hand);
             // const winnerIsPlayer2 = winners.includes(player2Hand);
-
             // This is the bug: inconsistent results between methods
             // expect(player1Hand.name).toBe("Pair");
             // expect(player2Hand.name).toBe("Pair");
-
             // Document the specific bug found
             // expect(comparison).toBe(-1);        // compare() says Player 2 wins
-            // expect(winnerIsPlayer1).toBe(true); // but winners() says Player 1 wins 
+            // expect(winnerIsPlayer1).toBe(true); // but winners() says Player 1 wins
             // expect(winnerIsPlayer2).toBe(false);
-
             // console.log("BUG CONFIRMED: pokersolver methods are inconsistent!");
             // console.log("This explains the wrong winner determination in issue #1159");
         });
@@ -482,7 +474,7 @@ describe("Texas Holdem - Data driven", () => {
             // Community cards from test data issue #1159
             const community = ["7D", "3C", "TC", "6D", "8H"];
 
-            // Player hands from test data  
+            // Player hands from test data
             const player1Cards = ["TD", "5C"].concat(community); // Pair of 10's
             const player2Cards = ["5D", "5H"].concat(community); // Pair of 5's
 
@@ -503,19 +495,22 @@ describe("Texas Holdem - Data driven", () => {
             const customWinners = CustomPokerSolver.findWinners([player1Evaluation, player2Evaluation]);
 
             console.log("Custom compare() result:", customComparison, "(1=P1 wins, -1=P2 wins, 0=tie)");
-            console.log("Custom winners() result: Player", customWinners.map((i: number) => i + 1));
+            console.log(
+                "Custom winners() result: Player",
+                customWinners.map((i: number) => i + 1)
+            );
 
             // Verify both hands are pairs
             expect(player1Evaluation.handType).toBe(1); // HandType.PAIR
             expect(player2Evaluation.handType).toBe(1); // HandType.PAIR
 
             // Verify our solver is consistent - both methods should agree
-            expect(customComparison).toBe(1);           // Player 1 wins (pair of 10s > pair of 5s)
-            expect(customWinners).toEqual([0]);         // Player 1 (index 0) wins
+            expect(customComparison).toBe(1); // Player 1 wins (pair of 10s > pair of 5s)
+            expect(customWinners).toEqual([0]); // Player 1 (index 0) wins
 
             // Verify correct pair ranks
             expect(player1Evaluation.rankValues[0]).toBe(10); // Pair of 10s
-            expect(player2Evaluation.rankValues[0]).toBe(5);  // Pair of 5s
+            expect(player2Evaluation.rankValues[0]).toBe(5); // Pair of 5s
 
             console.log("SUCCESS: Custom poker solver is consistent!");
             console.log("Player 1 correctly wins with pair of 10s vs pair of 5s");
@@ -553,6 +548,352 @@ describe("Texas Holdem - Data driven", () => {
             // Only NEW_HAND action should be available to start a new tournament
             expect(legalActions.length).toBe(1);
             expect(legalActions[0].action).toBe("new-hand");
+        });
+    });
+
+    describe("Bug 1173 - Incorrect actions after all-in", () => {
+        let game: TexasHoldemGame;
+
+        it("should allow call/fold options after a player goes all-in, not show", () => {
+            const SEAT_1 = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8"; // Player 1
+            const SEAT_2 = "0x2B6be678D732346c364c98905A285C938056b0A8"; // Player who went all-in (busted)
+            const SEAT_3 = "0xf20d09D3ef43315C392d4879e253142557363A2C"; // Next to act after all-in
+            const SEAT_4 = "0x4260E88e81E60113146092Fb9474b61C59f7552e"; // Big blind player
+
+            // Create game state that reproduces the exact bug scenario
+            console.log("Creating game state just after all-in...");
+
+            const fullGameData = test_1173.result.data;
+            const allActions = fullGameData.previousActions || [];
+
+            // Find the all-in action
+            const allInActionIndex = allActions.findIndex((action: any) => action.action === "all-in");
+            const allInAction = allActions[allInActionIndex];
+
+            console.log("All-in action:", allInAction);
+            expect(allInAction).toBeDefined();
+            expect(allInAction?.playerId).toEqual(SEAT_2);
+
+            // Create game state up to and including the all-in
+            const actionsUpToAllIn = allActions.slice(0, allInActionIndex + 1);
+            console.log("Actions included up to and including all-in:", actionsUpToAllIn.length);
+
+            // Create modified game data with only actions up to the all-in
+            const gameDataAfterAllIn = {
+                ...fullGameData,
+                previousActions: actionsUpToAllIn,
+                // Reset any state that would be set after the all-in
+                currentRound: "river",
+                nextToAct: SEAT_3 // Seat 3 should be next to act
+            };
+
+            // Create game from this state
+            game = fromTestJson({
+                id: "1",
+                result: {
+                    data: gameDataAfterAllIn
+                }
+            });
+
+            // Verify the fix: hasRoundEnded should now return false
+            expect(game.hasRoundEnded(game.currentRound)).toBe(false);
+
+            // Verify that seat 3 (next to act) has call/fold options, not show
+            const seat3Player = game.getSeatedPlayers().find((p: any) => p.address === SEAT_3);
+            expect(seat3Player).toBeDefined();
+            expect(seat3Player?.status).toBe('active');
+
+            const seat3Actions = game.getLegalActions(SEAT_3);
+            const actionTypes = seat3Actions.map((a: any) => a.action);
+
+            console.log("✅ Bug fixed: Seat 3 now has actions after all-in:", actionTypes);
+            console.log("Seat 3 details:", {
+                address: seat3Player?.address.slice(-4),
+                chips: seat3Player?.chips?.toString(),
+                status: seat3Player?.status
+            });
+
+            // Check all-in amount vs seat 3's chips
+            console.log("All-in amount:", allInAction.amount);
+            console.log("Can Seat 3 call? Chips:", seat3Player?.chips, "vs All-in:", allInAction.amount);
+
+            // After the fix, seat 3 should have fold option at minimum
+            expect(actionTypes).toContain('fold');
+            // Should NOT have show action (that indicates showdown)
+            expect(actionTypes).not.toContain('show');
+
+            // Verify hasRoundEnded is now false (this is the key fix)
+            expect(game.hasRoundEnded(game.currentRound)).toBe(false);
+        });
+    });
+
+    describe("Bug 1173 reproduction", () => {
+        let game: TexasHoldemGame;
+
+        test("All-in should allow call/fold, not immediately go to showdown", () => {
+            game = fromTestJson(test_1173);
+
+            // Verify the game state - this test data shows the END state after the bug occurred
+            expect(game.currentRound).toBe(TexasHoldemRound.END);
+
+            // Check the action sequence to understand the bug:
+            const previousActions = game.getPreviousActions();
+
+            // Find the all-in action
+            const allInAction = previousActions.find(
+                (action: any) => action.action === "all-in"
+            );
+            expect(allInAction).toBeDefined();
+            expect(allInAction?.seat).toBe(2); // Player 2 went all-in
+
+            // Find what happened immediately after the all-in
+            if (!allInAction) return;
+            const allInIndex = previousActions.indexOf(allInAction);
+            const nextAction = previousActions[allInIndex + 1];
+
+            console.log("All-in action:", allInAction);
+            console.log("Next action after all-in:", nextAction);
+
+            // THE BUG: After the all-in, the next action is immediately "show"
+            // instead of giving other players a chance to call or fold
+            expect(nextAction?.action).toBe("show"); // This demonstrates the bug
+
+            // The correct behavior would be:
+            // 1. Player 2 goes all-in
+            // 2. Player 3 should get call/fold options
+            // 3. Player 4 should get call/fold options
+            // 4. Only then proceed to showdown
+
+            console.log(
+                "Bug demonstrated: All-in immediately triggers showdown instead of call/fold actions"
+            );
+        });
+
+        test("Debug: Recreate game state just before all-in to understand the bug", () => {
+            // Let's create a modified version of test_1173 that stops just before the all-in
+            // to see what the legal actions should be
+
+            // Get the test data and examine the state right before the all-in
+            const gameData = { ...test_1173.result.data };
+
+            // Find the all-in action (index 66) and remove it and all subsequent actions
+            const originalActions = gameData.previousActions;
+            const allInActionIndex = originalActions.findIndex((action: any) => action.action === "all-in");
+
+            console.log("All-in action was at index:", allInActionIndex, "with action index:", originalActions[allInActionIndex].index);
+
+            // Create a modified game state that stops just before the all-in
+            const actionsBeforeAllIn = originalActions.slice(0, allInActionIndex);
+            const modifiedTestData = {
+                id: test_1173.id,
+                result: {
+                    data: {
+                        ...gameData,
+                        previousActions: actionsBeforeAllIn,
+                        round: "river", // Should still be on river, not end
+                        // Reset player legal actions since we're changing the state
+                        players: gameData.players.map((player: any) => ({
+                            ...player,
+                            legalActions: [] // We'll let the game engine determine these
+                        }))
+                    },
+                    signature: test_1173.result.signature
+                }
+            };
+
+            console.log("Creating game state just before all-in...");
+            console.log("Original actions count:", originalActions.length);
+            console.log("Modified actions count:", actionsBeforeAllIn.length);
+            console.log("Last action before all-in:", actionsBeforeAllIn[actionsBeforeAllIn.length - 1]);
+
+            // Create the modified game using fromTestJson
+            const modifiedGame = fromTestJson(modifiedTestData);
+
+            console.log("Modified game current round:", modifiedGame.currentRound);
+            console.log("Modified game next to act:", modifiedGame.getNextPlayerToAct());
+
+            // Now check legal actions for all players
+            const SEAT_1 = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+            const SEAT_2 = "0x2B6be678D732346c364c98905A285C938056b0A8"; // The one about to go all-in
+            const SEAT_3 = "0xf20d09D3ef43315C392d4879e253142557363A2C";
+            const SEAT_4 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
+
+            console.log("Legal actions just before all-in:");
+            console.log("Seat 1:", modifiedGame.getLegalActions(SEAT_1).map((a: any) => a.action));
+            console.log("Seat 2:", modifiedGame.getLegalActions(SEAT_2).map((a: any) => a.action));
+            console.log("Seat 3:", modifiedGame.getLegalActions(SEAT_3).map((a: any) => a.action));
+            console.log("Seat 4:", modifiedGame.getLegalActions(SEAT_4).map((a: any) => a.action));
+
+            expect(modifiedGame.currentRound).toBe(TexasHoldemRound.RIVER);
+        });
+
+        test("Debug: Examine what happens immediately after all-in", () => {
+            // Let's create a modified version that includes the all-in but stops there
+            // to see what happens to the game state
+
+            const gameData = { ...test_1173.result.data };
+            const originalActions = gameData.previousActions;
+            const allInActionIndex = originalActions.findIndex((action: any) => action.action === "all-in");
+
+            // Include the all-in action but remove subsequent "show" actions
+            const actionsUpToAllIn = originalActions.slice(0, allInActionIndex + 1);
+
+            console.log("Creating game state just after all-in...");
+            console.log("All-in action:", originalActions[allInActionIndex]);
+            console.log("Actions included up to and including all-in:", actionsUpToAllIn.length);
+
+            const modifiedTestData = {
+                id: test_1173.id,
+                result: {
+                    data: {
+                        ...gameData,
+                        previousActions: actionsUpToAllIn,
+                        round: "river", // Should still be on river, not showdown
+                        players: gameData.players.map((player: any) => ({
+                            ...player,
+                            legalActions: [] // Reset
+                        }))
+                    },
+                    signature: test_1173.result.signature
+                }
+            };
+
+            const gameAfterAllIn = fromTestJson(modifiedTestData);
+
+            console.log("Game state after all-in:");
+            console.log("Current round:", gameAfterAllIn.currentRound);
+            console.log("Next to act:", gameAfterAllIn.getNextPlayerToAct());
+
+            // Check player statuses
+            const SEAT_1 = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+            const SEAT_2 = "0x2B6be678D732346c364c98905A285C938056b0A8"; // The one who went all-in
+            const SEAT_3 = "0xf20d09D3ef43315C392d4879e253142557363A2C";
+            const SEAT_4 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
+
+            console.log("Player statuses after all-in:");
+            const players = [
+                { seat: 1, address: SEAT_1 },
+                { seat: 2, address: SEAT_2 },
+                { seat: 3, address: SEAT_3 },
+                { seat: 4, address: SEAT_4 }
+            ];
+
+            players.forEach(p => {
+                const player = gameAfterAllIn.getPlayer(p.address);
+                const status = gameAfterAllIn.getPlayerStatus(p.address);
+                console.log(`Seat ${p.seat}: status=${status}, chips=${player.chips}, actions=${gameAfterAllIn.getLegalActions(p.address).map((a: any) => a.action)}`);
+            });
+
+            // Check if round has ended
+            console.log("Has round ended?", gameAfterAllIn.hasRoundEnded(gameAfterAllIn.currentRound));
+
+            // Let's trace WHY hasRoundEnded returns true
+            // We need to look at the specific logic that's causing this
+
+            // Check active players count
+            const livePlayers = (gameAfterAllIn as any).findLivePlayers();
+            const activePlayers = livePlayers.filter((p: any) => p.status === 'active');
+
+            console.log("Live players count:", livePlayers.length);
+            console.log("Active players count:", activePlayers.length);
+            console.log("Active players:", activePlayers.map((p: any) => `${p.address.slice(-4)}: seat ${p.seat}`));
+
+            // Debug the bet equality logic that's likely causing the issue
+            console.log("\nDebugging bet equality logic:");
+            const playerBets: bigint[] = [];
+
+            for (const player of livePlayers) {
+                const totalBet = (gameAfterAllIn as any).getPlayerTotalBets(player.address, 'river');
+                playerBets.push(totalBet);
+                console.log(`Player ${player.address.slice(-4)}: bet=${totalBet}, status=${player.status}, chips=${player.chips}`);
+            }
+
+            const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
+            console.log(`Player bets: [${playerBets.join(", ")}]`);
+            console.log(`All bets equal? ${allBetsEqual} (This is likely why hasRoundEnded returns true)`);
+            console.log(`First bet amount: ${playerBets[0]}`);
+
+            // Let's also check what actions happened in this river round
+            const riverActions = (gameAfterAllIn as any)._rounds.get('river') || [];
+            console.log(`\nRiver round actions:`);
+            riverActions.forEach((action: any, index: number) => {
+                console.log(`  ${index}: ${action.playerId.slice(-4)} - ${action.action} ${action.amount || ''}`);
+            });
+
+            // Check if there's a bet/raise that players need to respond to
+            const lastBetOrRaise = riverActions.slice().reverse().find((a: any) =>
+                a.action === 'bet' || a.action === 'raise' || a.action === 'all-in'
+            );
+
+            if (lastBetOrRaise) {
+                console.log(`\nLast bet/raise/all-in: ${lastBetOrRaise.playerId.slice(-4)} - ${lastBetOrRaise.action} ${lastBetOrRaise.amount}`);
+                console.log(`Players who acted after this bet/raise:`);
+                const lastBetIndex = riverActions.indexOf(lastBetOrRaise);
+                const actionsAfterBet = riverActions.slice(lastBetIndex + 1);
+                actionsAfterBet.forEach((action: any) => {
+                    console.log(`  ${action.playerId.slice(-4)} - ${action.action}`);
+                });
+            };
+
+            // This should show us why the game immediately goes to showdown
+        });
+
+        it("should include all-in players in showdown winner calculation - test_1176", () => {
+            // Test case for bug where all-in players are not considered in winner calculation
+            const game = fromTestJson(test_1176);
+
+            // Player details from test_1176:
+            // Player 2 (seat 2): KH, KD (pair of Kings) - status "all-in", stack: 0
+            // Player 1 (seat 1): QS, QC (pair of Queens) - status "showing", stack: 21000000000000000000000
+            // Player 3 (seat 3): 6C, 9H - status "showing", stack: 8000000000000000000000
+            // Player 4 (seat 4): 9D, 7S - status "folded", stack: 11000000000000000000000
+            // Community cards: 8C, 3S, TH, 9S, 4D
+
+            // The game is loaded in "end" state with winners already calculated with the bug
+            // We need to trigger a fresh winner calculation
+
+            // Reset the game to showdown state to trigger winner recalculation
+            (game as any)._currentRound = TexasHoldemRound.SHOWDOWN;
+            (game as any)._winners.clear();
+
+            console.log("Test 1176 - Winner Analysis:");
+            console.log("Community cards:", game.communityCards);
+
+            // Log all players and their hands before winner calculation
+            Array.from(game.players.entries()).forEach(([seat, player]: [number, Player | null]) => {
+                if (player) {
+                    console.log(`Player ${player.address.slice(-4)} (seat ${seat}): ${player.holeCards?.join(', ')} - status: ${player.status}, stack: ${player.chips}`);
+                }
+            });
+
+            // Trigger winner calculation by calling private method
+            (game as any).calculateWinner();
+
+            // Get the winners after recalculation
+            const winnersMap = game.winners;
+            const winnerAddresses = winnersMap ? Array.from(winnersMap.keys()) : [];
+            const winnerEntries = winnersMap ? Array.from(winnersMap.entries()) : [];
+
+            console.log("Winners after recalculation:", winnerEntries.map(([address, winner]: [string, Winner]) => ({
+                address: address.slice(-4),
+                amount: winner.amount,
+                hand: winner.name,
+                cards: winner.cards
+            })));
+
+            // Player 2 with KK should win over Player 1 with QQ
+            const player2Address = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+            const hasPlayer2Won = winnerAddresses.includes(player2Address);
+
+            // This should now pass with the bug fix
+            expect(hasPlayer2Won).toBe(true);
+
+            // Player 2 should be the sole winner with KK
+            expect(winnerAddresses).toHaveLength(1);
+            expect(winnerAddresses[0]).toBe(player2Address);
+            if (winnersMap) {
+                expect(winnersMap.get(player2Address)?.name).toBe("Pair of Ks");
+            }
         });
     });
 });

@@ -399,8 +399,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             (player): player is Player =>
                 player !== null &&
                 ![PlayerStatus.FOLDED, PlayerStatus.BUSTED, PlayerStatus.SITTING_OUT].includes(player.status) &&
-                // In tournament games, also exclude players with 0 chips (effectively busted)
-                (this._gameOptions.type === GameType.CASH || player.chips > 0n)
+                // In tournament games, exclude players with 0 chips unless they are all-in
+                // All-in players should be eligible for showdown even with 0 chips
+                (this._gameOptions.type === GameType.CASH || player.chips > 0n || player.status === PlayerStatus.ALL_IN)
         );
     }
 
@@ -891,11 +892,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 8: Check if all players have acted AFTER the last bet/raise
+        // Step 8: Check if all players have acted AFTER the last bet/raise/all-in
         let lastBetOrRaiseIndex = -1;
         let lastBetOrRaisePlayerId = "";
         for (let i = actions.length - 1; i >= 0; i--) {
-            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE) {
+            if (actions[i].action === PlayerActionType.BET || actions[i].action === PlayerActionType.RAISE || actions[i].action === PlayerActionType.ALL_IN) {
                 lastBetOrRaiseIndex = i;
                 lastBetOrRaisePlayerId = actions[i].playerId;
                 break;
@@ -903,9 +904,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         if (lastBetOrRaiseIndex >= 0) {
-            // If there was a bet/raise, ensure all OTHER active players have acted after it
+            // If there was a bet/raise/all-in, ensure all OTHER active players have acted after it
             for (const player of activePlayers) {
-                // Skip the player who made the bet/raise - they don't need to act again
+                // Skip the player who made the bet/raise/all-in - they don't need to act again
                 if (player.address === lastBetOrRaisePlayerId) {
                     continue;
                 }
@@ -913,7 +914,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 const playerActionsAfterBet = actions.filter(a => a.playerId === player.address && actions.indexOf(a) > lastBetOrRaiseIndex);
 
                 if (playerActionsAfterBet.length === 0) {
-                    return false; // Player hasn't responded to the bet/raise yet
+                    return false; // Player hasn't responded to the bet/raise/all-in yet
                 }
             }
         }

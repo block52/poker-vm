@@ -7,7 +7,7 @@ import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extension
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { IValidator } from "../IValidator.sol";
+import { IValidator } from "./IValidator.sol";
 
 contract ValidatorNFT is IValidator, ERC721Enumerable, Ownable, AccessControl {
     // Card order matches deck.test.ts: Clubs -> Diamonds -> Hearts -> Spades
