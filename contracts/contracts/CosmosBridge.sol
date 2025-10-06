@@ -48,21 +48,21 @@ contract CosmosBridge {
         IERC20(underlying).approve(router, type(uint256).max);
     }
 
-    function deposit(uint256 amount, string receiver, address token) external returns(uint256) {
+    function deposit(uint256 amount, string calldata receiver, address token) external returns(uint256) {
         (uint256 index, uint256 received) = _deposit(amount, msg.sender, receiver, token);
         emit Deposited(receiver, received, index);
 
         return index;
     }
 
-    function depositUnderlying(uint256 amount, string receiver) external returns(uint256) {
+    function depositUnderlying(uint256 amount, string calldata receiver) external returns(uint256) {
         (uint256 index, uint256 received) = _deposit(amount, msg.sender, receiver, underlying);
         emit Deposited(receiver, received, index);
 
         return index;
     }
 
-    function _deposit(uint256 amount, address from, string receiver, address token) private returns (uint256 index, uint256 received) {
+    function _deposit(uint256 amount, address from, string calldata receiver, address token) private returns (uint256 index, uint256 received) {
         IERC20(token).transferFrom(from, _self, amount);
         received = amount;
 
@@ -77,7 +77,7 @@ contract CosmosBridge {
         index = depositIndex;
     }
 
-    function withdraw(uint256 amount, string receiver, bytes32 nonce, bytes calldata signature) external {
+    function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external {
         require(!withdrawNonces[nonce], "withdraw: nonce already used");
         require(IERC20(underlying).balanceOf(_self) >= amount, "withdraw: insufficient balance");
 
@@ -157,5 +157,5 @@ contract CosmosBridge {
     }
 
     event Deposited(string indexed account, uint256 amount, uint256 index);
-    event Withdrawn(string indexed account, uint256 amount, bytes32 nonce);
+    event Withdrawn(address indexed account, uint256 amount, bytes32 nonce);
 }
