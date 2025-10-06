@@ -10,11 +10,9 @@ import {
     FindGameStateCommand,
     GameStateCommand,
     GetNodesCommand,
-    GetTransactionCommand,
     GetTransactionsCommand,
     ISignedResponse,
     MeCommand,
-    MempoolCommand,
     MineCommand,
     MintCommand,
     NewCommand,
@@ -112,79 +110,27 @@ export class RPC {
             switch (method) {
 
                 case RPCMethods.FIND_CONTRACT: {
-                    if (!request.params) {
-                        return makeErrorRPCResponse(id, "Invalid params");
-                    }
-                    const [query] = request.params as RPCRequestParams[RPCMethods.FIND_CONTRACT];
-                    const command = new FindGameStateCommand(validatorPrivateKey, query);
-                    result = await command.execute();
-                    break;
+                    throw new Error("FIND_CONTRACT not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_ACCOUNT: {
-                    if (!request.params) {
-                        return makeErrorRPCResponse(id, "Invalid params");
-                    }
-                    // const command = new AccountCommand(request.params[0] as string, validatorPrivateKey);
-                    const command = new CosmosAccountCommand(process.env.COSMOS_RPC_ENDPOINT || "http://localhost:26657", request.params[0] as string, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_ACCOUNT not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_BLOCK: {
-                    const params: BlockCommandParams = {
-                        index: BigInt(0),
-                        hash: ""
-                    };
-
-                    let command = new BlockCommand(params, validatorPrivateKey);
-
-                    if (request.params) {
-                        // Use regex to check if the index is a number
-                        const regex = new RegExp("^[0-9]+$");
-                        const [index] = request.params as RPCRequestParams[RPCMethods.GET_BLOCK];
-                        if (!regex.test(index)) {
-                            return makeErrorRPCResponse(id, "Invalid params");
-                        }
-
-                        params.index = BigInt(index);
-                        command = new BlockCommand(params, validatorPrivateKey);
-                    }
-
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_BLOCK not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_BLOCK_BY_HASH: {
-                    const params: BlockCommandParams = {
-                        index: undefined,
-                        hash: request.params[0] as string
-                    };
-
-                    const command = new BlockCommand(params, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_BLOCK_BY_HASH not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_BLOCK_HEIGHT: {
-                    const params: BlockCommandParams = {
-                        index: undefined,
-                        hash: undefined
-                    };
-
-                    const command = new BlockCommand(params, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_BLOCK_HEIGHT not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_LAST_BLOCK: {
-                    const params: BlockCommandParams = {
-                        index: undefined,
-                        hash: undefined
-                    };
-                    const command = new BlockCommand(params, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_LAST_BLOCK not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_CLIENT: {
@@ -202,37 +148,25 @@ export class RPC {
                 }
 
                 case RPCMethods.GET_MEMPOOL: {
-                    const command = new MempoolCommand(validatorPrivateKey);
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_MEMPOOL not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_TRANSACTION: {
-                    const [hash] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTION];
-                    const command = new GetTransactionCommand(hash, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_TRANSACTION not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_TRANSACTIONS: {
-                    const [count] = request.params as RPCRequestParams[RPCMethods.GET_TRANSACTIONS];
-                    const blockHash = "";
-                    const command = new GetTransactionsCommand(Number(count), blockHash, validatorPrivateKey);
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_TRANSACTIONS not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_BLOCKS: {
-                    const [count] = request.params as RPCRequestParams[RPCMethods.GET_BLOCKS];
-                    // const command = new GetBlocksCommand(Number(count), validatorPrivateKey);
-                    const command = new GetCosmosBlocksCommand(process.env.COSMOS_RPC_ENDPOINT || "http://localhost:26657", validatorPrivateKey, Number(count));
-                    result = await command.execute();
-                    break;
+                    throw new Error("GET_BLOCKS not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_GAME_STATE: {
                     const [address, caller] = request.params as RPCRequestParams[RPCMethods.GET_GAME_STATE];
-                    const command = new GameStateCommand(address, validatorPrivateKey, caller);
+                    const comosUrl = "http://localhost:1317"; // TODO: make configurable
+                    const command = new GameStateCommand(address, caller, comosUrl);
                     result = await command.execute();
                     break;
                 }

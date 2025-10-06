@@ -1,13 +1,11 @@
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../../engine/texasHoldem";
-import { signResult } from "../abstractSignedCommand";
-import { ISignedCommand, ISignedResponse } from "../interfaces";
 import axios from "axios";
 
-export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
+export class GameStateCommand {
 
     // This will be shared secret later
-    constructor(readonly address: string, private readonly cosmosUrl: string) {
+    constructor(readonly address: string, readonly caller: string, private readonly cosmosUrl: string) {
 
     }
 
@@ -21,7 +19,7 @@ export class GameStateCommand implements ISignedCommand<TexasHoldemStateDTO> {
 
             const game = TexasHoldemGame.fromJson(gameState.data.state, gameState.data.gameOptions);
 
-            return await signResult(game.toJson(this.caller), this.privateKey);
+            return game.toJson(this.caller);
         } catch (error) {
             console.error(`Error executing GameStateCommand: ${(error as Error).message}`);
             throw error; // Rethrow the error to be handled by the caller
