@@ -2,15 +2,11 @@ import { ZeroHash } from "ethers";
 import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse } from "@bitcoinbrisbane/block52";
 
 import {
-    BlockCommand,
-    BlockCommandParams,
     BurnCommand,
     CreateAccountCommand,
     DeployContractCommand,
-    FindGameStateCommand,
     GameStateCommand,
     GetNodesCommand,
-    GetTransactionsCommand,
     ISignedResponse,
     MeCommand,
     MineCommand,
@@ -21,13 +17,8 @@ import {
     PerformActionCommandWithResult,
     ReceiveMinedBlockHashCommand,
     SharedSecretCommand,
-    ShutdownCommand,
-    StartServerCommand,
-    StopServerCommand,
     TransferCommand,
     WithdrawCommand,
-    GetCosmosBlocksCommand,
-    CosmosAccountCommand
 } from "./commands";
 
 import { makeErrorRPCResponse } from "./types/response";
@@ -63,41 +54,6 @@ export class RPC {
         }
 
         return makeErrorRPCResponse(request.id, "Method not found");
-    }
-
-    static async handleControlMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<any>> {
-        let result: any;
-        switch (method) {
-            case RPCMethods.PURGE: {
-                const [username, password] = request.params as RPCRequestParams[RPCMethods.PURGE];
-                const command = new PurgeMempoolCommand(username, password);
-                result = await command.execute();
-                break;
-            }
-            case RPCMethods.START: {
-                const command = new StartServerCommand();
-                result = await command.execute();
-                break;
-            }
-            case RPCMethods.STOP: {
-                const command = new StopServerCommand();
-                result = await command.execute();
-                break;
-            }
-            case RPCMethods.SHUTDOWN: {
-                const [username, password] = request.params as RPCRequestParams[RPCMethods.SHUTDOWN];
-                const command = new ShutdownCommand(username, password);
-                result = await command.execute();
-                break;
-            }
-            default:
-                return makeErrorRPCResponse(request.id, "Method not found");
-        }
-
-        return {
-            id: request.id,
-            result: result
-        };
     }
 
     // Return a JSONModel

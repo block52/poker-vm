@@ -14,6 +14,9 @@ export class GameStateCommand {
             const gameState = await axios.get(`${this.cosmosUrl}/poker/game/${this.address}`);
 
             if (!gameState) {
+                // If game state does not exist, call 
+
+
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
 

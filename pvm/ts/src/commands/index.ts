@@ -15,7 +15,7 @@ import { BlockCommand, BlockCommandParams } from "./blockCommand";
 import { BurnCommand } from "./burnCommand";
 import { CreateAccountCommand } from "./createAccountCommand";
 import { FindGameStateCommand } from "./findGameCommand";
-import { GameStateCommand } from "./comsos/gameStateCommand";
+import { GameStateCommand } from "./cosmos/gameStateCommand";
 import { GetBlocksCommand } from "./getBlocksCommand";
 import { GetCosmosBlocksCommand } from "./getCosmosBlocksCommand";
 import { GetNodesCommand } from "./getNodesCommand";
