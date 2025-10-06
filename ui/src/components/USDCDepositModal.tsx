@@ -43,10 +43,11 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
     const { data: walletClient } = useWalletClient();
     const publicClient = usePublicClient();
     const { switchChain } = useSwitchChain();
+    const [isSwitching, setIsSwitching] = useState(false);
 
     // Get Cosmos address from localStorage (where b52USDC will be minted)
     const cosmosAddress = getCosmosAddress();
-    
+
     console.log("📍 [1] USDCDepositModal initialized:", {
         walletAddress,
         cosmosAddress,
@@ -59,6 +60,27 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
 
     // Check if we need to switch to Base Chain
     const needsNetworkSwitch = chain?.id !== BASE_CHAIN_ID;
+
+    // Auto-switch to Base Chain when modal opens
+    useEffect(() => {
+        const autoSwitchNetwork = async () => {
+            if (isOpen && needsNetworkSwitch && switchChain && !isSwitching) {
+                console.log("📍 Auto-switching to Base Chain...");
+                setIsSwitching(true);
+                try {
+                    await switchChain({ chainId: BASE_CHAIN_ID });
+                    console.log("✅ Successfully switched to Base Chain");
+                } catch (err) {
+                    console.error("❌ Auto-switch failed:", err);
+                    setError("Please manually switch to Base Chain in MetaMask");
+                } finally {
+                    setIsSwitching(false);
+                }
+            }
+        };
+
+        autoSwitchNetwork();
+    }, [isOpen, needsNetworkSwitch, switchChain, isSwitching]);
 
     // Fetch USDC balance and allowance
     useEffect(() => {
@@ -165,6 +187,24 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
         }
     };
 
+    const handleSwitchNetwork = async () => {
+        if (!switchChain) return;
+
+        console.log("📍 Manually switching to Base Chain...");
+        setIsSwitching(true);
+        setError(null);
+
+        try {
+            await switchChain({ chainId: BASE_CHAIN_ID });
+            console.log("✅ Successfully switched to Base Chain");
+        } catch (err) {
+            console.error("❌ Failed to switch network:", err);
+            setError(err instanceof Error ? err.message : "Failed to switch to Base Chain");
+        } finally {
+            setIsSwitching(false);
+        }
+    };
+
     const handleDeposit = async () => {
         console.log("📍 [9] Starting USDC deposit to CosmosBridge on Base Chain");
         console.log("📍 [10] CRITICAL - Cosmos address (receiver):", cosmosAddress);
@@ -184,12 +224,7 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
 
         // Check if on correct network
         if (needsNetworkSwitch) {
-            setError(`Please switch to Base Chain (Chain ID: ${BASE_CHAIN_ID})`);
-            try {
-                await switchChain({ chainId: BASE_CHAIN_ID });
-            } catch (err) {
-                console.error("Failed to switch network:", err);
-            }
+            setError(`Please click "Switch to Base Chain" button above`);
             return;
         }
 
@@ -320,12 +355,26 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                         </div>
                     </div>
 
-                    {/* Network Display */}
+                    {/* Network Switch Button */}
                     {needsNetworkSwitch && (
-                        <div className="bg-yellow-900 bg-opacity-50 border border-yellow-500 rounded-lg p-3">
-                            <p className="text-yellow-300 text-sm">
-                                ⚠️ Please switch to Base Chain (Chain ID: {BASE_CHAIN_ID})
-                            </p>
+                        <div className="space-y-3">
+                            <div className="bg-yellow-900 bg-opacity-50 border border-yellow-500 rounded-lg p-3">
+                                <p className="text-yellow-300 text-sm">
+                                    ⚠️ Wrong Network: Connected to {chain?.name || `Chain ${chain?.id}`}
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleSwitchNetwork}
+                                disabled={isSwitching}
+                                className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{
+                                    background: isSwitching
+                                        ? hexToRgba(colors.accent.warning, 0.5)
+                                        : `linear-gradient(135deg, ${colors.accent.warning} 0%, ${hexToRgba(colors.accent.warning, 0.8)} 100%)`
+                                }}
+                            >
+                                {isSwitching ? "Switching..." : "🔄 Switch to Base Chain"}
+                            </button>
                         </div>
                     )}
 

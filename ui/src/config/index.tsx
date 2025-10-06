@@ -1,5 +1,5 @@
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { mainnet } from "@reown/appkit/networks";
+import { mainnet, base } from "@reown/appkit/networks";
 import type { AppKitNetwork } from "@reown/appkit/networks";
 import { createConfig, http } from "wagmi";
 import { metaMask } from "wagmi/connectors";
@@ -16,7 +16,8 @@ export const metadata = {
     icons: ["https://avatars.githubusercontent.com/u/179229932"]
 };
 
-export const networks = [mainnet] as [AppKitNetwork, ...AppKitNetwork[]];
+// Use Base as default network, with mainnet as fallback
+export const networks = [base, mainnet] as [AppKitNetwork, ...AppKitNetwork[]];
 
 export const wagmiAdapter = new WagmiAdapter({
     projectId: projectId,
@@ -25,9 +26,10 @@ export const wagmiAdapter = new WagmiAdapter({
 });
 
 export const config = createConfig({
-    chains: [mainnet],
+    chains: [base, mainnet],
     connectors: [metaMask()],
     transports: {
+        [base.id]: http(),
         [mainnet.id]: http()
     }
 });

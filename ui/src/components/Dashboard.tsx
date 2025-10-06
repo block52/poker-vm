@@ -6,7 +6,8 @@ import "./Dashboard.css"; // Import the CSS file with animations
 // Web3 Wallet Imports
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; //  Keep for Web3 wallet
 import { Wallet, ethers } from "ethers";
-import { BASE_RPC_URL, BASE_USDC_ADDRESS } from "../config/constants";
+import { BASE_RPC_URL, BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
+import { useAccount as useWagmiAccount, useSwitchChain } from "wagmi";
 
 const RPC_URL = import.meta.env.VITE_NODE_RPC_URL || BASE_RPC_URL; // Use Base Chain RPC
 const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
@@ -176,6 +177,10 @@ const Dashboard: React.FC = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
 
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
+
+    // Add wagmi hooks for chain detection and switching
+    const { chain } = useWagmiAccount();
+    const { switchChain } = useSwitchChain();
 
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
@@ -670,6 +675,24 @@ const Dashboard: React.FC = () => {
         setModalPlayerCount(4);
         setShowCreateGameModal(true);
     }, []);
+
+    // Auto-switch to Base Chain when wallet connects
+    useEffect(() => {
+        const autoSwitchToBase = async () => {
+            if (isConnected && chain?.id !== BASE_CHAIN_ID && switchChain) {
+                console.log("🔄 Auto-switching wallet to Base Chain...");
+                try {
+                    await switchChain({ chainId: BASE_CHAIN_ID });
+                    console.log("✅ Successfully switched to Base Chain");
+                } catch (err) {
+                    console.warn("⚠️ Could not auto-switch to Base Chain:", err);
+                    // Don't show error to user - they can manually switch if needed
+                }
+            }
+        };
+
+        autoSwitchToBase();
+    }, [isConnected, chain?.id, switchChain]);
 
     // Memoized Deposit callback
     const handleDepositClick = useCallback(() => {
@@ -1678,7 +1701,7 @@ const Dashboard: React.FC = () => {
                                                         Web3 Wallet USDC Balance
                                                     </p>
                                                     <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
-                                                        Available on Ethereum Mainnet
+                                                        Available on Base Chain
                                                     </p>
                                                 </div>
                                             </div>

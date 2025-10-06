@@ -5,7 +5,7 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { projectId, metadata, networks, wagmiAdapter } from "./config";
-import { mainnet } from "@reown/appkit/networks";
+import { base } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import QRDeposit from "./components/QRDeposit";
@@ -29,7 +29,7 @@ createAppKit({
         analytics: true
     },
     enableCoinbase: true,
-    defaultNetwork: mainnet,
+    defaultNetwork: base,
     allWallets: "SHOW"
 });
 
