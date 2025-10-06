@@ -849,24 +849,32 @@ describe("Texas Holdem - Data driven", () => {
             // Player 4 (seat 4): 9D, 7S - status "folded", stack: 11000000000000000000000
             // Community cards: 8C, 3S, TH, 9S, 4D
 
-            expect(game.currentRound).toEqual(TexasHoldemRound.END);
+            // The game is loaded in "end" state with winners already calculated with the bug
+            // We need to trigger a fresh winner calculation
 
-            // Get the winners
-            const winnersMap = game.winners;
-            const winnerAddresses = winnersMap ? Array.from(winnersMap.keys()) : [];
-            const winnerEntries = winnersMap ? Array.from(winnersMap.entries()) : [];
+            // Reset the game to showdown state to trigger winner recalculation
+            (game as any)._currentRound = TexasHoldemRound.SHOWDOWN;
+            (game as any)._winners.clear();
 
             console.log("Test 1176 - Winner Analysis:");
             console.log("Community cards:", game.communityCards);
 
-            // Log all players and their hands
+            // Log all players and their hands before winner calculation
             Array.from(game.players.entries()).forEach(([seat, player]: [number, Player | null]) => {
                 if (player) {
                     console.log(`Player ${player.address.slice(-4)} (seat ${seat}): ${player.holeCards?.join(', ')} - status: ${player.status}, stack: ${player.chips}`);
                 }
             });
 
-            console.log("Winners:", winnerEntries.map(([address, winner]: [string, Winner]) => ({
+            // Trigger winner calculation by calling private method
+            (game as any).calculateWinner();
+
+            // Get the winners after recalculation
+            const winnersMap = game.winners;
+            const winnerAddresses = winnersMap ? Array.from(winnersMap.keys()) : [];
+            const winnerEntries = winnersMap ? Array.from(winnersMap.entries()) : [];
+
+            console.log("Winners after recalculation:", winnerEntries.map(([address, winner]: [string, Winner]) => ({
                 address: address.slice(-4),
                 amount: winner.amount,
                 hand: winner.name,
@@ -874,11 +882,10 @@ describe("Texas Holdem - Data driven", () => {
             })));
 
             // Player 2 with KK should win over Player 1 with QQ
-            // Currently this test will fail because Player 2 (all-in) is not being considered
             const player2Address = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
             const hasPlayer2Won = winnerAddresses.includes(player2Address);
 
-            // This assertion will fail, demonstrating the bug
+            // This should now pass with the bug fix
             expect(hasPlayer2Won).toBe(true);
 
             // Player 2 should be the sole winner with KK

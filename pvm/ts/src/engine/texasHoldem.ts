@@ -399,8 +399,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             (player): player is Player =>
                 player !== null &&
                 ![PlayerStatus.FOLDED, PlayerStatus.BUSTED, PlayerStatus.SITTING_OUT].includes(player.status) &&
-                // In tournament games, also exclude players with 0 chips (effectively busted)
-                (this._gameOptions.type === GameType.CASH || player.chips > 0n)
+                // In tournament games, exclude players with 0 chips unless they are all-in
+                // All-in players should be eligible for showdown even with 0 chips
+                (this._gameOptions.type === GameType.CASH || player.chips > 0n || player.status === PlayerStatus.ALL_IN)
         );
     }
 
