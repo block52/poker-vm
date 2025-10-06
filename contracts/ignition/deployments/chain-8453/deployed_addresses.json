@@ -1,4 +1,4 @@
 {
-  "VaultModule#Vault": "0x961106278AD74432a0e7e532dBed2F2906725544",
-  "BridgeModule#Bridge": "0x2eDA3F43260736168c8c5790840095667A722548"
+  "HelloWorldModule#HelloWorld": "0xb4014F206bEBC35DDc5a218f2308125837dbA8EA",
+  "CosmosBridgeModule#CosmosBridge": "0xcc391c8f1aFd6DB5D8b0e064BA81b1383b14FE5B"
 }
