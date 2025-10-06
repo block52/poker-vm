@@ -1,6 +1,8 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, Deck } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS, TWO_TOKENS } from "../src/engine/testConstants";
+import { Winner } from "../src/engine/types";
+import { Player } from "../src/models/player";
 import {
     test_json,
     test_735,
@@ -27,7 +29,8 @@ import {
     test_1130_edited,
     test_1137,
     test_1158,
-    test_1173
+    test_1173,
+    test_1176
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -833,6 +836,57 @@ describe("Texas Holdem - Data driven", () => {
             };
 
             // This should show us why the game immediately goes to showdown
+        });
+
+        it("should include all-in players in showdown winner calculation - test_1176", () => {
+            // Test case for bug where all-in players are not considered in winner calculation
+            const game = fromTestJson(test_1176);
+
+            // Player details from test_1176:
+            // Player 2 (seat 2): KH, KD (pair of Kings) - status "all-in", stack: 0
+            // Player 1 (seat 1): QS, QC (pair of Queens) - status "showing", stack: 21000000000000000000000
+            // Player 3 (seat 3): 6C, 9H - status "showing", stack: 8000000000000000000000
+            // Player 4 (seat 4): 9D, 7S - status "folded", stack: 11000000000000000000000
+            // Community cards: 8C, 3S, TH, 9S, 4D
+
+            expect(game.currentRound).toEqual(TexasHoldemRound.END);
+
+            // Get the winners
+            const winnersMap = game.winners;
+            const winnerAddresses = winnersMap ? Array.from(winnersMap.keys()) : [];
+            const winnerEntries = winnersMap ? Array.from(winnersMap.entries()) : [];
+
+            console.log("Test 1176 - Winner Analysis:");
+            console.log("Community cards:", game.communityCards);
+
+            // Log all players and their hands
+            Array.from(game.players.entries()).forEach(([seat, player]: [number, Player | null]) => {
+                if (player) {
+                    console.log(`Player ${player.address.slice(-4)} (seat ${seat}): ${player.holeCards?.join(', ')} - status: ${player.status}, stack: ${player.chips}`);
+                }
+            });
+
+            console.log("Winners:", winnerEntries.map(([address, winner]: [string, Winner]) => ({
+                address: address.slice(-4),
+                amount: winner.amount,
+                hand: winner.name,
+                cards: winner.cards
+            })));
+
+            // Player 2 with KK should win over Player 1 with QQ
+            // Currently this test will fail because Player 2 (all-in) is not being considered
+            const player2Address = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
+            const hasPlayer2Won = winnerAddresses.includes(player2Address);
+
+            // This assertion will fail, demonstrating the bug
+            expect(hasPlayer2Won).toBe(true);
+
+            // Player 2 should be the sole winner with KK
+            expect(winnerAddresses).toHaveLength(1);
+            expect(winnerAddresses[0]).toBe(player2Address);
+            if (winnersMap) {
+                expect(winnersMap.get(player2Address)?.name).toBe("Pair of Ks");
+            }
         });
     });
 });
