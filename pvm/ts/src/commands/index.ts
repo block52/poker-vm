@@ -1,18 +1,14 @@
-import { AccountCommand } from "./accountCommand";
-import { BalanceCommand } from "./balanceCommand";
+
 import { ChallengeCommand } from "./challengeCommand";
 import { GetTransactionsCommand } from "./getTransactionsCommand";
 import { MeCommand } from "./meCommand";
 import { MintCommand } from "./mintCommand";
 import { NewCommand } from "./newCommand";
-import { NewTableCommand } from "./newTableCommand";
 import { RandomCommand } from "./randomCommand";
 import { ResponseCommand } from "./responseCommand";
-import { TransferCommand } from "./transferCommand";
 import { DeployContractCommand } from "./deployContractCommand";
 
 import { BlockCommand, BlockCommandParams } from "./blockCommand";
-import { BurnCommand } from "./burnCommand";
 import { CreateAccountCommand } from "./createAccountCommand";
 import { FindGameStateCommand } from "./findGameCommand";
 import { GameStateCommand } from "./cosmos/gameStateCommand";
@@ -33,17 +29,10 @@ import { CosmosAccountCommand } from "./cosmos/cosmosAccountCommand";
 
 // Server control commands
 import { SharedSecretCommand } from "./sharedSecretCommand";
-import { ShutdownCommand } from "./shutdownCommand";
-import { StartServerCommand } from "./startServerCommand";
-import { StopServerCommand } from "./stopServerCommand";
-import { WithdrawCommand } from "./withdrawCommand";
 import { ISignedResponse } from "./interfaces";
 
 export {
-    AccountCommand,
-    BalanceCommand,
     BlockCommand,
-    BurnCommand,
     ChallengeCommand,
     CosmosAccountCommand,
     CreateAccountCommand,
@@ -60,7 +49,6 @@ export {
     MineCommand,
     MintCommand,
     NewCommand,
-    NewTableCommand,
     PerformActionCommand,
     PerformActionCommandWithResult,
     PurgeMempoolCommand,
@@ -68,12 +56,7 @@ export {
     ReceiveMinedBlockCommand,
     ReceiveMinedBlockHashCommand,
     ResponseCommand,
-    SharedSecretCommand,
-    ShutdownCommand,
-    StartServerCommand,
-    StopServerCommand,
-    TransferCommand,
-    WithdrawCommand
+    SharedSecretCommand
 };
 
 // TypeScript's isolatedModules flag requires type-only exports to use 'export type'

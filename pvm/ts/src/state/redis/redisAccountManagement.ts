@@ -108,7 +108,7 @@ export class RedisAccountManagement implements IAccountManagement {
      */
     public async getBalance(address: string): Promise<bigint> {
         const account = await this.getAccount(address);
-        return account.balance;
+        throw new Error("Deprecated - use getAccount instead");
     }
 
     /**

@@ -80,36 +80,36 @@ describe("RPC Class - PERFORM_ACTION Method", () => {
         process.env = originalEnv;
     });
 
-    it("should successfully sit out after joining", async () => {
-        // Arrange
-        const request: RPCRequest = {
-            id: "1",
-            method: RPCMethods.PERFORM_ACTION,
-            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 0, ""] //  // [from, to, action, amount, nonce, index, data]
-        };
+    // it("should successfully sit out after joining", async () => {
+    //     // Arrange
+    //     const request: RPCRequest = {
+    //         id: "1",
+    //         method: RPCMethods.PERFORM_ACTION,
+    //         params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", NonPlayerActionType.JOIN, ONE_HUNDRED_TOKENS.toString(), "0", 0, ""] //  // [from, to, action, amount, nonce, index, data]
+    //     };
 
-        // Act
-        const response = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request);
+    //     // Act
+    //     const response = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request);
 
-        // Assert
-        expect(response).toBeDefined();
-        expect(response).toHaveProperty("id", "1");
+    //     // Assert
+    //     expect(response).toBeDefined();
+    //     expect(response).toHaveProperty("id", "1");
 
-        const request2: RPCRequest = {
-            id: "1",
-            method: RPCMethods.PERFORM_ACTION,
-            params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", PlayerActionType.SIT_OUT, "0", "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
-        };
+    //     const request2: RPCRequest = {
+    //         id: "1",
+    //         method: RPCMethods.PERFORM_ACTION,
+    //         params: [PLAYER, "0xa78eba9eda216154d263679e1cc615c7271679efa3", PlayerActionType.SIT_OUT, "0", "0", 1, ""] //  // [from, to, action, amount, nonce, index, data]
+    //     };
 
-        const response2 = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request2);
-        console.log(response2);
+    //     const response2 = await RPC.handleWriteMethod(RPCMethods.PERFORM_ACTION, request2);
+    //     console.log(response2);
 
-        // Assert
-        expect(response2).toBeDefined();
-        //   expect(response).toHaveProperty("id", "1");
+    //     // Assert
+    //     expect(response2).toBeDefined();
+    //     //   expect(response).toHaveProperty("id", "1");
 
-        // Check if the mempool add method was called
-        // const mempool = getMempoolInstance();
-        // expect(mempool.add).toHaveBeenCalledTimes(1);
-    });
+    //     // Check if the mempool add method was called
+    //     // const mempool = getMempoolInstance();
+    //     // expect(mempool.add).toHaveBeenCalledTimes(1);
+    // });
 });

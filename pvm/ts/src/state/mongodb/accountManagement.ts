@@ -42,7 +42,7 @@ export class AccountManagement extends StateManager implements IAccountManagemen
     public async getBalance(address: string): Promise<bigint> {
         const account = await this.getAccount(address);
 
-        return account.balance;
+        throw new Error("Deprecated - use getAccount instead");
     }
 
     public async incrementBalance(address: string, amount: bigint): Promise<void> {

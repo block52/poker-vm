@@ -2,11 +2,9 @@ import { Server as HttpServer } from "http";
 import * as WebSocket from "ws";
 import { TexasHoldemStateDTO, TransactionDTO } from "@bitcoinbrisbane/block52";
 import * as url from "url";
-import { verify } from "crypto";
 import { verifySignature } from "../utils/crypto";
 import { GameStateCommand, MempoolCommand } from "../commands";
-import { ZeroAddress, ZeroHash } from "ethers";
-import { getMempoolInstance } from "./mempool";
+import { ZeroHash } from "ethers";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -287,13 +285,13 @@ export class SocketService implements SocketServiceInterface {
                     const state = await gameStateCommand.execute();
 
                     // Log detailed game state
-                    logGameStateEvent(playerId, tableAddress, state.data, {
+                    logGameStateEvent(playerId, tableAddress, state, {
                         triggerType: "INITIAL_CONNECTION",
                         method: "setupSocketEvents"
                     });
 
                     // Send initial game state to the newly connected player
-                    this.sendGameStateToPlayer(tableAddress, playerId, state.data);
+                    this.sendGameStateToPlayer(tableAddress, playerId, state);
                 } else if (playerId) {
                     // Log connection even without auto-subscribe
                     logConnectionEvent(playerId, "ESTABLISHED", {
@@ -784,17 +782,17 @@ export class SocketService implements SocketServiceInterface {
                         console.log(`🔄 [TIMING DEBUG] Broadcasting to subscriber ${subscriberId}:`, {
                             timestamp: new Date().toISOString(),
                             tableAddress,
-                            nextToAct: gameStateResponse.data.nextToAct,
-                            round: gameStateResponse.data.round,
-                            playerCount: gameStateResponse.data.players.length,
-                            lastAction: gameStateResponse.data.previousActions[gameStateResponse.data.previousActions.length - 1]?.action || "NO_ACTIONS",
-                            lastActionIndex: gameStateResponse.data.previousActions[gameStateResponse.data.previousActions.length - 1]?.index || "NO_INDEX",
-                            actionCount: gameStateResponse.data.previousActions.length,
+                            nextToAct: gameStateResponse.nextToAct,
+                            round: gameStateResponse.round,
+                            playerCount: gameStateResponse.players.length,
+                            lastAction: gameStateResponse.previousActions[gameStateResponse.previousActions.length - 1]?.action || "NO_ACTIONS",
+                            lastActionIndex: gameStateResponse.previousActions[gameStateResponse.previousActions.length - 1]?.index || "NO_INDEX",
+                            actionCount: gameStateResponse.previousActions.length,
                             source: "WebSocket broadcastGameStateToAllSubscribers"
                         });
 
                         // Log detailed game state for this subscriber
-                        logGameStateEvent(subscriberId, tableAddress, gameStateResponse.data, {
+                        logGameStateEvent(subscriberId, tableAddress, gameStateResponse, {
                             triggerType: "BROADCAST_ALL",
                             method: "broadcastGameStateToAllSubscribers",
                             broadcastTimestamp: new Date().toISOString()
@@ -803,7 +801,7 @@ export class SocketService implements SocketServiceInterface {
                         const updateMessage: GameStateUpdateMessage = {
                             type: "gameStateUpdate",
                             tableAddress,
-                            gameState: gameStateResponse.data
+                            gameState: gameStateResponse
                         };
 
                         ws.send(JSON.stringify(updateMessage));
@@ -812,8 +810,8 @@ export class SocketService implements SocketServiceInterface {
                         // Log successful send
                         logWebSocketEvent(subscriberId, "BROADCAST_ALL_SENT_SUCCESS", {
                             tableAddress,
-                            round: gameStateResponse.data.round,
-                            nextToAct: gameStateResponse.data.nextToAct,
+                            round: gameStateResponse.round,
+                            nextToAct: gameStateResponse.nextToAct,
                             messageSize: JSON.stringify(updateMessage).length
                         });
                     } catch (error) {
