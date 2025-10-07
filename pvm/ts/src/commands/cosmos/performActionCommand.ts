@@ -17,7 +17,7 @@ export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
         gameOptions: GameOptions,
         protected readonly data?: string,
     ) {
-        this.texasHoldemGame = TexasHoldemGame.fromJson(gameState.state, gameOptions);
+        this.texasHoldemGame = TexasHoldemGame.fromJson(gameState, gameOptions);
     }
 
     public async execute(): Promise<TexasHoldemStateDTO> {
