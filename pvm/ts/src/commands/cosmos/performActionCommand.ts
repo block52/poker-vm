@@ -2,10 +2,12 @@ import { GameOptions, KEYS, NonPlayerActionType, PlayerActionType, TexasHoldemSt
 
 import { ICommand, ISignedResponse } from "../interfaces";
 import TexasHoldemGame from "../../engine/texasHoldem";
+import { getSocketService } from "../../core/socketserver";
 
 export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
 
     private readonly texasHoldemGame: TexasHoldemGame;
+    private readonly socketService = getSocketService();
 
     constructor(
         protected readonly from: string,
@@ -40,6 +42,19 @@ export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
 
         const updatedGameState: TexasHoldemStateDTO = this.texasHoldemGame.toJson();
         console.log("Updated Game State:", updatedGameState);
+
+        // Broadcast game state update via WebSocket
+        const socketService = getSocketService();
+        if (socketService) {
+            try {
+                await socketService.broadcastGameStateUpdate(this.to, this.from, updatedGameState);
+                console.log(`Broadcasted game state update after performing action: ${this.action}`);
+            } catch (error) {
+                console.error("Error broadcasting game state update:", error);
+            }
+        }
+
+
         return updatedGameState;
     }
 }

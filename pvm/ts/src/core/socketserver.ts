@@ -3,7 +3,7 @@ import * as WebSocket from "ws";
 import { TexasHoldemStateDTO, TransactionDTO } from "@bitcoinbrisbane/block52";
 import * as url from "url";
 import { verifySignature } from "../utils/crypto";
-import { GameStateCommand, MempoolCommand } from "../commands";
+import { GameStateCommand } from "../commands";
 import { ZeroHash } from "ethers";
 import * as fs from "fs";
 import * as path from "path";
@@ -182,15 +182,15 @@ type UnsubscribeMessage = {
     signature?: string; // Optional signature field
 };
 
-type MempoolSubscribeMessage = {
-    action: "subscribe_mempool";
-};
+// type MempoolSubscribeMessage = {
+//     action: "subscribe_mempool";
+// };
 
-type MempoolUnsubscribeMessage = {
-    action: "unsubscribe_mempool";
-};
+// type MempoolUnsubscribeMessage = {
+//     action: "unsubscribe_mempool";
+// };
 
-type ClientMessage = SubscribeMessage | UnsubscribeMessage | MempoolSubscribeMessage | MempoolUnsubscribeMessage;
+type ClientMessage = SubscribeMessage | UnsubscribeMessage; // | MempoolSubscribeMessage | MempoolUnsubscribeMessage;
 
 type GameStateUpdateMessage = {
     type: "gameStateUpdate";
@@ -208,8 +208,8 @@ export interface SocketServiceInterface {
     sendGameStateToPlayer(tableAddress: string, playerId: string, gameState: TexasHoldemStateDTO): void;
     broadcastGameStateUpdate(tableAddress: string, playerId: string, gameState: TexasHoldemStateDTO): void;
     broadcastGameStateToAllSubscribers(tableAddress: string): Promise<void>;
-    broadcastMempoolUpdate(): Promise<void>;
-    getMempoolSubscriberCount(): number;
+    // broadcastMempoolUpdate(): Promise<void>;
+    // getMempoolSubscriberCount(): number;
 }
 
 export class SocketService implements SocketServiceInterface {
@@ -232,9 +232,9 @@ export class SocketService implements SocketServiceInterface {
         return Array.from(playerMap.keys());
     }
 
-    public getMempoolSubscriberCount(): number {
-        return mempoolSubscriptions.size;
-    }
+    // public getMempoolSubscriberCount(): number {
+    //     return mempoolSubscriptions.size;
+    // }
 
     private setupSocketEvents() {
         console.log("Setting up WebSocket events");
@@ -250,7 +250,7 @@ export class SocketService implements SocketServiceInterface {
             // Declare variables at function scope so they're available throughout
             let tableAddress: string | undefined;
             let playerId: string | undefined;
-            let subscribeMempool: string | undefined;
+            // let subscribeMempool: string | undefined;
 
             try {
                 this.activeConnections++;
@@ -260,7 +260,7 @@ export class SocketService implements SocketServiceInterface {
                 const parsedUrl = url.parse(req.url || "", true);
                 tableAddress = parsedUrl.query.tableAddress as string;
                 playerId = parsedUrl.query.playerId as string;
-                subscribeMempool = parsedUrl.query.subscribeMempool as string;
+                // subscribeMempool = parsedUrl.query.subscribeMempool as string;
 
                 // If tableAddress and playerId are provided in URL, auto-subscribe
                 if (tableAddress && playerId) {
@@ -301,14 +301,14 @@ export class SocketService implements SocketServiceInterface {
                     });
                 }
 
-                // If subscribeMempool is provided in URL, auto-subscribe to mempool
-                if (subscribeMempool === "true") {
-                    this.subscribeToMempool(ws);
-                    console.log("Auto-subscribed to mempool updates");
+                // // If subscribeMempool is provided in URL, auto-subscribe to mempool
+                // if (subscribeMempool === "true") {
+                //     this.subscribeToMempool(ws);
+                //     console.log("Auto-subscribed to mempool updates");
 
-                    // Send initial mempool state
-                    await this.sendMempoolToClient(ws);
-                }
+                //     // Send initial mempool state
+                //     await this.sendMempoolToClient(ws);
+                // }
             } catch (error) {
                 this.activeConnections--;
                 console.error("Error during WebSocket connection setup:", error);
@@ -375,30 +375,30 @@ export class SocketService implements SocketServiceInterface {
                         }, data.playerId);
                     }
 
-                    if (data.action === "subscribe_mempool") {
-                        this.subscribeToMempool(ws);
-                        console.log("Client subscribed to mempool updates");
+                    // if (data.action === "subscribe_mempool") {
+                    //     this.subscribeToMempool(ws);
+                    //     console.log("Client subscribed to mempool updates");
 
-                        // Send initial mempool state
-                        this.sendMempoolToClient(ws);
+                    //     // Send initial mempool state
+                    //     this.sendMempoolToClient(ws);
 
-                        // Send confirmation
-                        this.sendMessage(ws, {
-                            type: "mempool_subscribed"
-                        });
-                    }
+                    //     // Send confirmation
+                    //     this.sendMessage(ws, {
+                    //         type: "mempool_subscribed"
+                    //     });
+                    // }
 
-                    if (data.action === "unsubscribe_mempool") {
-                        this.unsubscribeFromMempool(ws);
-                        console.log("Client unsubscribed from mempool updates");
+                    // if (data.action === "unsubscribe_mempool") {
+                    //     this.unsubscribeFromMempool(ws);
+                    //     console.log("Client unsubscribed from mempool updates");
 
-                        // Send confirmation
-                        this.sendMessage(ws, {
-                            type: "mempool_unsubscribed"
-                        });
-                    }
+                    //     // Send confirmation
+                    //     this.sendMessage(ws, {
+                    //         type: "mempool_unsubscribed"
+                    //     });
+                    // }
 
-                    if (!["subscribe", "unsubscribe", "subscribe_mempool", "unsubscribe_mempool"].includes(data.action)) {
+                    if (!["subscribe", "unsubscribe"].includes(data.action)) {
                         console.log(`Received unknown message: ${messageStr}`);
                         this.sendMessage(ws, {
                             type: "error",
@@ -479,10 +479,10 @@ export class SocketService implements SocketServiceInterface {
         console.log(`Table ${tableAddress} now has ${playerMap.size} subscribers`);
     }
 
-    private subscribeToMempool(ws: WebSocket) {
-        mempoolSubscriptions.add(ws);
-        console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
-    }
+    // private subscribeToMempool(ws: WebSocket) {
+    //     mempoolSubscriptions.add(ws);
+    //     console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
+    // }
 
     private unsubscribeFromTable(tableAddress: string, playerId: string) {
         const playerMap = tableSubscriptions.get(tableAddress);
@@ -499,10 +499,10 @@ export class SocketService implements SocketServiceInterface {
         }
     }
 
-    private unsubscribeFromMempool(ws: WebSocket) {
-        mempoolSubscriptions.delete(ws);
-        console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
-    }
+    // private unsubscribeFromMempool(ws: WebSocket) {
+    //     mempoolSubscriptions.delete(ws);
+    //     console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
+    // }
 
     private handleDisconnect(ws: WebSocket) {
         // Remove this websocket from all table subscriptions
@@ -539,71 +539,71 @@ export class SocketService implements SocketServiceInterface {
         mempoolSubscriptions.delete(ws);
     }
 
-    // Method to send mempool data to a specific client
-    private async sendMempoolToClient(ws: WebSocket) {
-        try {
-            const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
-            const mempoolResult = await mempoolCommand.execute();
+    // // Method to send mempool data to a specific client
+    // private async sendMempoolToClient(ws: WebSocket) {
+    //     try {
+    //         const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
+    //         const mempoolResult = await mempoolCommand.execute();
             
-            const updateMessage: MempoolUpdateMessage = {
-                type: "mempoolUpdate",
-                transactions: mempoolResult.data.toJson()
-            };
+    //         const updateMessage: MempoolUpdateMessage = {
+    //             type: "mempoolUpdate",
+    //             transactions: mempoolResult.data.toJson()
+    //         };
 
-            this.sendMessage(ws, updateMessage);
-            console.log("Sent initial mempool data to client");
-        } catch (error) {
-            console.error("Error sending mempool to client:", error);
-        }
-    }
+    //         this.sendMessage(ws, updateMessage);
+    //         console.log("Sent initial mempool data to client");
+    //     } catch (error) {
+    //         console.error("Error sending mempool to client:", error);
+    //     }
+    // }
 
-    // Method to broadcast mempool updates to all subscribed clients
-    public async broadcastMempoolUpdate() {
-        if (mempoolSubscriptions.size === 0) {
-            console.log("No mempool subscribers, skipping broadcast");
-            return;
-        }
+    // // Method to broadcast mempool updates to all subscribed clients
+    // public async broadcastMempoolUpdate() {
+    //     if (mempoolSubscriptions.size === 0) {
+    //         console.log("No mempool subscribers, skipping broadcast");
+    //         return;
+    //     }
 
-        try {
-            const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
-            const mempoolResult = await mempoolCommand.execute();
+    //     try {
+    //         const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
+    //         const mempoolResult = await mempoolCommand.execute();
             
-            const updateMessage: MempoolUpdateMessage = {
-                type: "mempoolUpdate",
-                transactions: mempoolResult.data.toJson()
-            };
+    //         const updateMessage: MempoolUpdateMessage = {
+    //             type: "mempoolUpdate",
+    //             transactions: mempoolResult.data.toJson()
+    //         };
 
-            const message = JSON.stringify(updateMessage);
-            console.log(`Broadcasting mempool update to ${mempoolSubscriptions.size} subscribers`);
+    //         const message = JSON.stringify(updateMessage);
+    //         console.log(`Broadcasting mempool update to ${mempoolSubscriptions.size} subscribers`);
 
-            // Send to all mempool subscribers
-            const disconnectedClients: WebSocket[] = [];
+    //         // Send to all mempool subscribers
+    //         const disconnectedClients: WebSocket[] = [];
             
-            for (const ws of mempoolSubscriptions) {
-                if (ws.readyState === WebSocket.OPEN) {
-                    try {
-                        ws.send(message);
-                    } catch (error) {
-                        console.error("Error sending mempool update to client:", error);
-                        disconnectedClients.push(ws);
-                    }
-                } else {
-                    disconnectedClients.push(ws);
-                }
-            }
+    //         for (const ws of mempoolSubscriptions) {
+    //             if (ws.readyState === WebSocket.OPEN) {
+    //                 try {
+    //                     ws.send(message);
+    //                 } catch (error) {
+    //                     console.error("Error sending mempool update to client:", error);
+    //                     disconnectedClients.push(ws);
+    //                 }
+    //             } else {
+    //                 disconnectedClients.push(ws);
+    //             }
+    //         }
 
-            // Clean up disconnected clients
-            for (const ws of disconnectedClients) {
-                mempoolSubscriptions.delete(ws);
-            }
+    //         // Clean up disconnected clients
+    //         for (const ws of disconnectedClients) {
+    //             mempoolSubscriptions.delete(ws);
+    //         }
 
-            if (disconnectedClients.length > 0) {
-                console.log(`Cleaned up ${disconnectedClients.length} disconnected mempool clients`);
-            }
-        } catch (error) {
-            console.error("Error broadcasting mempool update:", error);
-        }
-    }
+    //         if (disconnectedClients.length > 0) {
+    //             console.log(`Cleaned up ${disconnectedClients.length} disconnected mempool clients`);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error broadcasting mempool update:", error);
+    //     }
+    // }
 
     // Method to broadcast game state updates to a specific player
     public sendGameStateToPlayer(tableAddress: string, playerId: string, gameState: TexasHoldemStateDTO) {
@@ -866,7 +866,6 @@ export class SocketService implements SocketServiceInterface {
             maxConnections: this.maxConnections,
             tableCount: tableSubscriptions.size,
             totalPlayers,
-            mempoolSubscribers: mempoolSubscriptions.size,
             tables: tableInfo,
             logsDirectory: LOGS_DIR,
             availableLogFiles: this.getAvailableLogFiles()
