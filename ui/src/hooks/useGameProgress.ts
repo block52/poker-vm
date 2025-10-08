@@ -16,7 +16,7 @@ import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
  * - isLoading: boolean indicating if data is being loaded
  * - error: any error that occurred during data fetching
  */
-export const useGameProgress = (tableId?: string): GameProgressReturn => {
+export const useGameProgress = (_tableId?: string): GameProgressReturn => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
 

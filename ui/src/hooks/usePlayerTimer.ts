@@ -142,7 +142,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         });
 
         // console.log(`⏰ Time extended by ${timeoutInSeconds} seconds for seat ${playerSeat}`);
-    }, [isNextToAct, isCurrentUser, extensionInfo.hasUsedExtension, seatKey, lastActionTimestamp, timeoutInSeconds, playerSeat]);
+    }, [isNextToAct, isCurrentUser, extensionInfo.hasUsedExtension, seatKey, lastActionTimestamp]);
 
     // Auto-action logic (check first, then fold if check not available)
     const handleAutoAction = useCallback(async () => {
@@ -218,43 +218,32 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         return () => clearInterval(interval);
     }, [isNextToAct]); // Re-run effect when player becomes active/inactive
 
-    // Auto-action when timer expires - COMMENTED OUT TO DISABLE AUTO-FOLD/AUTO-CHECK
-    // useEffect(() => {
-    //     if (timeRemaining === 0 && isNextToAct && isCurrentUser && !isFolding) {
-    //         const timeoutId = setTimeout(() => {
-    //             handleAutoAction();
-    //         }, 500); // Small delay to ensure state is stable
-
-    //         return () => clearTimeout(timeoutId);
-    //     }
-    // }, [timeRemaining, isNextToAct, isCurrentUser, isFolding, handleAutoAction]);
-
     // Reset auto-action timer when next to act changes
     useEffect(() => {
         setLastAutoFoldTime(0);
     }, [gameState?.nextToAct]);
 
-    // Calculate progress (0-100)
-    const progress = useMemo(() => {
-        if (!isNextToAct) return 0;
+    // // Calculate progress (0-100)
+    // const progress = useMemo(() => {
+    //     if (!isNextToAct) return 0;
         
-        const elapsed = currentTime - lastActionTimestamp;
-        const extensionMs = extensionInfo.hasUsedExtension ? TIMEOUT_DURATION : 0;
-        const totalTimeout = TIMEOUT_DURATION + extensionMs;
-        const progressPercentage = Math.min((elapsed / totalTimeout) * 100, 100);
-        return progressPercentage;
-    }, [currentTime, lastActionTimestamp, isNextToAct, TIMEOUT_DURATION, extensionInfo.hasUsedExtension]);
+    //     const elapsed = currentTime - lastActionTimestamp;
+    //     const extensionMs = extensionInfo.hasUsedExtension ? TIMEOUT_DURATION : 0;
+    //     const totalTimeout = TIMEOUT_DURATION + extensionMs;
+    //     const progressPercentage = Math.min((elapsed / totalTimeout) * 100, 100);
+    //     return progressPercentage;
+    // }, [currentTime, lastActionTimestamp, isNextToAct, TIMEOUT_DURATION, extensionInfo.hasUsedExtension]);
 
     // Debug logging (only in development)
     useEffect(() => {
         if (process.env.NODE_ENV === "development" && isNextToAct && isCurrentUser) {
-            const extensionStatus = extensionInfo.hasUsedExtension ? " (EXTENDED)" : "";
+            // const extensionStatus = extensionInfo.hasUsedExtension ? " (EXTENDED)" : "";
             // console.log(`🕐 Timer for seat ${playerSeat}: ${timeRemaining}s remaining (timeout: ${timeoutInSeconds}s)${extensionStatus}`);
         }
     }, [timeRemaining, isNextToAct, isCurrentUser, playerSeat, timeoutInSeconds, extensionInfo.hasUsedExtension]);
 
     return {
-        playerStatus: player?.status || PlayerStatus.NOT_ACTED,
+        playerStatus: player?.status || PlayerStatus.ACTIVE, // TODO: Roll back to not acted later
         timeoutValue: timeoutInSeconds, // Dynamic timeout from game options
         progress: Math.ceil(timeoutInSeconds - timeRemaining), // Progress in seconds elapsed
         timeRemaining,

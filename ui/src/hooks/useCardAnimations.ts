@@ -4,10 +4,10 @@ import { CardAnimationsReturn } from "../types/index";
 
 /**
  * Custom hook to handle card animations
- * @param tableId The ID of the table (not used - Context manages subscription)
+ * @param _tableId The ID of the table (not used - Context manages subscription)
  * @returns Object containing animation state for cards
  */
-export const useCardAnimations = (tableId?: string): CardAnimationsReturn => {
+export const useCardAnimations = (_tableId?: string): CardAnimationsReturn => {
     const [flipped1, setFlipped1] = useState(false);
     const [flipped2, setFlipped2] = useState(false);
     const [flipped3, setFlipped3] = useState(false);

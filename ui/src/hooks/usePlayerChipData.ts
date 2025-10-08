@@ -18,7 +18,7 @@ export const usePlayerChipData = (): PlayerChipDataReturn => {
     // Memoized calculation of all player chip amounts using sumOfBets from backend
     const playerChipAmounts = useMemo(() => {
         const amounts: Record<number, string> = {};
-        
+
         // Handle loading, error, or invalid game state
         if (!gameState || !gameState.players || !Array.isArray(gameState.players)) {
             return amounts; // Return empty object for all invalid states
@@ -27,23 +27,23 @@ export const usePlayerChipData = (): PlayerChipDataReturn => {
         // Simply map each player's sumOfBets to their seat - no complex calculations needed
         gameState.players.forEach(player => {
             if (!player.seat || !player.address) return;
-            
+
             // Use the sumOfBets value directly from the backend - no fallback
             amounts[player.seat] = player.sumOfBets;
         });
-        
+
         return amounts;
     }, [gameState]);
 
     // Simplified function to get chip amount for a given seat
-    const getChipAmount = (seatIndex: number): string => {
+    const getChipAmount = (_seatIndex: number): string => {
         // Return exactly what the backend says - no defaults or fallbacks
-        return playerChipAmounts[seatIndex] || "";
+        return playerChipAmounts[_seatIndex] || "";
     };
 
     // Default values in case of error or loading
     const defaultState: PlayerChipDataReturn = {
-        getChipAmount: (seatIndex: number): string => "",
+        getChipAmount: (_seatIndex: number): string => "",
         isLoading,
         error
     };

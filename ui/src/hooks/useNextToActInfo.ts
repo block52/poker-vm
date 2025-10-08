@@ -12,7 +12,7 @@ import { useGameStateContext } from "../context/GameStateContext";
  * @param tableId The ID of the table to fetch state for (not used - Context manages subscription)
  * @returns Object containing next-to-act information
  */
-export const useNextToActInfo = (tableId?: string): NextToActInfoReturn => {
+export const useNextToActInfo = (_tableId?: string): NextToActInfoReturn => {
     // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
 

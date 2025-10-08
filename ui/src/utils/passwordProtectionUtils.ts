@@ -2,10 +2,10 @@
 export const setAuthCookie = () => {
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 100); // 100 days from now
-    const simpleJWT = btoa(JSON.stringify({ 
-        authenticated: true, 
+    const simpleJWT = btoa(JSON.stringify({
+        authenticated: true,
         timestamp: Date.now(),
-        app: "block52-poker-demo" 
+        app: "block52-poker-demo"
     }));
     document.cookie = "block52_auth=" + simpleJWT + "; expires=" + expirationDate.toUTCString() + "; path=/; SameSite=Strict";
 };
@@ -13,7 +13,7 @@ export const setAuthCookie = () => {
 export const checkAuthCookie = () => {
     const cookies = document.cookie.split(";");
     const authCookie = cookies.find(cookie => cookie.trim().startsWith("block52_auth="));
-    
+
     if (authCookie) {
         try {
             const cookieValue = authCookie.split("=")[1];
@@ -21,7 +21,7 @@ export const checkAuthCookie = () => {
             if (decoded.authenticated && decoded.app === "block52-poker-demo") {
                 return true;
             }
-        } catch (error) {
+        } catch (_error) {
             // Invalid cookie, remove it
             document.cookie = "block52_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
