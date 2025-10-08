@@ -44,10 +44,9 @@ export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
         console.log("Updated Game State:", updatedGameState);
 
         // Broadcast game state update via WebSocket
-        const socketService = getSocketService();
-        if (socketService) {
+        if (this.socketService) {
             try {
-                await socketService.broadcastGameStateUpdate(this.to, this.from, updatedGameState);
+                await this.socketService.broadcastGameStateUpdate(this.to, this.from, updatedGameState);
                 console.log(`Broadcasted game state update after performing action: ${this.action}`);
             } catch (error) {
                 console.error("Error broadcasting game state update:", error);
