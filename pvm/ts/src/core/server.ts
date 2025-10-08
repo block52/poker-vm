@@ -57,10 +57,10 @@ export class Server {
     }
 
     public async me(): Promise<Node> {
-        const blockchain = getBlockchainInstance();
-        const lastBlock = await blockchain.getLastBlock();
+        // const blockchain = getBlockchainInstance();
+        // const lastBlock = await blockchain.getLastBlock();
         const url = process.env.PUBLIC_URL || `http://localhost:${this._port}`;
-        return new Node("pvm-typescript", this.publicKey, url, "1.0.3", this.isValidator, lastBlock.index);
+        return new Node("pvm-typescript", this.publicKey, url, "1.0.3", this.isValidator, 0);
     }
 
     get started(): boolean {
@@ -92,32 +92,32 @@ export class Server {
     }
 
     public async bootstrap(args: string[] = []) {
-        await this.loadNodes();
+        // await this.loadNodes();
 
-        console.log("Bootstrapping...");
-        console.log("args", args);
-        args.includes("--reset") ? await this.resyncBlockchain() : await this.syncBlockchain();
+        // console.log("Bootstrapping...");
+        // console.log("args", args);
+        // args.includes("--reset") ? await this.resyncBlockchain() : await this.syncBlockchain();
 
-        await this.syncMempool();
+        // await this.syncMempool();
 
-        const validatorInstance = getValidatorInstance();
-        this.isValidator = await validatorInstance.isValidator(this.publicKey);
+        // const validatorInstance = getValidatorInstance();
+        // this.isValidator = await validatorInstance.isValidator(this.publicKey);
 
-        await this.syncDeposits();
+        // await this.syncDeposits();
 
-        const intervalId = setInterval(async () => {
-            if (!this._started) {
-                clearInterval(intervalId);
-                return;
-            }
+        // const intervalId = setInterval(async () => {
+        //     if (!this._started) {
+        //         clearInterval(intervalId);
+        //         return;
+        //     }
 
-            await this.mine();
-            await this.findHighestTip();
+        //     await this.mine();
+        //     await this.findHighestTip();
 
-            if (!this.synced) {
-                await this.syncBlockchain();
-            }
-        }, 15000);
+        //     if (!this.synced) {
+        //         await this.syncBlockchain();
+        //     }
+        // }, 15000);
 
         this._started = true;
         console.log(`Server started on port ${this._port}`);
@@ -125,7 +125,7 @@ export class Server {
 
     public async mine() {
         // Check environment variable to disable mining
-        if (process.env.DISABLE_MINING === "true") {
+        if (process.env.DISABLE_MINING || process.env.DISABLE_MINING === "true") {
             console.log("Mining disabled by configuration, skipping mine");
             return;
         }
@@ -241,6 +241,8 @@ export class Server {
     }
 
     private async purgeMempool() {
+        return;
+
         const mempool = getMempoolInstance();
         await mempool.purge();
     }
@@ -287,6 +289,8 @@ export class Server {
     }
 
     private async syncBlockchain() {
+        return;
+        
         this._syncing = true;
 
         if (this._nodes.size === 0) {

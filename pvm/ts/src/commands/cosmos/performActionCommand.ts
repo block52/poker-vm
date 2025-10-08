@@ -39,6 +39,7 @@ export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
         this.texasHoldemGame.performAction(this.from, this.action, this.index, this.value, this.data);
 
         const updatedGameState: TexasHoldemStateDTO = this.texasHoldemGame.toJson();
+        console.log("Updated Game State:", updatedGameState);
         return updatedGameState;
     }
 }
