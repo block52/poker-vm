@@ -932,10 +932,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             // (don't return here - let it continue to Steps 4b and 6)
         }
 
-        // Step 10: Calculate each live player's total bets and check if they're equal
+        // Step 10: Calculate each active player's total bets and check if they're equal
+        // Note: We only check active players, not all live players, because all-in players
+        // cannot contribute more to the current round and shouldn't be included in equality check
         const playerBets: bigint[] = [];
 
-        for (const player of livePlayers) {
+        for (const player of activePlayers) {
             // For PREFLOP, include blind bets from ANTE round
             const totalBet =
                 round === TexasHoldemRound.PREFLOP
@@ -952,7 +954,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 11: If all live player bets are equal, round has concluded
+        // Step 11: If all active player bets are equal, round has concluded
         const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
 
         if (round === TexasHoldemRound.PREFLOP) {
