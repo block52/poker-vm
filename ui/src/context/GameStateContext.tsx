@@ -52,7 +52,7 @@ const debugLog = (eventType: string, data: any) => {
     // Store in localStorage for persistence
     try {
         localStorage.setItem("pokerDebugLogs", JSON.stringify(debugLogs.slice(-20))); // Keep last 20
-    } catch (_e) {
+    } catch {
         // localStorage might be full, ignore
     }
 };

@@ -21,7 +21,7 @@ export const checkAuthCookie = () => {
             if (decoded.authenticated && decoded.app === "block52-poker-demo") {
                 return true;
             }
-        } catch (_error) {
+        } catch {
             // Invalid cookie, remove it
             document.cookie = "block52_auth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
