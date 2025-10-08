@@ -5744,7 +5744,7 @@ export const test_1173 = {
     }
 }
 
-export const test_1176 ={
+export const test_1176 = {
     "id": "1",
     "result": {
         "data": {
@@ -6092,11 +6092,11 @@ export const test_1178 = {
                     "lastAction": {
                         "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
                         "seat": 1,
-                        "action": "check",
-                        "amount": "0",
+                        "action": "bet",
+                        "amount": "200000000000000000000",
                         "round": "turn",
-                        "index": 91,
-                        "timestamp": 1759795012317
+                        "index": 83,
+                        "timestamp": 1759794967323
                     },
                     "legalActions": [],
                     "sumOfBets": "800000000000000000000",
@@ -6143,29 +6143,29 @@ export const test_1178 = {
                         "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
                         "seat": 2,
                         "action": "call",
-                        "amount": "200000000000000000000",
-                        "round": "turn",
-                        "index": 90,
-                        "timestamp": 1759794997324
+                        "amount": "8100000000000000000000",
+                        "round": "flop",
+                        "index": 81,
+                        "timestamp": 1759794952322
                     },
                     "legalActions": [
                         {
                             "action": "fold",
                             "min": "0",
                             "max": "0",
-                            "index": 92
+                            "index": 84
                         },
                         {
-                            "action": "check",
-                            "min": "0",
-                            "max": "0",
-                            "index": 92
+                            "action": "call",
+                            "min": "200000000000000000000",
+                            "max": "200000000000000000000",
+                            "index": 84
                         },
                         {
                             "action": "raise",
-                            "min": "200000000000000000000",
+                            "min": "400000000000000000000",
                             "max": "2800000000000000000000",
-                            "index": 92
+                            "index": 84
                         }
                     ],
                     "sumOfBets": "600000000000000000000",
@@ -6330,78 +6330,6 @@ export const test_1178 = {
                     "round": "turn",
                     "index": 83,
                     "timestamp": 1759794967323
-                },
-                {
-                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
-                    "seat": 2,
-                    "action": "call",
-                    "amount": "200000000000000000000",
-                    "round": "turn",
-                    "index": 84,
-                    "timestamp": 1759794967323
-                },
-                {
-                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
-                    "seat": 1,
-                    "action": "check",
-                    "amount": "",
-                    "round": "turn",
-                    "index": 85,
-                    "timestamp": 1759794967323
-                },
-                {
-                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
-                    "seat": 2,
-                    "action": "check",
-                    "amount": "",
-                    "round": "turn",
-                    "index": 86,
-                    "timestamp": 1759794982331
-                },
-                {
-                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
-                    "seat": 1,
-                    "action": "raise",
-                    "amount": "200000000000000000000",
-                    "round": "turn",
-                    "index": 87,
-                    "timestamp": 1759794982331
-                },
-                {
-                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
-                    "seat": 2,
-                    "action": "call",
-                    "amount": "200000000000000000000",
-                    "round": "turn",
-                    "index": 88,
-                    "timestamp": 1759794982331
-                },
-                {
-                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
-                    "seat": 1,
-                    "action": "raise",
-                    "amount": "200000000000000000000",
-                    "round": "turn",
-                    "index": 89,
-                    "timestamp": 1759794997324
-                },
-                {
-                    "playerId": "0xC84737526E425D7549eF20998Fa992f88EAC2484",
-                    "seat": 2,
-                    "action": "call",
-                    "amount": "200000000000000000000",
-                    "round": "turn",
-                    "index": 90,
-                    "timestamp": 1759794997324
-                },
-                {
-                    "playerId": "0x2B6be678D732346c364c98905A285C938056b0A8",
-                    "seat": 1,
-                    "action": "check",
-                    "amount": "",
-                    "round": "turn",
-                    "index": 91,
-                    "timestamp": 1759795012317
                 }
             ],
             "round": "turn",

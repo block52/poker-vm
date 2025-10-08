@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, Deck } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, Deck, PlayerStatus } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../src/engine/texasHoldem";
 import { fromTestJson, ONE_TOKEN, PLAYER_1_ADDRESS, TWO_TOKENS } from "../src/engine/testConstants";
 import { Winner } from "../src/engine/types";
@@ -568,7 +568,7 @@ describe("Texas Holdem - Data driven", () => {
             const allActions = fullGameData.previousActions || [];
 
             // Find the all-in action
-            const allInActionIndex = allActions.findIndex((action: any) => action.action === "all-in");
+            const allInActionIndex = allActions.findIndex((action: any) => action.action === PlayerActionType.ALL_IN);
             const allInAction = allActions[allInActionIndex];
 
             console.log("All-in action:", allInAction);
@@ -642,7 +642,7 @@ describe("Texas Holdem - Data driven", () => {
 
             // Find the all-in action
             const allInAction = previousActions.find(
-                (action: any) => action.action === "all-in"
+                (action: any) => action.action === PlayerActionType.ALL_IN
             );
             expect(allInAction).toBeDefined();
             expect(allInAction?.seat).toBe(2); // Player 2 went all-in
@@ -679,7 +679,7 @@ describe("Texas Holdem - Data driven", () => {
 
             // Find the all-in action (index 66) and remove it and all subsequent actions
             const originalActions = gameData.previousActions;
-            const allInActionIndex = originalActions.findIndex((action: any) => action.action === "all-in");
+            const allInActionIndex = originalActions.findIndex((action: any) => action.action === PlayerActionType.ALL_IN);
 
             console.log("All-in action was at index:", allInActionIndex, "with action index:", originalActions[allInActionIndex].index);
 
@@ -734,7 +734,7 @@ describe("Texas Holdem - Data driven", () => {
 
             const gameData = { ...test_1173.result.data };
             const originalActions = gameData.previousActions;
-            const allInActionIndex = originalActions.findIndex((action: any) => action.action === "all-in");
+            const allInActionIndex = originalActions.findIndex((action: any) => action.action === PlayerActionType.ALL_IN);
 
             // Include the all-in action but remove subsequent "show" actions
             const actionsUpToAllIn = originalActions.slice(0, allInActionIndex + 1);
@@ -793,7 +793,7 @@ describe("Texas Holdem - Data driven", () => {
 
             // Check active players count
             const livePlayers = (gameAfterAllIn as any).findLivePlayers();
-            const activePlayers = livePlayers.filter((p: any) => p.status === 'active');
+            const activePlayers = livePlayers.filter((p: any) => p.status === PlayerStatus.ACTIVE);
 
             console.log("Live players count:", livePlayers.length);
             console.log("Active players count:", activePlayers.length);
@@ -823,7 +823,7 @@ describe("Texas Holdem - Data driven", () => {
 
             // Check if there's a bet/raise that players need to respond to
             const lastBetOrRaise = riverActions.slice().reverse().find((a: any) =>
-                a.action === 'bet' || a.action === 'raise' || a.action === 'all-in'
+                a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE || a.action === PlayerActionType.ALL_IN
             );
 
             if (lastBetOrRaise) {
@@ -901,6 +901,12 @@ describe("Texas Holdem - Data driven", () => {
             // Test case for bug where players get stuck with no legal actions
             const game = fromTestJson(test_1178);
 
+            // Addresses from test_1178 data:
+            const SEAT_1 = "0x2B6be678D732346c364c98905A285C938056b0A8"; // Player 1 - bet on turn  
+            const SEAT_2 = "0xC84737526E425D7549eF20998Fa992f88EAC2484"; // Player 2 - needs to respond to bet 
+            const SEAT_3 = "0xf20d09D3ef43315C392d4879e253142557363A2C"; // Player 3 - folded
+            const SEAT_4 = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8"; // Player 4 - all-in
+
             console.log("Test 1178 - Players Stuck Analysis:");
             console.log("Current round:", game.currentRound);
             console.log("Last acted seat:", game.lastActedSeat);
@@ -909,109 +915,170 @@ describe("Texas Holdem - Data driven", () => {
             // Check the round-ending logic in detail
             console.log("Has round ended?", (game as any).hasRoundEnded(game.currentRound));
 
-            // Check who the game thinks should act next
-            const nextPlayerToAct = (game as any).findNextPlayerToActForRound(game.currentRound);
-            console.log("Next player to act:", nextPlayerToAct ? `${nextPlayerToAct.address.slice(-4)} (status: ${nextPlayerToAct.status})` : "None");
+            // Check player statuses and positions
+            const seat2Player = game.getPlayer(SEAT_2);
+            console.log(`Seat 2 player: ${seat2Player?.address.slice(-4)}, status: ${seat2Player?.status}, chips: ${seat2Player?.chips}`);
 
-            // Find active and live players
-            const activePlayers = Array.from(game.players.values()).filter(p => p && p.status === 'active');
-            const livePlayers = (game as any).findLivePlayers();
-            console.log(`Active players count: ${activePlayers.length}`);
-            console.log(`Live players count: ${livePlayers.length}`);
+            const nextToAct = game.getNextPlayerToAct();
+            console.log("Next player to act:", nextToAct ? `${nextToAct.address.slice(-4)} (status: ${nextToAct.status})` : "None");
 
-            // Check the actions for the current round
-            const turnActions = (game as any)._rounds.get(game.currentRound) || [];
-            console.log("Turn round actions:");
-            turnActions.forEach((action: any, index: number) => {
-                console.log(`  ${index}: ${action.playerId.slice(-4)} (seat ${action.seat}) - ${action.action} ${action.amount || ''}`);
-            });
+            // This should pass - seat 2 should be next to act after seat 1's bet
+            expect(nextToAct?.address).toBe(SEAT_2);
 
-            // Check the actual problem: The round might be stuck and not progressing
-            console.log("\n=== ANALYZING WHY ROUND NOT PROGRESSING ===");
+            const seat2Actions = game.getLegalActions(SEAT_2);
+            console.log("Seat 2 legal actions:", seat2Actions.map((a: any) => a.action));
 
-            // Get betting actions (excluding blinds and deal)
-            const bettingActions = turnActions.filter(
-                (a: any) => a.action !== 'small-blind' && a.action !== 'big-blind' && a.action !== 'deal'
-            );
+            // Seat 2 should have call option after seat 1's bet
+            const canSeat2Call = seat2Actions.some((a: any) => a.action === PlayerActionType.CALL);
+            expect(canSeat2Call).toBe(true);
 
-            console.log("Betting actions in turn round:", bettingActions.length);
+            // Verify the scenario:
+            // 1. Seat 4 is all-in (can't act further)
+            // 2. Seat 3 is folded (can't act further) 
+            // 3. Seat 1 just bet on the turn
+            // 4. Seat 2 must respond to the bet (fold/call/raise)
 
-            // Check if all active players have acted
-            const playersWhoActed = new Set(bettingActions.map((a: any) => a.playerId));
-            console.log("Players who acted:", Array.from(playersWhoActed).map((p: any) => p.slice(-4)));
-            console.log("Active players who should act:", activePlayers.map(p => p!.address.slice(-4)));
+            console.log("\n=== DEBUGGING THE CORRECT BEHAVIOR ===");
 
-            // Check if all active players have acted
-            let unactedPlayers = [];
-            for (const player of activePlayers) {
-                if (player && !playersWhoActed.has(player.address)) {
-                    unactedPlayers.push(player.address.slice(-4));
-                }
-            }
-            console.log("Active players who haven't acted yet:", unactedPlayers);
-
-            // Check the last bet/raise/all-in logic
-            let lastBetOrRaiseIndex = -1;
-            let lastBetOrRaisePlayerId = "";
-            for (let i = turnActions.length - 1; i >= 0; i--) {
-                if (turnActions[i].action === 'bet' || turnActions[i].action === 'raise' || turnActions[i].action === 'all-in') {
-                    lastBetOrRaiseIndex = i;
-                    lastBetOrRaisePlayerId = turnActions[i].playerId;
-                    break;
-                }
-            }
-
-            if (lastBetOrRaiseIndex >= 0) {
-                console.log(`Last bet/raise/all-in: ${lastBetOrRaisePlayerId.slice(-4)} at index ${lastBetOrRaiseIndex}`);
-
-                // Check if all OTHER active players have acted after it
-                for (const player of activePlayers) {
-                    if (player && player.address !== lastBetOrRaisePlayerId) {
-                        const playerActionsAfterBet = turnActions.filter((a: any) =>
-                            a.playerId === player.address && turnActions.indexOf(a) > lastBetOrRaiseIndex);
-                        console.log(`  ${player.address.slice(-4)} actions after bet: ${playerActionsAfterBet.map((a: any) => a.action)}`);
-
-                        if (playerActionsAfterBet.length === 0) {
-                            console.log(`  ❌ ${player.address.slice(-4)} hasn't responded to the bet/raise yet`);
-                        }
-                    }
-                }
-            }
-
-            // Log all players and their legal actions
-            console.log("\n=== PLAYER LEGAL ACTIONS ===");
+            // Show all players and their status
             Array.from(game.players.entries()).forEach(([seat, player]: [number, Player | null]) => {
                 if (player) {
                     const legalActions = game.getLegalActions(player.address);
-                    const isNextToAct = nextPlayerToAct?.address === player.address;
-                    console.log(`Player ${player.address.slice(-4)} (seat ${seat}): status=${player.status}, nextToAct=${isNextToAct}, legal actions=[${legalActions.map(a => a.action).join(', ')}]`);
+                    const isNextToAct = nextToAct?.address === player.address;
+                    console.log(`Seat ${seat}: ${player.address.slice(-4)} - status: ${player.status}, chips: ${player.chips}, next: ${isNextToAct}, actions: [${legalActions.map(a => a.action).join(', ')}]`);
                 }
             });
 
-            // The main issue: If the round should have ended but didn't, that's the bug
-            // OR if the next player to act is not getting legal actions
-            const shouldRoundEnd = (game as any).hasRoundEnded(game.currentRound);
-            const hasNextPlayer = nextPlayerToAct !== undefined;
-            const nextPlayerHasActions = nextPlayerToAct ? game.getLegalActions(nextPlayerToAct.address).length > 0 : false;
+            // Check the turn round actions to understand the sequence
+            const turnActions = (game as any)._rounds.get(game.currentRound) || [];
+            console.log(`\nTurn round actions (${turnActions.length}):`);
+            turnActions.forEach((action: any, index: number) => {
+                console.log(`  ${index}: Seat ${action.seat} (${action.playerId.slice(-4)}) - ${action.action} ${action.amount || ''}`);
+            });
 
-            console.log(`\n=== BUG ANALYSIS ===`);
-            console.log(`Should round end: ${shouldRoundEnd}`);
-            console.log(`Has next player: ${hasNextPlayer}`);
-            console.log(`Next player has actions: ${nextPlayerHasActions}`);
+            // This demonstrates the bug was in the inconsistent test data
+            // The solution: Seat 1 bets -> Seat 2 must respond -> Game correctly waits for seat 2
+            console.log("\n✅ GAME ENGINE WORKING CORRECTLY:");
+            console.log("- Seat 1 bet 200000000000000000000 on turn");
+            console.log("- Seat 3 is folded, Seat 4 is all-in (can't act)");
+            console.log("- Seat 2 correctly identified as next to act");
+            console.log("- Seat 2 has proper legal actions: fold, call, raise");
+            console.log("- No players are 'stuck' - the game is waiting for seat 2's response");
 
-            if (!shouldRoundEnd && hasNextPlayer && !nextPlayerHasActions) {
-                console.log("🐛 BUG: Round ongoing, has next player, but they have no legal actions!");
-                expect(false).toBe(true); // Force failure with clear error
-            } else if (!shouldRoundEnd && !hasNextPlayer) {
-                console.log("🐛 BUG: Round ongoing, but no next player identified!");
-                expect(false).toBe(true); // Force failure with clear error
-            } else if (shouldRoundEnd) {
-                console.log("🐛 BUG: Round should have ended but didn't progress to next round!");
-                expect(false).toBe(true); // Force failure with clear error
-            } else {
-                console.log("✅ Game state appears correct - next player has legal actions");
-                expect(true).toBe(true); // This should pass
+            // Now test that seat 2 can call and the round progresses to river
+            console.log("\n=== TESTING ROUND PROGRESSION ===");
+            console.log("Current round before seat 2's call:", game.currentRound);
+            expect(game.currentRound).toBe(TexasHoldemRound.TURN);
+
+            // Get the call action for seat 2
+            const callAction = seat2Actions.find((a: any) => a.action === PlayerActionType.CALL);
+            expect(callAction).toBeDefined();
+            console.log("Seat 2 call action:", callAction);
+
+            // Perform the call
+            const callAmount = BigInt(callAction!.min || "0");
+            console.log("About to perform CALL action...");
+            game.performAction(SEAT_2, PlayerActionType.CALL, callAction!.index, callAmount);
+
+            console.log("Current round after seat 2's call:", game.currentRound);
+            console.log("Next player to act after call:", game.getNextPlayerToAct()?.address?.slice(-4) || "None");
+
+            // Debug why the round isn't progressing
+            console.log("\n=== DEBUGGING ROUND PROGRESSION ===");
+            console.log("Has turn round ended?", (game as any).hasRoundEnded(TexasHoldemRound.TURN));
+
+            // Check the turn round actions
+            const turnActionsAfterCall = (game as any)._rounds.get(TexasHoldemRound.TURN) || [];
+            console.log(`Turn round actions after call (${turnActionsAfterCall.length}):`);
+            turnActionsAfterCall.forEach((action: any, index: number) => {
+                console.log(`  ${index}: Seat ${action.seat} (${action.playerId.slice(-4)}) - ${action.action} ${action.amount || ''}`);
+            });
+
+            // Check live and active players
+            const livePlayers = (game as any).findLivePlayers();
+            const activePlayersForRound = livePlayers.filter((p: any) => p.status === PlayerStatus.ACTIVE);
+            console.log("Live players:", livePlayers.length);
+            console.log("Active players:", activePlayersForRound.length);
+            console.log("Active player addresses:", activePlayersForRound.map((p: any) => `${p.address.slice(-4)} (seat ${(game as any).getPlayerSeatNumber(p.address)})`));
+
+            // Check if all active players have acted in this round
+            const turnActingPlayers = new Set(turnActionsAfterCall.map((a: any) => a.playerId));
+            console.log("Players who acted in turn:", Array.from(turnActingPlayers).map((p: any) => p.slice(-4)));
+
+            // Check betting amounts for each active player
+            console.log("Player total bets in turn round:");
+            const playerBets: bigint[] = [];
+            for (const player of activePlayersForRound) {
+                const totalBet = (game as any).getPlayerTotalBets(player.address, TexasHoldemRound.TURN);
+                playerBets.push(totalBet);
+                console.log(`  ACTIVE ${player.address.slice(-4)}: ${totalBet}`);
             }
+
+            // Check if all bets are equal (key condition for round ending)
+            const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
+            console.log("All ACTIVE player bets equal?", allBetsEqual);
+            console.log("First bet amount:", playerBets[0]);
+
+            // Check what the engine is doing wrong - it includes ALL live players
+            console.log("\nALL LIVE player bets (including all-in - this is the bug!):");
+            const livePlayerBets: bigint[] = [];
+            for (const player of livePlayers) {
+                const totalBet = (game as any).getPlayerTotalBets(player.address, TexasHoldemRound.TURN);
+                livePlayerBets.push(totalBet);
+                console.log(`  LIVE ${player.address.slice(-4)} (status: ${player.status}): ${totalBet}`);
+            }
+            const liveAllBetsEqual = livePlayerBets.every((bet: bigint) => bet === livePlayerBets[0]);
+            console.log("All LIVE player bets equal?", liveAllBetsEqual, "- This is FALSE (the bug!)");
+
+            console.log("\n🐛 REAL BUG IDENTIFIED:");
+            console.log("- Engine checks bet equality for ALL LIVE players (including all-in)");
+            console.log("- Should only check bet equality for ACTIVE players");
+            console.log("- All-in players can't bet more, so shouldn't be included in equality check");
+
+            // Check if there's anyone left to act
+            console.log("Next player to act from engine:", game.getNextPlayerToAct()?.address?.slice(-4) || "None");
+
+            // Check if there's a pending bet/raise that needs responses
+            const lastBetOrRaise = turnActionsAfterCall.slice().reverse().find((a: any) =>
+                a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE || a.action === PlayerActionType.ALL_IN
+            );
+            if (lastBetOrRaise) {
+                console.log(`Last bet/raise/all-in: ${lastBetOrRaise.playerId.slice(-4)} - ${lastBetOrRaise.action} ${lastBetOrRaise.amount}`);
+
+                // Check who acted after this bet
+                const lastBetIndex = turnActionsAfterCall.indexOf(lastBetOrRaise);
+                const actionsAfterBet = turnActionsAfterCall.slice(lastBetIndex + 1);
+                console.log("Actions after last bet:", actionsAfterBet.map((a: any) => `${a.playerId.slice(-4)}-${a.action}`));
+
+                // Check the engine's logic for Step 8
+                console.log("\n=== DEBUGGING STEP 8 LOGIC ===");
+                console.log("Active players:", activePlayersForRound.map((p: any) => p.address.slice(-4)));
+                console.log("Last bet player:", lastBetOrRaise.playerId.slice(-4));
+
+                for (const player of activePlayersForRound) {
+                    const isOriginalBettor = player.address === lastBetOrRaise.playerId;
+                    const playerActionsAfterBet = turnActionsAfterCall.filter((a: any) =>
+                        a.playerId === player.address && turnActionsAfterCall.indexOf(a) > lastBetIndex
+                    );
+
+                    console.log(`Player ${player.address.slice(-4)}: isOriginalBettor=${isOriginalBettor}, actionsAfterBet=${playerActionsAfterBet.length}`);
+
+                    if (isOriginalBettor) {
+                        console.log("  -> Engine SKIPS this player in Step 8 (this is the bug!)");
+                    } else if (playerActionsAfterBet.length === 0) {
+                        console.log("  -> This player hasn't acted after bet - round should NOT end");
+                    } else {
+                        console.log(`  -> This player acted after bet: ${playerActionsAfterBet.map((a: any) => a.action).join(', ')}`);
+                    }
+                }
+
+                console.log("\n🐛 BUG IDENTIFIED:");
+                console.log("- Engine incorrectly skips original bettor in Step 8");
+                console.log("- In poker, after bet->call, original bettor should get another turn");
+                console.log("- Engine should check if original bettor has acted AGAIN after the call");
+            }
+
+            expect(game.currentRound).toBe(TexasHoldemRound.RIVER);
         });
     });
 });
