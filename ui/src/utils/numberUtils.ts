@@ -14,7 +14,7 @@ export const formatToFixed = (value: number | number): string => {
 
 export const formatToFixedFromString = (value: string | number): string => {
     return Number(ethers.formatUnits(value || "0", 18)).toFixed(2);
-}
+};
 
 // Update the formatting function to ensure two decimal places
 export const formatWeiToDollars = (weiAmount: string | bigint | undefined | null): string => {
