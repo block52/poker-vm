@@ -82,7 +82,14 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     const navigate = useNavigate();
 
     // Memoize formatted values and calculations
-    const { minBuyInFormatted, maxBuyInFormatted, balanceFormatted, stakeLabel, minBuyInNumber, maxBuyInNumber } = useMemo(() => {
+    const {
+        minBuyInFormatted,
+        maxBuyInFormatted,
+        balanceFormatted,
+        stakeLabel,
+        minBuyInNumber,
+        maxBuyInNumber: _maxBuyInNumber
+    } = useMemo(() => {
         const minFormatted = formatWeiToSimpleDollars(minBuyInWei);
         const maxFormatted = formatWeiToSimpleDollars(maxBuyInWei);
         const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
@@ -417,7 +424,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                         disabled={!canJoinRandomSeat}
                         className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: !canJoinRandomSeat ? `${colors.brand.primary}`: `${colors.brand.secondary}, ${colors.brand.primary}`,
+                            background: !canJoinRandomSeat ? `${colors.brand.primary}` : `${colors.brand.secondary}, ${colors.brand.primary}`,
                             cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
                         }}
                     >

@@ -13,7 +13,7 @@ let clientInstance: NodeRpcClient | null = null;
  */
 export const getPrivateKey = (): string | null => {
     return localStorage.getItem("user_eth_private_key");
-}
+};
 
 /**
  * Get the user's public key from browser storage
@@ -21,7 +21,7 @@ export const getPrivateKey = (): string | null => {
  */
 export const getPublicKey = (): string | null => {
     return localStorage.getItem("user_eth_public_key");
-}
+};
 
 /**
  * Get formatted address for display (shortened with ellipsis)
@@ -31,7 +31,7 @@ export const getFormattedAddress = (length: number = 6): string => {
     const pubKey = getPublicKey();
     if (!pubKey) return "";
     return `${pubKey.slice(0, length)}...${pubKey.slice(-4)}`;
-}
+};
 
 /**
  * Set the user's private key in browser storage
@@ -41,7 +41,7 @@ export const setPrivateKey = (privateKey: string): void => {
     localStorage.setItem("user_eth_private_key", privateKey);
     // Clear the client instance when private key changes
     clientInstance = null;
-}
+};
 
 /**
  * Remove the user's private key from browser storage
@@ -50,7 +50,7 @@ export const clearPrivateKey = (): void => {
     localStorage.removeItem("user_eth_private_key");
     // Clear the client instance when private key is removed
     clientInstance = null;
-}
+};
 
 /**
  * Check if a private key is available
@@ -58,7 +58,7 @@ export const clearPrivateKey = (): void => {
  */
 export const hasPrivateKey = (): boolean => {
     return getPrivateKey() !== null;
-}
+};
 
 /**
  * Get singleton NodeRpcClient instance
@@ -81,14 +81,14 @@ export const getClient = (): NodeRpcClient => {
     clientInstance = new NodeRpcClient(nodeUrl, privateKey);
     
     return clientInstance;
-}
+};
 
 /**
  * Clear the client instance (useful when private key changes or for testing)
  */
 export const clearClientInstance = (): void => {
     clientInstance = null;
-}
+};
 
 /**
  * Get account balance directly from the blockchain
@@ -106,4 +106,4 @@ export const getAccountBalance = async (): Promise<string> => {
     const client = getClient();
     const account = await client.getAccount(publicKey);
     return account.balance.toString();
-}
+};

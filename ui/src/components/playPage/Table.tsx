@@ -67,7 +67,7 @@ import { colors, getTableHeaderGradient, getHexagonStroke, hexToRgba } from "../
 // Use environment variable for club logo with fallback to default
 const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
 const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
-const randomSeat = import.meta.env.VITE_RANDOM_SEAT === "true" ? true : false;
+const _randomSeat = import.meta.env.VITE_RANDOM_SEAT === "true" ? true : false;
 
 import { LuPanelLeftClose } from "react-icons/lu";
 import { useParams } from "react-router-dom";
@@ -79,7 +79,6 @@ import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtil
 import { ethers } from "ethers";
 
 import "./Table.css"; // Import the Table CSS file
-import ColorDebug from "../ColorDebug"; // Temporary debug component
 
 //// TODO get these hooks to subscribe to the wss connection
 
@@ -224,7 +223,7 @@ const Table = React.memo(() => {
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
-    
+
     // Check if sit out/sit in actions are available
     const hasSitOutAction = hasAction(playerLegalActions, PlayerActionType.SIT_OUT);
     const hasSitInAction = hasAction(playerLegalActions, PlayerActionType.SIT_IN);
@@ -235,10 +234,10 @@ const Table = React.memo(() => {
     // Add the useNextToActInfo hook
     const {
         seat: nextToActSeat,
-        player: nextToActPlayer,
+        player: _nextToActPlayer,
         isCurrentUserTurn,
-        availableActions: nextToActAvailableActions,
-        timeRemaining
+        availableActions: _nextToActAvailableActions,
+        timeRemaining: _timeRemaining
     } = useNextToActInfo(id);
 
     // Add the useTableState hook to get table state properties
@@ -246,14 +245,14 @@ const Table = React.memo(() => {
 
     // Use the table layout configuration system (only 4 and 9 players supported)
     // TODO: Add support for 2, 3, 5, 6, 7, 8 player tables - positions need to be configured in tableLayoutConfig.ts
-    const tableLayout = useTableLayout(tableSize as 4 | 9 || 9);
+    const tableLayout = useTableLayout((tableSize as 4 | 9) || 9);
 
     // Add the useGameProgress hook
     const { isGameInProgress, handNumber, actionCount, nextToAct } = useGameProgress(id);
 
     // Add the useGameOptions hook
     const { gameOptions } = useGameOptions();
-    
+
     // Add the useGameResults hook
     const { results } = useGameResults();
 
@@ -275,7 +274,7 @@ const Table = React.memo(() => {
         []
     );
 
-    const networkDisplayStyle = useMemo(
+    const _networkDisplayStyle = useMemo(
         () => ({
             backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
             border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
@@ -379,7 +378,7 @@ const Table = React.memo(() => {
     // IMPORTANT: Rotation happens ONLY ONCE in getComponentToRender()
     // We don't pre-rotate arrays to avoid double rotation
 
-    const [seat, ] = useState<number>(0);
+    const [seat] = useState<number>(0);
     const [startIndex, setStartIndex] = useState<number>(0); // Controls table rotation (0 = no rotation)
 
     // Log rotation changes for debugging
@@ -390,7 +389,7 @@ const Table = React.memo(() => {
     const [currentIndex, setCurrentIndex] = useState<number>(1);
 
     // Add the useChipPositions hook AFTER startIndex is defined
-    const { chipPositionArray } = useChipPositions(startIndex);
+    const { chipPositionArray: _chipPositionArray } = useChipPositions(startIndex);
 
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData();
@@ -409,19 +408,26 @@ const Table = React.memo(() => {
         const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
 
         // Debug logging for seat mapping
-        console.log("🎲 TABLE - Active Players Mapping: " + JSON.stringify({
-            totalPlayers: activePlayers.length,
-            currentUserAddress: userWalletAddress,
-            currentUserSeat: currentUserSeat,
-            players: activePlayers.map((p: PlayerDTO) => ({
-                seat: p.seat,
-                address: p.address,
-                stack: p.stack,
-                status: p.status,
-                lastAction: p.lastAction,
-                sumOfBets: p.sumOfBets
-            }))
-        }, null, 2));
+        console.log(
+            "🎲 TABLE - Active Players Mapping: " +
+                JSON.stringify(
+                    {
+                        totalPlayers: activePlayers.length,
+                        currentUserAddress: userWalletAddress,
+                        currentUserSeat: currentUserSeat,
+                        players: activePlayers.map((p: PlayerDTO) => ({
+                            seat: p.seat,
+                            address: p.address,
+                            stack: p.stack,
+                            status: p.status,
+                            lastAction: p.lastAction,
+                            sumOfBets: p.sumOfBets
+                        }))
+                    },
+                    null,
+                    2
+                )
+        );
 
         return activePlayers;
     }, [tableDataValues.tableDataPlayers, userWalletAddress, currentUserSeat]);
@@ -437,9 +443,7 @@ const Table = React.memo(() => {
         const handleResize = () => {
             setViewportMode(getViewportMode());
             setIsMobile(window.innerWidth <= 414);
-            setIsMobileLandscape(
-                window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600
-            );
+            setIsMobileLandscape(window.innerWidth <= 1024 && window.innerWidth > window.innerHeight && window.innerHeight <= 600);
         };
 
         window.addEventListener("resize", handleResize);
@@ -471,21 +475,15 @@ const Table = React.memo(() => {
     // }, [currentUserSeat]);
 
     // Memoize reordered arrays using positions from tableLayout
-    const reorderedPlayerArray = useMemo(
-        () => {
-            const positions = tableLayout.positions.players || [];
-            return [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
-        },
-        [tableLayout.positions.players, startIndex]
-    );
+    const _reorderedPlayerArray = useMemo(() => {
+        const positions = tableLayout.positions.players || [];
+        return [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
+    }, [tableLayout.positions.players, startIndex]);
 
-    const reorderedDealerArray = useMemo(
-        () => {
-            const positions = tableLayout.positions.dealers || [];
-            return [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
-        },
-        [tableLayout.positions.dealers, startIndex]
-    );
+    const _reorderedDealerArray = useMemo(() => {
+        const positions = tableLayout.positions.dealers || [];
+        return [...positions.slice(startIndex), ...positions.slice(0, startIndex)];
+    }, [tableLayout.positions.dealers, startIndex]);
 
     // Winner animations
     const hasWinner = Array.isArray(winnerInfo) && winnerInfo.length > 0;
@@ -529,12 +527,12 @@ const Table = React.memo(() => {
     useEffect(() => {
         window.addEventListener("resize", handleResize);
         window.addEventListener("orientationchange", handleResize);
-        
+
         // Also listen for the modern screen orientation API
         if (screen.orientation) {
             screen.orientation.addEventListener("change", handleResize);
         }
-        
+
         return () => {
             window.removeEventListener("resize", handleResize);
             window.removeEventListener("orientationchange", handleResize);
@@ -634,18 +632,27 @@ const Table = React.memo(() => {
             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
 
             // Debug logging for seat assignment
-            console.log(`🪑 SEAT ASSIGNMENT - Position ${positionIndex} → Seat ${seatNumber}: ` + JSON.stringify({
-                positionIndex: positionIndex,
-                startIndex: startIndex,
-                calculatedSeat: seatNumber,
-                playerFound: playerAtThisSeat ? {
-                    address: playerAtThisSeat.address?.substring(0, 10) + "...",
-                    stack: playerAtThisSeat.stack,
-                    sumOfBets: playerAtThisSeat.sumOfBets
-                } : null,
-                isCurrentUser: isCurrentUser,
-                uiPosition: { left: position.left, top: position.top }
-            }, null, 2));
+            console.log(
+                `🪑 SEAT ASSIGNMENT - Position ${positionIndex} → Seat ${seatNumber}: ` +
+                    JSON.stringify(
+                        {
+                            positionIndex: positionIndex,
+                            startIndex: startIndex,
+                            calculatedSeat: seatNumber,
+                            playerFound: playerAtThisSeat
+                                ? {
+                                      address: playerAtThisSeat.address?.substring(0, 10) + "...",
+                                      stack: playerAtThisSeat.stack,
+                                      sumOfBets: playerAtThisSeat.sumOfBets
+                                  }
+                                : null,
+                            isCurrentUser: isCurrentUser,
+                            uiPosition: { left: position.left, top: position.top }
+                        },
+                        null,
+                        2
+                    )
+            );
 
             // Build common props shared by all player components
             const playerProps = {
@@ -679,7 +686,13 @@ const Table = React.memo(() => {
                 // OppositePlayer includes the "SIT HERE" button in PlayerPopUpCard
                 // When clicked, it calls setStartIndex(seatNumber - 1) to rotate the table
                 // This makes the clicked seat appear at the bottom position
-                <OppositePlayer {...playerProps} uiPosition={positionIndex} setStartIndex={setStartIndex} isCardVisible={isCardVisible} setCardVisible={setCardVisible} />
+                <OppositePlayer
+                    {...playerProps}
+                    uiPosition={positionIndex}
+                    setStartIndex={setStartIndex}
+                    isCardVisible={isCardVisible}
+                    setCardVisible={setCardVisible}
+                />
             );
         },
         // INVESTIGATE: startIndex is in the dependency array, so component should re-render when it changes
@@ -687,7 +700,17 @@ const Table = React.memo(() => {
         // 1. Is startIndex actually changing? (console log confirms it is)
         // 2. Is reorderedPlayerArray using startIndex correctly?
         // 3. Is the table layout using the correct tableSize?
-        [tableActivePlayers, userWalletAddress, currentIndex, tableDataValues.tableDataPlayers, tableSize, isCardVisible, startIndex, updateBalanceOnPlayerJoin, tableLayout]
+        [
+            tableActivePlayers,
+            userWalletAddress,
+            currentIndex,
+            tableDataValues.tableDataPlayers,
+            tableSize,
+            isCardVisible,
+            startIndex,
+            updateBalanceOnPlayerJoin,
+            tableLayout
+        ]
     );
 
     const copyToClipboard = useCallback((text: string) => {
@@ -759,173 +782,181 @@ const Table = React.memo(() => {
 
             {/*//! HEADER - CASINO STYLE - Hidden in mobile landscape */}
             {!isMobileLandscape && (
-            <div className="flex-shrink-0">
-                <div
-                    className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2"
-                    style={headerStyle}
-                >
-                    {/* Subtle animated background */}
-                    <div className="absolute inset-0 z-0">
-                        {/* Bottom edge glow */}
-                        <div
-                            className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent to-transparent opacity-50"
-                            style={{ backgroundImage: `linear-gradient(to right, transparent, ${colors.accent.glow}, transparent)` }}
-                        ></div>
-                    </div>
+                <div className="flex-shrink-0">
+                    <div
+                        className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2"
+                        style={headerStyle}
+                    >
+                        {/* Subtle animated background */}
+                        <div className="absolute inset-0 z-0">
+                            {/* Bottom edge glow */}
+                            <div
+                                className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent to-transparent opacity-50"
+                                style={{ backgroundImage: `linear-gradient(to right, transparent, ${colors.accent.glow}, transparent)` }}
+                            ></div>
+                        </div>
 
-                    {/* Left Section - Lobby button and Network display */}
-                    <div className="flex items-center space-x-2 sm:space-x-4 z-10">
-                        <span
-                            className="text-white text-sm sm:text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
-                            onClick={handleLobbyClick}
-                        >
-                            Lobby
-                        </span>
-                        <NetworkDisplay isMainnet={false} />
-                        {/* Game Type Display - Desktop Only */}
-                        {gameOptions && (
-                            <div className="hidden md:flex items-center ml-4 px-3 py-1 rounded-lg" 
-                                 style={{ backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5), border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}` }}>
-                                <span className="text-sm font-semibold" style={{ color: colors.brand.primary }}>
-                                    {gameState?.type === "cash" ? "Cash • " : 
-                                     gameState?.type === "tournament" ? "Tournament • " : 
-                                     gameState?.type === "sit-and-go" ? "Sit & Go • " : ""}
-                                    Texas Hold'em
-                                    {gameOptions.minPlayers && gameOptions.maxPlayers && (
-                                        <span className="ml-1" style={{ color: colors.ui.textSecondary }}>
-                                            ({tableActivePlayers.length}/{gameOptions.maxPlayers} Players)
-                                        </span>
-                                    )}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
-                    <div className="flex items-center z-10 min-w-0">
-                        <div className="flex items-center rounded-lg py-1 px-1 sm:px-2 mr-1 sm:mr-3 min-w-0" style={walletInfoStyle}>
-                            {isBalanceLoading ? (
-                                <span className="text-xs sm:text-sm">Loading...</span>
-                            ) : (
-                                <>
-                                    {/* Address */}
-                                    <div className="flex items-center mr-1 sm:mr-4 min-w-0">
-                                        <span className="font-mono text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-none" style={{ color: colors.brand.primary }}>
-                                            {formattedAddress}
-                                        </span>
-                                        <FaCopy
-                                            className="ml-1 sm:ml-1.5 cursor-pointer transition-colors duration-200 hover:opacity-80"
-                                            style={{ color: colors.brand.primary }}
-                                            size={9}
-                                            onClick={() => copyToClipboard(publicKey || "")}
-                                            title="Copy full address"
-                                        />
-                                    </div>
-
-                                    {/* Balance - UPDATED to use direct utility */}
-                                    <div className="flex items-center flex-shrink-0">
-                                        <div
-                                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center mr-0.5 sm:mr-1.5"
-                                            style={balanceIconStyle}
-                                        >
-                                            <span className="font-bold text-[8px] sm:text-[10px]" style={{ color: colors.brand.primary }}>
-                                                $
+                        {/* Left Section - Lobby button and Network display */}
+                        <div className="flex items-center space-x-2 sm:space-x-4 z-10">
+                            <span
+                                className="text-white text-sm sm:text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
+                                onClick={handleLobbyClick}
+                            >
+                                Lobby
+                            </span>
+                            <NetworkDisplay isMainnet={false} />
+                            {/* Game Type Display - Desktop Only */}
+                            {gameOptions && (
+                                <div
+                                    className="hidden md:flex items-center ml-4 px-3 py-1 rounded-lg"
+                                    style={{ backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5), border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}` }}
+                                >
+                                    <span className="text-sm font-semibold" style={{ color: colors.brand.primary }}>
+                                        {gameState?.type === "cash"
+                                            ? "Cash • "
+                                            : gameState?.type === "tournament"
+                                            ? "Tournament • "
+                                            : gameState?.type === "sit-and-go"
+                                            ? "Sit & Go • "
+                                            : ""}
+                                        Texas Hold'em
+                                        {gameOptions.minPlayers && gameOptions.maxPlayers && (
+                                            <span className="ml-1" style={{ color: colors.ui.textSecondary }}>
+                                                ({tableActivePlayers.length}/{gameOptions.maxPlayers} Players)
                                             </span>
-                                        </div>
-                                        <div>
-                                            <p className="text-white font-medium text-[10px] sm:text-xs">
-                                                ${balanceFormatted}
-                                                <span className="text-[8px] sm:text-[10px] ml-1 text-gray-400">USDC</span>
-                                            </p>
-                                        </div>
-                                        {/* Refresh button */}
-                                        <button
-                                            onClick={fetchAccountBalance}
-                                            disabled={isBalanceLoading}
-                                            className="ml-1 transition-colors duration-200 disabled:opacity-50 hover:opacity-80"
-                                            style={{ color: colors.brand.primary }}
-                                            title="Refresh balance"
-                                        >
-                                            <span className="text-[8px]">↻</span>
-                                        </button>
-                                    </div>
-                                </>
+                                        )}
+                                    </span>
+                                </div>
                             )}
                         </div>
 
-                        <div
-                            className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 cursor-pointer rounded-full shadow-md border transition-all duration-300 flex-shrink-0"
-                            style={depositButtonStyle}
-                            onClick={handleDepositClick}
-                            onMouseEnter={handleDepositMouseEnter}
-                            onMouseLeave={handleDepositMouseLeave}
-                        >
-                            <RiMoneyDollarCircleLine className="hover:scale-110 transition-transform duration-200" size={16} />
-                        </div>
-                    </div>
-                </div>
+                        {/* Right Section - Wallet info - UPDATED to use NodeRpc balance */}
+                        <div className="flex items-center z-10 min-w-0">
+                            <div className="flex items-center rounded-lg py-1 px-1 sm:px-2 mr-1 sm:mr-3 min-w-0" style={walletInfoStyle}>
+                                {isBalanceLoading ? (
+                                    <span className="text-xs sm:text-sm">Loading...</span>
+                                ) : (
+                                    <>
+                                        {/* Address */}
+                                        <div className="flex items-center mr-1 sm:mr-4 min-w-0">
+                                            <span
+                                                className="font-mono text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-none"
+                                                style={{ color: colors.brand.primary }}
+                                            >
+                                                {formattedAddress}
+                                            </span>
+                                            <FaCopy
+                                                className="ml-1 sm:ml-1.5 cursor-pointer transition-colors duration-200 hover:opacity-80"
+                                                style={{ color: colors.brand.primary }}
+                                                size={9}
+                                                onClick={() => copyToClipboard(publicKey || "")}
+                                                title="Copy full address"
+                                            />
+                                        </div>
 
-                {/* SUB HEADER */}
-                <div
-                    className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header"
-                    style={subHeaderStyle}
-                >
-                    {/* Animated background overlay */}
-                    <div className="sub-header-overlay shimmer-animation" />
+                                        {/* Balance - UPDATED to use direct utility */}
+                                        <div className="flex items-center flex-shrink-0">
+                                            <div
+                                                className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex items-center justify-center mr-0.5 sm:mr-1.5"
+                                                style={balanceIconStyle}
+                                            >
+                                                <span className="font-bold text-[8px] sm:text-[10px]" style={{ color: colors.brand.primary }}>
+                                                    $
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p className="text-white font-medium text-[10px] sm:text-xs">
+                                                    ${balanceFormatted}
+                                                    <span className="text-[8px] sm:text-[10px] ml-1 text-gray-400">USDC</span>
+                                                </p>
+                                            </div>
+                                            {/* Refresh button */}
+                                            <button
+                                                onClick={fetchAccountBalance}
+                                                disabled={isBalanceLoading}
+                                                className="ml-1 transition-colors duration-200 disabled:opacity-50 hover:opacity-80"
+                                                style={{ color: colors.brand.primary }}
+                                                title="Refresh balance"
+                                            >
+                                                <span className="text-[8px]">↻</span>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
 
-                    {/* Bottom edge shadow */}
-                    <div className="sub-header-shadow" />
-
-                    {/* Left Section */}
-                    <div className="flex items-center z-20">
-                        <div className="flex flex-col">
-                            <div className="flex items-center space-x-1 sm:space-x-2">
-                                <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
-                                    ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
-                                </span>
-
-                                <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
-                                    Hand #{handNumber}
-                                </span>
-                                <span className="hidden sm:inline-block text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
-                                    <span className="ml-2">Actions # {actionCount}</span>
-                                </span>
-                                <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
-                                    <span className="sm:ml-2">Seat {nextToAct}</span>
-                                </span>
+                            <div
+                                className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 cursor-pointer rounded-full shadow-md border transition-all duration-300 flex-shrink-0"
+                                style={depositButtonStyle}
+                                onClick={handleDepositClick}
+                                onMouseEnter={handleDepositMouseEnter}
+                                onMouseLeave={handleDepositMouseLeave}
+                            >
+                                <RiMoneyDollarCircleLine className="hover:scale-110 transition-transform duration-200" size={16} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Section */}
-                    <div className="flex items-center z-10 mr-1 sm:mr-3">
-                        <span
-                            className="cursor-pointer transition-colors duration-200 px-1 sm:px-2 py-0.5 sm:py-1 rounded hover:opacity-80"
-                            style={sidebarToggleStyle}
-                            onClick={onCloseSideBar}
-                            title="Toggle Action Log"
-                        >
-                            {openSidebar ? <LuPanelLeftOpen size={14} /> : <LuPanelLeftClose size={14} />}
-                            {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
-                        </span>
+                    {/* SUB HEADER */}
+                    <div
+                        className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header"
+                        style={subHeaderStyle}
+                    >
+                        {/* Animated background overlay */}
+                        <div className="sub-header-overlay shimmer-animation" />
 
-                        <span
-                            className="text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 transition-colors duration-300 ml-2 sm:ml-3"
-                            style={{ color: colors.ui.textSecondary }}
-                            onMouseEnter={handleLeaveTableMouseEnter}
-                            onMouseLeave={handleLeaveTableMouseLeave}
-                            onClick={handleLeaveTableClick}
-                            title="Return to Lobby"
-                        >
-                            <span className="hidden sm:inline">Leave Table</span>
-                            <span className="sm:hidden">Leave</span>
-                            <RxExit size={12} />
-                        </span>
+                        {/* Bottom edge shadow */}
+                        <div className="sub-header-shadow" />
+
+                        {/* Left Section */}
+                        <div className="flex items-center z-20">
+                            <div className="flex flex-col">
+                                <div className="flex items-center space-x-1 sm:space-x-2">
+                                    <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
+                                        ${formattedValues.smallBlindFormatted} / ${formattedValues.bigBlindFormatted}
+                                    </span>
+
+                                    <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
+                                        Hand #{handNumber}
+                                    </span>
+                                    <span className="hidden sm:inline-block text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
+                                        <span className="ml-2">Actions # {actionCount}</span>
+                                    </span>
+                                    <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
+                                        <span className="sm:ml-2">Seat {nextToAct}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Section */}
+                        <div className="flex items-center z-10 mr-1 sm:mr-3">
+                            <span
+                                className="cursor-pointer transition-colors duration-200 px-1 sm:px-2 py-0.5 sm:py-1 rounded hover:opacity-80"
+                                style={sidebarToggleStyle}
+                                onClick={onCloseSideBar}
+                                title="Toggle Action Log"
+                            >
+                                {openSidebar ? <LuPanelLeftOpen size={14} /> : <LuPanelLeftClose size={14} />}
+                                {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
+                            </span>
+
+                            <span
+                                className="text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 transition-colors duration-300 ml-2 sm:ml-3"
+                                style={{ color: colors.ui.textSecondary }}
+                                onMouseEnter={handleLeaveTableMouseEnter}
+                                onMouseLeave={handleLeaveTableMouseLeave}
+                                onClick={handleLeaveTableClick}
+                                title="Return to Lobby"
+                            >
+                                <span className="hidden sm:inline">Leave Table</span>
+                                <span className="sm:hidden">Leave</span>
+                                <RxExit size={12} />
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
             )}
-
 
             {/* Mobile Landscape Floating Controls */}
             {isMobileLandscape && (
@@ -940,17 +971,12 @@ const Table = React.memo(() => {
                             ${formattedValues.smallBlindFormatted}/{formattedValues.bigBlindFormatted}
                         </span>
                     </div>
-                    
+
                     {/* Right: Balance & Leave */}
                     <div className="flex items-center gap-2 bg-black bg-opacity-70 px-2 py-1 rounded-lg">
-                        <span className="text-white text-xs font-mono">
-                            ${balanceFormatted}
-                        </span>
+                        <span className="text-white text-xs font-mono">${balanceFormatted}</span>
                         <span className="text-gray-300 text-xs">|</span>
-                        <span 
-                            className="text-white text-xs cursor-pointer flex items-center gap-1"
-                            onClick={handleLeaveTableClick}
-                        >
+                        <span className="text-white text-xs cursor-pointer flex items-center gap-1" onClick={handleLeaveTableClick}>
                             Leave <RxExit size={10} />
                         </span>
                     </div>
@@ -1018,6 +1044,11 @@ const Table = React.memo(() => {
                                             {/*//! CHIP */}
                                             {tableLayout.positions.chips.map((position, index) => {
                                                 const chipAmount = getChipAmount(index + 1);
+
+                                                // DON'T RENDER CHIP IF AMOUNT IS 0
+                                                if (chipAmount === "0" || chipAmount === "" || !chipAmount) {
+                                                    return null;
+                                                }
 
                                                 return (
                                                     <div
@@ -1090,14 +1121,14 @@ const Table = React.memo(() => {
                     <LiveHandStrengthDisplay />
 
                     {/*//! FOOTER - Adjusted for mobile landscape */}
-                    <div className={`w-full flex justify-center items-center z-[10] ${
-                        isMobileLandscape 
-                            ? "h-[80px] fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm" 
-                            : "h-[200px] sm:h-[250px] bg-transparent"
-                    }`}>
-                        <div className={`w-full flex justify-center items-center h-full ${
-                            isMobileLandscape ? "max-w-[500px] px-2" : "max-w-[700px]"
-                        }`}>
+                    <div
+                        className={`w-full flex justify-center items-center z-[10] ${
+                            isMobileLandscape
+                                ? "h-[80px] fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm"
+                                : "h-[200px] sm:h-[250px] bg-transparent"
+                        }`}
+                    >
+                        <div className={`w-full flex justify-center items-center h-full ${isMobileLandscape ? "max-w-[500px] px-2" : "max-w-[700px]"}`}>
                             <PokerActionPanel />
                         </div>
                         {/* <div className="w-full h-[400px] flex justify-center overflow-y-auto">
@@ -1112,37 +1143,47 @@ const Table = React.memo(() => {
             </div>
 
             {/* Status Messages Container - Desktop positioned top-left, mobile/tablet centered */}
-            <div className={`flex flex-col space-y-2 z-50 ${
-                viewportMode === "desktop" 
-                    ? "fixed left-4 top-32 items-start"
-                    : isMobileLandscape 
+            <div
+                className={`flex flex-col space-y-2 z-50 ${
+                    viewportMode === "desktop"
+                        ? "fixed left-4 top-32 items-start"
+                        : isMobileLandscape
                         ? "absolute left-2 items-start max-w-[150px]"
                         : "absolute left-1/2 transform -translate-x-1/2 items-center"
-            }`} style={{ top: viewportMode === "desktop" ? undefined : isMobileLandscape ? "3rem" : "6.25rem" }}>
+                }`}
+                style={{ top: viewportMode === "desktop" ? undefined : isMobileLandscape ? "3rem" : "6.25rem" }}
+            >
                 {/* Add a message for the current user's seat */}
                 {currentUserSeat >= 0 && (
-                    <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
-                        viewportMode === "desktop" ? "bg-black bg-opacity-60 text-left" :
-                        isMobileLandscape ? "bg-black bg-opacity-50 text-left break-words" : 
-                        "bg-black bg-opacity-50 text-center"
-                    }`}>
+                    <div
+                        className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
+                            viewportMode === "desktop"
+                                ? "bg-black bg-opacity-60 text-left"
+                                : isMobileLandscape
+                                ? "bg-black bg-opacity-50 text-left break-words"
+                                : "bg-black bg-opacity-50 text-center"
+                        }`}
+                    >
                         You are seated at position {currentUserSeat}
                     </div>
                 )}
 
                 {/* Add an indicator for whose turn it is */}
                 {nextToActSeat && isGameInProgress && (
-                    <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
-                        viewportMode === "desktop" ? "bg-black bg-opacity-80 text-left" :
-                        isMobileLandscape ? "bg-black bg-opacity-70 text-left break-words" : 
-                        "bg-black bg-opacity-70 text-center"
-                    }`}>
+                    <div
+                        className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
+                            viewportMode === "desktop"
+                                ? "bg-black bg-opacity-80 text-left"
+                                : isMobileLandscape
+                                ? "bg-black bg-opacity-70 text-left break-words"
+                                : "bg-black bg-opacity-70 text-center"
+                        }`}
+                    >
                         {isCurrentUserTurn && playerLegalActions && playerLegalActions.length > 0 ? (
                             <span className="text-yellow-400 font-semibold">Your turn to act!</span>
                         ) : (
                             <span>
-                                Waiting for{" "}
-                                {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at seat ${nextToActSeat}`} to act
+                                Waiting for {nextToActSeat === 1 ? "Small Blind" : nextToActSeat === 2 ? "Big Blind" : `player at seat ${nextToActSeat}`} to act
                             </span>
                         )}
                     </div>
@@ -1150,11 +1191,15 @@ const Table = React.memo(() => {
 
                 {/* Show a message when the hand is over */}
                 {!isGameInProgress && tableActivePlayers.length > 0 && (
-                    <div className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
-                        viewportMode === "desktop" ? "bg-black bg-opacity-80 text-left" :
-                        isMobileLandscape ? "bg-black bg-opacity-70 text-left break-words" : 
-                        "bg-black bg-opacity-70 text-center"
-                    }`}>
+                    <div
+                        className={`text-white px-3 py-2 rounded-lg text-xs sm:text-sm backdrop-blur-sm ${
+                            viewportMode === "desktop"
+                                ? "bg-black bg-opacity-80 text-left"
+                                : isMobileLandscape
+                                ? "bg-black bg-opacity-70 text-left break-words"
+                                : "bg-black bg-opacity-70 text-center"
+                        }`}
+                    >
                         <span>Hand complete - waiting for next hand</span>
                     </div>
                 )}
@@ -1162,27 +1207,34 @@ const Table = React.memo(() => {
 
             {/* Add a message for empty table if needed */}
             {tableActivePlayers.length === 0 && (
-                <div className={`text-white bg-black bg-opacity-50 rounded text-xs sm:text-sm ${
-                    isMobileLandscape 
-                        ? "absolute left-2 top-24 p-2 max-w-[150px] text-left break-words"
-                        : "absolute top-28 right-4 p-2 sm:p-4 text-center"
-                }`}>
+                <div
+                    className={`text-white bg-black bg-opacity-50 rounded text-xs sm:text-sm ${
+                        isMobileLandscape ? "absolute left-2 top-24 p-2 max-w-[150px] text-left break-words" : "absolute top-28 right-4 p-2 sm:p-4 text-center"
+                    }`}
+                >
                     Waiting for players to join...
                 </div>
             )}
 
             {/* Layout Mode Indicator - only shown in development mode */}
             {import.meta.env.VITE_NODE_ENV === "development" && (
-                <div className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600" style={{ maxWidth: "180px" }}>
+                <div
+                    className="fixed top-20 right-4 z-50 bg-black bg-opacity-80 text-white px-3 py-2 rounded-lg text-xs border border-gray-600"
+                    style={{ maxWidth: "180px" }}
+                >
                     <div className="font-bold mb-1">Layout Debug Info</div>
-                    <div>Mode: <span className="text-yellow-400 font-mono">{viewportMode}</span></div>
+                    <div>
+                        Mode: <span className="text-yellow-400 font-mono">{viewportMode}</span>
+                    </div>
                     <div className="text-gray-400 mt-1">
                         {window.innerWidth}x{window.innerHeight}
                         {window.innerWidth > window.innerHeight ? " (landscape)" : " (portrait)"}
                     </div>
                     <div className="mt-2 pt-2 border-t border-gray-700">
                         <div className="font-bold mb-1">Table Rotation</div>
-                        <div className="text-green-400">StartIndex: <span className="font-mono">{startIndex}</span></div>
+                        <div className="text-green-400">
+                            StartIndex: <span className="font-mono">{startIndex}</span>
+                        </div>
                         <div className="text-gray-400 text-[10px] mt-1">
                             {startIndex === 0 && "No rotation (Seat 1 at bottom)"}
                             {startIndex === 1 && "Rotated by 1 (Seat 2 at bottom)"}
@@ -1192,23 +1244,20 @@ const Table = React.memo(() => {
                         </div>
                         <div className="flex gap-1 mt-2">
                             <button
-                                onClick={() => setStartIndex((prev) => (prev + 1) % tableSize)}
+                                onClick={() => setStartIndex(prev => (prev + 1) % tableSize)}
                                 className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px]"
                                 title="Rotate left - increases startIndex"
                             >
                                 ← Rotate
                             </button>
                             <button
-                                onClick={() => setStartIndex((prev) => (prev - 1 + tableSize) % tableSize)}
+                                onClick={() => setStartIndex(prev => (prev - 1 + tableSize) % tableSize)}
                                 className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px]"
                                 title="Rotate right - decreases startIndex"
                             >
                                 Rotate →
                             </button>
-                            <button
-                                onClick={() => setStartIndex(0)}
-                                className="bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded text-[10px]"
-                            >
+                            <button onClick={() => setStartIndex(0)} className="bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded text-[10px]">
                                 Reset
                             </button>
                         </div>
@@ -1224,15 +1273,9 @@ const Table = React.memo(() => {
 
             {/* Sit Out Toggle - Professional Mobile Design */}
             {hasSitOutAction && (
-                <div className={`fixed z-30 ${
-                    isMobileLandscape 
-                        ? "bottom-2 left-2" 
-                        : isMobile
-                            ? "bottom-[260px] right-4" // Moved to right side on mobile portrait to avoid blind button overlap
-                            : "bottom-20 left-4"
-                }`}>
+                <div className={`fixed z-30 ${isMobileLandscape ? "bottom-2 left-2" : isMobile ? "bottom-[260px] right-4" : "bottom-20 left-4"}`}>
                     {/* Mobile: Compact Button Design */}
-                    {(isMobile || isMobileLandscape) ? (
+                    {isMobile || isMobileLandscape ? (
                         <button
                             onClick={() => handleSitOut(id)}
                             className="btn-sit-out text-white font-medium py-1.5 px-3 rounded-lg shadow-md text-xs
@@ -1240,7 +1283,12 @@ const Table = React.memo(() => {
                             flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
                             </svg>
                             SIT OUT
                         </button>
@@ -1253,7 +1301,12 @@ const Table = React.memo(() => {
                             flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
                             </svg>
                             SIT OUT
                         </button>
@@ -1263,13 +1316,7 @@ const Table = React.memo(() => {
 
             {/* Sit In Button - Shows when player is sitting out */}
             {hasSitInAction && (
-                <div className={`fixed z-30 ${
-                    isMobileLandscape 
-                        ? "bottom-2 left-2" 
-                        : isMobile
-                            ? "bottom-[260px] right-4"
-                            : "bottom-20 left-4"
-                }`}>
+                <div className={`fixed z-30 ${isMobileLandscape ? "bottom-2 left-2" : isMobile ? "bottom-[260px] right-4" : "bottom-20 left-4"}`}>
                     <button
                         onClick={() => handleSitIn(id)}
                         className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600
@@ -1278,7 +1325,12 @@ const Table = React.memo(() => {
                             animate-pulse text-sm"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
                         </svg>
                         SIT IN
                     </button>
@@ -1302,7 +1354,7 @@ const Table = React.memo(() => {
 
             {/* Sit & Go Auto-Join Modal - Shows for Sit & Go games when user is not playing */}
             {gameState && (gameState.type as string) === "sit-and-go" && !isUserAlreadyPlaying && id && (
-                <SitAndGoAutoJoinModal 
+                <SitAndGoAutoJoinModal
                     tableId={id}
                     onJoinSuccess={() => {
                         // Refresh the page or update state to show the user is now playing
@@ -1312,11 +1364,7 @@ const Table = React.memo(() => {
             )}
 
             {/* Club Name at Bottom Center (or Bottom Right in mobile landscape) */}
-            <div className={`fixed z-40 ${
-                isMobileLandscape 
-                    ? "bottom-4 right-4 opacity-30" 
-                    : "bottom-1 left-1/2 transform -translate-x-1/2 opacity-60"
-            }`}>
+            <div className={`fixed z-40 ${isMobileLandscape ? "bottom-4 right-4 opacity-30" : "bottom-1 left-1/2 transform -translate-x-1/2 opacity-60"}`}>
                 <div className="text-xs" style={{ color: colors.ui.textSecondary, fontSize: isMobileLandscape ? "14px" : "20px" }}>
                     {clubName}
                 </div>
