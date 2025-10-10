@@ -1045,6 +1045,11 @@ const Table = React.memo(() => {
                                             {tableLayout.positions.chips.map((position, index) => {
                                                 const chipAmount = getChipAmount(index + 1);
 
+                                                // DON'T RENDER CHIP IF AMOUNT IS 0
+                                                if (chipAmount === "0" || chipAmount === "" || !chipAmount) {
+                                                    return null;
+                                                }
+
                                                 return (
                                                     <div
                                                         key={`key-${index}`}
@@ -1268,15 +1273,7 @@ const Table = React.memo(() => {
 
             {/* Sit Out Toggle - Professional Mobile Design */}
             {hasSitOutAction && (
-                <div
-                    className={`fixed z-30 ${
-                        isMobileLandscape
-                            ? "bottom-2 left-2"
-                            : isMobile
-                            ? "bottom-[260px] right-4" // Moved to right side on mobile portrait to avoid blind button overlap
-                            : "bottom-20 left-4"
-                    }`}
-                >
+                <div className={`fixed z-30 ${isMobileLandscape ? "bottom-2 left-2" : isMobile ? "bottom-[260px] right-4" : "bottom-20 left-4"}`}>
                     {/* Mobile: Compact Button Design */}
                     {isMobile || isMobileLandscape ? (
                         <button
