@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { ResultDTO } from "@bitcoinbrisbane/block52";
 import { useGameStateContext } from "../context/GameStateContext";
-import { ethers } from "ethers";
 import { formatWeiToSimpleDollars } from "../utils/numberUtils";
 
 // Hook return type for individual player result
