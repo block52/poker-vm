@@ -119,6 +119,10 @@ import GameStartCountdown from "./common/GameStartCountdown";
 import SitAndGoAutoJoinModal from "./SitAndGoAutoJoinModal";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 
+// Player Timeout Management
+import { usePlayerTimeoutManager } from "../../hooks/usePlayerTimeoutManager";
+import { PlayerTimeoutDebug } from "./PlayerTimeoutDebug";
+
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
@@ -255,6 +259,9 @@ const Table = React.memo(() => {
 
     // Add the useGameResults hook
     const { results } = useGameResults();
+
+    // Player timeout management - automatically handle player timeouts
+    usePlayerTimeoutManager(id);
 
     // Memoize formatted values
     const formattedValues = useMemo(
@@ -1369,6 +1376,9 @@ const Table = React.memo(() => {
                     {clubName}
                 </div>
             </div>
+
+            {/* Player Timeout Debug - Development Only */}
+            <PlayerTimeoutDebug tableId={id} />
         </div>
     );
 });
