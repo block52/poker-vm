@@ -340,4 +340,144 @@ export class PokerSolver {
                 return rank.toString();
         }
     }
+
+    /**
+     * Generate a complete deck of 52 cards
+     */
+    private static generateDeck(): Card[] {
+        const deck: Card[] = [];
+        for (let suit = 1; suit <= 4; suit++) {
+            for (let rank = 1; rank <= 13; rank++) {
+                deck.push({
+                    suit: suit as SUIT,
+                    rank: rank,
+                    value: rank === 1 ? 1 : rank, // Ace low value for the Card type
+                    mnemonic: `${this.formatRank(rank)}${this.getSuitChar(suit as SUIT)}`
+                });
+            }
+        }
+        return deck;
+    }
+
+    /**
+     * Get suit character for mnemonic
+     */
+    private static getSuitChar(suit: SUIT): string {
+        switch (suit) {
+            case SUIT.HEARTS:
+                return "H";
+            case SUIT.DIAMONDS:
+                return "D";
+            case SUIT.CLUBS:
+                return "C";
+            case SUIT.SPADES:
+                return "S";
+            default:
+                return "?";
+        }
+    }
+
+    /**
+     * Remove known cards from deck
+     */
+    private static getAvailableCards(knownCards: Card[]): Card[] {
+        const deck = this.generateDeck();
+        const knownCardStrings = knownCards.map(card => `${card.rank}-${card.suit}`);
+
+        return deck.filter(card =>
+            !knownCardStrings.includes(`${card.rank}-${card.suit}`)
+        );
+    }
+
+    /**
+     * Shuffle array in place using Fisher-Yates algorithm
+     */
+    private static shuffleArray<T>(array: T[]): void {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    /**
+     * Calculate win percentages for two hands using Monte Carlo simulation
+     * @param handA First player's hole cards (2 cards)
+     * @param handB Second player's hole cards (2 cards)
+     * @param communityCards Current community cards (0-5 cards)
+     * @param simulations Number of simulations to run (default: 10000)
+     * @returns Tuple of [handA win %, handB win %, tie %]
+     */
+    public static calculateWinPercentages(
+        handA: Card[],
+        handB: Card[],
+        communityCards: Card[] = [],
+        simulations: number = 10000
+    ): [number, number, number] {
+        // Validate inputs
+        if (handA.length !== 2) {
+            throw new Error("Hand A must have exactly 2 cards");
+        }
+        if (handB.length !== 2) {
+            throw new Error("Hand B must have exactly 2 cards");
+        }
+        if (communityCards.length > 5) {
+            throw new Error("Community cards cannot exceed 5 cards");
+        }
+
+        // Get all known cards
+        const knownCards = [...handA, ...handB, ...communityCards];
+
+        // Validate no duplicate cards
+        const cardStrings = knownCards.map(card => `${card.rank}-${card.suit}`);
+        if (new Set(cardStrings).size !== cardStrings.length) {
+            throw new Error("Duplicate cards detected in input");
+        }
+
+        // Get available cards for simulation
+        const availableCards = this.getAvailableCards(knownCards);
+        const cardsNeeded = 5 - communityCards.length;
+
+        let handAWins = 0;
+        let handBWins = 0;
+        let ties = 0;
+
+        // Run Monte Carlo simulations
+        for (let sim = 0; sim < simulations; sim++) {
+            // Shuffle available cards
+            const shuffledDeck = [...availableCards];
+            this.shuffleArray(shuffledDeck);
+
+            // Deal remaining community cards
+            const fullCommunityCards = [...communityCards, ...shuffledDeck.slice(0, cardsNeeded)];
+
+            // Evaluate both hands
+            const handACards = [...handA, ...fullCommunityCards];
+            const handBCards = [...handB, ...fullCommunityCards];
+
+            const evaluationA = this.findBestHand(handACards);
+            const evaluationB = this.findBestHand(handBCards);
+
+            // Compare hands
+            const result = this.compareHands(evaluationA, evaluationB);
+
+            if (result > 0) {
+                handAWins++;
+            } else if (result < 0) {
+                handBWins++;
+            } else {
+                ties++;
+            }
+        }
+
+        // Convert to percentages
+        const handAPercent = (handAWins / simulations) * 100;
+        const handBPercent = (handBWins / simulations) * 100;
+        const tiePercent = (ties / simulations) * 100;
+
+        return [
+            Math.round(handAPercent * 100) / 100, // Round to 2 decimal places
+            Math.round(handBPercent * 100) / 100,
+            Math.round(tiePercent * 100) / 100
+        ];
+    }
 }
