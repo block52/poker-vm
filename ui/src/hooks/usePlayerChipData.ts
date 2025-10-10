@@ -4,51 +4,52 @@ import { useGameStateContext } from "../context/GameStateContext";
 
 /**
  * Custom hook to fetch and provide player chip data for each seat
- *
- * SIMPLIFIED: Uses the sumOfBets value directly from PlayerDTO instead of calculating
- * This prevents complex logic and just uses what the backend already provides
- *
- * @param tableId The ID of the table (not used - Context manages subscription)
- * @returns Object containing player chip data mapped by seat
+ * FIXED: Only shows current round betting, not accumulated totals
  */
 export const usePlayerChipData = (): PlayerChipDataReturn => {
-    // Get game state directly from Context - no additional WebSocket connections
     const { gameState, isLoading, error } = useGameStateContext();
 
-    // Memoized calculation of all player chip amounts using sumOfBets from backend
+    // Calculate current round betting amounts
     const playerChipAmounts = useMemo(() => {
         const amounts: Record<number, string> = {};
 
-        // Handle loading, error, or invalid game state
         if (!gameState || !gameState.players || !Array.isArray(gameState.players)) {
-            return amounts; // Return empty object for all invalid states
+            return amounts;
         }
 
-        // Simply map each player's sumOfBets to their seat - no complex calculations needed
+        // Get current round from game state
+        const currentRound = gameState.round;
+
         gameState.players.forEach(player => {
             if (!player.seat || !player.address) return;
 
-            // Use the sumOfBets value directly from the backend - no fallback
-            amounts[player.seat] = player.sumOfBets;
+            // FIXED: Only show chips based on current round logic
+            let chipAmount = "0";
+
+            if (currentRound === "ante" || currentRound === "preflop") {
+                // During ante/preflop, show accumulated bets (includes blinds)
+                chipAmount = player.sumOfBets || "0";
+            } else {
+                // After preflop, calculate current round betting only
+                chipAmount = calculateCurrentRoundBetting(player, currentRound, gameState.previousActions || []);
+            }
+
+            amounts[player.seat] = chipAmount;
         });
 
         return amounts;
     }, [gameState]);
 
-    // Simplified function to get chip amount for a given seat
     const getChipAmount = (_seatIndex: number): string => {
-        // Return exactly what the backend says - no defaults or fallbacks
-        return playerChipAmounts[_seatIndex] || "";
+        return playerChipAmounts[_seatIndex] || "0";
     };
 
-    // Default values in case of error or loading
     const defaultState: PlayerChipDataReturn = {
-        getChipAmount: (_seatIndex: number): string => "",
+        getChipAmount: (_seatIndex: number): string => "0",
         isLoading,
         error
     };
 
-    // Early return only for loading/error states
     if (isLoading || error) {
         return defaultState;
     }
@@ -59,3 +60,29 @@ export const usePlayerChipData = (): PlayerChipDataReturn => {
         error: null
     };
 };
+
+/**
+ * Calculate how much a player has bet in the current round only
+ */
+function calculateCurrentRoundBetting(
+    player: any,
+    currentRound: string,
+    previousActions: any[]
+): string {
+    // Find all actions by this player in the current round
+    const currentRoundActions = previousActions.filter(action =>
+        action.playerId === player.address &&
+        action.round === currentRound &&
+        action.amount &&
+        action.amount !== "0" &&
+        action.amount !== ""
+    );
+
+    // Sum up all betting actions in current round
+    const totalCurrentRoundBetting = currentRoundActions.reduce((sum, action) => {
+        const amount = BigInt(action.amount || "0");
+        return sum + amount;
+    }, BigInt(0));
+
+    return totalCurrentRoundBetting.toString();
+}
