@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { CosmosClient, getDefaultCosmosConfig } from "@block52/sdk/cosmosClient";
+import { CosmosClient, getDefaultCosmosConfig } from "@bitcoinbrisbane/block52";
 
 interface UseCosmosGameStateReturn {
     gameState: any | null;

@@ -2,10 +2,10 @@
  * Utility functions for Cosmos integration
  */
 
-import { CosmosClient, CosmosConfig } from "@bitcoinbrisbane/block52";
+import { CosmosClient, getDefaultCosmosConfig, type CosmosConfig } from "@bitcoinbrisbane/block52";
 
 // Export types for use in other files
-export type { CosmosClient, CosmosConfig };
+export type { CosmosConfig };
 
 // Storage keys for cosmos data
 export const STORAGE_COSMOS_MNEMONIC = "user_cosmos_mnemonic";
@@ -83,28 +83,27 @@ export const getFormattedCosmosAddress = (length: number = 6): string => {
 /**
  * Default cosmos configuration for the frontend
  */
-export const getDefaultCosmosConfig = (): CosmosConfig => ({
-    rpcEndpoint: "http://localhost:26657",
-    chainId: "pokerchain",
-    prefix: "b52",
-    denom: "b52USD",
-    gasPrice: "0.025b52USD",
-});
+export const getCosmosUIConfig = (): CosmosConfig => {
+    // Use the SDK's default config and override with environment variables
+    const defaultConfig = getDefaultCosmosConfig();
+
+    return {
+        ...defaultConfig,
+        rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || defaultConfig.rpcEndpoint,
+        restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || defaultConfig.restEndpoint,
+        chainId: import.meta.env.VITE_COSMOS_CHAIN_ID || defaultConfig.chainId,
+        prefix: import.meta.env.VITE_COSMOS_PREFIX || defaultConfig.prefix,
+        gasPrice: import.meta.env.VITE_COSMOS_GAS_PRICE || defaultConfig.gasPrice,
+        contractAddress: "",
+    };
+};
 
 /**
- * Create a cosmos client with the user's mnemonic
- * @param mnemonic Optional mnemonic, if not provided will try to get from storage
- * @returns CosmosClient instance or null if no mnemonic available
+ * Create a cosmos client with the default configuration
+ * @returns CosmosClient instance
  */
-export const createCosmosClient = (mnemonic?: string): CosmosClient | null => {
-    const userMnemonic = mnemonic || getCosmosMnemonic();
-    if (!userMnemonic) return null;
-
-    const config = {
-        ...getDefaultCosmosConfig(),
-        mnemonic: userMnemonic
-    };
-
+export const createCosmosClient = (): CosmosClient => {
+    const config = getCosmosUIConfig();
     return new CosmosClient(config);
 };
 
