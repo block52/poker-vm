@@ -27,6 +27,16 @@ interface CosmosProviderState {
     // Game actions
     performPokerAction: (gameId: string, action: string, amount?: bigint) => Promise<string>;
     joinGame: (gameId: string, seat: number, buyInAmount: bigint) => Promise<string>;
+    createGame: (
+        gameType: string,
+        minPlayers: number,
+        maxPlayers: number,
+        minBuyInB52USDC: bigint,
+        maxBuyInB52USDC: bigint,
+        smallBlindB52USDC: bigint,
+        bigBlindB52USDC: bigint,
+        timeout: number
+    ) => Promise<string>;
     getGameState: (gameId: string) => Promise<any>;
     getLegalActions: (gameId: string, playerAddress: string) => Promise<any>;
 }
@@ -202,6 +212,46 @@ export const CosmosProvider: React.FC<CosmosProviderProps> = ({ children }) => {
         [cosmosClient, refreshBalance]
     );
 
+    // Create a new game
+    const createGame = useCallback(
+        async (
+            gameType: string,
+            minPlayers: number,
+            maxPlayers: number,
+            minBuyInB52USDC: bigint,
+            maxBuyInB52USDC: bigint,
+            smallBlindB52USDC: bigint,
+            bigBlindB52USDC: bigint,
+            timeout: number
+        ): Promise<string> => {
+            if (!cosmosClient) {
+                throw new Error("Cosmos client not initialized");
+            }
+
+            try {
+                const txHash = await cosmosClient.createGame(
+                    gameType,
+                    minPlayers,
+                    maxPlayers,
+                    minBuyInB52USDC,
+                    maxBuyInB52USDC,
+                    smallBlindB52USDC,
+                    bigBlindB52USDC,
+                    timeout
+                );
+
+                // Refresh balance after creating game
+                await refreshBalance();
+
+                return txHash;
+            } catch (err) {
+                console.error("Error creating game:", err);
+                throw err instanceof Error ? err : new Error("Failed to create game");
+            }
+        },
+        [cosmosClient, refreshBalance]
+    );
+
     // Get game state
     const getGameState = useCallback(
         async (gameId: string): Promise<any> => {
@@ -244,6 +294,7 @@ export const CosmosProvider: React.FC<CosmosProviderProps> = ({ children }) => {
         sendTokens,
         performPokerAction,
         joinGame,
+        createGame,
         getGameState,
         getLegalActions
     };

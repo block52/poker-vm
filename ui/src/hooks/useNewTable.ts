@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { GameOptionsDTO, GameType } from "@bitcoinbrisbane/block52";
 import { getClient } from "../utils/b52AccountUtils";
 import { ethers } from "ethers";
+import { useCosmosContext } from "./useCosmosContext";
 
 // Type for creating new table options
 export interface CreateTableOptions {
@@ -21,7 +22,7 @@ export interface UseNewTableReturn {
 }
 
 /**
- * Custom hook to create a new table using the SDK's NodeRpcClient
+ * Custom hook to create a new table using either Cosmos or the SDK's NodeRpcClient
  * @returns Object with createTable function, loading state, and error
  */
 export const useNewTable = (): UseNewTableReturn => {
@@ -29,8 +30,14 @@ export const useNewTable = (): UseNewTableReturn => {
     const [error, setError] = useState<Error | null>(null);
     const [newTableAddress, setNewTableAddress] = useState<string | null>(null);
 
+    // Get Cosmos context for Cosmos-based table creation
+    const cosmosContext = useCosmosContext();
+
+    // Check if Cosmos backend is enabled
+    const useCosmosBackend = import.meta.env.VITE_USE_COSMOS === "true";
+
     const createTable = useCallback(async (
-        owner: string, 
+        owner: string,
         nonce: number,
         gameOptions: CreateTableOptions
     ): Promise<string | null> => {
@@ -39,69 +46,119 @@ export const useNewTable = (): UseNewTableReturn => {
         setNewTableAddress(null);
 
         try {
-            // Get the singleton client instance
-            const client = getClient();
+            if (useCosmosBackend && cosmosContext) {
+                // Use Cosmos backend for table creation
+                console.log("🌌 Creating table via Cosmos blockchain");
 
-            const minBuyIn: bigint = ethers.parseEther(gameOptions.minBuyIn.toString());
-            const maxBuyIn: bigint = ethers.parseEther(gameOptions.maxBuyIn.toString());
+                const minBuyIn: bigint = ethers.parseUnits(gameOptions.minBuyIn.toString(), 6); // b52USDC has 6 decimals
+                const maxBuyIn: bigint = ethers.parseUnits(gameOptions.maxBuyIn.toString(), 6);
 
-            // Calculate blind values based on game type
-            const calculatedSmallBlind: bigint = minBuyIn / 100n; // 1% of min buy-in
-            const calculatedBigBlind: bigint = maxBuyIn / 100n; // 1% of max buy-in
+                // Calculate blind values based on game type
+                const calculatedSmallBlind: bigint = minBuyIn / 100n; // 1% of min buy-in
+                const calculatedBigBlind: bigint = maxBuyIn / 100n; // 1% of max buy-in
 
-            let smallBlind = calculatedSmallBlind.toString();
-            let bigBlind = calculatedBigBlind.toString();
+                let smallBlind = calculatedSmallBlind;
+                let bigBlind = calculatedBigBlind;
 
-            if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
-                // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in
-                // Buy-in represents tournament entry fee, not chip value
-                smallBlind = ethers.parseEther("100").toString();
-                bigBlind = ethers.parseEther("200").toString();
+                if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
+                    // For Sit & Go and Tournament: Fixed starting blinds
+                    smallBlind = ethers.parseUnits("100", 6); // 100 b52USDC
+                    bigBlind = ethers.parseUnits("200", 6);   // 200 b52USDC
 
-                console.log("🎮 Sit & Go Tournament Settings:");
-                console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
-                console.log(`  Starting Blinds: ${smallBlind}/${bigBlind}`);
+                    console.log("🎮 Sit & Go Tournament Settings:");
+                    console.log(`  Entry Fee: ${gameOptions.minBuyIn} b52USDC`);
+                    console.log(`  Starting Blinds: ${ethers.formatUnits(smallBlind, 6)}/${ethers.formatUnits(bigBlind, 6)} b52USDC`);
+                }
+
+                console.log("🚀 Creating Cosmos Game with:");
+                console.log(`  Type: ${gameOptions.type}`);
+                console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
+                console.log(`  Buy-in: ${ethers.formatUnits(minBuyIn, 6)}-${ethers.formatUnits(maxBuyIn, 6)} b52USDC`);
+                console.log(`  Blinds: ${ethers.formatUnits(smallBlind, 6)}/${ethers.formatUnits(bigBlind, 6)} b52USDC`);
+
+                // Create game using Cosmos client
+                const txHash = await cosmosContext.createGame(
+                    gameOptions.type.toString(),
+                    gameOptions.minPlayers,
+                    gameOptions.maxPlayers,
+                    minBuyIn,
+                    maxBuyIn,
+                    smallBlind,
+                    bigBlind,
+                    300000 // 30 second timeout
+                );
+
+                console.log(`✅ Cosmos game created successfully. Transaction: ${txHash}`);
+                setNewTableAddress(txHash); // Use transaction hash as identifier
+                return txHash;
+            } else {
+                // Use proxy backend for table creation
+                console.log("🔄 Creating table via proxy backend");
+
+                // Get the singleton client instance
+                const client = getClient();
+
+                const minBuyIn: bigint = ethers.parseEther(gameOptions.minBuyIn.toString());
+                const maxBuyIn: bigint = ethers.parseEther(gameOptions.maxBuyIn.toString());
+
+                // Calculate blind values based on game type
+                const calculatedSmallBlind: bigint = minBuyIn / 100n; // 1% of min buy-in
+                const calculatedBigBlind: bigint = maxBuyIn / 100n; // 1% of max buy-in
+
+                let smallBlind = calculatedSmallBlind.toString();
+                let bigBlind = calculatedBigBlind.toString();
+
+                if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
+                    // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in
+                    // Buy-in represents tournament entry fee, not chip value
+                    smallBlind = ethers.parseEther("100").toString();
+                    bigBlind = ethers.parseEther("200").toString();
+
+                    console.log("🎮 Sit & Go Tournament Settings:");
+                    console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
+                    console.log(`  Starting Blinds: ${smallBlind}/${bigBlind}`);
+                }
+
+                // Build game options DTO object for the new API with all required fields
+                const gameOptionsDTO: GameOptionsDTO = {
+                    type: gameOptions.type,
+                    minBuyIn: minBuyIn.toString(),
+                    maxBuyIn: maxBuyIn.toString(),
+                    minPlayers: gameOptions.minPlayers,
+                    maxPlayers: gameOptions.maxPlayers,
+                    smallBlind,
+                    bigBlind,
+                    timeout: 300000 // Standard 30,000 millisecond timeout for decisions
+                };
+
+                console.log("📊 Final game parameters:");
+                console.log(`  Game Type: ${gameOptions.type}`);
+                console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
+                console.log("  Timeout: 30 seconds");
+
+                console.log("🚀 Creating New Table with SDK:");
+                console.log(`Owner: ${owner}`);
+                console.log(`Nonce: ${nonce}`);
+                console.log("Game Options:", gameOptionsDTO);
+
+                // IMPORTANT: We pass a timestamp instead of the actual account nonce here
+                // This ensures each table gets a unique address even if multiple tables are created quickly
+                // Using nonce 0 would cause issues with table uniqueness and joining
+                // The timestamp guarantees uniqueness while the actual transaction nonce is handled internally by the SDK
+                const timestamp = Date.now();
+                console.log(`Using timestamp for uniqueness: ${timestamp}`);
+
+                // Use the SDK's newTable method with the game options DTO
+                // The third parameter is the timestamp for uniqueness, not the account nonce
+                const tableAddress = await client.newTable(gameOptionsDTO, owner, timestamp);
+
+                if (tableAddress) {
+                    console.log(`✅ Table created successfully: ${tableAddress}`);
+                    setNewTableAddress(tableAddress);
+                }
+
+                return tableAddress;
             }
-
-            // Build game options DTO object for the new API with all required fields
-            const gameOptionsDTO: GameOptionsDTO = {
-                type: gameOptions.type,
-                minBuyIn: minBuyIn.toString(),
-                maxBuyIn: maxBuyIn.toString(),
-                minPlayers: gameOptions.minPlayers,
-                maxPlayers: gameOptions.maxPlayers,
-                smallBlind,
-                bigBlind,
-                timeout: 300000 // Standard 30,000 millisecond timeout for decisions
-            };
-            
-            console.log("📊 Final game parameters:");
-            console.log(`  Game Type: ${gameOptions.type}`);
-            console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
-            console.log("  Timeout: 30 seconds");
-            
-            console.log("🚀 Creating New Table with SDK:");
-            console.log(`Owner: ${owner}`);
-            console.log(`Nonce: ${nonce}`);
-            console.log("Game Options:", gameOptionsDTO);
-            
-            // IMPORTANT: We pass a timestamp instead of the actual account nonce here
-            // This ensures each table gets a unique address even if multiple tables are created quickly
-            // Using nonce 0 would cause issues with table uniqueness and joining
-            // The timestamp guarantees uniqueness while the actual transaction nonce is handled internally by the SDK
-            const timestamp = Date.now();
-            console.log(`Using timestamp for uniqueness: ${timestamp}`);
-            
-            // Use the SDK's newTable method with the game options DTO
-            // The third parameter is the timestamp for uniqueness, not the account nonce
-            const tableAddress = await client.newTable(gameOptionsDTO, owner, timestamp);
-            
-            if (tableAddress) {
-                console.log(`✅ Table created successfully: ${tableAddress}`);
-                setNewTableAddress(tableAddress);
-            }
-            
-            return tableAddress;
         } catch (err: any) {
             const errorMessage = err.message || "Failed to create table";
             setError(new Error(errorMessage));
@@ -110,7 +167,7 @@ export const useNewTable = (): UseNewTableReturn => {
         } finally {
             setIsCreating(false);
         }
-    }, []);
+    }, [useCosmosBackend, cosmosContext]);
 
     return {
         createTable,

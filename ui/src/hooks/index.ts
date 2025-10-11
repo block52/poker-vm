@@ -28,8 +28,18 @@ export { useTableTurnIndex } from "./useTableTurnIndex";
 export { useVacantSeatData } from "./useVacantSeatData";
 export { useWinnerInfo } from "./useWinnerInfo";
 
+// Cosmos hooks
+export { useCosmosContext } from "./useCosmosContext";
+export { useCosmosGameState } from "./useCosmosGameState";
+export { useGameActions } from "./useGameActions";
+export { useSitAndGoPlayerResults } from "./useSitAndGoPlayerResults";
+
 // Default export hook
 export { default as useUserWallet } from "./useUserWallet";
+export { default as useCosmosWallet } from "./useCosmosWallet";
+
+// Named exports from useUserWallet
+export { STORAGE_PRIVATE_KEY } from "./useUserWallet";
 
 // Player actions (barrel)
 export * from "./playerActions";

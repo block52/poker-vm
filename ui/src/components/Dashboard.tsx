@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate for naviga
 import "./Dashboard.css"; // Import the CSS file with animations
 
 // Web3 Wallet Imports
-import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect"; //  Keep for Web3 wallet
 import { Wallet, ethers } from "ethers";
 import { BASE_RPC_URL, BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
 import { useAccount as useWagmiAccount, useSwitchChain } from "wagmi";
@@ -16,20 +15,18 @@ import BuyInModal from "./playPage/BuyInModal";
 import WithdrawalModal from "./WithdrawalModal";
 import USDCDepositModal from "./USDCDepositModal";
 
-// game wallet and SDK imports
-import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
+// Game wallet and SDK imports
 import { Variant } from "./types";
 import { formatAddress } from "./common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
 import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
-import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
-import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
-import { CreateTableOptions, useNewTable } from "../hooks/useNewTable"; // Import useNewTable hook
-import { useTablePlayerCounts } from "../hooks/useTablePlayerCounts"; // Import useTablePlayerCounts hook
 
-// Cosmos wallet imports
-import useCosmosWallet from "../hooks/useCosmosWallet";
+// Hook imports from barrel file
+import { useUserWalletConnect, useAccount, useFindGames, useNewTable, useTablePlayerCounts, useCosmosWallet, STORAGE_PRIVATE_KEY } from "../hooks";
+import type { CreateTableOptions } from "../hooks/useNewTable"; // Import type separately
+
+// Cosmos wallet utils
 import { isValidSeedPhrase } from "../utils/cosmosUtils";
 
 // Password protection utils
@@ -325,14 +322,26 @@ const Dashboard: React.FC = () => {
 
     // Function to handle creating a new game using the new hook
     const handleCreateNewGame = async () => {
-        if (!publicKey) {
-            setCreateGameError("No wallet address available. Please create or import a wallet first.");
-            return;
-        }
+        // Check if Cosmos backend is enabled
+        const useCosmosBackend = import.meta.env.VITE_USE_COSMOS === "true";
 
-        if (!account) {
-            setCreateGameError("Account data not loaded. Please wait and try again.");
-            return;
+        if (useCosmosBackend) {
+            // For Cosmos backend, check Cosmos wallet
+            if (!cosmosWallet.address) {
+                setCreateGameError("No Cosmos wallet connected. Please import or create a Cosmos wallet first.");
+                return;
+            }
+        } else {
+            // For proxy backend, check ETH wallet
+            if (!publicKey) {
+                setCreateGameError("No wallet address available. Please create or import a wallet first.");
+                return;
+            }
+
+            if (!account) {
+                setCreateGameError("Account data not loaded. Please wait and try again.");
+                return;
+            }
         }
 
         setCreateGameError("");
@@ -367,13 +376,22 @@ const Dashboard: React.FC = () => {
             console.log("  maxPlayers:", gameOptions.maxPlayers);
 
             // Use the createTable function from the hook
-            const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
+            // For Cosmos backend, we use cosmosWallet.address; for proxy backend, we use publicKey
+            const ownerAddress = useCosmosBackend ? cosmosWallet.address! : publicKey!;
+            const nonce = useCosmosBackend ? 0 : account!.nonce; // Cosmos doesn't need nonce, it handles it internally
+
+            const tableAddress = await createTable(ownerAddress, nonce, gameOptions);
 
             if (tableAddress) {
                 setShowCreateGameModal(false);
 
-                // Refresh account data to get updated nonce
-                await refetchAccount();
+                if (useCosmosBackend) {
+                    // For Cosmos, refresh the Cosmos wallet balance
+                    await cosmosWallet.refreshBalance();
+                } else {
+                    // For proxy backend, refresh account data to get updated nonce
+                    await refetchAccount();
+                }
 
                 // Refresh the games list
                 await refetchGames();
