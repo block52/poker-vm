@@ -3,14 +3,37 @@ import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { stringToPath } from "@cosmjs/crypto";
 import { Coin } from "@cosmjs/amino";
 import { Tendermint37Client } from "@cosmjs/tendermint-rpc";
+import axios, { AxiosInstance } from "axios";
 
 export interface CosmosConfig {
     rpcEndpoint: string;
+    restEndpoint: string;
     chainId: string;
     prefix: string;
-    denom: string;
+    denom: string; // This will be "b52USDC"
     gasPrice: string;
     mnemonic?: string;
+}
+
+// Poker API types based on Swagger
+export interface GameStateResponse {
+    game_state: string; // JSON string containing the game state
+}
+
+export interface GameResponse {
+    game: string; // JSON string containing the game info
+}
+
+export interface LegalActionsResponse {
+    actions: string; // JSON string containing legal actions
+}
+
+export interface ListGamesResponse {
+    games: string; // JSON string containing list of games
+}
+
+export interface PlayerGamesResponse {
+    games: string; // JSON string containing player's games
 }
 
 export class CosmosClient {
@@ -19,9 +42,19 @@ export class CosmosClient {
     private signingClient?: SigningStargateClient;
     private tmClient?: Tendermint37Client;
     private wallet?: DirectSecp256k1HdWallet;
+    private restClient: AxiosInstance;
 
     constructor(config: CosmosConfig) {
         this.config = config;
+
+        // Initialize REST client for API calls
+        this.restClient = axios.create({
+            baseURL: config.restEndpoint,
+            timeout: 10000,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
     }
 
     /**
@@ -208,6 +241,253 @@ export class CosmosClient {
     }
 
     /**
+     * Fetch game state from Cosmos REST API
+     */
+    async getGameState(gameId: string): Promise<any> {
+        try {
+            const response = await this.restClient.get<GameStateResponse>(
+                `/block52/pokerchain/poker/v1/game_state/${gameId}`
+            );
+
+            // Parse the JSON string response
+            if (response.data.game_state) {
+                return JSON.parse(response.data.game_state);
+            }
+
+            throw new Error("No game state found in response");
+        } catch (error) {
+            console.error("Error fetching game state:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch game info from Cosmos REST API
+     */
+    async getGame(gameId: string): Promise<any> {
+        try {
+            const response = await this.restClient.get<GameResponse>(
+                `/block52/pokerchain/poker/v1/game/${gameId}`
+            );
+
+            if (response.data.game) {
+                return JSON.parse(response.data.game);
+            }
+
+            throw new Error("No game found in response");
+        } catch (error) {
+            console.error("Error fetching game:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch legal actions for a player
+     */
+    async getLegalActions(gameId: string, playerAddress: string): Promise<any> {
+        try {
+            const response = await this.restClient.get<LegalActionsResponse>(
+                `/block52/pokerchain/poker/v1/legal_actions/${gameId}/${playerAddress}`
+            );
+
+            if (response.data.actions) {
+                return JSON.parse(response.data.actions);
+            }
+
+            return [];
+        } catch (error) {
+            console.error("Error fetching legal actions:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * List all games
+     */
+    async listGames(): Promise<any[]> {
+        try {
+            const response = await this.restClient.get<ListGamesResponse>(
+                `/block52/pokerchain/poker/v1/list_games`
+            );
+
+            if (response.data.games) {
+                return JSON.parse(response.data.games);
+            }
+
+            return [];
+        } catch (error) {
+            console.error("Error listing games:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get games for a specific player
+     */
+    async getPlayerGames(playerAddress: string): Promise<any[]> {
+        try {
+            const response = await this.restClient.get<PlayerGamesResponse>(
+                `/block52/pokerchain/poker/v1/player_games/${playerAddress}`
+            );
+
+            if (response.data.games) {
+                return JSON.parse(response.data.games);
+            }
+
+            return [];
+        } catch (error) {
+            console.error("Error fetching player games:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Perform a poker action (transaction)
+     */
+    async performAction(
+        gameId: string,
+        action: string,
+        amount: bigint = 0n
+    ): Promise<string> {
+        await this.initSigningClient();
+        if (!this.signingClient) throw new Error("Signing client not initialized");
+
+        const fromAddress = await this.getWalletAddress();
+
+        // Create the message for performing action
+        const msg = {
+            typeUrl: "/pokerchain.poker.v1.MsgPerformAction",
+            value: {
+                creator: fromAddress,
+                gameId: gameId,
+                action: action,
+                amount: amount.toString(),
+            },
+        };
+
+        const result = await this.signingClient.signAndBroadcast(
+            fromAddress,
+            [msg],
+            "auto"
+        );
+
+        return result.transactionHash;
+    }
+
+    /**
+     * Get b52USDC balance for an address
+     */
+    async getB52USDCBalance(address: string): Promise<bigint> {
+        await this.initClient();
+        if (!this.client) throw new Error("Client not initialized");
+
+        const balance = await this.client.getBalance(address, "b52USDC");
+        return BigInt(balance.amount);
+    }
+
+    /**
+     * Send b52USDC tokens from one account to another
+     */
+    async sendB52USDC(
+        fromAddress: string,
+        toAddress: string,
+        amount: bigint,
+        memo?: string
+    ): Promise<string> {
+        await this.initSigningClient();
+        if (!this.signingClient) throw new Error("Signing client not initialized");
+
+        const coin: Coin = {
+            denom: "b52USDC",
+            amount: amount.toString()
+        };
+
+        const result = await this.signingClient.sendTokens(
+            fromAddress,
+            toAddress,
+            [coin],
+            "auto",
+            memo
+        );
+
+        return result.transactionHash;
+    }
+
+    /**
+     * Join a game with b52USDC buy-in (transaction)
+     */
+    async joinGame(
+        gameId: string,
+        seat: number,
+        buyInAmount: bigint // Amount in b52USDC
+    ): Promise<string> {
+        await this.initSigningClient();
+        if (!this.signingClient) throw new Error("Signing client not initialized");
+
+        const fromAddress = await this.getWalletAddress();
+
+        const msg = {
+            typeUrl: "/pokerchain.poker.v1.MsgJoinGame",
+            value: {
+                creator: fromAddress,
+                gameId: gameId,
+                seat: seat.toString(),
+                buyIn: buyInAmount.toString(), // b52USDC amount
+            },
+        };
+
+        const result = await this.signingClient.signAndBroadcast(
+            fromAddress,
+            [msg],
+            "auto"
+        );
+
+        return result.transactionHash;
+    }
+
+    /**
+     * Create a new game with b52USDC denominated blinds and buy-ins
+     */
+    async createGame(
+        gameType: string,
+        minPlayers: number,
+        maxPlayers: number,
+        minBuyInB52USDC: bigint,  // Minimum buy-in in b52USDC
+        maxBuyInB52USDC: bigint,  // Maximum buy-in in b52USDC
+        smallBlindB52USDC: bigint, // Small blind in b52USDC
+        bigBlindB52USDC: bigint,   // Big blind in b52USDC
+        timeout: number
+    ): Promise<string> {
+        await this.initSigningClient();
+        if (!this.signingClient) throw new Error("Signing client not initialized");
+
+        const fromAddress = await this.getWalletAddress();
+
+        const msg = {
+            typeUrl: "/pokerchain.poker.v1.MsgCreateGame",
+            value: {
+                creator: fromAddress,
+                gameType: gameType,
+                minPlayers: minPlayers.toString(),
+                maxPlayers: maxPlayers.toString(),
+                minBuyIn: minBuyInB52USDC.toString(),
+                maxBuyIn: maxBuyInB52USDC.toString(),
+                smallBlind: smallBlindB52USDC.toString(),
+                bigBlind: bigBlindB52USDC.toString(),
+                timeout: timeout.toString(),
+            },
+        };
+
+        const result = await this.signingClient.signAndBroadcast(
+            fromAddress,
+            [msg],
+            "auto"
+        );
+
+        return result.transactionHash;
+    }
+
+    /**
      * Disconnect clients
      */
     async disconnect(): Promise<void> {
@@ -242,3 +522,14 @@ export const initializeCosmosClient = (config: CosmosConfig): CosmosClient => {
     cosmosClientInstance = new CosmosClient(config);
     return cosmosClientInstance;
 };
+
+// Update the default configuration
+export const getDefaultCosmosConfig = (): CosmosConfig => ({
+    rpcEndpoint: process.env.VITE_COSMOS_RPC_ENDPOINT || "http://localhost:26657",
+    restEndpoint: process.env.VITE_COSMOS_REST_ENDPOINT || "http://localhost:1317",
+    chainId: process.env.VITE_CHAIN_ID || "pokerchain",
+    prefix: process.env.VITE_ADDRESS_PREFIX || "b52",
+    denom: "b52USDC", // Use b52USDC as the denomination
+    gasPrice: process.env.VITE_GAS_PRICE || "0.001b52USDC", // Gas price in b52USDC
+    mnemonic: process.env.VITE_MNEMONIC,
+});

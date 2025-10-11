@@ -1,0 +1,11 @@
+src/
+.git/
+.github/
+node_modules/
+*.log
+.DS_Store
+.env*
+rollup.config.js
+tsconfig.json
+jest.config.js
+.eslintrc.*

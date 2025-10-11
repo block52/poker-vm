@@ -361,9 +361,9 @@
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
 "@bitcoinbrisbane/block52@1.4.1":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.4.0.tgz#378f132a5abf7d9ec1eb137b7aab6b85127aa3a7"
-  integrity sha512-p4VkEu0H5ZbCqPjPrERWu2Jki8UO0qpzgjp+vCYCrHgT7jlXm1EknofNF2xS2GaUEds4kskidkVc1e72VFmdrw==
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-1.4.1.tgz#9f3db896acc2dfac238d1c918332f12341fe404c"
+  integrity sha512-zp/2n4FI8u5/JvGb4UhU9SAO1LgMln8qYwaVW3mHx+BmcIQE2HyMfO5BKiMoTFZ0GHbfgsQ6IvdpcYibTC4CCw==
   dependencies:
     "@cosmjs/amino" "^0.32.4"
     "@cosmjs/crypto" "^0.32.4"
