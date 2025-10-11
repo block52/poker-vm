@@ -22,6 +22,7 @@ interface CosmosProviderState {
     importSeedPhrase: (mnemonic: string) => Promise<void>;
     clearWallet: () => void;
     refreshBalance: () => Promise<void>;
+    sendTokens: (recipientAddress: string, amount: string) => Promise<string>;
 
     // Game actions
     performPokerAction: (gameId: string, action: string, amount?: bigint) => Promise<string>;
@@ -135,6 +136,29 @@ export const CosmosProvider: React.FC<CosmosProviderProps> = ({ children }) => {
         setError(null);
     }, []);
 
+    // Send tokens
+    const sendTokens = useCallback(async (recipientAddress: string, amount: string): Promise<string> => {
+        if (!cosmosClient || !address) {
+            throw new Error("Cosmos wallet not initialized");
+        }
+
+        try {
+            const txHash = await cosmosClient.sendB52USDC(
+                address,
+                recipientAddress,
+                BigInt(amount)
+            );
+
+            // Refresh balance after successful transaction
+            await refreshBalance();
+
+            return txHash;
+        } catch (err) {
+            console.error("Failed to send tokens:", err);
+            throw err instanceof Error ? err : new Error("Failed to send tokens");
+        }
+    }, [cosmosClient, address, refreshBalance]);
+
     // Perform poker action
     const performPokerAction = useCallback(
         async (gameId: string, action: string, amount: bigint = 0n): Promise<string> => {
@@ -218,10 +242,11 @@ export const CosmosProvider: React.FC<CosmosProviderProps> = ({ children }) => {
         importSeedPhrase,
         clearWallet,
         refreshBalance,
+        sendTokens,
         performPokerAction,
         joinGame,
         getGameState,
-        getLegalActions
+        getLegalActions,
     };
 
     return <CosmosContext.Provider value={value}>{children}</CosmosContext.Provider>;

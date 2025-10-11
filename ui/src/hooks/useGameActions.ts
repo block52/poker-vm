@@ -18,11 +18,11 @@ interface GameActionHook {
     performPokerAction: (gameId: string, action: string, amount?: bigint) => Promise<string>;
     joinGame: (gameId: string, seat: number, buyInAmount: bigint) => Promise<string>;
     leaveGame: (gameId: string) => Promise<string>;
-    
+
     // Game state
     getGameState: (gameId: string) => Promise<any>;
     getLegalActions: (gameId: string, playerAddress: string) => Promise<any>;
-    
+
     // Connection status
     isConnected: boolean;
     backendType: "cosmos" | "proxy";
@@ -36,50 +36,50 @@ export const useGameActions = (): GameActionHook => {
     const cosmosContext = useCosmosContext();
 
     const backendType = useMemo(() => USE_COSMOS ? "cosmos" : "proxy", []);
-    
+
     const performPokerAction = useCallback(async (gameId: string, action: string, amount: bigint = 0n): Promise<string> => {
         if (USE_COSMOS) {
             return await cosmosContext.performPokerAction(gameId, action, amount);
         } else {
             // Map actions to existing proxy functions
             const amountStr = amount.toString();
-            
+
             switch (action.toLowerCase()) {
                 case "fold": {
                     const foldResult = await foldHand(gameId);
                     return foldResult?.hash || "proxy-fold-" + Date.now();
                 }
-                    
+
                 case "call": {
                     const callResult = await callHand(gameId, amountStr);
                     return callResult?.hash || "proxy-call-" + Date.now();
                 }
-                    
+
                 case "bet": {
                     const betResult = await betHand(gameId, amountStr);
                     return betResult?.hash || "proxy-bet-" + Date.now();
                 }
-                    
+
                 case "raise": {
                     const raiseResult = await raiseHand(gameId, amountStr);
                     return raiseResult?.hash || "proxy-raise-" + Date.now();
                 }
-                    
+
                 case "check": {
                     const checkResult = await checkHand(gameId);
                     return checkResult?.hash || "proxy-check-" + Date.now();
                 }
-                    
+
                 case "sitout": {
                     const sitoutResult = await sitOut(gameId);
                     return sitoutResult?.hash || "proxy-sitout-" + Date.now();
                 }
-                    
+
                 case "sitin": {
                     const sitinResult = await sitIn(gameId);
                     return sitinResult?.hash || "proxy-sitin-" + Date.now();
                 }
-                    
+
                 default:
                     throw new Error(`Unknown action: ${action}`);
             }

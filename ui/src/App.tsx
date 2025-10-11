@@ -41,7 +41,7 @@ function AppContent() {
         const style = document.createElement("style");
         style.innerHTML = generateCSSVariables();
         document.head.appendChild(style);
-        
+
         return () => {
             document.head.removeChild(style);
         };

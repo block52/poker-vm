@@ -30,4 +30,17 @@ export default defineConfig({
     preview: {
         port: 5173 // Use default Vite port for preview too
     },
+    define: {
+        global: "globalThis",
+    },
+    resolve: {
+        alias: {
+            crypto: "crypto-browserify",
+            stream: "stream-browserify",
+            buffer: "buffer",
+        },
+    },
+    optimizeDeps: {
+        include: ["buffer", "crypto-browserify", "stream-browserify"],
+    },
 });

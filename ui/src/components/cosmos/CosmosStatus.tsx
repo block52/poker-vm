@@ -21,38 +21,26 @@ const CosmosStatus: React.FC<CosmosStatusProps> = ({ className = "" }) => {
     };
 
     if (backendType === "proxy") {
-        return (
-            <div className={`text-xs text-gray-400 ${className}`}>
-                Backend: Proxy
-            </div>
-        );
+        return <div className={`text-xs text-gray-400 ${className}`}>Backend: Proxy</div>;
     }
 
     return (
         <div className={`text-xs ${className}`}>
             <div className={`flex items-center gap-2 ${isConnected ? "text-green-400" : "text-red-400"}`}>
                 <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400"}`}></div>
-                <span>
-                    {isConnected ? "Cosmos Connected" : "Cosmos Disconnected"}
-                </span>
+                <span>{isConnected ? "Cosmos Connected" : "Cosmos Disconnected"}</span>
             </div>
-            
+
             {isConnected && address && (
                 <div className="text-gray-300 mt-1">
                     <div>Address: {getFormattedCosmosAddress()}</div>
                     <div>Balance: {formatBalance(balance)}</div>
                 </div>
             )}
-            
-            {error && (
-                <div className="text-red-400 mt-1">
-                    Error: {error.message}
-                </div>
-            )}
-            
-            <div className="text-gray-400 mt-1">
-                Backend: Cosmos
-            </div>
+
+            {error && <div className="text-red-400 mt-1">Error: {error.message}</div>}
+
+            <div className="text-gray-400 mt-1">Backend: Cosmos</div>
         </div>
     );
 };

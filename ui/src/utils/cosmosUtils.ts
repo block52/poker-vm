@@ -100,10 +100,14 @@ export const getCosmosUIConfig = (): CosmosConfig => {
 
 /**
  * Create a cosmos client with the default configuration
+ * @param mnemonic Optional mnemonic for signing operations
  * @returns CosmosClient instance
  */
-export const createCosmosClient = (): CosmosClient => {
+export const createCosmosClient = (mnemonic?: string): CosmosClient => {
     const config = getCosmosUIConfig();
+    if (mnemonic) {
+        config.mnemonic = mnemonic;
+    }
     return new CosmosClient(config);
 };
 
