@@ -1,5 +1,21 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite"; resolve: {
+    alias: {
+        crypto: "crypto-browserify",
+            stream: "stream-browserify",
+                buffer: "buffer",
+                    process: "process",
+                        util: "util",
+        },
+},
+optimizeDeps: {
+    include: [
+        "buffer",
+        "crypto-browserify",
+        "stream-browserify",
+        "process",
+        "util"
+    ],
+    }, "@vitejs/plugin-react";
 import tailwindcss from "tailwindcss";
 
 // https://vitejs.dev/config/
@@ -32,15 +48,24 @@ export default defineConfig({
     },
     define: {
         global: "globalThis",
+        "process.env": {},
     },
     resolve: {
         alias: {
             crypto: "crypto-browserify",
             stream: "stream-browserify",
             buffer: "buffer",
+            process: "process/browser",
+            util: "util",
         },
     },
     optimizeDeps: {
-        include: ["buffer", "crypto-browserify", "stream-browserify"],
+        include: [
+            "buffer",
+            "crypto-browserify",
+            "stream-browserify",
+            "process/browser",
+            "util"
+        ],
     },
 });

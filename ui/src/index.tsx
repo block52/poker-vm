@@ -1,3 +1,6 @@
+// Must be first import for browser polyfills
+import "./polyfills";
+
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
@@ -11,21 +14,21 @@ if (!projectId) {
 const root = createRoot(document.getElementById("app") as HTMLElement);
 
 function onRenderCallback(
-  id: string, 
-  _phase: "mount" | "update" | "nested-update",
-  actualDuration: number,
-  _baseDuration: number,
-  _startTime: number,
-  _commitTime: number
+    id: string,
+    _phase: "mount" | "update" | "nested-update",
+    actualDuration: number,
+    _baseDuration: number,
+    _startTime: number,
+    _commitTime: number
 ) {
-  // Log or collect performance metrics
-  if (actualDuration > 5) {
-    console.table({
-      component: id,
-      renderTime: actualDuration.toFixed(2),
-      phase: _phase
-    });
-  }
+    // Log or collect performance metrics
+    if (actualDuration > 5) {
+        console.table({
+            component: id,
+            renderTime: actualDuration.toFixed(2),
+            phase: _phase
+        });
+    }
 }
 
 root.render(
@@ -38,8 +41,8 @@ root.render(
     // double-execution pattern is too aggressive for real-time connections.
     // TODO: Re-enable StrictMode and improve WebSocket resilience for production
     // <React.StrictMode>
-        <Profiler id="AppRoot" onRender={onRenderCallback}>
-            <App />
-        </Profiler>
+    <Profiler id="AppRoot" onRender={onRenderCallback}>
+        <App />
+    </Profiler>
     // </React.StrictMode>
 );

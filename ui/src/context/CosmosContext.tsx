@@ -137,27 +137,26 @@ export const CosmosProvider: React.FC<CosmosProviderProps> = ({ children }) => {
     }, []);
 
     // Send tokens
-    const sendTokens = useCallback(async (recipientAddress: string, amount: string): Promise<string> => {
-        if (!cosmosClient || !address) {
-            throw new Error("Cosmos wallet not initialized");
-        }
+    const sendTokens = useCallback(
+        async (recipientAddress: string, amount: string): Promise<string> => {
+            if (!cosmosClient || !address) {
+                throw new Error("Cosmos wallet not initialized");
+            }
 
-        try {
-            const txHash = await cosmosClient.sendB52USDC(
-                address,
-                recipientAddress,
-                BigInt(amount)
-            );
+            try {
+                const txHash = await cosmosClient.sendB52USDC(address, recipientAddress, BigInt(amount));
 
-            // Refresh balance after successful transaction
-            await refreshBalance();
+                // Refresh balance after successful transaction
+                await refreshBalance();
 
-            return txHash;
-        } catch (err) {
-            console.error("Failed to send tokens:", err);
-            throw err instanceof Error ? err : new Error("Failed to send tokens");
-        }
-    }, [cosmosClient, address, refreshBalance]);
+                return txHash;
+            } catch (err) {
+                console.error("Failed to send tokens:", err);
+                throw err instanceof Error ? err : new Error("Failed to send tokens");
+            }
+        },
+        [cosmosClient, address, refreshBalance]
+    );
 
     // Perform poker action
     const performPokerAction = useCallback(
@@ -246,7 +245,7 @@ export const CosmosProvider: React.FC<CosmosProviderProps> = ({ children }) => {
         performPokerAction,
         joinGame,
         getGameState,
-        getLegalActions,
+        getLegalActions
     };
 
     return <CosmosContext.Provider value={value}>{children}</CosmosContext.Provider>;
