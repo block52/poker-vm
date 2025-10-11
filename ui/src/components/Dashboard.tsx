@@ -190,7 +190,7 @@ const Dashboard: React.FC = () => {
     const { playerCounts } = useTablePlayerCounts(gameAddresses);
 
     // Add useAccount hook to get account nonce
-    const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
+    const { account, isLoading: accountLoading, refetch: refetchAccount } = useAccount(publicKey);
 
     // Use the new useNewTable hook from hooks directory
     const { createTable, isCreating: isCreatingTable, error: createTableError } = useNewTable();
@@ -198,8 +198,6 @@ const Dashboard: React.FC = () => {
     const [showImportModal, setShowImportModal] = useState(false);
     const [importKey, setImportKey] = useState("");
     const [importError, setImportError] = useState("");
-    const [showPrivateKey, setShowPrivateKey] = useState(false);
-    const [showCosmosAddress, setShowCosmosAddress] = useState(false);
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
@@ -460,18 +458,6 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    const handleCopyPrivateKey = async () => {
-        const privateKey = localStorage.getItem(STORAGE_PRIVATE_KEY);
-        if (privateKey) {
-            try {
-                await navigator.clipboard.writeText(privateKey);
-                // Could add a toast notification here if you want
-            } catch (err) {
-                console.error("Failed to copy private key:", err);
-            }
-        }
-    };
-
     // Cosmos wallet handlers
     const handleImportCosmosSeed = async () => {
         try {
@@ -553,18 +539,6 @@ const Dashboard: React.FC = () => {
             setTransferError(err instanceof Error ? err.message : "Failed to send tokens");
         } finally {
             setIsTransferring(false);
-        }
-    };
-
-    const handleCopyCosmosAddress = async () => {
-        if (cosmosWallet.address) {
-            try {
-                await navigator.clipboard.writeText(cosmosWallet.address);
-                // Could add a toast notification here if you want
-                console.log("Cosmos address copied to clipboard");
-            } catch (err) {
-                console.error("Failed to copy cosmos address:", err);
-            }
         }
     };
 
@@ -1317,7 +1291,7 @@ const Dashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            {publicKey && (
+                            {cosmosWallet.address && (
                                 <div className="space-y-3">
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center">
@@ -1332,18 +1306,19 @@ const Dashboard: React.FC = () => {
                                             }}
                                         >
                                             <p className="font-mono text-xs tracking-wider break-all hidden md:block" style={{ color: colors.brand.primary }}>
-                                                {publicKey}
+                                                {cosmosWallet.address || "No Cosmos wallet connected"}
                                             </p>
                                             <p className="font-mono text-xs tracking-wider md:hidden" style={{ color: colors.brand.primary }}>
-                                                {formatAddress(publicKey)}
+                                                {cosmosWallet.address ? formatAddress(cosmosWallet.address) : "No wallet"}
                                             </p>
                                             <div className="flex items-center">
                                                 <button
                                                     onClick={() => {
-                                                        navigator.clipboard.writeText(publicKey || "");
+                                                        navigator.clipboard.writeText(cosmosWallet.address || "");
                                                     }}
                                                     className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                                                     title="Copy address"
+                                                    disabled={!cosmosWallet.address}
                                                 >
                                                     <svg
                                                         className="w-4 h-4"
@@ -1363,77 +1338,6 @@ const Dashboard: React.FC = () => {
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div
-                                        className="flex items-center justify-between p-3 rounded-lg"
-                                        style={{
-                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                        }}
-                                    >
-                                        <div className="flex items-center">
-                                            <div
-                                                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
-                                            >
-                                                <span className="font-bold" style={{ color: colors.brand.primary }}>
-                                                    $
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="text-white text-sm font-bold">USDC</p>
-                                                <p className="text-gray-400 text-xs">USD Coin</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-white font-bold">
-                                                {accountLoading ? (
-                                                    <span className="text-gray-400">Loading...</span>
-                                                ) : accountError ? (
-                                                    <span className="text-red-400">Error</span>
-                                                ) : account ? (
-                                                    `$${formatBalance(account.balance)}`
-                                                ) : (
-                                                    <span className="text-gray-400">No data</span>
-                                                )}
-                                            </p>
-                                            <button
-                                                onClick={() => setShowPrivateKey(!showPrivateKey)}
-                                                className="text-xs transition duration-300 hover:opacity-80"
-                                                style={{ color: colors.brand.primary }}
-                                            >
-                                                {showPrivateKey ? "Hide Private Key" : "Show Private Key"}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {showPrivateKey && (
-                                        <div className="p-2 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-blue-500/10">
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-white text-sm font-mono break-all">{localStorage.getItem(STORAGE_PRIVATE_KEY)}</p>
-                                                <button
-                                                    onClick={handleCopyPrivateKey}
-                                                    className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                                    title="Copy private key"
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        style={{ color: colors.brand.primary }}
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* Cosmos Wallet Section */}
                                     <div
@@ -1473,54 +1377,8 @@ const Dashboard: React.FC = () => {
                                                     <span className="text-gray-400">No wallet</span>
                                                 )}
                                             </p>
-                                            {cosmosWallet.address && (
-                                                <div className="flex flex-col items-end">
-                                                    <button
-                                                        onClick={handleCopyCosmosAddress}
-                                                        className="text-xs text-gray-400 hover:text-white transition-colors cursor-pointer mb-1"
-                                                        title="Click to copy full address"
-                                                    >
-                                                        {cosmosWallet.address.slice(0, 8)}...{cosmosWallet.address.slice(-6)}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setShowCosmosAddress(!showCosmosAddress)}
-                                                        className="text-xs transition duration-300 hover:opacity-80"
-                                                        style={{ color: colors.brand.primary }}
-                                                    >
-                                                        {showCosmosAddress ? "Hide Address" : "Show Address"}
-                                                    </button>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
-
-                                    {showCosmosAddress && cosmosWallet.address && (
-                                        <div className="p-2 bg-gray-800/90 backdrop-blur-sm rounded-lg border border-blue-500/10 mt-2">
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-white text-sm font-mono break-all">{cosmosWallet.address}</p>
-                                                <button
-                                                    onClick={handleCopyCosmosAddress}
-                                                    className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                                    title="Copy cosmos address"
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        style={{ color: colors.brand.primary }}
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {cosmosWallet.address && (
                                         <div className="space-y-2">
