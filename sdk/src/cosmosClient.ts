@@ -525,11 +525,10 @@ export const initializeCosmosClient = (config: CosmosConfig): CosmosClient => {
 
 // Update the default configuration
 export const getDefaultCosmosConfig = (): CosmosConfig => ({
-    rpcEndpoint: process.env.VITE_COSMOS_RPC_ENDPOINT || "http://localhost:26657",
-    restEndpoint: process.env.VITE_COSMOS_REST_ENDPOINT || "http://localhost:1317",
-    chainId: process.env.VITE_CHAIN_ID || "pokerchain",
-    prefix: process.env.VITE_ADDRESS_PREFIX || "b52",
+    rpcEndpoint: "http://localhost:26657",
+    restEndpoint: "http://localhost:1317",
+    chainId: "pokerchain",
+    prefix: "b52",
     denom: "b52USDC", // Use b52USDC as the denomination
-    gasPrice: process.env.VITE_GAS_PRICE || "0.001b52USDC", // Gas price in b52USDC
-    mnemonic: process.env.VITE_MNEMONIC,
+    gasPrice: "0.001b52USDC", // Gas price in b52USDC
 });

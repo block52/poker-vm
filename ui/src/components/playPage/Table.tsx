@@ -119,6 +119,9 @@ import GameStartCountdown from "./common/GameStartCountdown";
 import SitAndGoAutoJoinModal from "./SitAndGoAutoJoinModal";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 
+// Cosmos Integration
+import CosmosStatus from "../cosmos/CosmosStatus";
+
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
@@ -1368,6 +1371,11 @@ const Table = React.memo(() => {
                 <div className="text-xs" style={{ color: colors.ui.textSecondary, fontSize: isMobileLandscape ? "14px" : "20px" }}>
                     {clubName}
                 </div>
+            </div>
+
+            {/* Cosmos Status in Bottom Left */}
+            <div className="fixed bottom-2 left-2 z-40 opacity-60">
+                <CosmosStatus />
             </div>
         </div>
     );

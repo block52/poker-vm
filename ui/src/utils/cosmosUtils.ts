@@ -93,8 +93,8 @@ export const getCosmosUIConfig = (): CosmosConfig => {
         restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || defaultConfig.restEndpoint,
         chainId: import.meta.env.VITE_COSMOS_CHAIN_ID || defaultConfig.chainId,
         prefix: import.meta.env.VITE_COSMOS_PREFIX || defaultConfig.prefix,
+        denom: import.meta.env.VITE_COSMOS_DENOM || defaultConfig.denom,
         gasPrice: import.meta.env.VITE_COSMOS_GAS_PRICE || defaultConfig.gasPrice,
-        contractAddress: "",
     };
 };
 

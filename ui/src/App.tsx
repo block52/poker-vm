@@ -11,6 +11,7 @@ import Dashboard from "./components/Dashboard";
 import QRDeposit from "./components/QRDeposit";
 import CosmosWalletPage from "./components/CosmosWalletPage";
 import { GameStateProvider } from "./context/GameStateContext";
+import { CosmosProvider } from "./context/CosmosContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
 import FaviconSetter from "./components/FaviconSetter";
@@ -79,9 +80,11 @@ function App() {
         <Router>
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-                    <GameStateProvider>
-                        <AppContent />
-                    </GameStateProvider>
+                    <CosmosProvider>
+                        <GameStateProvider>
+                            <AppContent />
+                        </GameStateProvider>
+                    </CosmosProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </Router>

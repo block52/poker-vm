@@ -1,6 +1,5 @@
 // Main SDK exports
-export { CosmosClient } from "./cosmosClient";
-export { getDefaultCosmosConfig } from "./cosmosClient";
+export { CosmosClient, getDefaultCosmosConfig } from "./cosmosClient";
 
 // Types exports
 export type { CosmosConfig, GameState, GameInfo, LegalAction, PlayerAction } from "./types";

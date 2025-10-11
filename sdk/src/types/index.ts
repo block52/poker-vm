@@ -5,8 +5,9 @@ export interface CosmosConfig {
     restEndpoint: string;
     chainId: string;
     prefix: string;
+    denom: string;
     gasPrice: string;
-    contractAddress: string;
+    mnemonic?: string;
 }
 
 export interface GameState {
