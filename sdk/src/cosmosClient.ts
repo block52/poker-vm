@@ -1,9 +1,89 @@
-import { StargateClient, SigningStargateClient, GasPrice } from "@cosmjs/stargate";
+import { StargateClient, SigningStargateClient, GasPrice, Coin, defaultRegistryTypes } from "@cosmjs/stargate";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { stringToPath } from "@cosmjs/crypto";
-import { Coin } from "@cosmjs/amino";
-import { Tendermint37Client } from "@cosmjs/tendermint-rpc";
+import { Registry, GeneratedType } from "@cosmjs/proto-signing";
+import { Writer, Reader } from "protobufjs/minimal";
 import axios, { AxiosInstance } from "axios";
+
+// Cosmos blockchain constants (matches pokerchain/x/poker/types/types.go)
+export const COSMOS_CONSTANTS = {
+    CHAIN_ID: "pokerchain",
+    ADDRESS_PREFIX: "b52",
+    TOKEN_DENOM: "uusdc",
+    USDC_DECIMALS: 6, // 1 USDC = 1,000,000 uusdc
+    GAME_CREATION_COST: 1, // 1 uusdc = 0.000001 USDC
+    DEFAULT_GAS_PRICE: "0.025uusdc"
+} as const;
+
+// Define the MsgCreateGame interface to match the protobuf structure
+export interface MsgCreateGame {
+    creator: string;
+    minBuyIn: string;
+    maxBuyIn: string;
+    minPlayers: number;
+    maxPlayers: number;
+    smallBlind: string;
+    bigBlind: string;
+    timeout: number;
+    gameType: string;
+}
+
+// Create a simple encoder for MsgCreateGame
+const MsgCreateGameType: GeneratedType = {
+    encode(message: MsgCreateGame, writer: Writer = Writer.create()): Writer {
+        if (message.creator !== "") {
+            writer.uint32(10).string(message.creator);
+        }
+        if (message.minBuyIn !== "0") {
+            writer.uint32(16).uint64(message.minBuyIn);
+        }
+        if (message.maxBuyIn !== "0") {
+            writer.uint32(24).uint64(message.maxBuyIn);
+        }
+        if (message.minPlayers !== 0) {
+            writer.uint32(32).int64(message.minPlayers);
+        }
+        if (message.maxPlayers !== 0) {
+            writer.uint32(40).int64(message.maxPlayers);
+        }
+        if (message.smallBlind !== "0") {
+            writer.uint32(48).uint64(message.smallBlind);
+        }
+        if (message.bigBlind !== "0") {
+            writer.uint32(56).uint64(message.bigBlind);
+        }
+        if (message.timeout !== 0) {
+            writer.uint32(64).int64(message.timeout);
+        }
+        if (message.gameType !== "") {
+            writer.uint32(74).string(message.gameType);
+        }
+        return writer;
+    },
+    decode(input: Uint8Array | Reader, length?: number): MsgCreateGame {
+        throw new Error("MsgCreateGame decode not implemented");
+    },
+    fromPartial(object: Partial<MsgCreateGame>): MsgCreateGame {
+        return {
+            creator: object.creator || "",
+            minBuyIn: object.minBuyIn || "0",
+            maxBuyIn: object.maxBuyIn || "0",
+            minPlayers: object.minPlayers || 0,
+            maxPlayers: object.maxPlayers || 0,
+            smallBlind: object.smallBlind || "0",
+            bigBlind: object.bigBlind || "0",
+            timeout: object.timeout || 0,
+            gameType: object.gameType || "",
+        };
+    },
+};
+
+// Create a custom registry with poker module types
+function createPokerRegistry(): Registry {
+    const registry = new Registry([...defaultRegistryTypes]);
+    registry.register("/pokerchain.poker.v1.MsgCreateGame", MsgCreateGameType);
+    return registry;
+}
 
 export interface CosmosConfig {
     rpcEndpoint: string;
@@ -40,7 +120,6 @@ export class CosmosClient {
     private config: CosmosConfig;
     private client?: StargateClient;
     private signingClient?: SigningStargateClient;
-    private tmClient?: Tendermint37Client;
     private wallet?: DirectSecp256k1HdWallet;
     private restClient: AxiosInstance;
 
@@ -85,11 +164,15 @@ export class CosmosClient {
         }
 
         if (!this.signingClient) {
+            // Create custom registry with poker module types
+            const registry = createPokerRegistry();
+
             this.signingClient = await SigningStargateClient.connectWithSigner(
                 this.config.rpcEndpoint,
                 this.wallet,
                 {
-                    gasPrice: GasPrice.fromString(this.config.gasPrice)
+                    gasPrice: GasPrice.fromString(this.config.gasPrice),
+                    registry: registry
                 }
             );
         }
@@ -189,38 +272,46 @@ export class CosmosClient {
     }
 
     /**
-     * Initialize the Tendermint client for block queries
+     * Get a specific block by height via REST API
      */
-    async initTendermintClient(): Promise<void> {
-        if (!this.tmClient) {
-            this.tmClient = await Tendermint37Client.connect(this.config.rpcEndpoint);
+    async getBlock(height: number) {
+        try {
+            const response = await this.restClient.get(
+                `/cosmos/base/tendermint/v1beta1/blocks/${height}`
+            );
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching block at height ${height}:`, error);
+            throw error;
         }
     }
 
     /**
-     * Get a specific block by height
+     * Get the latest block via REST API
      */
-    async getBlock(height: number) {
-        await this.initTendermintClient();
-        if (!this.tmClient) throw new Error("Tendermint client not initialized");
-
-        return await this.tmClient.block(height);
+    async getLatestBlock() {
+        try {
+            const response = await this.restClient.get(
+                "/cosmos/base/tendermint/v1beta1/blocks/latest"
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching latest block:", error);
+            throw error;
+        }
     }
 
     /**
      * Get multiple blocks starting from a specific height
      */
     async getBlocks(startHeight: number, count: number = 10) {
-        await this.initTendermintClient();
-        if (!this.tmClient) throw new Error("Tendermint client not initialized");
-
         const blocks = [];
         const currentHeight = await this.getHeight();
         const endHeight = Math.min(startHeight + count - 1, currentHeight);
 
         for (let height = startHeight; height <= endHeight; height++) {
             try {
-                const block = await this.tmClient.block(height);
+                const block = await this.getBlock(height);
                 blocks.push(block);
             } catch (error) {
                 console.warn(`Failed to fetch block at height ${height}:`, error);
@@ -496,9 +587,6 @@ export class CosmosClient {
         }
         if (this.signingClient) {
             this.signingClient.disconnect();
-        }
-        if (this.tmClient) {
-            this.tmClient.disconnect();
         }
     }
 }

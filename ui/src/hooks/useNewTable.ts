@@ -1,8 +1,7 @@
 import { useState, useCallback } from "react";
-import { GameOptionsDTO, GameType } from "@bitcoinbrisbane/block52";
-import { getClient } from "../utils/b52AccountUtils";
-import { ethers } from "ethers";
-import { useCosmosContext } from "./useCosmosContext";
+import { GameType, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getCosmosClient } from "../utils/cosmos/client";
+import { getCosmosAddress } from "../utils/cosmos/storage";
 
 // Type for creating new table options
 export interface CreateTableOptions {
@@ -15,20 +14,20 @@ export interface CreateTableOptions {
 
 // Type for useNewTable hook return
 export interface UseNewTableReturn {
-    createTable: (owner: string, nonce: number, gameOptions: CreateTableOptions) => Promise<string | null>;
+    createTable: (gameOptions: CreateTableOptions) => Promise<string | null>;
     isCreating: boolean;
     error: Error | null;
-    newTableAddress: string | null;
+    newGameId: string | null;
 }
 
 /**
- * Custom hook to create a new table using either Cosmos or the SDK's NodeRpcClient
+ * Custom hook to create a new game on Cosmos blockchain using CosmosClient
  * @returns Object with createTable function, loading state, and error
  */
 export const useNewTable = (): UseNewTableReturn => {
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-    const [newTableAddress, setNewTableAddress] = useState<string | null>(null);
+    const [newGameId, setNewGameId] = useState<string | null>(null);
 
     // Get Cosmos context for Cosmos-based table creation
     const cosmosContext = useCosmosContext();
@@ -37,132 +36,91 @@ export const useNewTable = (): UseNewTableReturn => {
     const useCosmosBackend = import.meta.env.VITE_USE_COSMOS === "true";
 
     const createTable = useCallback(async (
-        owner: string,
-        nonce: number,
         gameOptions: CreateTableOptions
     ): Promise<string | null> => {
         setIsCreating(true);
         setError(null);
-        setNewTableAddress(null);
+        setNewGameId(null);
 
         try {
-            if (useCosmosBackend && cosmosContext) {
-                // Use Cosmos backend for table creation
-                console.log("🌌 Creating table via Cosmos blockchain");
-
-                const minBuyIn: bigint = ethers.parseUnits(gameOptions.minBuyIn.toString(), 6); // b52USDC has 6 decimals
-                const maxBuyIn: bigint = ethers.parseUnits(gameOptions.maxBuyIn.toString(), 6);
-
-                // Calculate blind values based on game type
-                const calculatedSmallBlind: bigint = minBuyIn / 100n; // 1% of min buy-in
-                const calculatedBigBlind: bigint = maxBuyIn / 100n; // 1% of max buy-in
-
-                let smallBlind = calculatedSmallBlind;
-                let bigBlind = calculatedBigBlind;
-
-                if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
-                    // For Sit & Go and Tournament: Fixed starting blinds
-                    smallBlind = ethers.parseUnits("100", 6); // 100 b52USDC
-                    bigBlind = ethers.parseUnits("200", 6);   // 200 b52USDC
-
-                    console.log("🎮 Sit & Go Tournament Settings:");
-                    console.log(`  Entry Fee: ${gameOptions.minBuyIn} b52USDC`);
-                    console.log(`  Starting Blinds: ${ethers.formatUnits(smallBlind, 6)}/${ethers.formatUnits(bigBlind, 6)} b52USDC`);
-                }
-
-                console.log("🚀 Creating Cosmos Game with:");
-                console.log(`  Type: ${gameOptions.type}`);
-                console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
-                console.log(`  Buy-in: ${ethers.formatUnits(minBuyIn, 6)}-${ethers.formatUnits(maxBuyIn, 6)} b52USDC`);
-                console.log(`  Blinds: ${ethers.formatUnits(smallBlind, 6)}/${ethers.formatUnits(bigBlind, 6)} b52USDC`);
-
-                // Create game using Cosmos client
-                const txHash = await cosmosContext.createGame(
-                    gameOptions.type.toString(),
-                    gameOptions.minPlayers,
-                    gameOptions.maxPlayers,
-                    minBuyIn,
-                    maxBuyIn,
-                    smallBlind,
-                    bigBlind,
-                    300000 // 30 second timeout
-                );
-
-                console.log(`✅ Cosmos game created successfully. Transaction: ${txHash}`);
-                setNewTableAddress(txHash); // Use transaction hash as identifier
-                return txHash;
-            } else {
-                // Use proxy backend for table creation
-                console.log("🔄 Creating table via proxy backend");
-
-                // Get the singleton client instance
-                const client = getClient();
-
-                const minBuyIn: bigint = ethers.parseEther(gameOptions.minBuyIn.toString());
-                const maxBuyIn: bigint = ethers.parseEther(gameOptions.maxBuyIn.toString());
-
-                // Calculate blind values based on game type
-                const calculatedSmallBlind: bigint = minBuyIn / 100n; // 1% of min buy-in
-                const calculatedBigBlind: bigint = maxBuyIn / 100n; // 1% of max buy-in
-
-                let smallBlind = calculatedSmallBlind.toString();
-                let bigBlind = calculatedBigBlind.toString();
-
-                if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
-                    // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in
-                    // Buy-in represents tournament entry fee, not chip value
-                    smallBlind = ethers.parseEther("100").toString();
-                    bigBlind = ethers.parseEther("200").toString();
-
-                    console.log("🎮 Sit & Go Tournament Settings:");
-                    console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
-                    console.log(`  Starting Blinds: ${smallBlind}/${bigBlind}`);
-                }
-
-                // Build game options DTO object for the new API with all required fields
-                const gameOptionsDTO: GameOptionsDTO = {
-                    type: gameOptions.type,
-                    minBuyIn: minBuyIn.toString(),
-                    maxBuyIn: maxBuyIn.toString(),
-                    minPlayers: gameOptions.minPlayers,
-                    maxPlayers: gameOptions.maxPlayers,
-                    smallBlind,
-                    bigBlind,
-                    timeout: 300000 // Standard 30,000 millisecond timeout for decisions
-                };
-
-                console.log("📊 Final game parameters:");
-                console.log(`  Game Type: ${gameOptions.type}`);
-                console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
-                console.log("  Timeout: 30 seconds");
-
-                console.log("🚀 Creating New Table with SDK:");
-                console.log(`Owner: ${owner}`);
-                console.log(`Nonce: ${nonce}`);
-                console.log("Game Options:", gameOptionsDTO);
-
-                // IMPORTANT: We pass a timestamp instead of the actual account nonce here
-                // This ensures each table gets a unique address even if multiple tables are created quickly
-                // Using nonce 0 would cause issues with table uniqueness and joining
-                // The timestamp guarantees uniqueness while the actual transaction nonce is handled internally by the SDK
-                const timestamp = Date.now();
-                console.log(`Using timestamp for uniqueness: ${timestamp}`);
-
-                // Use the SDK's newTable method with the game options DTO
-                // The third parameter is the timestamp for uniqueness, not the account nonce
-                const tableAddress = await client.newTable(gameOptionsDTO, owner, timestamp);
-
-                if (tableAddress) {
-                    console.log(`✅ Table created successfully: ${tableAddress}`);
-                    setNewTableAddress(tableAddress);
-                }
-
-                return tableAddress;
+            // Get Cosmos client
+            const cosmosClient = getCosmosClient();
+            if (!cosmosClient) {
+                throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
             }
+
+            // Get user's Cosmos address
+            const userAddress = getCosmosAddress();
+            if (!userAddress) {
+                throw new Error("Cosmos address not found. Please create or import a Cosmos wallet.");
+            }
+
+            // Convert buy-in from dollars to uusdc micro-units using SDK constants
+            const minBuyInB52USDC = BigInt(Math.floor(gameOptions.minBuyIn * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
+            const maxBuyInB52USDC = BigInt(Math.floor(gameOptions.maxBuyIn * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
+
+            // Calculate blind values based on game type
+            let smallBlindB52USDC: bigint;
+            let bigBlindB52USDC: bigint;
+
+            if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
+                // For Sit & Go and Tournament: Fixed starting blinds
+                // 0.01 USDC small blind, 0.02 USDC big blind
+                smallBlindB52USDC = BigInt(10000); // 0.01 USDC in micro-units
+                bigBlindB52USDC = BigInt(20000);   // 0.02 USDC in micro-units
+
+                console.log("🎮 Sit & Go Tournament Settings:");
+                console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
+                console.log(`  Starting Blinds: ${smallBlindB52USDC}/${bigBlindB52USDC} uusdc`);
+            } else {
+                // For cash games: 1% of min/max buy-in
+                smallBlindB52USDC = minBuyInB52USDC / 100n;
+                bigBlindB52USDC = maxBuyInB52USDC / 100n;
+            }
+
+            console.log("📊 Final game parameters:");
+            console.log(`  Game Type: ${gameOptions.type}`);
+            console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
+            console.log(`  Min Buy-in: ${minBuyInB52USDC} uusdc ($${gameOptions.minBuyIn})`);
+            console.log(`  Max Buy-in: ${maxBuyInB52USDC} uusdc ($${gameOptions.maxBuyIn})`);
+            console.log(`  Small Blind: ${smallBlindB52USDC} uusdc`);
+            console.log(`  Big Blind: ${bigBlindB52USDC} uusdc`);
+
+            console.log("🚀 Creating New Game on Cosmos Blockchain:");
+            console.log(`Creator: ${userAddress}`);
+
+            // Map GameType to string for Cosmos
+            const gameTypeStr = gameOptions.type === GameType.SIT_AND_GO ? "sit_and_go" :
+                               gameOptions.type === GameType.TOURNAMENT ? "tournament" : "cash";
+
+            // Timeout in seconds (5 minutes = 300 seconds)
+            const timeoutSeconds = 300;
+
+            // Call CosmosClient.createGame()
+            const txHash = await cosmosClient.createGame(
+                gameTypeStr,
+                gameOptions.minPlayers,
+                gameOptions.maxPlayers,
+                minBuyInB52USDC,
+                maxBuyInB52USDC,
+                smallBlindB52USDC,
+                bigBlindB52USDC,
+                timeoutSeconds
+            );
+
+            if (txHash) {
+                console.log(`✅ Game creation transaction submitted: ${txHash}`);
+                setNewGameId(txHash);
+
+                // Note: The actual game ID will be returned in the transaction result
+                // You may want to query the transaction to get the game ID from events
+            }
+
+            return txHash;
         } catch (err: any) {
-            const errorMessage = err.message || "Failed to create table";
+            const errorMessage = err.message || "Failed to create game on blockchain";
             setError(new Error(errorMessage));
-            console.error("Error creating table:", err);
+            console.error("Error creating game:", err);
             return null;
         } finally {
             setIsCreating(false);
@@ -173,6 +131,6 @@ export const useNewTable = (): UseNewTableReturn => {
         createTable,
         isCreating,
         error,
-        newTableAddress
+        newGameId
     };
 };

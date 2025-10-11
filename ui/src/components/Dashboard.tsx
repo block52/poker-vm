@@ -320,28 +320,12 @@ const Dashboard: React.FC = () => {
 
     const DEFAULT_GAME_CONTRACT = "0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7"; // Example address
 
-    // Function to handle creating a new game using the new hook
+    // Function to handle creating a new game using Cosmos blockchain
     const handleCreateNewGame = async () => {
-        // Check if Cosmos backend is enabled
-        const useCosmosBackend = import.meta.env.VITE_USE_COSMOS === "true";
-
-        if (useCosmosBackend) {
-            // For Cosmos backend, check Cosmos wallet
-            if (!cosmosWallet.address) {
-                setCreateGameError("No Cosmos wallet connected. Please import or create a Cosmos wallet first.");
-                return;
-            }
-        } else {
-            // For proxy backend, check ETH wallet
-            if (!publicKey) {
-                setCreateGameError("No wallet address available. Please create or import a wallet first.");
-                return;
-            }
-
-            if (!account) {
-                setCreateGameError("Account data not loaded. Please wait and try again.");
-                return;
-            }
+        // Check for Cosmos wallet
+        if (!cosmosWallet.address) {
+            setCreateGameError("No Cosmos wallet found. Please create or import a Cosmos wallet first.");
+            return;
         }
 
         setCreateGameError("");
@@ -359,6 +343,7 @@ const Dashboard: React.FC = () => {
             console.log("  Sit & Go Buy-In:", modalSitAndGoBuyIn);
             console.log("  Player Count:", modalPlayerCount);
             console.log("  Is Tournament:", isTournament);
+            console.log("  Cosmos Address:", cosmosWallet.address);
 
             const gameOptions: CreateTableOptions = {
                 type: modalGameType,
@@ -368,36 +353,25 @@ const Dashboard: React.FC = () => {
                 maxPlayers: modalPlayerCount
             };
 
-            console.log("📦 Final CreateTableOptions being sent to SDK:");
+            console.log("📦 Final CreateTableOptions being sent to Cosmos:");
             console.log("  type:", gameOptions.type);
             console.log("  minBuyIn:", gameOptions.minBuyIn);
             console.log("  maxBuyIn:", gameOptions.maxBuyIn);
             console.log("  minPlayers:", gameOptions.minPlayers);
             console.log("  maxPlayers:", gameOptions.maxPlayers);
 
-            // Use the createTable function from the hook
-            // For Cosmos backend, we use cosmosWallet.address; for proxy backend, we use publicKey
-            const ownerAddress = useCosmosBackend ? cosmosWallet.address! : publicKey!;
-            const nonce = useCosmosBackend ? 0 : account!.nonce; // Cosmos doesn't need nonce, it handles it internally
+            // Use the createTable function from the hook (Cosmos SDK)
+            const txHash = await createTable(gameOptions);
 
-            const tableAddress = await createTable(ownerAddress, nonce, gameOptions);
-
-            if (tableAddress) {
+            if (txHash) {
+                console.log("✅ Game created! Transaction hash:", txHash);
                 setShowCreateGameModal(false);
-
-                if (useCosmosBackend) {
-                    // For Cosmos, refresh the Cosmos wallet balance
-                    await cosmosWallet.refreshBalance();
-                } else {
-                    // For proxy backend, refresh account data to get updated nonce
-                    await refetchAccount();
-                }
 
                 // Refresh the games list
                 await refetchGames();
             }
         } catch (error: any) {
-            console.error("Error creating table:", error);
+            console.error("Error creating game:", error);
             setCreateGameError(error.message || "An unexpected error occurred");
         }
     };
