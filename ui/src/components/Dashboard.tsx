@@ -323,15 +323,11 @@ const Dashboard: React.FC = () => {
 
     const DEFAULT_GAME_CONTRACT = "0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7"; // Example address
 
-    // Function to handle creating a new game using the new hook
+    // Function to handle creating a new game using Cosmos blockchain
     const handleCreateNewGame = async () => {
-        if (!publicKey) {
-            setCreateGameError("No wallet address available. Please create or import a wallet first.");
-            return;
-        }
-
-        if (!account) {
-            setCreateGameError("Account data not loaded. Please wait and try again.");
+        // Check for Cosmos wallet
+        if (!cosmosWallet.address) {
+            setCreateGameError("No Cosmos wallet found. Please create or import a Cosmos wallet first.");
             return;
         }
 
@@ -350,6 +346,7 @@ const Dashboard: React.FC = () => {
             console.log("  Sit & Go Buy-In:", modalSitAndGoBuyIn);
             console.log("  Player Count:", modalPlayerCount);
             console.log("  Is Tournament:", isTournament);
+            console.log("  Cosmos Address:", cosmosWallet.address);
 
             const gameOptions: CreateTableOptions = {
                 type: modalGameType,
@@ -359,27 +356,25 @@ const Dashboard: React.FC = () => {
                 maxPlayers: modalPlayerCount
             };
 
-            console.log("📦 Final CreateTableOptions being sent to SDK:");
+            console.log("📦 Final CreateTableOptions being sent to Cosmos:");
             console.log("  type:", gameOptions.type);
             console.log("  minBuyIn:", gameOptions.minBuyIn);
             console.log("  maxBuyIn:", gameOptions.maxBuyIn);
             console.log("  minPlayers:", gameOptions.minPlayers);
             console.log("  maxPlayers:", gameOptions.maxPlayers);
 
-            // Use the createTable function from the hook
-            const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
+            // Use the createTable function from the hook (Cosmos SDK)
+            const txHash = await createTable(gameOptions);
 
-            if (tableAddress) {
+            if (txHash) {
+                console.log("✅ Game created! Transaction hash:", txHash);
                 setShowCreateGameModal(false);
-
-                // Refresh account data to get updated nonce
-                await refetchAccount();
 
                 // Refresh the games list
                 await refetchGames();
             }
         } catch (error: any) {
-            console.error("Error creating table:", error);
+            console.error("Error creating game:", error);
             setCreateGameError(error.message || "An unexpected error occurred");
         }
     };
