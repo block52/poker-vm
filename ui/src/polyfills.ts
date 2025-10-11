@@ -1,16 +1,27 @@
 // Browser polyfills for Node.js modules used by Cosmos SDK
 import { Buffer } from "buffer";
 
+// Ensure global is defined
+if (typeof (globalThis as any).global === "undefined") {
+    (globalThis as any).global = globalThis;
+}
+
 // Make Buffer globally available
 if (typeof window !== "undefined") {
-    window.global = window.global || window;
-    window.Buffer = window.Buffer || Buffer;
-    window.process = window.process || {
+    (window as any).global = (window as any).global || window;
+    (window as any).Buffer = (window as any).Buffer || Buffer;
+    (window as any).process = (window as any).process || {
         env: {},
         browser: true,
         version: "",
-        versions: { node: "16.0.0" }
+        versions: { node: "16.0.0" },
+        nextTick: (callback: Function) => setTimeout(callback, 0)
     };
+
+    // Fix for hash-base/readable-stream slice issue
+    if (!Buffer.prototype.slice && (Buffer.prototype as any).subarray) {
+        Buffer.prototype.slice = (Buffer.prototype as any).subarray;
+    }
 }
 
 // Export for module usage
@@ -20,5 +31,6 @@ export const process = {
     env: {},
     browser: true,
     version: "",
-    versions: { node: "16.0.0" }
+    versions: { node: "16.0.0" },
+    nextTick: (callback: Function) => setTimeout(callback, 0)
 };
