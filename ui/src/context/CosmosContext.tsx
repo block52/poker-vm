@@ -2,6 +2,34 @@ import React, { createContext, useEffect, useState, useCallback, ReactNode } fro
 import { CosmosClient } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic, setCosmosMnemonic, setCosmosAddress, clearCosmosData, getCosmosUIConfig } from "../utils/cosmosUtils";
 
+/**
+ * ARCHITECTURE NOTE - Real-Time Game State Subscription Flow:
+ *
+ * This CosmosContext handles wallet management and blockchain transactions.
+ * For REAL-TIME game state updates, the architecture is:
+ *
+ * 1. UI creates/joins game → CosmosClient.createGame() → Cosmos blockchain (MsgCreateGame)
+ * 2. Cosmos blockchain processes transaction and commits to block
+ * 3. PVM server polls Cosmos REST API for new blocks/transactions
+ *    (e.g., GET /cosmos/base/tendermint/v1beta1/blocks/latest every 2 seconds)
+ * 4. When PVM detects game transaction, it queries full game state from Cosmos via REST API
+ *    (REST is simpler than gRPC - no protobuf complexity in PVM)
+ * 5. PVM broadcasts game state to ALL connected WebSocket clients
+ * 6. UI GameStateContext receives updates via WebSocket connection (wss://node1.block52.xyz)
+ *
+ * Key connections:
+ * - PVM ← (polls via REST) ← Cosmos blockchain
+ * - UI ← (WebSocket) ← PVM server (UNCHANGED - existing GameStateContext works as-is!)
+ *
+ * This hybrid approach keeps:
+ * - Cosmos blockchain as source of truth for game state and transactions
+ * - PVM as real-time relay/distribution layer via WebSocket
+ * - Existing GameStateContext.tsx needs ZERO changes
+ * - Simple REST API polling in PVM (no complex Tendermint RPC subscriptions)
+ *
+ * See: /poker-vm/WORKING_CHECKLIST.md "OPTION 2: Custom WebSocket Server + Cosmos Subscriber (Hybrid)"
+ */
+
 interface CosmosBalance {
     denom: string;
     amount: string;

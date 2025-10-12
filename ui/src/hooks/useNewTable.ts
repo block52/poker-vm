@@ -29,9 +29,6 @@ export const useNewTable = (): UseNewTableReturn => {
     const [error, setError] = useState<Error | null>(null);
     const [newGameId, setNewGameId] = useState<string | null>(null);
 
-    // Get Cosmos context for Cosmos-based table creation
-    const cosmosContext = useCosmosContext();
-
     // Check if Cosmos backend is enabled
     const useCosmosBackend = import.meta.env.VITE_USE_COSMOS === "true";
 
@@ -125,7 +122,7 @@ export const useNewTable = (): UseNewTableReturn => {
         } finally {
             setIsCreating(false);
         }
-    }, [useCosmosBackend, cosmosContext]);
+    }, [useCosmosBackend]);
 
     return {
         createTable,
