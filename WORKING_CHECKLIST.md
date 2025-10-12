@@ -3,7 +3,7 @@
 **Last Updated**: October 11, 2025 @ 6:50 PM
 **Status**: 🎉 GAME CREATION WORKING! Custom protobuf message registration complete
 **Current Block Height**: ~4028+ (local chain running)
-**CosmosClient Progress**: ✅ 11/27 IClient methods implemented (41%) - **`createGame()` via SDK now working!** 🎲
+**CosmosClient Progress**: ✅ 12/27 IClient methods implemented (44%) - **`createGame()` + `findGames()` TESTED & WORKING!** 🎲🎉
 **Architecture**: ⚠️ **UI USES COSMOS REST API ONLY** - No Tendermint RPC from browser
 
 **✅ BRIDGE TEST SUCCESSFUL - CONFIRMED IN UI**:
@@ -278,11 +278,27 @@ todo:
 - 📋 Checklist: `/poker-vm/cosmosexplorer/COSMOS_EXPLORER_CHECKLIST.md`
 
 **Next Steps**:
-1. [ ] Get transaction hash from block #231 to verify it's the game creation
-2. [ ] Query games list to confirm game was created: `pokerchaind query poker list-games`
-3. [ ] Test transaction search with actual tx hash from block #231
-4. [ ] Verify MsgCreateGame message details in explorer
-5. [ ] Fix ESLint warning in BlocksPage.tsx (unused `Link` import)
+1. [x] Get transaction hash from block #68 to verify game creation ✅ `6DC1920A33244C65505CEA60DD86961A89DB31689772B78420F493F99FC17682`
+2. [x] Query games list to confirm game was created ✅ Returns 1 game
+3. [x] **Test findGames() in Dashboard** ✅ **WORKING!** Games list displays correctly from Cosmos REST API
+4. [x] Verify MsgCreateGame message details ✅ Game ID `0xbf618c81...` created successfully
+5. [ ] Test transaction search with actual tx hash in Cosmos Explorer
+6. [ ] Fix ESLint warning in BlocksPage.tsx (unused `Link` import)
+7. [ ] Fix buy-in display formatting (currently shows $0.00 due to number/string conversion)
+
+**Recent Implementation** (Oct 12, 2025):
+- ✅ **Implemented `ListGames` query handler** in pokerchain (`query_list_games.go`)
+  - Uses `k.Games.Walk()` to iterate all games from blockchain state
+  - Returns JSON array of games via REST API
+- ✅ Added `findGames(min?, max?)` method to SDK CosmosClient
+- ✅ Added `listGames()` helper method (calls `/block52/pokerchain/poker/v1/list_games`)
+- ✅ Updated `useFindGames` hook to use Cosmos REST API instead of Ethereum NodeRpcClient
+- ✅ Removed Ethereum/private key dependencies from useFindGames
+- ✅ **TESTED & WORKING!** - Games display in Dashboard UI
+  - Game created: `0xbf618c81022d227f1f543ffe22eaac94b33b6c7e098302e51fac1dd24715155f`
+  - Appears in "Available Tables" section with Join button
+  - Shows player count (0/4 Players)
+  - Enhanced logging confirms data flow from Cosmos → SDK → UI
 
 **Test Account**:
 - Address: `b52168ketml7jed9gl7t2quelfkktr0zuuescapgde`
@@ -611,17 +627,30 @@ yarn test:bridge:withdraw
     - Fixed "Cannot read properties of undefined (reading 'uint32')" error
   - **Pattern**: All poker game **transactions** use SigningStargateClient, all **queries** use REST:
     - `createGame()` → SigningStargateClient with custom MsgCreateGame encoder ✅
+    - `findGames()` → REST GET `/block52/pokerchain/poker/v1/list_games` ✅ **IMPLEMENTED (Oct 12, 2025)**
     - `playerJoin()` → SigningStargateClient with MsgJoinGame encoder (future)
     - `playerAction()` → SigningStargateClient with MsgPerformAction encoder (future)
     - `playerLeave()` → SigningStargateClient with MsgLeaveGame encoder (future)
-    - `findGames()` → REST GET `/poker/v1/games` (future)
     - `getGameState()` → REST GET `/poker/v1/game_state/{id}` (future)
   - **Testing**: Build SDK with `cd sdk && yarn build`, reinstall in UI with `yarn install --force`
 
-  **❌ Not Implemented (17 methods)** - Poker-specific game logic:
+  **✅ Implemented (12 methods)** - Basic Cosmos SDK queries + Game Creation + Game Listing:
+  - [x] `getAccount(address)` - Get account info
+  - [x] `getBalance(address)` - Get single denom balance
+  - [x] `getAllBalances(address)` - Get all token balances
+  - [x] `sendTokens(from, to, amount)` - Transfer tokens
+  - [x] `getHeight()` - Get current block height
+  - [x] `getTx(txHash)` - Get transaction by hash
+  - [x] `getBlock(height)` - Get specific block
+  - [x] `getBlocks(startHeight, count)` - Get multiple blocks
+  - [x] `getLatestBlocks(count)` - Get recent blocks
+  - [x] `createGame(...)` - **✅ WORKING** - Creates new poker game via CosmJS
+  - [x] `findGames(min?, max?)` - **✅ IMPLEMENTED (Oct 12, 2025)** - Query available poker games via REST → `GET /block52/pokerchain/poker/v1/list_games`
+  - [x] `listGames()` - Helper method for findGames()
 
-  *Core Poker Game Methods* (5 remaining):
-  - [ ] `findGames(min?, max?)` - **[RPC QUERY]** Query available poker games → `GET /poker/v1/games`
+  **❌ Not Implemented (16 methods)** - Poker-specific game logic:
+
+  *Core Poker Game Methods* (4 remaining):
   - [ ] `getGameState(gameAddress, caller)` - **[RPC QUERY]** Get current game state → `GET /poker/v1/game_state/{game_id}`
   - [ ] `getLegalActions(gameAddress, caller)` - **[RPC QUERY]** Get legal actions for player → `GET /poker/v1/legal_actions/{game_id}`
   - [ ] `newHand(gameAddress, nonce?)` - **[REST TX]** Deal new hand → `POST /poker/v1/new_hand` (if message exists)

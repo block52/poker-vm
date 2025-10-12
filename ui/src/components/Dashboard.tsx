@@ -19,7 +19,7 @@ import USDCDepositModal from "./USDCDepositModal";
 import { Variant } from "./types";
 import { formatAddress } from "./common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
+import { formatBalance, formatUSDCToSimpleDollars } from "../utils/numberUtils"; // Import formatBalance and USDC utility functions
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
@@ -1635,7 +1635,7 @@ const Dashboard: React.FC = () => {
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
                                                                     Buy-in: $
                                                                     {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
-                                                                        ? formatBalance(game.gameOptions.maxBuyIn)
+                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.maxBuyIn)
                                                                         : "1.00"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
@@ -1650,23 +1650,23 @@ const Dashboard: React.FC = () => {
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
                                                                     Min: $
                                                                     {game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0"
-                                                                        ? formatBalance(game.gameOptions.minBuyIn)
+                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.minBuyIn)
                                                                         : "1.00"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
                                                                     Max: $
                                                                     {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
-                                                                        ? formatBalance(game.gameOptions.maxBuyIn)
+                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.maxBuyIn)
                                                                         : "100.00"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
                                                                     Blinds: $
                                                                     {game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0"
-                                                                        ? formatBalance(game.gameOptions.smallBlind)
+                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.smallBlind)
                                                                         : "0.50"}
                                                                     /$
                                                                     {game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0"
-                                                                        ? formatBalance(game.gameOptions.bigBlind)
+                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.bigBlind)
                                                                         : "1.00"}
                                                                 </span>
                                                             </>

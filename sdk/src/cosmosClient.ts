@@ -397,17 +397,63 @@ export class CosmosClient {
      */
     async listGames(): Promise<any[]> {
         try {
+            console.log("📡 [CosmosClient] Making REST API call to list_games...");
+            console.log("   URL:", `${this.config.restEndpoint}/block52/pokerchain/poker/v1/list_games`);
+
             const response = await this.restClient.get<ListGamesResponse>(
                 `/block52/pokerchain/poker/v1/list_games`
             );
 
+            console.log("📥 [CosmosClient] Raw response:", response.data);
+            console.log("   Status:", response.status);
+            console.log("   Games string:", response.data.games);
+
             if (response.data.games) {
-                return JSON.parse(response.data.games);
+                const parsed = JSON.parse(response.data.games);
+                console.log("✅ [CosmosClient] Parsed games:", parsed);
+                return parsed;
             }
 
+            console.log("⚠️ [CosmosClient] No games field in response, returning empty array");
             return [];
+        } catch (error: any) {
+            console.error("❌ [CosmosClient] Error listing games:");
+            console.error("   Message:", error.message);
+            console.error("   Response status:", error.response?.status);
+            console.error("   Response data:", error.response?.data);
+            console.error("   Full error:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Find games (alias for listGames - matches IClient interface)
+     * @param min Optional minimum players filter
+     * @param max Optional maximum players filter
+     */
+    async findGames(min?: number, max?: number): Promise<any[]> {
+        try {
+            console.log("🔍 [CosmosClient] findGames called with filters:", { min, max });
+            const allGames = await this.listGames();
+            console.log("📊 [CosmosClient] Total games before filtering:", allGames.length);
+
+            // Apply filters if provided
+            if (min !== undefined || max !== undefined) {
+                const filtered = allGames.filter(game => {
+                    const playerCount = game.current_players || 0;
+                    const matchesMin = min === undefined || playerCount >= min;
+                    const matchesMax = max === undefined || playerCount <= max;
+                    console.log(`   Game ${game.id || game.game_id}: ${playerCount} players, min=${matchesMin}, max=${matchesMax}`);
+                    return matchesMin && matchesMax;
+                });
+                console.log("✅ [CosmosClient] Filtered games:", filtered.length);
+                return filtered;
+            }
+
+            console.log("✅ [CosmosClient] Returning all games (no filter):", allGames.length);
+            return allGames;
         } catch (error) {
-            console.error("Error listing games:", error);
+            console.error("❌ [CosmosClient] Error finding games:", error);
             throw error;
         }
     }
