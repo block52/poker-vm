@@ -1,9 +1,11 @@
-import { CosmosClient, type CosmosConfig } from "../src/cosmosClient";
+import { CosmosClient } from "../src/cosmosClient";
+import type { CosmosConfig } from "../src/cosmosClient";
 
 describe("CosmosClient", () => {
     let client: CosmosClient;
     const mockConfig: CosmosConfig = {
         rpcEndpoint: "https://node1.block52.xyz",
+        restEndpoint: "https://rest.block52.xyz",
         chainId: "pokerchain",
         prefix: "poker",
         denom: "b52USD",
@@ -42,7 +44,7 @@ describe("CosmosClient", () => {
     describe("Account Operations", () => {
         it("should get account balance", async () => {
             // Skip this test if not connected to actual network
-            const testAddress = "poker1example"; // This would need to be a real address
+            const testAddress = "b521hg93rsm2f5v3zlepf20ru88uweajt3nf492s2p"; // This would need to be a real address
 
             try {
                 const balance = await client.getBalance(testAddress);
