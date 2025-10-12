@@ -612,9 +612,9 @@ export const initializeCosmosClient = (config: CosmosConfig): CosmosClient => {
 };
 
 // Update the default configuration
-export const getDefaultCosmosConfig = (): CosmosConfig => ({
-    rpcEndpoint: "http://localhost:26657",
-    restEndpoint: "http://localhost:1317",
+export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
+    rpcEndpoint: `http://${domain}:26657`,
+    restEndpoint: `http://${domain}:1317`,
     chainId: "pokerchain",
     prefix: "b52",
     denom: "b52USDC", // Use b52USDC as the denomination
