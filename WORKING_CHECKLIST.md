@@ -1,9 +1,9 @@
 # PVM on Cosmos - Working Checklist
 
-**Last Updated**: October 11, 2025 @ 6:50 PM
-**Status**: 🎉 GAME CREATION WORKING! Custom protobuf message registration complete
+**Last Updated**: October 12, 2025 @ 7:30 PM
+**Status**: 🎉 BALANCE DISPLAY FIXED! Cosmos USDC formatting now working correctly
 **Current Block Height**: ~4028+ (local chain running)
-**CosmosClient Progress**: ✅ 12/27 IClient methods implemented (44%) - **`createGame()` + `findGames()` TESTED & WORKING!** 🎲🎉
+**CosmosClient Progress**: ✅ 13/27 IClient methods implemented (48%) - **`createGame()` + `findGames()` + `getBalance()` FULLY INTEGRATED!** 🎲💰
 **Architecture**: ⚠️ **UI USES COSMOS REST API ONLY** - No Tendermint RPC from browser
 
 **✅ BRIDGE TEST SUCCESSFUL - CONFIRMED IN UI**:
@@ -286,7 +286,64 @@ todo:
 6. [ ] Fix ESLint warning in BlocksPage.tsx (unused `Link` import)
 7. [ ] Fix buy-in display formatting (currently shows $0.00 due to number/string conversion)
 
-**Recent Implementation** (Oct 12, 2025):
+**Recent Implementation** (Oct 12, 2025 - PM):
+- ✅ **COSMOS ACCOUNT UTILS & BALANCE INTEGRATION** - Replaced all Ethereum account utilities
+  - Created `cosmosAccountUtils.ts` replacing `b52AccountUtils.ts` with Cosmos equivalents:
+    - `getCosmosAddress()` - Get Cosmos address from initialized client (async)
+    - `getCosmosAddressSync()` - Get address from localStorage (sync)
+    - `getFormattedCosmosAddress(length)` - Format address with ellipsis (b521rg...fj9p)
+    - `hasCosmosWallet()` - Check if Cosmos wallet is connected
+    - `getCosmosBalance(denom)` - Get balance for specific token (returns bigint)
+    - `getAllCosmosBalances()` - Get all token balances
+  - Updated BuyInModal to use Cosmos balance (6 decimal USDC microunits instead of 18 decimal Wei)
+  - Updated Table.tsx to use `getCosmosBalance()` and `getCosmosAddressSync()`
+  - Updated SitAndGoAutoJoinModal.tsx to use Cosmos balance queries
+  - All buy-in/blind amount formatting changed from `formatWeiToSimpleDollars` → `formatUSDCToSimpleDollars`
+  - Balance fetching now uses `ethers.formatUnits(amount, 6)` for USDC microunits
+  - **FULLY TESTED**: Dashboard now correctly displays "$1.00" instead of "$0.00" for game buy-ins! 🎉
+
+**✅ TypeScript Build Fixed** - All type errors resolved:
+1. ✅ Using `getWalletAddress()` instead of accessing non-existent `signerAddress` property
+2. ✅ Understanding that `getBalance()` returns `bigint` directly, not an object
+3. ✅ Providing both async and sync versions of `getCosmosAddress()` for different use cases
+4. ✅ Using localStorage for synchronous address access in component initialization
+5. ✅ **Result**: `yarn build` succeeds with zero TypeScript errors! 🎉
+
+**🚧 ONGOING: `user_eth_public_key` Migration** (12 files remaining):
+Need to replace all Ethereum localStorage references with Cosmos equivalents:
+
+**Migration Tasks**:
+- [ ] Dashboard.tsx - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] usePlayerTimer.ts - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] useNextToActInfo.ts - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] GameStateContext.tsx - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] VacantPlayer.tsx - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] Footer.tsx - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] useVacantSeatData.ts - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] QRDeposit.tsx - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] useTablePlayerCounts.ts - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] useUserWallet.ts - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] usePlayerSeatInfo.ts - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+- [ ] usePlayerLegalActions.ts - Replace `user_eth_public_key` with `getCosmosAddressSync()`
+
+**Migration Pattern**:
+```typescript
+// OLD (Ethereum)
+const publicKey = localStorage.getItem("user_eth_public_key");
+
+// NEW (Cosmos)
+import { getCosmosAddressSync } from "../../utils/cosmosAccountUtils";
+const publicKey = getCosmosAddressSync();
+```
+
+**Files to Check**:
+```bash
+# Search for remaining references
+cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/ui/src
+grep -r "user_eth_public_key" . --include="*.ts" --include="*.tsx"
+```
+
+**Recent Implementation** (Oct 12, 2025 - AM):
 - ✅ **Implemented `ListGames` query handler** in pokerchain (`query_list_games.go`)
   - Uses `k.Games.Walk()` to iterate all games from blockchain state
   - Returns JSON array of games via REST API

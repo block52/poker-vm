@@ -10,8 +10,8 @@ import { ethers } from "ethers";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { useSitAndGoPlayerJoinRandomSeat } from "../../hooks/useSitAndGoPlayerJoinRandomSeat";
-import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
-import { getAccountBalance } from "../../utils/b52AccountUtils";
+import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
+import { getCosmosBalance } from "../../utils/cosmosAccountUtils";
 import { colors as _colors, hexToRgba as _hexToRgba } from "../../utils/colorConfig";
 import { useGameStateContext } from "../../context/GameStateContext";
 
@@ -60,16 +60,17 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             };
         }
 
-        // Use actual values from gameOptions
-        const maxBuyInWei = gameOptions.maxBuyIn;
-        // If backend sends "1" Wei, interpret as $1 USD (1e18 Wei)
-        const maxFormatted = maxBuyInWei === "1" ? "1.00" : formatWeiToSimpleDollars(maxBuyInWei);
+        // Use actual values from gameOptions (Cosmos USDC microunits - 6 decimals)
+        const maxBuyInMicrounits = gameOptions.maxBuyIn;
+        // Format USDC microunits to dollars
+        const maxFormatted = maxBuyInMicrounits === "1" ? "1.00" : formatUSDCToSimpleDollars(maxBuyInMicrounits);
 
-        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
+        // Balance is stored as USDC microunits (6 decimals)
+        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 6)) : 0;
 
-        // Use actual blind values from gameOptions if they exist
-        const smallBlind = gameOptions.smallBlind ? formatWeiToSimpleDollars(gameOptions.smallBlind) : "0.00";
-        const bigBlind = gameOptions.bigBlind ? formatWeiToSimpleDollars(gameOptions.bigBlind) : "0.00";
+        // Use actual blind values from gameOptions if they exist (also in microunits)
+        const smallBlind = gameOptions.smallBlind ? formatUSDCToSimpleDollars(gameOptions.smallBlind) : "0.00";
+        const bigBlind = gameOptions.bigBlind ? formatUSDCToSimpleDollars(gameOptions.bigBlind) : "0.00";
 
         return {
             maxBuyInFormatted: maxFormatted,
@@ -86,15 +87,15 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                 setIsBalanceLoading(true);
 
                 if (!publicKey) {
-                    setBuyInError("No wallet address available");
+                    setBuyInError("No Cosmos wallet address available");
                     setIsBalanceLoading(false);
                     return;
                 }
 
-                const balance = await getAccountBalance();
+                const balance = await getCosmosBalance("b52usdc");
                 setAccountBalance(balance);
             } catch (err) {
-                console.error("Error fetching account balance:", err);
+                console.error("Error fetching Cosmos balance:", err);
                 setBuyInError("Failed to fetch balance");
             } finally {
                 setIsBalanceLoading(false);

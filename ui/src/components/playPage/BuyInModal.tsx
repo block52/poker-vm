@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
-import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
-import { getAccountBalance } from "../../utils/b52AccountUtils";
+import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
+import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { joinTable } from "../../hooks/playerActions/joinTable";
@@ -74,8 +74,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     const [waitForBigBlind, setWaitForBigBlind] = useState(true);
     const [isJoiningRandomSeat, setIsJoiningRandomSeat] = useState(false);
 
-    // Get publicKey once and memoize it
-    const publicKey = useMemo(() => localStorage.getItem("user_eth_public_key") || undefined, []);
+    // Get Cosmos address once and memoize it (synchronously from localStorage)
+    const cosmosAddress = useMemo(() => {
+        return localStorage.getItem("cosmos_address") || undefined;
+    }, []);
 
     const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns();
     const { emptySeatIndexes, isUserAlreadyPlaying } = useVacantSeatData();
@@ -90,17 +92,21 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         minBuyInNumber,
         maxBuyInNumber: _maxBuyInNumber
     } = useMemo(() => {
-        const minFormatted = formatWeiToSimpleDollars(minBuyInWei);
-        const maxFormatted = formatWeiToSimpleDollars(maxBuyInWei);
-        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
+        // Format USDC microunits (6 decimals) from Cosmos
+        const minFormatted = formatUSDCToSimpleDollars(minBuyInWei);
+        const maxFormatted = formatUSDCToSimpleDollars(maxBuyInWei);
+        // Balance is stored as USDC microunits (6 decimals)
+        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 6)) : 0;
 
-        console.log("💵 BuyInModal - Buy-in limits:");
+        console.log("💵 BuyInModal - Buy-in limits (Cosmos USDC):");
         console.log("  minBuyInWei:", minBuyInWei);
         console.log("  maxBuyInWei:", maxBuyInWei);
         console.log("  minFormatted:", minFormatted);
         console.log("  maxFormatted:", maxFormatted);
+        console.log("  accountBalance (microunits):", accountBalance);
+        console.log("  balanceFormatted (dollars):", balance);
 
-        // Calculate stake label
+        // Calculate stake label from max buy-in
         const bigBlind = parseFloat(maxFormatted) / 100;
         const smallBlind = bigBlind / 2;
         const stake = `$${smallBlind.toFixed(2)} / $${bigBlind.toFixed(2)}`;
@@ -133,23 +139,39 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         return !isUserAlreadyPlaying && emptySeatIndexes.length > 0 && !isDisabled && !isJoiningRandomSeat;
     }, [isUserAlreadyPlaying, emptySeatIndexes.length, isDisabled, isJoiningRandomSeat]);
 
-    // Fetch balance effect
+    // Fetch Cosmos balance effect
     useEffect(() => {
         const fetchBalance = async () => {
             try {
                 setIsBalanceLoading(true);
 
-                if (!publicKey) {
-                    setBalanceError(new Error("No address available"));
+                if (!cosmosAddress) {
+                    setBalanceError(new Error("No Cosmos address available. Please create or import a wallet."));
                     setIsBalanceLoading(false);
                     return;
                 }
 
-                const balance = await getAccountBalance();
-                setAccountBalance(balance);
+                const cosmosClient = getCosmosClient();
+                if (!cosmosClient) {
+                    setBalanceError(new Error("Cosmos client not initialized"));
+                    setIsBalanceLoading(false);
+                    return;
+                }
+
+                console.log("💰 BuyInModal - Fetching Cosmos balance for:", cosmosAddress);
+
+                // Get wallet address and query balance
+                const address = await cosmosClient.getWalletAddress();
+                const balance = await cosmosClient.getBalance(address);
+
+                console.log("💰 BuyInModal - Balance (bigint):", balance);
+                console.log("  Amount (string):", balance.toString());
+
+                // Balance is returned as bigint, convert to string
+                setAccountBalance(balance.toString());
                 setBalanceError(null);
             } catch (err) {
-                console.error("Error fetching account balance:", err);
+                console.error("❌ Error fetching Cosmos balance:", err);
                 setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
             } finally {
                 setIsBalanceLoading(false);
@@ -157,7 +179,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         };
 
         fetchBalance();
-    }, [publicKey]);
+    }, [cosmosAddress]);
 
     // Memoized event handlers
     const handleBuyInChange = useCallback((amount: string) => {
@@ -205,14 +227,21 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
     const handleJoinClick = useCallback(() => {
         try {
-            const buyInWei = ethers.parseUnits(buyInAmount, 18);
+            // Convert dollar amount to USDC microunits (6 decimals)
+            const buyInMicrounits = ethers.parseUnits(buyInAmount, 6);
 
-            if (buyInWei < BigInt(minBuyInWei)) {
+            console.log("💰 BuyInModal - handleJoinClick:");
+            console.log("  buyInAmount (input):", buyInAmount);
+            console.log("  buyInMicrounits:", buyInMicrounits.toString());
+            console.log("  minBuyInWei:", minBuyInWei);
+            console.log("  maxBuyInWei:", maxBuyInWei);
+
+            if (buyInMicrounits < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is $${minBuyInFormatted}`);
                 return;
             }
 
-            if (buyInWei > BigInt(maxBuyInWei)) {
+            if (buyInMicrounits > BigInt(maxBuyInWei)) {
                 setBuyInError(`Maximum buy-in is $${maxBuyInFormatted}`);
                 return;
             }
@@ -226,7 +255,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             localStorage.setItem("wait_for_big_blind", JSON.stringify(waitForBigBlind));
 
             onJoin(buyInAmount, waitForBigBlind);
-        } catch {
+        } catch (error) {
+            console.error("❌ Error in handleJoinClick:", error);
             setBuyInError("Invalid input amount.");
         }
     }, [buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, balanceFormatted, minBuyInNumber, waitForBigBlind, onJoin]);
@@ -236,15 +266,19 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             setBuyInError("");
             setIsJoiningRandomSeat(true);
 
-            // Validate buy-in amount first
-            const buyInWei = ethers.parseUnits(buyInAmount, 18);
+            // Validate buy-in amount first - convert to USDC microunits (6 decimals)
+            const buyInMicrounits = ethers.parseUnits(buyInAmount, 6);
 
-            if (buyInWei < BigInt(minBuyInWei)) {
+            console.log("💰 BuyInModal - Random seat join:");
+            console.log("  buyInAmount (input):", buyInAmount);
+            console.log("  buyInMicrounits:", buyInMicrounits.toString());
+
+            if (buyInMicrounits < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is ${minBuyInFormatted}`);
                 return;
             }
 
-            if (buyInWei > BigInt(maxBuyInWei)) {
+            if (buyInMicrounits > BigInt(maxBuyInWei)) {
                 setBuyInError(`Maximum buy-in is ${maxBuyInFormatted}`);
                 return;
             }
@@ -261,22 +295,20 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             }
 
             const joinOptions: JoinTableOptions = {
-                amount: buyInWei.toString(),
+                amount: buyInMicrounits.toString(),
                 seatNumber: undefined // Let the server handle random seat assignment
             };
 
             console.log("💰 BuyInModal - Join attempt:");
-            console.log("  buyInAmount (input):", buyInAmount);
-            console.log("  buyInWei (bigint):", buyInWei.toString());
             console.log("  joinOptions.amount:", joinOptions.amount);
             console.log("  tableId:", tableId);
 
-            joinTable(tableId || ethers.ZeroAddress, joinOptions);
+            joinTable(tableId || "default-game-id", joinOptions);
 
             // Navigate to table
             navigate(`/table/${tableId}`);
         } catch (error) {
-            console.error("Error joining random seat:", error);
+            console.error("❌ Error joining random seat:", error);
             setBuyInError("Failed to join table. Please try again.");
         } finally {
             setIsJoiningRandomSeat(false);
