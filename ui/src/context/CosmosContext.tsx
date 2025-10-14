@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { CosmosClient } from "@bitcoinbrisbane/block52";
-import { getCosmosMnemonic, setCosmosMnemonic, setCosmosAddress, clearCosmosData, getCosmosUIConfig } from "../utils/cosmosUtils";
+import { getCosmosMnemonic, setCosmosMnemonic, setCosmosAddress, getCosmosAddress, clearCosmosData, getCosmosUIConfig } from "../utils/cosmosUtils";
 
 /**
  * ARCHITECTURE NOTE - Real-Time Game State Subscription Flow:
@@ -100,25 +100,27 @@ export const CosmosProvider: React.FC<CosmosProviderProps> = ({ children }) => {
                 return;
             }
 
-            // Create client with mnemonic
+            // Create client (REST-only, no initialization needed)
             const config = getCosmosUIConfig();
             const client = new CosmosClient({ ...config, mnemonic });
 
-            // Initialize the client
-            await client.initClient();
-            await client.initSigningClient();
-
-            // Get wallet address
-            const walletAddress = await client.getWalletAddress();
+            // Note: REST-only client doesn't support wallet operations
+            // We'll need to implement address derivation from mnemonic locally
+            // For now, we'll show an error that transaction signing is not supported
 
             setCosmosClient(client);
-            setAddress(walletAddress);
-            setCosmosAddress(walletAddress);
             setIsConnected(true);
 
-            // Get initial balance
-            const balances = await client.getAllBalances(walletAddress);
-            setBalance(balances);
+            console.warn("🚧 REST-only mode: Transaction signing not supported. Read operations only.");
+
+            // Get initial balance (if we have a stored address)
+            const storedAddress = getCosmosAddress();
+            if (storedAddress) {
+                setAddress(storedAddress);
+                setCosmosAddress(storedAddress);
+                const balances = await client.getAllBalances(storedAddress);
+                setBalance(balances);
+            }
         } catch (err) {
             console.error("Failed to initialize Cosmos client:", err);
             setError(err instanceof Error ? err : new Error("Failed to initialize Cosmos client"));
