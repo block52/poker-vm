@@ -1,21 +1,17 @@
-import { StargateClient, SigningStargateClient, GasPrice, Coin, defaultRegistryTypes } from "@cosmjs/stargate";
-import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
-import { Registry, GeneratedType } from "@cosmjs/proto-signing";
-import { Writer, Reader } from "protobufjs/minimal";
 import axios, { AxiosInstance } from "axios";
 
 // Cosmos blockchain constants (matches pokerchain/x/poker/types/types.go)
 export const COSMOS_CONSTANTS = {
     CHAIN_ID: "pokerchain",
     ADDRESS_PREFIX: "b52",
-    TOKEN_DENOM: "uusdc",
-    USDC_DECIMALS: 6, // 1 USDC = 1,000,000 uusdc
-    GAME_CREATION_COST: 1, // 1 uusdc = 0.000001 USDC
-    DEFAULT_GAS_PRICE: "0.025uusdc"
+    TOKEN_DENOM: "b52usdc",
+    USDC_DECIMALS: 6, // 1 USDC = 1,000,000 b52usdc
+    GAME_CREATION_COST: 1, // 1 b52usdc = 0.000001 USDC
+    DEFAULT_GAS_PRICE: "0.025b52usdc"
 } as const;
 
-// Define the MsgCreateGame interface to match the protobuf structure
-export interface MsgCreateGame {
+// Define the game creation parameters interface
+export interface CreateGameParams {
     creator: string;
     minBuyIn: string;
     maxBuyIn: string;
@@ -27,61 +23,10 @@ export interface MsgCreateGame {
     gameType: string;
 }
 
-// Create a simple encoder for MsgCreateGame
-const MsgCreateGameType: GeneratedType = {
-    encode(message: MsgCreateGame, writer: Writer = Writer.create()): Writer {
-        if (message.creator !== "") {
-            writer.uint32(10).string(message.creator);
-        }
-        if (message.minBuyIn !== "0") {
-            writer.uint32(16).uint64(message.minBuyIn);
-        }
-        if (message.maxBuyIn !== "0") {
-            writer.uint32(24).uint64(message.maxBuyIn);
-        }
-        if (message.minPlayers !== 0) {
-            writer.uint32(32).int64(message.minPlayers);
-        }
-        if (message.maxPlayers !== 0) {
-            writer.uint32(40).int64(message.maxPlayers);
-        }
-        if (message.smallBlind !== "0") {
-            writer.uint32(48).uint64(message.smallBlind);
-        }
-        if (message.bigBlind !== "0") {
-            writer.uint32(56).uint64(message.bigBlind);
-        }
-        if (message.timeout !== 0) {
-            writer.uint32(64).int64(message.timeout);
-        }
-        if (message.gameType !== "") {
-            writer.uint32(74).string(message.gameType);
-        }
-        return writer;
-    },
-    decode(input: Uint8Array | Reader, length?: number): MsgCreateGame {
-        throw new Error("MsgCreateGame decode not implemented");
-    },
-    fromPartial(object: Partial<MsgCreateGame>): MsgCreateGame {
-        return {
-            creator: object.creator || "",
-            minBuyIn: object.minBuyIn || "0",
-            maxBuyIn: object.maxBuyIn || "0",
-            minPlayers: object.minPlayers || 0,
-            maxPlayers: object.maxPlayers || 0,
-            smallBlind: object.smallBlind || "0",
-            bigBlind: object.bigBlind || "0",
-            timeout: object.timeout || 0,
-            gameType: object.gameType || ""
-        };
-    }
-};
-
-// Create a custom registry with poker module types
-function createPokerRegistry(): Registry {
-    const registry = new Registry([...defaultRegistryTypes]);
-    registry.register("/pokerchain.poker.v1.MsgCreateGame", MsgCreateGameType);
-    return registry;
+// Define standard Cosmos types
+export interface Coin {
+    denom: string;
+    amount: string;
 }
 
 export interface CosmosConfig {
@@ -117,9 +62,6 @@ export interface PlayerGamesResponse {
 
 export class CosmosClient {
     private config: CosmosConfig;
-    private client?: StargateClient;
-    private signingClient?: SigningStargateClient;
-    private wallet?: DirectSecp256k1HdWallet;
     private restClient: AxiosInstance;
 
     constructor(config: CosmosConfig) {
@@ -136,126 +78,76 @@ export class CosmosClient {
     }
 
     /**
-     * Initialize the read-only client
+     * Get account information via REST API
      */
-    async initClient(): Promise<void> {
-        if (!this.client) {
-            this.client = await StargateClient.connect(this.config.rpcEndpoint);
+    async getAccount(address: string): Promise<any> {
+        try {
+            const response = await this.restClient.get(`/cosmos/auth/v1beta1/accounts/${address}`);
+            return response.data.account;
+        } catch (error) {
+            console.error("Error fetching account:", error);
+            throw error;
         }
     }
 
     /**
-     * Initialize the signing client (requires mnemonic)
-     */
-    async initSigningClient(): Promise<void> {
-        if (!this.config.mnemonic) {
-            throw new Error("Mnemonic required for signing client");
-        }
-
-        if (!this.wallet) {
-            // const hdPath: HdPath = stringToPath("m/44'/118'/0'/0/0");
-            this.wallet = await DirectSecp256k1HdWallet.fromMnemonic(this.config.mnemonic, {
-                prefix: this.config.prefix
-            });
-        }
-
-        if (!this.signingClient) {
-            // Create custom registry with poker module types
-            const registry = createPokerRegistry();
-
-            this.signingClient = await SigningStargateClient.connectWithSigner(this.config.rpcEndpoint, this.wallet, {
-                gasPrice: GasPrice.fromString(this.config.gasPrice),
-                registry: registry
-            });
-        }
-    }
-
-    /**
-     * Get account balance
-     */
-    async getBalance(address: string): Promise<bigint> {
-        await this.initClient();
-        if (!this.client) throw new Error("Client not initialized");
-
-        const balance = await this.client.getBalance(address, this.config.denom);
-        return BigInt(balance.amount);
-    }
-
-    /**
-     * Get all balances for an account
+     * Get all coin balances for an address via REST API
      */
     async getAllBalances(address: string): Promise<Coin[]> {
-        await this.initClient();
-        if (!this.client) throw new Error("Client not initialized");
-
-        const balances = await this.client.getAllBalances(address);
-        return [...balances]; // Convert readonly array to mutable array
-    }
-
-    /**
-     * Send tokens from one account to another
-     */
-    async sendTokens(fromAddress: string, toAddress: string, amount: bigint, memo?: string): Promise<string> {
-        await this.initSigningClient();
-        if (!this.signingClient) throw new Error("Signing client not initialized");
-
-        const coin: Coin = {
-            denom: this.config.denom,
-            amount: amount.toString()
-        };
-
-        const result = await this.signingClient.sendTokens(fromAddress, toAddress, [coin], "auto", memo);
-
-        return result.transactionHash;
-    }
-
-    /**
-     * Get account information
-     */
-    async getAccount(address: string) {
-        await this.initClient();
-        if (!this.client) throw new Error("Client not initialized");
-
-        return await this.client.getAccount(address);
-    }
-
-    /**
-     * Get the wallet address (first account)
-     */
-    async getWalletAddress(): Promise<string> {
-        if (!this.wallet) {
-            await this.initSigningClient();
+        try {
+            const response = await this.restClient.get(`/cosmos/bank/v1beta1/balances/${address}`);
+            return response.data.balances || [];
+        } catch (error) {
+            console.error("Error fetching balances:", error);
+            return [];
         }
-        if (!this.wallet) throw new Error("Wallet not initialized");
-
-        const accounts = await this.wallet.getAccounts();
-        return accounts[0].address;
     }
 
     /**
-     * Get current block height
+     * Get specific coin balance for an address via REST API
+     */
+    async getBalance(address: string, denom?: string): Promise<bigint> {
+        try {
+            const targetDenom = denom || this.config.denom;
+            const response = await this.restClient.get(`/cosmos/bank/v1beta1/balances/${address}/by_denom?denom=${targetDenom}`);
+            const balance = response.data.balance?.amount || "0";
+            return BigInt(balance);
+        } catch (error) {
+            console.error("Error fetching balance:", error);
+            return 0n;
+        }
+    }
+
+    /**
+     * Get current block height via REST API
      */
     async getHeight(): Promise<number> {
-        await this.initClient();
-        if (!this.client) throw new Error("Client not initialized");
-
-        return await this.client.getHeight();
+        try {
+            const response = await this.restClient.get("/cosmos/base/tendermint/v1beta1/blocks/latest");
+            return parseInt(response.data.block.header.height);
+        } catch (error) {
+            console.error("Error fetching height:", error);
+            throw error;
+        }
     }
 
     /**
-     * Get transaction by hash
+     * Get transaction by hash via REST API
      */
-    async getTx(txHash: string) {
-        await this.initClient();
-        if (!this.client) throw new Error("Client not initialized");
-
-        return await this.client.getTx(txHash);
+    async getTx(txHash: string): Promise<any> {
+        try {
+            const response = await this.restClient.get(`/cosmos/tx/v1beta1/txs/${txHash}`);
+            return response.data.tx_response;
+        } catch (error) {
+            console.error("Error fetching transaction:", error);
+            throw error;
+        }
     }
 
     /**
      * Get a specific block by height via REST API
      */
-    async getBlock(height: number) {
+    async getBlock(height: number): Promise<any> {
         try {
             const response = await this.restClient.get(`/cosmos/base/tendermint/v1beta1/blocks/${height}`);
             return response.data;
@@ -268,7 +160,7 @@ export class CosmosClient {
     /**
      * Get the latest block via REST API
      */
-    async getLatestBlock() {
+    async getLatestBlock(): Promise<any> {
         try {
             const response = await this.restClient.get("/cosmos/base/tendermint/v1beta1/blocks/latest");
             return response.data;
@@ -281,7 +173,7 @@ export class CosmosClient {
     /**
      * Get multiple blocks starting from a specific height
      */
-    async getBlocks(startHeight: number, count: number = 10) {
+    async getBlocks(startHeight: number, count: number = 10): Promise<any[]> {
         const blocks = [];
         const currentHeight = await this.getHeight();
         const endHeight = Math.min(startHeight + count - 1, currentHeight);
@@ -302,25 +194,23 @@ export class CosmosClient {
     /**
      * Get the latest blocks (most recent)
      */
-    async getLatestBlocks(count: number = 10) {
+    async getLatestBlocks(count: number = 10): Promise<any[]> {
         const currentHeight = await this.getHeight();
         const startHeight = Math.max(1, currentHeight - count + 1);
         return await this.getBlocks(startHeight, count);
     }
 
     /**
-     * Fetch game state from Cosmos REST API
+     * Get game state via REST API
      */
     async getGameState(gameId: string): Promise<any> {
         try {
-            const response = await this.restClient.get<GameStateResponse>(`/block52/pokerchain/poker/v1/game_state/${gameId}`);
+            const response = await this.restClient.get(`/block52/pokerchain/poker/v1/game_state/${gameId}`);
 
-            // Parse the JSON string response
             if (response.data.game_state) {
                 return JSON.parse(response.data.game_state);
             }
-
-            throw new Error("No game state found in response");
+            return null;
         } catch (error) {
             console.error("Error fetching game state:", error);
             throw error;
@@ -328,17 +218,16 @@ export class CosmosClient {
     }
 
     /**
-     * Fetch game info from Cosmos REST API
+     * Get game info via REST API
      */
     async getGame(gameId: string): Promise<any> {
         try {
-            const response = await this.restClient.get<GameResponse>(`/block52/pokerchain/poker/v1/game/${gameId}`);
+            const response = await this.restClient.get(`/block52/pokerchain/poker/v1/game/${gameId}`);
 
             if (response.data.game) {
                 return JSON.parse(response.data.game);
             }
-
-            throw new Error("No game found in response");
+            return null;
         } catch (error) {
             console.error("Error fetching game:", error);
             throw error;
@@ -346,16 +235,18 @@ export class CosmosClient {
     }
 
     /**
-     * Fetch legal actions for a player
+     * Get legal actions for a game via REST API
      */
-    async getLegalActions(gameId: string, playerAddress: string): Promise<any> {
+    async getLegalActions(gameId: string, playerAddress?: string): Promise<any> {
         try {
-            const response = await this.restClient.get<LegalActionsResponse>(`/block52/pokerchain/poker/v1/legal_actions/${gameId}/${playerAddress}`);
+            const url = playerAddress
+                ? `/block52/pokerchain/poker/v1/legal_actions/${gameId}/${playerAddress}`
+                : `/block52/pokerchain/poker/v1/legal_actions/${gameId}`;
+            const response = await this.restClient.get(url);
 
             if (response.data.actions) {
                 return JSON.parse(response.data.actions);
             }
-
             return [];
         } catch (error) {
             console.error("Error fetching legal actions:", error);
@@ -364,14 +255,14 @@ export class CosmosClient {
     }
 
     /**
-     * List all games
+     * List all games via REST API
      */
     async listGames(): Promise<any[]> {
         try {
             console.log("📡 [CosmosClient] Making REST API call to list_games...");
             console.log("   URL:", `${this.config.restEndpoint}/block52/pokerchain/poker/v1/list_games`);
 
-            const response = await this.restClient.get<ListGamesResponse>(`/block52/pokerchain/poker/v1/list_games`);
+            const response = await this.restClient.get(`/block52/pokerchain/poker/v1/list_games`);
 
             console.log("📥 [CosmosClient] Raw response:", response.data);
             console.log("   Status:", response.status);
@@ -428,152 +319,86 @@ export class CosmosClient {
     }
 
     /**
-     * Get games for a specific player
+     * Get player's games via REST API
      */
-    async getPlayerGames(playerAddress: string): Promise<any[]> {
+    async getPlayerGames(player: string): Promise<any[]> {
         try {
-            const response = await this.restClient.get<PlayerGamesResponse>(`/block52/pokerchain/poker/v1/player_games/${playerAddress}`);
+            const response = await this.restClient.get(`/block52/pokerchain/poker/v1/player_games/${player}`);
 
             if (response.data.games) {
                 return JSON.parse(response.data.games);
             }
-
             return [];
         } catch (error) {
             console.error("Error fetching player games:", error);
-            throw error;
+            return [];
         }
     }
 
     /**
-     * Perform a poker action (transaction)
-     */
-    async performAction(gameId: string, action: string, amount: bigint = 0n): Promise<string> {
-        await this.initSigningClient();
-        if (!this.signingClient) throw new Error("Signing client not initialized");
-
-        const fromAddress = await this.getWalletAddress();
-
-        // Create the message for performing action
-        const msg = {
-            typeUrl: "/pokerchain.poker.v1.MsgPerformAction",
-            value: {
-                creator: fromAddress,
-                gameId: gameId,
-                action: action,
-                amount: amount.toString()
-            }
-        };
-
-        const result = await this.signingClient.signAndBroadcast(fromAddress, [msg], "auto");
-
-        return result.transactionHash;
-    }
-
-    /**
-     * Get b52USDC balance for an address
+     * Get b52USDC balance for an address via REST API
      */
     async getB52USDCBalance(address: string): Promise<bigint> {
-        await this.initClient();
-        if (!this.client) throw new Error("Client not initialized");
-
-        const balance = await this.client.getBalance(address, "b52USDC");
-        return BigInt(balance.amount);
+        return this.getBalance(address, "b52USDC");
     }
 
     /**
-     * Send b52USDC tokens from one account to another
+     * Convert uusdc (micro USDC) to USDC display format
      */
+    uusdcToUsdc(uusdcAmount: bigint): number {
+        return Number(uusdcAmount) / Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS);
+    }
+
+    /**
+     * Convert USDC to uusdc (micro USDC) format
+     */
+    usdcToUusdc(usdcAmount: number): bigint {
+        return BigInt(Math.floor(usdcAmount * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
+    }
+
+    /**
+     * Note: All transaction methods require a separate wallet implementation for signing and broadcasting
+     * These methods throw errors to indicate they need wallet integration
+     */
+
+    async getWalletAddress(): Promise<string> {
+        throw new Error("Wallet address retrieval not implemented in REST-only mode. Use a wallet implementation.");
+    }
+
+    async sendTokens(fromAddress: string, toAddress: string, amount: bigint, memo?: string): Promise<string> {
+        throw new Error("Transaction signing not implemented in REST-only mode. Use a wallet implementation.");
+    }
+
     async sendB52USDC(fromAddress: string, toAddress: string, amount: bigint, memo?: string): Promise<string> {
-        await this.initSigningClient();
-        if (!this.signingClient) throw new Error("Signing client not initialized");
-
-        const coin: Coin = {
-            denom: "b52USDC",
-            amount: amount.toString()
-        };
-
-        const result = await this.signingClient.sendTokens(fromAddress, toAddress, [coin], "auto", memo);
-
-        return result.transactionHash;
+        throw new Error("Transaction signing not implemented in REST-only mode. Use a wallet implementation.");
     }
 
-    /**
-     * Join a game with b52USDC buy-in (transaction)
-     */
-    async joinGame(
-        gameId: string,
-        seat: number,
-        buyInAmount: bigint // Amount in b52USDC
-    ): Promise<string> {
-        await this.initSigningClient();
-        if (!this.signingClient) throw new Error("Signing client not initialized");
-
-        const fromAddress = await this.getWalletAddress();
-
-        const msg = {
-            typeUrl: "/pokerchain.poker.v1.MsgJoinGame",
-            value: {
-                creator: fromAddress,
-                gameId: gameId,
-                seat: seat.toString(),
-                buyIn: buyInAmount.toString() // b52USDC amount
-            }
-        };
-
-        const result = await this.signingClient.signAndBroadcast(fromAddress, [msg], "auto");
-
-        return result.transactionHash;
+    async performAction(gameId: string, action: string, amount: bigint = 0n): Promise<string> {
+        throw new Error("Transaction signing not implemented in REST-only mode. Use a wallet implementation.");
     }
 
-    /**
-     * Create a new game with b52USDC denominated blinds and buy-ins
-     */
+    async joinGame(gameId: string, seat: number, buyInAmount: bigint): Promise<string> {
+        throw new Error("Transaction signing not implemented in REST-only mode. Use a wallet implementation.");
+    }
+
     async createGame(
         gameType: string,
         minPlayers: number,
         maxPlayers: number,
-        minBuyInB52USDC: bigint, // Minimum buy-in in b52USDC
-        maxBuyInB52USDC: bigint, // Maximum buy-in in b52USDC
-        smallBlindB52USDC: bigint, // Small blind in b52USDC
-        bigBlindB52USDC: bigint, // Big blind in b52USDC
+        minBuyInB52USDC: bigint,
+        maxBuyInB52USDC: bigint,
+        smallBlindB52USDC: bigint,
+        bigBlindB52USDC: bigint,
         timeout: number
     ): Promise<string> {
-        await this.initSigningClient();
-        if (!this.signingClient) throw new Error("Signing client not initialized");
-
-        const fromAddress = await this.getWalletAddress();
-
-        const msg = {
-            typeUrl: "/pokerchain.poker.v1.MsgCreateGame",
-            value: {
-                creator: fromAddress,
-                gameType: gameType,
-                minPlayers: minPlayers.toString(),
-                maxPlayers: maxPlayers.toString(),
-                minBuyIn: minBuyInB52USDC.toString(),
-                maxBuyIn: maxBuyInB52USDC.toString(),
-                smallBlind: smallBlindB52USDC.toString(),
-                bigBlind: bigBlindB52USDC.toString(),
-                timeout: timeout.toString()
-            }
-        };
-
-        const result = await this.signingClient.signAndBroadcast(fromAddress, [msg], "auto");
-
-        return result.transactionHash;
+        throw new Error("Transaction signing not implemented in REST-only mode. Use a wallet implementation.");
     }
 
     /**
-     * Disconnect clients
+     * Disconnect - no-op for REST client
      */
     async disconnect(): Promise<void> {
-        if (this.client) {
-            this.client.disconnect();
-        }
-        if (this.signingClient) {
-            this.signingClient.disconnect();
-        }
+        // No persistent connections to close in REST-only mode
     }
 }
 
@@ -604,5 +429,5 @@ export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConf
     chainId: "pokerchain",
     prefix: "b52",
     denom: "b52USDC", // Use b52USDC as the denomination
-    gasPrice: "0.001b52USDC" // Gas price in b52USDC
+    gasPrice: "0.001b52USDC" // Gas price in b52USDC (not used in REST-only mode)
 });

@@ -39,10 +39,6 @@
         "url": "https://github.com/block52/poker-vm/issues"
     },
     "homepage": "https://github.com/block52/poker-vm#readme",
-    "peerDependencies": {
-        "@cosmjs/proto-signing": "^0.32.0",
-        "@cosmjs/stargate": "^0.32.0"
-    },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.0",
         "@rollup/plugin-json": "^6.0.0",
@@ -61,8 +57,6 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@cosmjs/proto-signing": "^0.32.0",
-        "@cosmjs/stargate": "^0.32.0",
         "axios": "^1.12.2",
         "ethers": "^6.15.0",
         "tslib": "^2.6.0"
