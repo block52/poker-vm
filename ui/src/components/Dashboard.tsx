@@ -1431,7 +1431,7 @@ const Dashboard: React.FC = () => {
                                         <WithdrawButton onClick={handleWithdrawClick} />
                                         <CreateTableButton onClick={handleCreateTableClick} />
                                     </div>
-                                    <div className="mt-2 flex justify-center">
+                                    <div className="mt-2 flex justify-center gap-4">
                                         <button
                                             onClick={handleImportModalClick}
                                             className="text-sm underline transition duration-300 hover:opacity-80"
@@ -1439,6 +1439,23 @@ const Dashboard: React.FC = () => {
                                         >
                                             Import Private Key
                                         </button>
+                                        <a
+                                            href="/explorer"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm underline transition duration-300 hover:opacity-80 flex items-center gap-1"
+                                            style={{ color: colors.brand.primary }}
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                                />
+                                            </svg>
+                                            Block Explorer
+                                        </a>
                                     </div>
                                 </div>
                             )}

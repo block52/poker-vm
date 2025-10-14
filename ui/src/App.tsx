@@ -10,6 +10,8 @@ import { ToastContainer } from "react-toastify";
 import Dashboard from "./components/Dashboard";
 import QRDeposit from "./components/QRDeposit";
 import CosmosWalletPage from "./components/CosmosWalletPage";
+import BlocksPage from "./pages/explorer/BlocksPage";
+import TransactionPage from "./pages/explorer/TransactionPage";
 import { GameStateProvider } from "./context/GameStateContext";
 import { CosmosProvider } from "./context/CosmosContext";
 import { generateCSSVariables } from "./utils/colorConfig";
@@ -55,6 +57,8 @@ function AppContent() {
                 <Route path="/deposit" element={<Deposit />} />
                 <Route path="/qr-deposit" element={<QRDeposit />} />
                 <Route path="/wallet" element={<CosmosWalletPage />} />
+                <Route path="/explorer" element={<BlocksPage />} />
+                <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer

@@ -1,10 +1,584 @@
 # PVM on Cosmos - Working Checklist
 
-**Last Updated**: October 12, 2025 @ 7:30 PM
-**Status**: 🎉 BALANCE DISPLAY FIXED! Cosmos USDC formatting now working correctly
-**Current Block Height**: ~4028+ (local chain running)
-**CosmosClient Progress**: ✅ 13/27 IClient methods implemented (48%) - **`createGame()` + `findGames()` + `getBalance()` FULLY INTEGRATED!** 🎲💰
-**Architecture**: ⚠️ **UI USES COSMOS REST API ONLY** - No Tendermint RPC from browser
+**Last Updated**: October 14, 2025 @ 4:00 PM
+**Status**: 🚧 TRANSACTION SIGNING BLOCKED - Need to register custom message types
+**Current Block Height**: ~3040+ (local chain running)
+**CosmosClient Progress**: ✅ SigningStargateClient implemented, ❌ Custom message registration needed
+**Architecture**: ⚠️ **UI USES COSMOS RPC FOR SIGNING** - REST API for queries only
+
+---
+
+## ⚠️ CRITICAL BLOCKERS - Transaction Signing Issues
+
+### 🔴 BLOCKER #1: "Unregistered type url: /pokerchain.poker.v1.MsgCreateGame"
+
+**Root Cause:**
+CosmJS's SigningStargateClient doesn't know how to encode custom poker module messages. It only knows standard Cosmos SDK messages (bank, staking, gov, etc.).
+
+**Error Message:**
+```
+Error: Unregistered type url: /pokerchain.poker.v1.MsgCreateGame
+    at Registry.lookupTypeWithError
+    at Registry.encode
+```
+
+**Solution Options:**
+1. **Generate TypeScript client** from pokerchain protos using `ignite generate ts-client` (RECOMMENDED)
+2. **Manually register** MsgCreateGame with protobuf encoder in SDK (quick fix)
+3. **Use Telescope** to generate CosmJS-compatible types from protos
+
+**Files to Fix:**
+- `/poker-vm/sdk/src/cosmosClient.ts` - Need to register message types before using SigningStargateClient
+- OR generate types in `/pokerchain/` and import into SDK
+
+**Assigned to:** Alex
+**Priority:** 🔴 CRITICAL - Blocks all transaction functionality (createGame, joinGame, performAction, etc.)
+
+---
+
+### 🟡 BLOCKER #2: Gas Token Configuration Mismatch
+
+**Problem:**
+SDK is using `uusdc` for gas fees, but pokerchain uses `stake` as native token.
+
+**Current code in `/poker-vm/sdk/src/cosmosClient.ts` line 482:**
+```typescript
+// ❌ WRONG:
+const fee = {
+    amount: [{ denom: "uusdc", amount: "1000" }],  // Can't pay gas with game currency!
+    gas: "200000"
+};
+
+// ✅ CORRECT:
+const fee = {
+    amount: [{ denom: "stake", amount: "1000" }],  // Must use native chain token
+    gas: "200000"
+};
+```
+
+**Why this matters:**
+- `uusdc` is for poker games (bridged USDC)
+- `stake` is for blockchain operations (gas fees, staking)
+- Mixing them causes transaction failures
+
+**Long-term TODO:**
+Before mainnet, rename `stake` to `b52` in `pokerchain/config.yml` to match branding.
+
+**Assigned to:** Alex
+**Priority:** 🟡 HIGH - Will cause transaction rejection even after message registration
+
+---
+
+## 🪙 Token Architecture Documentation
+
+### Three-Token System Explained:
+
+#### 1. **`stake`** (Native Chain Token - Gas/Staking)
+- **Purpose**: Pay gas fees, validator staking, governance voting
+- **Defined in**: `pokerchain/config.yml` → `default_denom: stake`
+- **Who has it**: Development accounts (alice, bob, etc.) get billions for testing
+- **Future name**: Will be renamed to `b52` or `ub52` (micro-b52) for mainnet
+- **Why "stake"?**: This is just the default Cosmos SDK development token name - like "eth" for Ethereum testnets
+
+**Example from config.yml:**
+```yaml
+default_denom: stake  # TODO: Change to "b52" for mainnet
+accounts:
+  - name: alice
+    coins:
+      - 3000000000000stake  # 3 trillion micro-stake for gas fees
+```
+
+#### 2. **`uusdc`** (Bridge Token - Gaming Currency)
+- **Purpose**: In-game poker currency (buy-ins, pots, payouts)
+- **Created**: Dynamically minted when users deposit USDC from Base Chain via bridge
+- **NOT in config.yml**: This token is created on-demand, not pre-allocated
+- **Bridge contract**: `0xcc391c8f1aFd6DB5D8b0e064BA81b1383b14FE5B` (Base Chain)
+- **Display name in UI**: `b52USDC` or `b52USD`
+- **Decimals**: 6 (same as USDC standard)
+
+**Bridge Flow:**
+```
+User deposits 100 USDC on Base Chain
+    ↓
+Bridge detects Deposited event
+    ↓
+Pokerchain mints 100,000,000 uusdc (100 * 10^6)
+    ↓
+User receives b52USDC in Cosmos wallet
+    ↓
+User plays poker with b52USDC
+```
+
+#### 3. **Base USDC** (External Token)
+- **Purpose**: Users deposit from Base Chain (Ethereum L2)
+- **Token address**: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` (Base USDC)
+- **Bridge contract**: `0xcc391c8f1aFd6DB5D8b0e064BA81b1383b14FE5B` (CosmosBridge)
+- **Network**: Base Chain (Chain ID: 8453)
+
+### Why Two Separate Tokens?
+
+**Separation of Concerns:**
+- `stake/b52` = **Blockchain utility** (like ETH for Ethereum)
+- `uusdc/b52USDC` = **Application currency** (like USDC for payments)
+
+**Benefits:**
+- Gas prices stable (in b52)
+- Game currency stable (pegged to USDC)
+- Can't accidentally spend game winnings on gas fees
+- Validators stake b52, not game currency
+
+---
+
+## 🔑 Private Key & Account Management
+
+### Development Accounts (alice, bob, charlie, etc.)
+
+**Where are they defined?**
+- **Mnemonics**: Stored in `pokerchain/config.yml` (PLAIN TEXT - dev only!)
+- **Private keys**: Encrypted in `~/.pokerchain/keyring-test/*.info` files (PBES2-encrypted JWT)
+- **Access via CLI**: `pokerchaind keys list --keyring-backend test`
+
+**Example from config.yml:**
+```yaml
+accounts:
+  - name: alice
+    coins:
+      - 3000000000000stake
+      - 20000token
+    mnemonic: moon town sad rebuild sad gather note lion desk pen letter invite...
+```
+
+**Security Note:**
+⚠️ These accounts are for DEVELOPMENT ONLY! Never use these mnemonics on mainnet or with real funds.
+
+### User Wallets (in Browser)
+
+**Where are they stored?**
+- **Mnemonic**: Browser localStorage (key: `STORAGE_COSMOS_MNEMONIC`)
+- **Private keys**: Derived from mnemonic in browser memory (never sent to server)
+- **Signing**: Happens client-side via `CosmosClient` → `SigningStargateClient`
+
+**How it works:**
+```
+1. User generates/imports mnemonic in browser
+2. Mnemonic saved to localStorage
+3. CosmosClient reads mnemonic from localStorage
+4. Creates DirectSecp256k1HdWallet from mnemonic
+5. Wallet derives private key (in memory only)
+6. Signs transactions locally
+7. Broadcasts signed transaction to blockchain
+```
+
+**Key Point:**
+The development accounts (alice, bob) are NOT used by the browser. They're separate accounts for testing the blockchain directly via CLI.
+
+**Browser wallet vs. Development accounts:**
+- **Browser wallet**: User's personal wallet (mnemonic in localStorage)
+- **Alice/Bob**: Test accounts on the blockchain (mnemonic in config.yml)
+- **They are different**: Browser wallet has its own address (e.g., `b52168ketml7...`)
+
+---
+
+## 🎯 Architecture Simplification TODO
+
+### Current Architecture: CosmosContext (Complex)
+
+**What it does:**
+```typescript
+// CosmosContext.tsx wraps entire app
+<CosmosProvider>
+  <App />
+</CosmosProvider>
+
+// Components use context
+const { createGame } = useCosmos();
+await createGame(...);
+```
+
+**Problems:**
+- Context overhead and complexity
+- Tightly coupled to React
+- Hard to understand for new developers
+- Unnecessary abstraction for stateless client
+
+### Proposed Architecture: Direct SDK Usage (Simpler)
+
+**What it would look like:**
+```typescript
+// useNewTable.ts - Just use SDK directly
+import { CosmosClient } from "@bitcoinbrisbane/block52";
+
+const client = new CosmosClient({
+    mnemonic: getCosmosMnemonic(),
+    rpcEndpoint: "http://localhost:26657",
+    restEndpoint: "http://localhost:1317",
+    chainId: "pokerchain",
+    prefix: "b52",
+    denom: "stake",
+    gasPrice: "0.001stake"
+});
+
+const result = await client.createGame(...);
+```
+
+**Benefits:**
+- ✅ Simpler - No context needed
+- ✅ Easier to understand - Direct function calls
+- ✅ More flexible - Each hook can have different config
+- ✅ Better for testing - No React context mocking
+
+**Trade-offs:**
+- Multiple client instances created (but they're lightweight and stateless)
+- Mnemonic loaded multiple times (still secure - in memory only)
+
+**Decision:** Consider removing CosmosContext after message registration is fixed.
+
+---
+
+## ⛽ Gas Fee Configuration - Where to Change Transaction Costs
+
+### Overview: Browser Wallet Needs BOTH Tokens
+
+**Critical Understanding:**
+Users need TWO different tokens to play poker on Pokerchain:
+
+1. **`stake`** (will be renamed to `b52`) - For gas fees
+   - Required for ALL blockchain transactions
+   - Used to pay transaction fees (like ETH for Ethereum)
+   - Without it: Transactions will be rejected!
+
+2. **`uusdc`** (displays as `b52USDC`) - For poker games
+   - Required for playing poker (buy-ins, bets)
+   - Obtained by depositing USDC from Base Chain
+
+**Example Transaction Flow:**
+```
+User creates a game with $100 buy-in:
+├── Gas fee: 1000 stake (deducted from user's stake balance)
+└── Buy-in: 100,000,000 uusdc (locked from user's uusdc balance)
+```
+
+### Where Gas Fees Are Configured
+
+#### 1. Blockchain-Level Configuration (Validator Minimum)
+
+**File:** `~/.pokerchain/config/app.toml`
+
+```toml
+###############################################################################
+###                           Base Configuration                            ###
+###############################################################################
+
+# The minimum gas prices a validator is willing to accept for processing a
+# transaction. A transaction's fees must meet the minimum of any denomination
+# specified in this config (e.g. 0.25token1;0.0001token2).
+minimum-gas-prices = "0stake"
+```
+
+**What this means:**
+- Validators will accept transactions with **0 stake** gas price (FREE transactions!)
+- You can change this to enforce minimum fees: `"0.001stake"` = require 0.001 stake per unit of gas
+- Format: `"<amount><denom>"` (e.g., `"0.025stake"` or `"0.001b52"`)
+
+**How to Change Gas Prices (Step-by-Step):**
+
+1. **Stop the chain** (press Ctrl+C in the terminal running `ignite chain serve`)
+
+2. **Edit the app.toml file:**
+   ```bash
+   # Open in your editor
+   nano ~/.pokerchain/config/app.toml
+   # or
+   code ~/.pokerchain/config/app.toml
+   # or
+   vim ~/.pokerchain/config/app.toml
+   ```
+
+3. **Find and change the minimum-gas-prices line:**
+   ```toml
+   # Change this line (around line 124):
+   minimum-gas-prices = "0stake"
+
+   # To one of these options:
+   minimum-gas-prices = "0stake"              # FREE (current - dev only)
+   minimum-gas-prices = "0.001stake"          # Tiny fee (testing)
+   minimum-gas-prices = "0.025stake"          # Mainnet level
+   minimum-gas-prices = "0stake,0.001uusdc"   # Accept either token
+   ```
+
+4. **Save the file** (Ctrl+O in nano, :wq in vim)
+
+5. **Restart the chain:**
+   ```bash
+   cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/pokerchain
+   ignite chain serve
+   ```
+
+6. **Verify the change took effect:**
+   ```bash
+   # Check the setting
+   grep "minimum-gas-prices" ~/.pokerchain/config/app.toml
+   ```
+
+**Multi-Denomination Gas Fees:**
+
+You can accept MULTIPLE tokens for gas fees:
+```toml
+# Accept either stake OR uusdc for gas
+minimum-gas-prices = "0.025stake,0.001uusdc"
+```
+
+This means users can pay gas fees with either:
+- 0.025 stake per gas unit, OR
+- 0.001 uusdc per gas unit
+
+**Note:** Ignite CLI does NOT support setting this in `config.yml` - you must edit `app.toml` directly.
+
+**Current Setting:** `"0stake"` = **FREE transactions** (good for development!)
+
+---
+
+### Understanding "0stake" - Current Gas Configuration
+
+**What does `minimum-gas-prices = "0stake"` mean?**
+
+```bash
+# Check your current setting
+grep "minimum-gas-prices" ~/.pokerchain/config/app.toml
+# Output: minimum-gas-prices = "0stake"
+```
+
+**This means gas fees are FREE!**
+
+Breaking down the format `"<amount><denom>"`:
+- `0` = The price per gas unit (ZERO!)
+- `stake` = The token denomination
+
+**Example transaction cost:**
+```
+User creates a game:
+├── Gas used: 150,000 units
+├── Gas price: 0 stake per unit
+├── Total fee: 150,000 × 0 = 0 stake
+└── Cost to user: FREE! 🎉
+```
+
+**Why is it set to 0?**
+
+Ignite CLI automatically sets `minimum-gas-prices = "0stake"` for development chains because:
+- ✅ Makes development easier - no need to manage gas tokens
+- ✅ Faster testing - don't worry about running out of gas money
+- ✅ Focus on features - not on funding test accounts
+- ✅ Perfect for local development
+
+**When to keep it as 0stake:**
+- ✅ Local development (current situation)
+- ✅ Running automated tests
+- ✅ Rapid prototyping
+- ✅ Developer onboarding
+
+**When to change it (to something like 0.025stake):**
+- 🚀 Testnet deployment - prevents spam attacks
+- 🚀 Mainnet deployment - validators earn fees
+- 🚀 Production environment - anti-spam protection
+- 🚀 Load testing - simulate real transaction costs
+
+**What happens if you change it to 0.025stake?**
+
+```
+Create game transaction:
+├── Gas used: 150,000 units
+├── Gas price: 0.025 stake per unit
+├── Total fee: 150,000 × 0.025 = 3,750 ustake
+└── Cost: 0.00375 stake tokens per transaction
+```
+
+**Summary:**
+- **Current:** `0stake` = FREE transactions ✅
+- **Perfect for development** - No changes needed!
+- **Change before mainnet** - Add `0.025stake` or similar
+
+---
+
+### Quick Reference: Changing Gas Prices with Ignite CLI
+
+**Ignite CLI default:** When you run `ignite chain serve`, it automatically creates `~/.pokerchain/config/app.toml` with `minimum-gas-prices = "0stake"`
+
+**To change the gas price:**
+
+```bash
+# 1. Stop the chain (if running)
+# Press Ctrl+C in the terminal
+
+# 2. Edit app.toml directly
+nano ~/.pokerchain/config/app.toml
+
+# 3. Find this line (around line 124):
+minimum-gas-prices = "0stake"
+
+# 4. Change to your desired value:
+minimum-gas-prices = "0.025stake"     # Mainnet level
+# or
+minimum-gas-prices = "0.001stake"     # Testing level
+# or
+minimum-gas-prices = "0stake,0.001uusdc"  # Multi-token
+
+# 5. Save and exit (Ctrl+O, Enter, Ctrl+X in nano)
+
+# 6. Restart the chain
+cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/pokerchain
+ignite chain serve
+
+# 7. Verify the change
+grep "minimum-gas-prices" ~/.pokerchain/config/app.toml
+```
+
+**Common Gas Price Values:**
+
+| Setting | Use Case | Cost per 100k gas |
+|---------|----------|-------------------|
+| `0stake` | Development (current) | FREE |
+| `0.001stake` | Light testing | 100 ustake (0.0001 stake) |
+| `0.025stake` | Mainnet/Production | 2,500 ustake (0.0025 stake) |
+| `0.1stake` | High-security mainnet | 10,000 ustake (0.01 stake) |
+
+**Multi-Token Gas Fees:**
+
+```toml
+# Users can pay with EITHER token
+minimum-gas-prices = "0.025stake,0.001uusdc"
+```
+
+This allows users to choose:
+- Pay 0.025 stake per gas, OR
+- Pay 0.001 uusdc per gas
+
+**Note:** The setting in `~/.pokerchain/config/app.toml` is only used when running the chain locally. For production/testnet, you'll configure this in your validator's `app.toml` file.
+
+---
+
+#### 2. SDK Configuration (Client-Side)
+
+**File:** `/poker-vm/sdk/src/cosmosClient.ts` (multiple places)
+
+**Location A: Default Config (line ~573)**
+```typescript
+export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
+    rpcEndpoint: `http://${domain}:26657`,
+    restEndpoint: `http://${domain}:1317`,
+    chainId: "pokerchain",
+    prefix: "b52",
+    denom: "b52USDC",  // ❌ WRONG - Should be "stake"
+    gasPrice: "0.001b52USDC"  // ❌ WRONG - Should be "0.001stake"
+});
+```
+
+**Location B: SigningStargateClient Initialization (line ~113)**
+```typescript
+this.signingClient = await SigningStargateClient.connectWithSigner(
+    this.config.rpcEndpoint,
+    this.wallet,
+    {
+        gasPrice: GasPrice.fromString(this.config.gasPrice)  // Uses config.gasPrice
+    }
+);
+```
+
+**Location C: Transaction Fee (line ~482 in createGame method)**
+```typescript
+const fee = {
+    amount: [{ denom: "uusdc", amount: "1000" }],  // ❌ WRONG - Should be "stake"
+    gas: "200000"  // Gas limit (max computation units)
+};
+```
+
+### 🔧 Fixes Needed
+
+#### Fix #1: Change Default Gas Denom
+
+**File:** `/poker-vm/sdk/src/cosmosClient.ts` line ~573
+
+```typescript
+// ❌ WRONG:
+export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
+    denom: "b52USDC",
+    gasPrice: "0.001b52USDC"
+});
+
+// ✅ CORRECT:
+export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
+    denom: "stake",  // Native token for gas
+    gasPrice: "0.001stake"  // 0.001 stake per gas unit
+});
+```
+
+#### Fix #2: Use Correct Denom in createGame Fee
+
+**File:** `/poker-vm/sdk/src/cosmosClient.ts` line ~482
+
+```typescript
+// ❌ WRONG:
+const fee = {
+    amount: [{ denom: "uusdc", amount: "1000" }],
+    gas: "200000"
+};
+
+// ✅ CORRECT:
+const fee = {
+    amount: [{ denom: "stake", amount: "1000" }],  // 1000 ustake = 0.001 stake
+    gas: "200000"
+};
+```
+
+### Gas Fee Calculation
+
+**Formula:**
+```
+Total Fee = gasPrice × gasUsed
+```
+
+**Example:**
+- Gas price: `0.001stake` per gas unit
+- Gas used: 100,000 units
+- Total fee: 0.001 × 100,000 = **100 stake**
+
+**Current Configuration:**
+- Gas price: `0stake` (FREE transactions!)
+- Gas limit: `200000` units
+- Total fee: **0 stake** (no cost)
+
+**For mainnet, consider:**
+- Gas price: `0.025stake` (prevents spam)
+- Average transaction: ~100,000 gas
+- Fee per transaction: ~2,500 stake (0.0025 b52 tokens)
+
+### TODO: Before Mainnet
+
+1. **Rename token:** `stake` → `b52` in `config.yml`
+2. **Set minimum gas price:** `0.025b52` in `app.toml`
+3. **Update SDK config:** Change all references from `stake` to `b52`
+4. **Add UI validation:** Warn users if insufficient `b52` for gas fees
+5. **Implement gas estimation:** Calculate exact gas needed per transaction type
+
+### Gas Estimation by Transaction Type
+
+Estimated gas usage (to be measured):
+- `MsgCreateGame`: ~150,000 gas
+- `MsgJoinGame`: ~100,000 gas
+- `MsgPerformAction`: ~80,000 gas
+- `MsgLeaveGame`: ~90,000 gas
+
+**At 0.025b52 per gas:**
+- Create game: ~3,750 ub52 (0.00375 b52)
+- Join game: ~2,500 ub52 (0.0025 b52)
+- Poker action: ~2,000 ub52 (0.002 b52)
+
+---
+
+**Previous Status**: 🎉 BALANCE DISPLAY FIXED! Cosmos USDC formatting now working correctly
+**Previous Block Height**: ~4028+ (local chain running)
+**Previous CosmosClient Progress**: ✅ 13/27 IClient methods implemented (48%) - **`createGame()` + `findGames()` + `getBalance()` FULLY INTEGRATED!** 🎲💰
 
 **✅ BRIDGE TEST SUCCESSFUL - CONFIRMED IN UI**:
 - Test deposit from Base Chain (tx: `0x77c534e452b1b46ec5857c7ce0f92c49f96c41ad9f55d7f15302cab9daba2d9e`)
@@ -277,14 +851,38 @@ todo:
 - 🌐 URL: http://localhost:3000
 - 📋 Checklist: `/poker-vm/cosmosexplorer/COSMOS_EXPLORER_CHECKLIST.md`
 
+## 🎯 MAJOR TASK: Move Cosmos Explorer into Main UI App
+
+**Goal**: Integrate Cosmos Explorer pages into the main poker UI app for Electron packaging
+
+**Why**:
+- UI will be packaged as Electron desktop app
+- Users should be able to view blockchain explorer within the app
+- Consolidates codebase (removes separate cosmosexplorer project)
+
+**Tasks**:
+- [x] Create `/explorer` directory in `ui/src/pages/` ✅
+- [x] Copy `BlocksPage.tsx` from cosmosexplorer to `ui/src/pages/explorer/` ✅
+- [x] Copy `TransactionsPage.tsx` from cosmosexplorer to `ui/src/pages/explorer/` ✅
+- [x] Add `/explorer` and `/explorer/tx/:hash` routes to React Router ✅
+- [x] Update imports and dependencies (uses CosmosClient instead of separate cosmosApi) ✅
+- [ ] Add navigation links to explorer from main UI (Dashboard)
+- [ ] Test both pages work correctly in main UI
+- [ ] Update styling to match main UI theme
+
+**Source**: `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/cosmosexplorer`
+**Destination**: `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/ui/src/pages/explorer`
+
+---
+
 **Next Steps**:
 1. [x] Get transaction hash from block #68 to verify game creation ✅ `6DC1920A33244C65505CEA60DD86961A89DB31689772B78420F493F99FC17682`
 2. [x] Query games list to confirm game was created ✅ Returns 1 game
 3. [x] **Test findGames() in Dashboard** ✅ **WORKING!** Games list displays correctly from Cosmos REST API
 4. [x] Verify MsgCreateGame message details ✅ Game ID `0xbf618c81...` created successfully
-5. [ ] Test transaction search with actual tx hash in Cosmos Explorer
-6. [ ] Fix ESLint warning in BlocksPage.tsx (unused `Link` import)
-7. [ ] Fix buy-in display formatting (currently shows $0.00 due to number/string conversion)
+5. [x] Fix buy-in display formatting ✅ **FIXED!** Now shows correct amounts ($1.00, $100.00, etc.)
+6. [ ] Test transaction search with actual tx hash in Cosmos Explorer
+7. [ ] Fix ESLint warning in BlocksPage.tsx (unused `Link` import)
 
 **Recent Implementation** (Oct 12, 2025 - PM):
 - ✅ **COSMOS ACCOUNT UTILS & BALANCE INTEGRATION** - Replaced all Ethereum account utilities
