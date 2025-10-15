@@ -1,6 +1,14 @@
 // Main SDK exports
 export { CosmosClient, getDefaultCosmosConfig, COSMOS_CONSTANTS } from "./cosmosClient";
 
+// Signing client
+export {
+    SigningCosmosClient,
+    createSigningCosmosClient,
+    createSigningClientFromMnemonic
+} from "./signingClient";
+export type { SigningCosmosConfig, MsgCreateGame } from "./signingClient";
+
 // Wallet utilities
 export {
     generateWallet,

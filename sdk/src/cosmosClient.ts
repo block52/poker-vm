@@ -61,8 +61,8 @@ export interface PlayerGamesResponse {
 }
 
 export class CosmosClient {
-    private config: CosmosConfig;
-    private restClient: AxiosInstance;
+    protected readonly config: CosmosConfig;
+    private readonly restClient: AxiosInstance;
 
     constructor(config: CosmosConfig) {
         this.config = config;
