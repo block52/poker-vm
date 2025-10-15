@@ -1,6 +1,16 @@
 // Main SDK exports
 export { CosmosClient, getDefaultCosmosConfig, COSMOS_CONSTANTS } from "./cosmosClient";
 
+// Wallet utilities
+export {
+    generateWallet,
+    createWalletFromMnemonic,
+    isValidMnemonic,
+    getAddressFromMnemonic,
+    BLOCK52_HD_PATH
+} from "./walletUtils";
+export type { WalletInfo } from "./walletUtils";
+
 // Types exports
 export type { CosmosConfig, GameState, GameInfo, LegalAction, PlayerAction } from "./types";
 
