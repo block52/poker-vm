@@ -106,6 +106,7 @@ export class SigningCosmosClient extends CosmosClient {
         fromAddress: string,
         toAddress: string,
         amount: bigint,
+        denom?: string,
         memo?: string
     ): Promise<string> {
         await this.initializeSigningClient();
@@ -114,7 +115,11 @@ export class SigningCosmosClient extends CosmosClient {
             throw new Error("Failed to initialize signing client");
         }
 
-        const coins = [{ denom: this.config.denom, amount: amount.toString() }];
+        if (!denom) {
+            denom = this.config.denom;
+        }
+
+        const coins = [{ denom, amount: amount.toString() }];
         const fee = calculateFee(100_000, this.gasPrice); // Estimate gas
 
         const result = await this.signingClient.sendTokens(
