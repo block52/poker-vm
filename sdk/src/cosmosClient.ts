@@ -343,16 +343,16 @@ export class CosmosClient {
     }
 
     /**
-     * Convert uusdc (micro USDC) to USDC display format
+     * Convert b52usdc (micro USDC) to USDC display format
      */
-    uusdcToUsdc(uusdcAmount: bigint): number {
-        return Number(uusdcAmount) / Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS);
+    b52usdcToUsdc(b52usdcAmount: bigint): number {
+        return Number(b52usdcAmount) / Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS);
     }
 
     /**
-     * Convert USDC to uusdc (micro USDC) format
+     * Convert USDC to b52usdc (micro USDC) format
      */
-    usdcToUusdc(usdcAmount: number): bigint {
+    usdcToB52usdc(usdcAmount: number): bigint {
         return BigInt(Math.floor(usdcAmount * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
     }
 
