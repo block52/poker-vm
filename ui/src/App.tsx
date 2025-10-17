@@ -7,13 +7,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { projectId, metadata, networks, wagmiAdapter } from "./config";
 import { base } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
-import Dashboard from "./components/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import QRDeposit from "./components/QRDeposit";
 import CosmosWalletPage from "./components/CosmosWalletPage";
 import BlocksPage from "./pages/explorer/BlocksPage";
 import TransactionPage from "./pages/explorer/TransactionPage";
+import TestSigningPage from "./pages/TestSigningPage";
 import { GameStateProvider } from "./context/GameStateContext";
-import { CosmosProvider } from "./context/CosmosContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
 import FaviconSetter from "./components/FaviconSetter";
@@ -57,6 +57,7 @@ function AppContent() {
                 <Route path="/deposit" element={<Deposit />} />
                 <Route path="/qr-deposit" element={<QRDeposit />} />
                 <Route path="/wallet" element={<CosmosWalletPage />} />
+                <Route path="/test-signing" element={<TestSigningPage />} />
                 <Route path="/explorer" element={<BlocksPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
                 <Route path="/" element={<Dashboard />} />
@@ -84,11 +85,9 @@ function App() {
         <Router>
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-                    <CosmosProvider>
-                        <GameStateProvider>
-                            <AppContent />
-                        </GameStateProvider>
-                    </CosmosProvider>
+                    <GameStateProvider>
+                        <AppContent />
+                    </GameStateProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </Router>

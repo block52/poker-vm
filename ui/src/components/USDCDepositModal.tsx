@@ -3,7 +3,7 @@ import { useAccount, useWalletClient, usePublicClient, useSwitchChain } from "wa
 import { parseUnits, formatUnits, parseAbi } from "viem";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { BASE_USDC_ADDRESS, COSMOS_BRIDGE_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
-import { getCosmosAddress } from "../utils/cosmosUtils";
+import { getCosmosAddress } from "../utils/cosmos";
 
 interface USDCDepositModalProps {
     isOpen: boolean;

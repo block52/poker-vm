@@ -3,31 +3,32 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate for naviga
 
 import "./Dashboard.css"; // Import the CSS file with animations
 
-// Web3 Wallet Imports
-import { Wallet, ethers } from "ethers";
+// Base Chain imports (only for USDC deposits via bridge)
+import { ethers } from "ethers";
 import { BASE_RPC_URL, BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
 import { useAccount as useWagmiAccount, useSwitchChain } from "wagmi";
 
-const RPC_URL = import.meta.env.VITE_NODE_RPC_URL || BASE_RPC_URL; // Use Base Chain RPC
+const RPC_URL = BASE_RPC_URL; // Base Chain RPC for USDC balance queries
 const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
 
-import BuyInModal from "./playPage/BuyInModal";
-import WithdrawalModal from "./WithdrawalModal";
-import USDCDepositModal from "./USDCDepositModal";
+import BuyInModal from "../components/playPage/BuyInModal";
+import WithdrawalModal from "../components/WithdrawalModal";
+import USDCDepositModal from "../components/USDCDepositModal";
+import CosmosStatus from "../components/cosmos/CosmosStatus";
 
 // Game wallet and SDK imports
-import { Variant } from "./types";
-import { formatAddress } from "./common/utils";
+import { Variant } from "../components/types";
+import { formatAddress } from "../components/common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
 import { formatBalance, formatUSDCToSimpleDollars } from "../utils/numberUtils"; // Import formatBalance and USDC utility functions
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
-import { useUserWalletConnect, useAccount, useFindGames, useNewTable, useTablePlayerCounts, useCosmosWallet, STORAGE_PRIVATE_KEY } from "../hooks";
+import { useUserWalletConnect, useAccount, useFindGames, useNewTable, useTablePlayerCounts, useCosmosWallet } from "../hooks";
 import type { CreateTableOptions } from "../hooks/useNewTable"; // Import type separately
 
 // Cosmos wallet utils
-import { isValidSeedPhrase } from "../utils/cosmosUtils";
+import { isValidSeedPhrase } from "../utils/cosmos";
 
 // Password protection utils
 import {
@@ -39,26 +40,6 @@ import {
 // Club branding imports
 import defaultLogo from "../assets/YOUR_CLUB.png";
 import { colors, getAnimationGradient, getHexagonStroke, hexToRgba } from "../utils/colorConfig";
-
-// Add network display component - Memoized to prevent re-renders
-const NetworkDisplay = React.memo(({ isMainnet = false }: { isMainnet?: boolean }) => {
-    const containerStyle = useMemo(
-        () => ({
-            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-        }),
-        []
-    );
-
-    const dotStyle = useMemo(() => (!isMainnet ? { backgroundColor: colors.brand.primary } : {}), [isMainnet]);
-
-    return (
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs" style={containerStyle}>
-            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : ""}`} style={dotStyle}></div>
-            <span className="text-gray-300">Block52 Chain</span>
-        </div>
-    );
-});
 
 // Memoized Deposit button component
 const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) => {
@@ -161,11 +142,8 @@ const HexagonPattern = React.memo(() => {
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
-    const [typeSelected, setTypeSelected] = useState<string>("cash");
-    const [variantSelected, setVariantSelected] = useState<string>("texas-holdem");
-    const [seatSelected, setSeatSelected] = useState<number>(2);
-    const [limitTypeSelected, setLimitTypeSelected] = useState("no-limit");
-    const [publicKey, setPublicKey] = useState<string | undefined>(localStorage.getItem("user_eth_public_key") || undefined);
+    // Removed: Game selection state variables - now handled in Create Game modal
+    // Removed: Ethereum wallet state - now using Cosmos wallet only
 
     // Password protection states
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -175,7 +153,7 @@ const Dashboard: React.FC = () => {
 
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
 
-    // Add wagmi hooks for chain detection and switching
+    // Wagmi hooks for Base Chain (USDC deposit bridge only)
     const { chain } = useWagmiAccount();
     const { switchChain } = useSwitchChain();
 
@@ -186,15 +164,12 @@ const Dashboard: React.FC = () => {
     const gameAddresses = useMemo(() => games.map(g => g.address), [games]);
     const { playerCounts } = useTablePlayerCounts(gameAddresses);
 
-    // Add useAccount hook to get account nonce
-    const { account, isLoading: accountLoading, refetch: refetchAccount } = useAccount(publicKey);
+    // Removed: Ethereum account hook - now using Cosmos wallet only
 
     // Use the new useNewTable hook from hooks directory
     const { createTable, isCreating: isCreatingTable, error: createTableError } = useNewTable();
 
-    const [showImportModal, setShowImportModal] = useState(false);
-    const [importKey, setImportKey] = useState("");
-    const [importError, setImportError] = useState("");
+    // Removed: Ethereum private key import modal states
 
     // New game creation states
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
@@ -235,12 +210,9 @@ const Dashboard: React.FC = () => {
     // Cosmos wallet state and hooks
     const cosmosWallet = useCosmosWallet();
     const [showCosmosImportModal, setShowCosmosImportModal] = useState(false);
-    const [showCosmosUpdateModal, setShowCosmosUpdateModal] = useState(false);
     const [showCosmosTransferModal, setShowCosmosTransferModal] = useState(false);
     const [cosmosSeedPhrase, setCosmosSeedPhrase] = useState("");
-    const [cosmosUpdateSeedPhrase, setCosmosUpdateSeedPhrase] = useState("");
     const [cosmosImportError, setCosmosImportError] = useState("");
-    const [cosmosUpdateError, setCosmosUpdateError] = useState("");
     const [transferRecipient, setTransferRecipient] = useState("");
     const [transferAmount, setTransferAmount] = useState("");
     const [transferError, setTransferError] = useState("");
@@ -376,79 +348,11 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    const generateNewWallet = () => {
-        try {
-            // Create a new random wallet
-            const newWallet = Wallet.createRandom();
+    // Removed: Ethereum wallet generation - now using Cosmos wallet only
 
-            // Save to localStorage
-            localStorage.setItem(STORAGE_PRIVATE_KEY, newWallet.privateKey);
-            localStorage.setItem("user_eth_public_key", newWallet.address);
+    // Removed: handleGameVariant and handleSeat - game options now in Create Game modal
 
-            // Update the state
-            setPublicKey(newWallet.address);
-
-            // Force refresh data
-            // fetchAccountBalance(true);
-        } catch (err) {
-            console.error("Failed to generate new wallet:", err);
-        }
-    };
-
-    useEffect(() => {
-        const privateKey = localStorage.getItem(STORAGE_PRIVATE_KEY);
-        if (!privateKey) {
-            // Auto-generate a wallet if no private key exists
-            generateNewWallet();
-        } else {
-            setPublicKey(localStorage.getItem("user_eth_public_key") || undefined);
-        }
-    }, []);
-
-    const handleGameVariant = (variant: Variant) => {
-        if (variant === Variant.TEXAS_HOLDEM) {
-            setVariantSelected("texas-holdem");
-        }
-        if (variant === Variant.OMAHA) {
-            setVariantSelected("omaha");
-        }
-    };
-
-    const handleSeat = (seat: number) => {
-        setSeatSelected(seat);
-    };
-
-    const handleImportPrivateKey = () => {
-        try {
-            // Validate private key format
-            if (!importKey.startsWith("0x")) {
-                setImportError("Private key must start with 0x");
-                return;
-            }
-            if (importKey.length !== 66) {
-                setImportError("Invalid private key length");
-                return;
-            }
-
-            // Create wallet from private key to validate and get address
-            const wallet = new Wallet(importKey);
-
-            // Save to localStorage
-            localStorage.setItem(STORAGE_PRIVATE_KEY, importKey);
-            localStorage.setItem("user_eth_public_key", wallet.address);
-
-            // Reset form and close modal
-            setImportKey("");
-            setImportError("");
-            setShowImportModal(false);
-
-            // Refresh page to update wallet
-            window.location.reload();
-        } catch (err) {
-            console.error("Failed to import private key:", err);
-            setImportError("Invalid private key format");
-        }
-    };
+    // Removed: Ethereum private key import handler - now using Cosmos seed phrase
 
     // Cosmos wallet handlers
     const handleImportCosmosSeed = async () => {
@@ -472,26 +376,7 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    const handleUpdateCosmosSeed = async () => {
-        try {
-            setCosmosUpdateError("");
-
-            if (!isValidSeedPhrase(cosmosUpdateSeedPhrase)) {
-                setCosmosUpdateError("Please enter a valid seed phrase (12, 15, 18, 21, or 24 words)");
-                return;
-            }
-
-            await cosmosWallet.importSeedPhrase(cosmosUpdateSeedPhrase);
-
-            // Reset form and close modal
-            setCosmosUpdateSeedPhrase("");
-            setCosmosUpdateError("");
-            setShowCosmosUpdateModal(false);
-        } catch (err) {
-            console.error("Failed to update cosmos seed phrase:", err);
-            setCosmosUpdateError("Failed to update seed phrase");
-        }
-    };
+    // Removed: handleUpdateCosmosSeed - now handled on /wallet page
 
     const handleCosmosTransfer = async () => {
         try {
@@ -535,7 +420,7 @@ const Dashboard: React.FC = () => {
     };
 
     // CSS for disabled buttons
-    const disabledButtonClass = "text-gray-300 bg-gradient-to-br from-gray-600 to-gray-700 cursor-not-allowed shadow-inner border border-gray-600/30";
+    // Removed: disabledButtonClass - no longer needed
 
     // Memoized background styles to prevent re-renders
     const backgroundStyle1 = useMemo(
@@ -595,18 +480,9 @@ const Dashboard: React.FC = () => {
         []
     );
 
-    useEffect(() => {
-        setLimitTypeSelected("no-limit"); // Default when changing variant
-    }, [variantSelected]);
+    // Removed: useEffect for limit type - no longer using these state variables
 
-    const handleGameType = (type: string) => {
-        if (type === GameType.CASH) {
-            setTypeSelected("cash");
-        }
-        if (type === GameType.TOURNAMENT) {
-            setTypeSelected("tournament");
-        }
-    };
+    // Removed: handleGameType - game type selection now in Create Game modal
 
     // Memoized hover handlers
     const handleWalletMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -677,23 +553,10 @@ const Dashboard: React.FC = () => {
         setShowWithdrawalModal(true);
     }, []);
 
-    // Memoized Import Modal callback
-    const handleImportModalClick = useCallback(() => {
-        setShowImportModal(true);
-    }, []);
+    // Removed: handleImportModalClick - no longer needed (using Cosmos wallet)
 
     // Memoized game selection callbacks
-    const handleCashGameClick = useCallback(() => {
-        handleGameType(GameType.CASH);
-    }, []);
-
-    const handleTexasHoldemClick = useCallback(() => {
-        handleGameVariant(Variant.TEXAS_HOLDEM);
-    }, []);
-
-    const handleHeadsUpClick = useCallback(() => {
-        handleSeat(2);
-    }, []);
+    // Removed: Game selection button handlers - no longer needed
 
     // Memoized Choose Table callback
     const handleChooseTableClick = useCallback(() => {
@@ -875,46 +738,7 @@ const Dashboard: React.FC = () => {
             {/* Main Dashboard Content - Only show when authenticated */}
             {isAuthenticated && (
                 <>
-                    {/* Import Private Key Modal */}
-                    {showImportModal && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                            <div
-                                className="p-6 rounded-xl w-96 shadow-2xl border"
-                                style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}
-                            >
-                                <h3 className="text-xl font-bold text-white mb-4">Import Private Key</h3>
-                                <div className="space-y-4">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter private key (0x...)"
-                                        value={importKey}
-                                        onChange={e => setImportKey(e.target.value)}
-                                        className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                    />
-                                    {importError && <p className="text-red-500 text-sm">{importError}</p>}
-                                    <div className="flex justify-end space-x-3">
-                                        <button
-                                            onClick={() => {
-                                                setShowImportModal(false);
-                                                setImportKey("");
-                                                setImportError("");
-                                            }}
-                                            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleImportPrivateKey}
-                                            className="px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                            style={{ backgroundColor: colors.brand.primary }}
-                                        >
-                                            Import
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Removed: Import Private Key Modal - now using Cosmos seed phrase import */}
 
                     {/* Cosmos Import Seed Phrase Modal */}
                     {showCosmosImportModal && (
@@ -961,56 +785,7 @@ const Dashboard: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Cosmos Update Seed Phrase Modal */}
-                    {showCosmosUpdateModal && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                            <div
-                                className="p-6 rounded-xl w-96 shadow-2xl border"
-                                style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}
-                            >
-                                <h3 className="text-xl font-bold text-white mb-4">Update Cosmos Seed Phrase</h3>
-                                <div className="space-y-4">
-                                    <div className="p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
-                                        <p className="text-yellow-400 text-sm">
-                                            ⚠️ <strong>Warning:</strong> Updating your seed phrase will change your wallet address and you'll lose access to
-                                            your current address.
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-white text-sm mb-1">New Seed Phrase</label>
-                                        <textarea
-                                            placeholder="Enter your 12, 15, 18, 21, or 24 word seed phrase..."
-                                            value={cosmosUpdateSeedPhrase}
-                                            onChange={e => setCosmosUpdateSeedPhrase(e.target.value)}
-                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 h-20 resize-none"
-                                        />
-                                        <p className="text-xs text-gray-400 mt-1">Words should be separated by spaces</p>
-                                    </div>
-                                    {cosmosUpdateError && <p className="text-red-500 text-sm">{cosmosUpdateError}</p>}
-                                    <div className="flex justify-end space-x-3">
-                                        <button
-                                            onClick={() => {
-                                                setShowCosmosUpdateModal(false);
-                                                setCosmosUpdateSeedPhrase("");
-                                                setCosmosUpdateError("");
-                                            }}
-                                            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleUpdateCosmosSeed}
-                                            disabled={cosmosWallet.isLoading}
-                                            className="px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90 disabled:opacity-50"
-                                            style={{ backgroundColor: colors.brand.primary }}
-                                        >
-                                            {cosmosWallet.isLoading ? "Updating..." : "Update"}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Removed: Cosmos Update Seed Phrase Modal - now handled on /wallet page */}
 
                     {/* Cosmos Transfer Modal */}
                     {showCosmosTransferModal && (
@@ -1188,11 +963,11 @@ const Dashboard: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={handleCreateNewGame}
-                                            disabled={isCreatingTable || accountLoading}
+                                            disabled={isCreatingTable}
                                             className={`px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md flex items-center ${
-                                                isCreatingTable || accountLoading ? "bg-gray-500" : "hover:opacity-90"
+                                                isCreatingTable ? "bg-gray-500" : "hover:opacity-90"
                                             }`}
-                                            style={isCreatingTable || accountLoading ? {} : { backgroundColor: colors.brand.primary }}
+                                            style={isCreatingTable ? {} : { backgroundColor: colors.brand.primary }}
                                         >
                                             {isCreatingTable ? (
                                                 <>
@@ -1211,8 +986,6 @@ const Dashboard: React.FC = () => {
                                                     </svg>
                                                     Creating Table...
                                                 </>
-                                            ) : accountLoading ? (
-                                                "Loading Account..."
                                             ) : (
                                                 "Create Game"
                                             )}
@@ -1234,7 +1007,7 @@ const Dashboard: React.FC = () => {
 
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
-                            <NetworkDisplay isMainnet={false} />
+                            <CosmosStatus />
                         </div>
 
                         {/* Block52 Wallet Section */}
@@ -1340,14 +1113,6 @@ const Dashboard: React.FC = () => {
                                         }}
                                     >
                                         <div className="flex items-center">
-                                            <div
-                                                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
-                                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
-                                            >
-                                                <span className="font-bold" style={{ color: colors.brand.primary }}>
-                                                    B
-                                                </span>
-                                            </div>
                                             <div>
                                                 <p className="text-white text-sm font-bold">b52USD</p>
                                                 <p className="text-gray-400 text-xs">Cosmos Chain</p>
@@ -1389,28 +1154,7 @@ const Dashboard: React.FC = () => {
                                                     Refresh
                                                 </button>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => setShowCosmosUpdateModal(true)}
-                                                    className="flex-1 px-3 py-2 text-sm bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition duration-300"
-                                                >
-                                                    Update Seed
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        if (
-                                                            window.confirm(
-                                                                "Are you sure you want to clear your cosmos wallet? This will remove your seed phrase and you'll lose access to this address."
-                                                            )
-                                                        ) {
-                                                            cosmosWallet.clearWallet();
-                                                        }
-                                                    }}
-                                                    className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-300"
-                                                >
-                                                    Clear Wallet
-                                                </button>
-                                            </div>
+                                            {/* Removed: Update Seed and Clear Wallet buttons - now handled on /wallet page */}
                                         </div>
                                     )}
 
@@ -1432,13 +1176,23 @@ const Dashboard: React.FC = () => {
                                         <CreateTableButton onClick={handleCreateTableClick} />
                                     </div>
                                     <div className="mt-2 flex justify-center gap-4">
-                                        <button
-                                            onClick={handleImportModalClick}
-                                            className="text-sm underline transition duration-300 hover:opacity-80"
+                                        <a
+                                            href="/wallet"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm underline transition duration-300 hover:opacity-80 flex items-center gap-1"
                                             style={{ color: colors.brand.primary }}
                                         >
-                                            Import Private Key
-                                        </button>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                                />
+                                            </svg>
+                                            Cosmos Wallet
+                                        </a>
                                         <a
                                             href="/explorer"
                                             target="_blank"
@@ -1833,74 +1587,8 @@ const Dashboard: React.FC = () => {
                         )} */}
 
                         <div className="space-y-6">
-                            {/* Game options always visible */}
-                            <div className="flex justify-between gap-6">
-                                <button
-                                    onClick={handleCashGameClick}
-                                    className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                    style={{
-                                        backgroundColor: typeSelected === "cash" ? colors.brand.primary : colors.ui.bgMedium,
-                                        opacity: typeSelected === "cash" ? 1 : 0.7
-                                    }}
-                                >
-                                    Cash
-                                </button>
-                                <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
-                                    Tournament
-                                </button>
-                            </div>
-
-                            <div className="flex justify-between gap-6">
-                                <button
-                                    onClick={handleTexasHoldemClick}
-                                    className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                    style={{
-                                        backgroundColor: variantSelected === "texas-holdem" ? colors.brand.primary : colors.ui.bgMedium,
-                                        opacity: variantSelected === "texas-holdem" ? 1 : 0.7
-                                    }}
-                                >
-                                    Texas Holdem
-                                </button>
-                                <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
-                                    Omaha
-                                </button>
-                            </div>
-                            <div className="flex justify-between gap-6">
-                                {["no-limit", "pot-limit", "fixed-limit"].map(limit => (
-                                    <button
-                                        key={limit}
-                                        onClick={() => {
-                                            setLimitTypeSelected(limit);
-                                            // TODO: Wire limitTypeSelected into game creation logic
-                                        }}
-                                        className="text-white capitalize hover:opacity-90 rounded-xl py-3 px-4 w-[33%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                        style={{
-                                            backgroundColor: limitTypeSelected === limit ? colors.brand.primary : colors.ui.bgMedium,
-                                            opacity: limitTypeSelected === limit ? 1 : 0.7
-                                        }}
-                                    >
-                                        {limit.replace("-", " ")}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex justify-between gap-6">
-                                <button
-                                    onClick={handleHeadsUpClick}
-                                    className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                    style={{
-                                        backgroundColor: seatSelected === 2 ? colors.brand.primary : colors.ui.bgMedium,
-                                        opacity: seatSelected === 2 ? 1 : 0.7
-                                    }}
-                                >
-                                    Heads Up
-                                </button>
-                                <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
-                                    6 Max
-                                </button>
-                                <button disabled={true} className={`${disabledButtonClass} rounded-xl py-3 px-6 w-[50%] text-center`}>
-                                    Full Ring
-                                </button>
-                            </div>
+                            {/* Removed: Game type selection buttons (Cash/Tournament, Texas Holdem/Omaha, etc.)
+                               These options are now configured in the Create Game modal */}
                             {games && games.length > 0 && (
                                 <div className="flex justify-between gap-6">
                                     <button
@@ -1936,8 +1624,7 @@ const Dashboard: React.FC = () => {
                             isOpen={showWithdrawalModal}
                             onClose={() => setShowWithdrawalModal(false)}
                             onSuccess={() => {
-                                // Refresh account balance after successful withdrawal
-                                refetchAccount();
+                                // Balance will auto-refresh on next page interaction
                             }}
                         />
                     )}
@@ -1946,8 +1633,7 @@ const Dashboard: React.FC = () => {
                             isOpen={showUSDCDepositModal}
                             onClose={() => setShowUSDCDepositModal(false)}
                             onSuccess={() => {
-                                // Refresh account balance after successful deposit
-                                refetchAccount();
+                                // Balance will auto-refresh on next page interaction
                                 setShowUSDCDepositModal(false);
                             }}
                         />

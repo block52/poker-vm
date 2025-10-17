@@ -132,7 +132,7 @@ export default function BlocksPage() {
           <div className="flex justify-center mb-4">
             <svg
               className="h-16 w-16"
-              style={{ color: colors.accent.error }}
+              style={{ color: colors.accent.danger }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -245,14 +245,14 @@ export default function BlocksPage() {
           <div
             className="backdrop-blur-md p-4 rounded-xl shadow-2xl mt-6"
             style={{
-              backgroundColor: hexToRgba(colors.accent.error, 0.2),
-              border: `1px solid ${hexToRgba(colors.accent.error, 0.5)}`
+              backgroundColor: hexToRgba(colors.accent.danger, 0.2),
+              border: `1px solid ${hexToRgba(colors.accent.danger, 0.5)}`
             }}
           >
             <div className="flex items-center gap-3">
               <svg
                 className="h-6 w-6 flex-shrink-0"
-                style={{ color: colors.accent.error }}
+                style={{ color: colors.accent.danger }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

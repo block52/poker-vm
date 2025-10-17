@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
@@ -30,13 +30,6 @@ export default function TransactionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-search if hash is in URL
-  useState(() => {
-    if (urlHash) {
-      handleSearch(urlHash);
-    }
-  });
-
   const handleSearch = async (hashToSearch?: string) => {
     const searchHash = hashToSearch || txHash;
 
@@ -56,8 +49,21 @@ export default function TransactionPage() {
 
       const tx = await cosmosClient.getTx(searchHash.trim());
 
-      // Transform the response to match expected format
-      setTransaction(tx as any);
+      console.log("Raw transaction response:", tx);
+
+      // Validate transaction structure
+      if (!tx) {
+        throw new Error("Transaction not found");
+      }
+
+      // CosmosClient returns the transaction directly, not wrapped in tx_response
+      // Transform to expected format if needed
+      const formattedTx = tx.tx_response ? tx : {
+        tx_response: tx,
+        tx: tx.tx || { body: { messages: [] } }
+      };
+
+      setTransaction(formattedTx as any);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || "Transaction not found");
       setTransaction(null);
@@ -72,6 +78,13 @@ export default function TransactionPage() {
       handleSearch();
     }
   };
+
+  // Auto-search if hash is in URL
+  useEffect(() => {
+    if (urlHash) {
+      handleSearch(urlHash);
+    }
+  }, [urlHash]);
 
   // Memoized styles
   const containerStyle = useMemo(() => ({
@@ -158,14 +171,14 @@ export default function TransactionPage() {
           <div
             className="backdrop-blur-md p-4 rounded-xl shadow-2xl mb-6"
             style={{
-              backgroundColor: hexToRgba(colors.accent.error, 0.2),
-              border: `1px solid ${hexToRgba(colors.accent.error, 0.5)}`
+              backgroundColor: hexToRgba(colors.accent.danger, 0.2),
+              border: `1px solid ${hexToRgba(colors.accent.danger, 0.5)}`
             }}
           >
             <div className="flex items-center gap-3">
               <svg
                 className="h-6 w-6 flex-shrink-0"
-                style={{ color: colors.accent.error }}
+                style={{ color: colors.accent.danger }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -183,7 +196,7 @@ export default function TransactionPage() {
         )}
 
         {/* Transaction Details */}
-        {transaction && (
+        {transaction && transaction.tx_response && (
           <div
             className="backdrop-blur-md p-6 rounded-xl shadow-2xl"
             style={containerStyle}
@@ -211,7 +224,7 @@ export default function TransactionPage() {
                 <span
                   className="font-bold flex items-center gap-2"
                   style={{
-                    color: transaction.tx_response.code === 0 ? colors.accent.success : colors.accent.error
+                    color: transaction.tx_response.code === 0 ? colors.accent.success : colors.accent.danger
                   }}
                 >
                   {transaction.tx_response.code === 0 ? (

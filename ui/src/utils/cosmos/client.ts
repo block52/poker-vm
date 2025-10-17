@@ -1,41 +1,29 @@
 /**
  * Cosmos Client creation and management
+ *
+ * This file provides a minimal wrapper around the SDK's CosmosClient
+ * with singleton pattern for the frontend.
  */
 
-import { CosmosClient, CosmosConfig, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { CosmosClient, getDefaultCosmosConfig as getDefaultCosmosConfigSDK, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "./storage";
 
-// Re-export types and constants
-export type { CosmosClient, CosmosConfig };
+// Re-export types and constants from SDK
+export type { CosmosClient };
 export { COSMOS_CONSTANTS };
 
 /**
- * Default cosmos configuration for the frontend
+ * Get default cosmos configuration with environment variable overrides
+ * Uses SDK's getDefaultCosmosConfig() and overrides with env vars if present
  */
-export const getDefaultCosmosConfig = (): CosmosConfig => ({
-    rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657",
-    restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317",
-    chainId: COSMOS_CONSTANTS.CHAIN_ID,
-    prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-    denom: COSMOS_CONSTANTS.TOKEN_DENOM,
-    gasPrice: COSMOS_CONSTANTS.DEFAULT_GAS_PRICE,
-});
+export const getDefaultCosmosConfig = () => {
+    const sdkConfig = getDefaultCosmosConfigSDK();
 
-/**
- * Create a cosmos client with the user's mnemonic
- * @param mnemonic Optional mnemonic, if not provided will try to get from storage
- * @returns CosmosClient instance or null if no mnemonic available
- */
-export const createCosmosClient = (mnemonic?: string): CosmosClient | null => {
-    const userMnemonic = mnemonic || getCosmosMnemonic();
-    if (!userMnemonic) return null;
-
-    const config = {
-        ...getDefaultCosmosConfig(),
-        mnemonic: userMnemonic
+    return {
+        ...sdkConfig,
+        rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || sdkConfig.rpcEndpoint,
+        restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || sdkConfig.restEndpoint,
     };
-
-    return new CosmosClient(config);
 };
 
 /**
@@ -46,7 +34,11 @@ let clientInstance: CosmosClient | null = null;
 
 export const getCosmosClient = (): CosmosClient | null => {
     if (!clientInstance) {
-        clientInstance = createCosmosClient();
+        const mnemonic = getCosmosMnemonic();
+        if (!mnemonic) return null;
+
+        const config = getDefaultCosmosConfig();
+        clientInstance = new CosmosClient({ ...config, mnemonic });
     }
     return clientInstance;
 };

@@ -202,7 +202,8 @@
 "@bitcoinbrisbane/block52@file:../sdk":
   version "2.0.2"
   dependencies:
-    "@cosmjs/amino" "^0.36.1"
+    "@cosmjs/crypto" "^0.36.1"
+    "@cosmjs/encoding" "^0.36.1"
     "@cosmjs/proto-signing" "^0.36.1"
     "@cosmjs/stargate" "^0.36.1"
     axios "^1.12.2"

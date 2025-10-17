@@ -1,44 +1,22 @@
 /**
- * Helper functions for Cosmos wallet operations
+ * Cosmos utility helper functions
+ *
+ * This file provides minimal helpers, delegating to SDK where possible.
  */
+
+import { isValidMnemonic } from "@bitcoinbrisbane/block52";
 
 /**
- * Validates if a string is a valid BIP39 mnemonic seed phrase
- * @param seedPhrase The seed phrase to validate
- * @returns boolean indicating if the seed phrase is valid
+ * Validates if a seed phrase is valid BIP39 mnemonic
+ * Re-exports SDK's isValidMnemonic function for consistency with existing code
  */
-export const isValidSeedPhrase = (seedPhrase: string): boolean => {
-    if (!seedPhrase.trim()) return false;
-
-    // Basic validation: should be 12, 15, 18, 21, or 24 words
-    const words = seedPhrase.trim().split(/\s+/);
-    const validWordCounts = [12, 15, 18, 21, 24];
-
-    if (!validWordCounts.includes(words.length)) return false;
-
-    // Check that all words are lowercase letters (basic mnemonic format)
-    const mnemonicPattern = /^[a-z]+$/;
-    return words.every(word => mnemonicPattern.test(word));
-};
+export const isValidSeedPhrase = isValidMnemonic;
 
 /**
- * Get test addresses from the local chain (alice, bob, etc.)
- * Useful for development and testing
- * @returns Object with test account addresses
+ * Get test addresses (alice and bob from config)
+ * These are the same addresses used in the Cosmos chain config.yml
  */
-export const getTestAddresses = async () => {
-    try {
-        const restUrl = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
-
-        // Query alice and bob balances to get their addresses
-        // In development, these are the default test accounts
-        return {
-            alice: "b521xa0ue7p4z4vlfphkvxwz0w8sj5gam8zxszqy9l",
-            bob: "b521qu2qmrc6rve2az7r74nc5jh5fuqe8j5fpd7hq0",
-            restUrl: restUrl
-        };
-    } catch (error) {
-        console.error("Failed to get test addresses:", error);
-        return null;
-    }
-};
+export const getTestAddresses = () => ({
+    alice: "b521rgaelup3yzxt6puf593k5wq3mz8k0m2pvkfj9p",
+    bob: "b521lk6fjllpzykqhpp72vyvvskeffsjzfh97kmq75"
+});

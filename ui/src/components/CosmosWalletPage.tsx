@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { generateWallet, createWalletFromMnemonic } from "../utils/walletUtils";
-import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmosUtils";
-import { getColorWithOpacity } from "../utils/colorConfig";
+import { useNavigate } from "react-router-dom";
+import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
+import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
+import { colors, hexToRgba } from "../utils/colorConfig";
+import defaultLogo from "../assets/YOUR_CLUB.png";
 
 const CosmosWalletPage = () => {
+    const navigate = useNavigate();
     const [mnemonic, setMnemonic] = useState<string>("");
     const [address, setAddress] = useState<string>("");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -12,6 +15,10 @@ const CosmosWalletPage = () => {
     const [showMnemonic, setShowMnemonic] = useState(false);
     const [aliceBalance, setAliceBalance] = useState<string | null>(null);
     const [bobBalance, setBobBalance] = useState<string | null>(null);
+
+    // Get club logo from env
+    const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
+    const clubName = import.meta.env.VITE_CLUB_NAME || "Block52";
 
     // Check if wallet already exists
     const existingMnemonic = getCosmosMnemonic();
@@ -56,11 +63,11 @@ const CosmosWalletPage = () => {
             setIsGenerating(true);
             setError("");
 
-            // Generate a new 24-word mnemonic
-            const wallet = generateWallet("b52", 24);
+            // Generate a new 24-word mnemonic using SDK (proper BIP39 + bech32)
+            const walletInfo = await generateWalletSDK("b52", 24);
 
-            const newMnemonic = wallet.mnemonic;
-            const newAddress = wallet.address;
+            const newMnemonic = walletInfo.mnemonic;
+            const newAddress = walletInfo.address;
 
             // Save to browser storage
             setCosmosMnemonic(newMnemonic);
@@ -70,7 +77,8 @@ const CosmosWalletPage = () => {
             setAddress(newAddress);
             setShowMnemonic(true);
 
-            console.log("✅ Wallet generated successfully!");
+            console.log("✅ Wallet generated successfully with proper bech32 encoding!");
+            console.log("Address:", newAddress);
         } catch (err) {
             console.error("Failed to generate wallet:", err);
             setError("Failed to generate wallet. Please try again.");
@@ -91,10 +99,10 @@ const CosmosWalletPage = () => {
                 return;
             }
 
-            // Create wallet from mnemonic
-            const wallet = createWalletFromMnemonic(importMnemonic, "b52");
+            // Create wallet from mnemonic using SDK (proper BIP39 + bech32)
+            const walletInfo = await createWalletSDK(importMnemonic, "b52");
 
-            const importedAddress = wallet.address;
+            const importedAddress = walletInfo.address;
 
             // Save to browser storage
             setCosmosMnemonic(importMnemonic);
@@ -104,7 +112,8 @@ const CosmosWalletPage = () => {
             setAddress(importedAddress);
             setImportMnemonic("");
 
-            console.log("✅ Wallet imported successfully!");
+            console.log("✅ Wallet imported successfully with proper bech32 encoding!");
+            console.log("Address:", importedAddress);
         } catch (err) {
             console.error("Failed to import wallet:", err);
             setError("Failed to import wallet. Please check your seed phrase.");
@@ -121,6 +130,8 @@ const CosmosWalletPage = () => {
             setAddress("");
             setShowMnemonic(false);
             console.log("Wallet cleared");
+            // Reload page to update existingAddress/existingMnemonic
+            window.location.reload();
         }
     };
 
@@ -131,21 +142,51 @@ const CosmosWalletPage = () => {
     };
 
     return (
-        <div className="min-h-screen p-8" style={{ backgroundColor: "var(--table-bg-base)" }}>
-            <div className="max-w-4xl mx-auto">
+        <div
+            className="min-h-screen p-4 md:p-8"
+            style={{
+                background: `linear-gradient(135deg, ${colors.table.bgBase} 0%, ${hexToRgba(colors.table.bgBase, 0.95)} 100%)`,
+                minHeight: "100vh"
+            }}
+        >
+            {/* Header with Logo and Back Button */}
+            <div className="max-w-4xl mx-auto mb-8">
+                <div className="flex items-center justify-between mb-6">
+                    {/* Back Button */}
+                    <button
+                        onClick={() => navigate("/")}
+                        className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity"
+                        style={{ color: colors.brand.primary }}
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span className="font-semibold">Back to Dashboard</span>
+                    </button>
+
+                    {/* Logo */}
+                    <img src={clubLogo} alt={`${clubName} Logo`} className="h-12" />
+                </div>
+
                 <h1 className="text-4xl font-bold text-white mb-2 text-center">Cosmos Wallet Manager</h1>
-                <p className="text-center mb-8" style={{ color: "var(--ui-text-secondary)" }}>
+                <p
+                    className="text-center mb-8"
+                    style={{ color: hexToRgba(colors.ui.textSecondary, 0.8) }}
+                >
                     Generate or import a wallet to receive deposits and play poker
                 </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto">
 
                 {/* Existing Wallet Display */}
                 {existingAddress && (
                     <div
-                        className="rounded-lg p-6 mb-8 border shadow-lg"
+                        className="rounded-xl p-6 mb-8 border shadow-lg"
                         style={{
-                            backgroundColor: "var(--ui-bg-dark)",
-                            borderColor: "var(--ui-border-color)",
-                            boxShadow: `0 10px 30px ${getColorWithOpacity("brand.primary", 0.1)}`
+                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
+                            borderColor: hexToRgba(colors.brand.primary, 0.2),
+                            boxShadow: `0 10px 30px ${hexToRgba(colors.brand.primary, 0.1)}`
                         }}
                     >
                         <h2 className="text-2xl font-semibold text-white mb-4">Current Wallet</h2>
@@ -159,16 +200,14 @@ const CosmosWalletPage = () => {
                                         readOnly
                                         className="flex-1 text-white px-4 py-2 rounded border font-mono text-sm"
                                         style={{
-                                            backgroundColor: "var(--table-bg-base)",
-                                            borderColor: "var(--ui-border-color)"
+                                            backgroundColor: hexToRgba(colors.table.bgBase, 0.6),
+                                            borderColor: hexToRgba(colors.brand.primary, 0.2)
                                         }}
                                     />
                                     <button
                                         onClick={() => copyToClipboard(existingAddress, "Address")}
-                                        className="text-white px-4 py-2 rounded transition-colors"
-                                        style={{ backgroundColor: "var(--brand-primary)" }}
-                                        onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
-                                        onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                                        className="text-white px-4 py-2 rounded transition-all hover:opacity-80"
+                                        style={{ backgroundColor: colors.brand.primary }}
                                     >
                                         Copy
                                     </button>
@@ -185,25 +224,21 @@ const CosmosWalletPage = () => {
                                             readOnly
                                             className="flex-1 text-white px-4 py-2 rounded border font-mono text-sm"
                                             style={{
-                                                backgroundColor: "var(--table-bg-base)",
-                                                borderColor: "var(--ui-border-color)"
+                                                backgroundColor: hexToRgba(colors.table.bgBase, 0.6),
+                                                borderColor: hexToRgba(colors.brand.primary, 0.2)
                                             }}
                                         />
                                         <button
                                             onClick={() => setShowMnemonic(!showMnemonic)}
-                                            className="text-white px-4 py-2 rounded transition-colors"
-                                            style={{ backgroundColor: "var(--ui-bg-medium)" }}
-                                            onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
-                                            onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                                            className="text-white px-4 py-2 rounded transition-all hover:opacity-80"
+                                            style={{ backgroundColor: colors.ui.bgMedium }}
                                         >
                                             {showMnemonic ? "Hide" : "Show"}
                                         </button>
                                         <button
                                             onClick={() => copyToClipboard(existingMnemonic, "Seed Phrase")}
-                                            className="text-white px-4 py-2 rounded transition-colors"
-                                            style={{ backgroundColor: "var(--brand-primary)" }}
-                                            onMouseOver={e => (e.currentTarget.style.opacity = "0.8")}
-                                            onMouseOut={e => (e.currentTarget.style.opacity = "1")}
+                                            className="text-white px-4 py-2 rounded transition-all hover:opacity-80"
+                                            style={{ backgroundColor: colors.brand.primary }}
                                         >
                                             Copy
                                         </button>
@@ -228,7 +263,7 @@ const CosmosWalletPage = () => {
                         style={{
                             backgroundColor: "var(--ui-bg-dark)",
                             borderColor: "var(--ui-border-color)",
-                            boxShadow: `0 10px 30px ${getColorWithOpacity("brand.primary", 0.1)}`
+                            boxShadow: `0 10px 30px ${hexToRgba(colors.brand.primary, 0.1)}`
                         }}
                     >
                         <h2 className="text-2xl font-semibold text-white mb-4">Generate New Wallet</h2>
@@ -315,7 +350,7 @@ const CosmosWalletPage = () => {
                         style={{
                             backgroundColor: "var(--ui-bg-dark)",
                             borderColor: "var(--ui-border-color)",
-                            boxShadow: `0 10px 30px ${getColorWithOpacity("brand.primary", 0.1)}`
+                            boxShadow: `0 10px 30px ${hexToRgba(colors.brand.primary, 0.1)}`
                         }}
                     >
                         <h2 className="text-2xl font-semibold text-white mb-4">Import Existing Wallet</h2>
@@ -367,8 +402,8 @@ const CosmosWalletPage = () => {
                 <div
                     className="mt-8 rounded-lg p-6 border"
                     style={{
-                        backgroundColor: getColorWithOpacity("ui.bgDark", 0.5),
-                        borderColor: getColorWithOpacity("brand.primary", 0.1)
+                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.5),
+                        borderColor: hexToRgba(colors.brand.primary, 0.1)
                     }}
                 >
                     <h3 className="text-lg font-semibold text-white mb-4">Development Test Accounts</h3>
@@ -380,7 +415,7 @@ const CosmosWalletPage = () => {
                                     <span
                                         className="text-xs px-2 py-1 rounded"
                                         style={{
-                                            backgroundColor: getColorWithOpacity("accent.success", 0.2),
+                                            backgroundColor: hexToRgba(colors.accent.success, 0.2),
                                             color: "var(--accent-success)"
                                         }}
                                     >
@@ -399,7 +434,7 @@ const CosmosWalletPage = () => {
                                     <span
                                         className="text-xs px-2 py-1 rounded"
                                         style={{
-                                            backgroundColor: getColorWithOpacity("accent.success", 0.2),
+                                            backgroundColor: hexToRgba(colors.accent.success, 0.2),
                                             color: "var(--accent-success)"
                                         }}
                                     >

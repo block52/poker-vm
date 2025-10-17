@@ -34,7 +34,7 @@ Build a minimal Cosmos block explorer to:
 - [x] Auto-refresh every 2 seconds to show new blocks
 - [x] Add copy-to-clipboard for hashes (implicit via browser selection)
 
-### Phase 3: Transaction Search (30 minutes) 🚧 IN PROGRESS
+### Phase 3: Transaction Search (30 minutes) ✅ COMPLETE
 - [x] Create `TransactionPage.tsx` component
 - [x] Add search input for transaction hash
 - [x] Fetch transaction: `GET /cosmos/tx/v1beta1/txs/{hash}`
@@ -49,8 +49,11 @@ Build a minimal Cosmos block explorer to:
   - [x] Message data (JSON formatted)
   - [x] Events emitted
 - [x] Handle not found errors gracefully
+- [x] Fixed response format handling (supports both wrapped and unwrapped responses)
+- [x] Added auto-search when hash is in URL
+- [x] Tested with real transaction: 6BDD45B66C3ED993F87E1EEF6371E9113E9DF075736F306D54B119CD290D8F67
 
-**Note**: Transaction search is functional but currently showing "Error: Network Error" - this may be due to CORS or the endpoint returning an error for invalid hashes. Needs testing with a valid transaction hash.
+**Status**: ✅ **FULLY WORKING** - Successfully displays MsgSend transaction with all details, messages, and events!
 
 ### Phase 4: Block Detail Page (Optional - 20 minutes)
 - [ ] Create `BlockDetailPage.tsx` component
@@ -212,11 +215,11 @@ Keep it minimal - just use basic CSS:
 ## ✅ Success Criteria
 
 **MVP Complete When**:
-1. [x] Can see latest blocks updating in real-time ✅ **WORKING - Block #231 showing with 1 tx**
-2. [ ] Can paste transaction hash and see details ⚠️ **NEEDS TESTING with valid tx hash**
-3. [ ] Can confirm game creation transaction appears
-4. [x] Can see "0 txs" in empty blocks ✅ **WORKING - Blocks #230-212 show "0 txs"**
-5. [ ] Can see MsgCreateGame details when transaction succeeds
+1. [x] Can see latest blocks updating in real-time ✅ **WORKING**
+2. [x] Can paste transaction hash and see details ✅ **WORKING - Tested with 6BDD45B6...**
+3. [ ] Can confirm game creation transaction appears (Next: test createGame())
+4. [x] Can see "0 txs" in empty blocks ✅ **WORKING**
+5. [ ] Can see MsgCreateGame details when transaction succeeds (Next: test createGame())
 
 ## 🎉 Current Status (October 11, 2025 @ 7:30 PM)
 
