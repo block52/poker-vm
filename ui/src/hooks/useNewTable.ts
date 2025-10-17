@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
-import { GameType, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
-import { getCosmosClient } from "../utils/cosmos/client";
-import { getCosmosAddress } from "../utils/cosmos/storage";
+import { GameType, COSMOS_CONSTANTS, createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
+import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
 
 // Type for creating new table options
 export interface CreateTableOptions {
@@ -21,16 +20,13 @@ export interface UseNewTableReturn {
 }
 
 /**
- * Custom hook to create a new game on Cosmos blockchain using CosmosClient
+ * Custom hook to create a new game on Cosmos blockchain using SigningCosmosClient
  * @returns Object with createTable function, loading state, and error
  */
 export const useNewTable = (): UseNewTableReturn => {
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const [newGameId, setNewGameId] = useState<string | null>(null);
-
-    // Check if Cosmos backend is enabled
-    const useCosmosBackend = import.meta.env.VITE_USE_COSMOS === "true";
 
     const createTable = useCallback(async (
         gameOptions: CreateTableOptions
@@ -40,17 +36,29 @@ export const useNewTable = (): UseNewTableReturn => {
         setNewGameId(null);
 
         try {
-            // Get Cosmos client
-            const cosmosClient = getCosmosClient();
-            if (!cosmosClient) {
+            // Get user's Cosmos address and mnemonic
+            const userAddress = getCosmosAddress();
+            const mnemonic = getCosmosMnemonic();
+
+            if (!userAddress || !mnemonic) {
                 throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
             }
 
-            // Get user's Cosmos address
-            const userAddress = getCosmosAddress();
-            if (!userAddress) {
-                throw new Error("Cosmos address not found. Please create or import a Cosmos wallet.");
-            }
+            // Create signing client from mnemonic
+            const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
+            const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+
+            const signingClient = await createSigningClientFromMnemonic(
+                {
+                    rpcEndpoint,
+                    restEndpoint,
+                    chainId: COSMOS_CONSTANTS.CHAIN_ID,
+                    prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
+                    denom: "stake", // Gas token
+                    gasPrice: "0.025stake"
+                },
+                mnemonic
+            );
 
             // Convert buy-in from dollars to uusdc micro-units using SDK constants
             const minBuyInB52USDC = BigInt(Math.floor(gameOptions.minBuyIn * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
@@ -93,8 +101,8 @@ export const useNewTable = (): UseNewTableReturn => {
             // Timeout in seconds (5 minutes = 300 seconds)
             const timeoutSeconds = 300;
 
-            // Call CosmosClient.createGame()
-            const txHash = await cosmosClient.createGame(
+            // Call SigningCosmosClient.createGame()
+            const txHash = await signingClient.createGame(
                 gameTypeStr,
                 gameOptions.minPlayers,
                 gameOptions.maxPlayers,
@@ -117,12 +125,12 @@ export const useNewTable = (): UseNewTableReturn => {
         } catch (err: any) {
             const errorMessage = err.message || "Failed to create game on blockchain";
             setError(new Error(errorMessage));
-            console.error("Error creating game:", err);
+            console.error("❌ Error creating game:", err);
             return null;
         } finally {
             setIsCreating(false);
         }
-    }, [useCosmosBackend]);
+    }, []);
 
     return {
         createTable,

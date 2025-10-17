@@ -191,17 +191,24 @@ export default function TestSigningPage() {
         });
 
         try {
+            // Strip any decimals and validate the amount
+            const cleanAmount = sendAmount.split('.')[0]; // Remove decimal part
+            if (!cleanAmount || isNaN(Number(cleanAmount)) || Number(cleanAmount) <= 0) {
+                throw new Error("Amount must be a positive integer (micro-units, no decimals)");
+            }
+
             console.log("💸 sendTokens():", {
                 from: walletAddress,
                 to: recipientAddress,
-                amount: sendAmount,
+                amount: cleanAmount,
+                originalInput: sendAmount,
                 denom: sendDenom
             });
 
             const txHash = await signingClient.sendTokens(
                 walletAddress,
                 recipientAddress,
-                BigInt(sendAmount),
+                BigInt(cleanAmount),
                 sendDenom,
                 "Test transfer via SDK"
             );
@@ -247,14 +254,33 @@ export default function TestSigningPage() {
         });
 
         try {
+            // Validate and clean all BigInt inputs
+            const cleanMinBuyIn = minBuyIn.split('.')[0];
+            const cleanMaxBuyIn = maxBuyIn.split('.')[0];
+            const cleanSmallBlind = smallBlind.split('.')[0];
+            const cleanBigBlind = bigBlind.split('.')[0];
+
+            if (!cleanMinBuyIn || isNaN(Number(cleanMinBuyIn)) || Number(cleanMinBuyIn) <= 0) {
+                throw new Error("Min buy-in must be a positive integer (micro-units)");
+            }
+            if (!cleanMaxBuyIn || isNaN(Number(cleanMaxBuyIn)) || Number(cleanMaxBuyIn) <= 0) {
+                throw new Error("Max buy-in must be a positive integer (micro-units)");
+            }
+            if (!cleanSmallBlind || isNaN(Number(cleanSmallBlind)) || Number(cleanSmallBlind) <= 0) {
+                throw new Error("Small blind must be a positive integer (micro-units)");
+            }
+            if (!cleanBigBlind || isNaN(Number(cleanBigBlind)) || Number(cleanBigBlind) <= 0) {
+                throw new Error("Big blind must be a positive integer (micro-units)");
+            }
+
             console.log("🎮 createGame():", {
                 gameType,
                 minPlayers,
                 maxPlayers,
-                minBuyIn,
-                maxBuyIn,
-                smallBlind,
-                bigBlind,
+                minBuyIn: cleanMinBuyIn,
+                maxBuyIn: cleanMaxBuyIn,
+                smallBlind: cleanSmallBlind,
+                bigBlind: cleanBigBlind,
                 timeout
             });
 
@@ -262,10 +288,10 @@ export default function TestSigningPage() {
                 gameType,
                 minPlayers,
                 maxPlayers,
-                BigInt(minBuyIn),
-                BigInt(maxBuyIn),
-                BigInt(smallBlind),
-                BigInt(bigBlind),
+                BigInt(cleanMinBuyIn),
+                BigInt(cleanMaxBuyIn),
+                BigInt(cleanSmallBlind),
+                BigInt(cleanBigBlind),
                 timeout
             );
 
@@ -323,12 +349,23 @@ export default function TestSigningPage() {
         });
 
         try {
-            console.log("🪑 joinGame():", { gameId, seat, buyInAmount });
+            // Validate and clean buy-in amount
+            const cleanBuyInAmount = buyInAmount.split('.')[0];
+            if (!cleanBuyInAmount || isNaN(Number(cleanBuyInAmount)) || Number(cleanBuyInAmount) <= 0) {
+                throw new Error("Buy-in amount must be a positive integer (micro-units)");
+            }
+
+            console.log("🪑 joinGame():", {
+                gameId,
+                seat,
+                buyInAmount: cleanBuyInAmount,
+                originalInput: buyInAmount
+            });
 
             const txHash = await signingClient.joinGame(
                 gameId,
                 seat,
-                BigInt(buyInAmount)
+                BigInt(cleanBuyInAmount)
             );
 
             console.log("✅ joinGame() successful:", txHash);
@@ -376,12 +413,23 @@ export default function TestSigningPage() {
         });
 
         try {
-            console.log("🃏 performAction():", { gameId, action, amount: actionAmount });
+            // Validate and clean action amount
+            const cleanActionAmount = actionAmount.split('.')[0];
+            if (!cleanActionAmount || isNaN(Number(cleanActionAmount)) || Number(cleanActionAmount) < 0) {
+                throw new Error("Action amount must be a non-negative integer (micro-units)");
+            }
+
+            console.log("🃏 performAction():", {
+                gameId,
+                action,
+                amount: cleanActionAmount,
+                originalInput: actionAmount
+            });
 
             const txHash = await signingClient.performAction(
                 gameId,
                 action,
-                BigInt(actionAmount)
+                BigInt(cleanActionAmount)
             );
 
             console.log("✅ performAction() successful:", txHash);
@@ -665,31 +713,42 @@ export default function TestSigningPage() {
                         {/* joinGame() */}
                         <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                             <h3 className="text-xl font-bold text-white mb-4">5. joinGame()</h3>
-                            <div className="grid grid-cols-3 gap-3 mb-3">
-                                <input
-                                    type="text"
-                                    placeholder="Game ID"
-                                    value={gameId}
-                                    onChange={(e) => setGameId(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Seat"
-                                    value={seat}
-                                    onChange={(e) => setSeat(Number(e.target.value))}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Buy-In Amount"
-                                    value={buyInAmount}
-                                    onChange={(e) => setBuyInAmount(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
+                            <div className="space-y-3 mb-3">
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Game ID (from createGame transaction)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="0x645d17cae33d8832e38cb16639983d2239631356d60e3656d54036f7792b13ed"
+                                        value={gameId}
+                                        onChange={(e) => setGameId(e.target.value)}
+                                        className="w-full p-2 rounded-lg text-white"
+                                        style={inputStyle}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-1">Seat Number (0-5)</label>
+                                        <input
+                                            type="number"
+                                            placeholder="0"
+                                            value={seat}
+                                            onChange={(e) => setSeat(Number(e.target.value))}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-1">Buy-In Amount (micro-units)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="100000000"
+                                            value={buyInAmount}
+                                            onChange={(e) => setBuyInAmount(e.target.value)}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                             <button
                                 onClick={testJoinGame}
@@ -703,35 +762,46 @@ export default function TestSigningPage() {
                         {/* performAction() */}
                         <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                             <h3 className="text-xl font-bold text-white mb-4">6. performAction()</h3>
-                            <div className="grid grid-cols-3 gap-3 mb-3">
-                                <input
-                                    type="text"
-                                    placeholder="Game ID"
-                                    value={gameId}
-                                    onChange={(e) => setGameId(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
-                                <select
-                                    value={action}
-                                    onChange={(e) => setAction(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                >
-                                    <option value="fold">Fold</option>
-                                    <option value="call">Call</option>
-                                    <option value="raise">Raise</option>
-                                    <option value="bet">Bet</option>
-                                    <option value="check">Check</option>
-                                </select>
-                                <input
-                                    type="text"
-                                    placeholder="Amount"
-                                    value={actionAmount}
-                                    onChange={(e) => setActionAmount(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
+                            <div className="space-y-3 mb-3">
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Game ID (same as joinGame)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="0x645d17cae33d8832e38cb16639983d2239631356d60e3656d54036f7792b13ed"
+                                        value={gameId}
+                                        onChange={(e) => setGameId(e.target.value)}
+                                        className="w-full p-2 rounded-lg text-white"
+                                        style={inputStyle}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-1">Action Type</label>
+                                        <select
+                                            value={action}
+                                            onChange={(e) => setAction(e.target.value)}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        >
+                                            <option value="fold">Fold</option>
+                                            <option value="call">Call</option>
+                                            <option value="raise">Raise</option>
+                                            <option value="bet">Bet</option>
+                                            <option value="check">Check</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-1">Amount (0 for fold/check)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="0"
+                                            value={actionAmount}
+                                            onChange={(e) => setActionAmount(e.target.value)}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                             <button
                                 onClick={testPerformAction}
