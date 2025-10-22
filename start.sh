@@ -8,4 +8,4 @@ git stash
 git pull
 yarn install
 yarn build
-pm2 start dist/index.js --name node
+pm2 start dist/src/index.js --name node
