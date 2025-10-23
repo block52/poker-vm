@@ -31,7 +31,7 @@ export class DealerPositionManager implements IDealerPositionManager {
         // Fallback: if no next player found, start from first active player
         const firstActivePlayer = activePlayers[0];
         const fallbackSeat = this.game.getPlayerSeatNumber(firstActivePlayer.address);
-        return fallbackSeat; ``
+        return fallbackSeat;
     }
 
     public getPosition(name: string): number {
