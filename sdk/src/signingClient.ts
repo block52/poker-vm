@@ -2,6 +2,7 @@ import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { SigningStargateClient, GasPrice, calculateFee } from "@cosmjs/stargate";
 import { Registry, EncodeObject } from "@cosmjs/proto-signing";
 import { CosmosClient, CosmosConfig, COSMOS_CONSTANTS } from "./cosmosClient";
+import { msgTypes } from "./pokerchain.poker.v1/registry";
 
 /**
  * Extended configuration for signing client
@@ -74,8 +75,10 @@ export class SigningCosmosClient extends CosmosClient {
         // Create custom registry for poker messages
         const registry = new Registry();
 
-        // TODO: Register custom message types here when available
-        // registry.register("/block52.pokerchain.poker.MsgCreateGame", MsgCreateGame);
+        // Register poker module message types
+        msgTypes.forEach(([typeUrl, type]) => {
+            registry.register(typeUrl, type);
+        });
 
         this.signingClient = await SigningStargateClient.connectWithSigner(
             this.config.rpcEndpoint,
@@ -182,7 +185,7 @@ export class SigningCosmosClient extends CosmosClient {
 
         // Create the transaction message
         const msg: EncodeObject = {
-            typeUrl: "/block52.pokerchain.poker.MsgCreateGame",
+            typeUrl: "/pokerchain.poker.v1.MsgCreateGame",
             value: msgCreateGame
         };
 
@@ -240,7 +243,7 @@ export class SigningCosmosClient extends CosmosClient {
 
         // Create the transaction message
         const msg: EncodeObject = {
-            typeUrl: "/block52.pokerchain.poker.MsgJoinGame",
+            typeUrl: "/pokerchain.poker.v1.MsgJoinGame",
             value: msgJoinGame
         };
 
@@ -288,7 +291,7 @@ export class SigningCosmosClient extends CosmosClient {
 
         // Create the transaction message
         const msg: EncodeObject = {
-            typeUrl: "/block52.pokerchain.poker.MsgPerformAction",
+            typeUrl: "/pokerchain.poker.v1.MsgPerformAction",
             value: msgPerformAction
         };
 

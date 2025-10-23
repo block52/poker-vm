@@ -218,3 +218,10 @@ export type PerformActionResponse = {
     timestamp: string;
     data?: string;
 }
+// Constants for URL parameters
+export const KEYS = {
+    ACTION_TYPE: "action_type",
+    INDEX: "index",
+    VALUE: "value",
+    SEAT: "seat"
+} as const;

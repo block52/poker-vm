@@ -74,8 +74,99 @@ const registry = new Registry([
   
 ])
 
+// Export custom SDK classes and types
+export {
+    CosmosClient,
+    getCosmosClient,
+    initializeCosmosClient,
+    getDefaultCosmosConfig,
+    COSMOS_CONSTANTS,
+    type CosmosConfig,
+    type GameStateResponse,
+    type GameResponse,
+    type ListGamesResponse
+} from './cosmosClient';
+export {
+    SigningCosmosClient,
+    createSigningCosmosClient,
+    createSigningClientFromMnemonic,
+    type SigningCosmosConfig
+} from './signingClient';
+export {
+    createWalletFromMnemonic,
+    generateWallet,
+    isValidMnemonic,
+    getAddressFromMnemonic,
+    type WalletInfo
+} from './walletUtils';
+
+// Export generated Ignite client
 export {
     Client,
     registry,
     MissingWalletError
 }
+
+// Export game types and enums
+export {
+    PlayerActionType,
+    NonPlayerActionType,
+    AllPlayerActions,
+    GameType,
+    GameStatus,
+    PlayerStatus,
+    TexasHoldemRound,
+    SUIT,
+    KEYS,
+    type GameOptions,
+    type GameOptionsDTO,
+    type ActionDTO,
+    type LegalActionDTO,
+    type PlayerDTO,
+    type PerformActionResponse,
+    type GameStateResponse as GameStateResponseDTO,
+    type TexasHoldemStateDTO,
+    type WinnerDTO,
+    type ResultDTO,
+    type GameOptionsResponse,
+    type TransactionResponse,
+    type Card  // Poker game Card type (with value, mnemonic)
+} from './types/game';
+
+// Export RPC types
+export type {
+    ISignedResponse,
+    RPCRequest,
+    RPCResponse,
+    RPCRequestParams
+} from './types/rpc';
+export { RPCMethods } from './types/rpc';
+
+// Export chain types
+export type {
+    AccountDTO,
+    BlockHeaderDTO,
+    BlockDTO,
+    TransactionDTO,
+    BurnResponseDTO,
+    WithdrawResponseDTO
+} from './types/chain';
+
+// Export Cosmos types from types/index
+export type {
+    GameState,
+    GameInfo,
+    Player,
+    LegalAction,
+    PlayerAction
+} from './types/index';
+
+// Export poker game integration and solver
+export { PokerGameIntegration } from './pokerGameIntegration';
+export { PokerSolver } from './pokerSolver';
+export { Deck } from './deck';
+
+// Export Ignite client (legacy RPC client)
+export { IgniteClient } from './client';
+// Alias for backward compatibility
+export { IgniteClient as NodeRpcClient } from './client';

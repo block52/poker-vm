@@ -25,13 +25,14 @@ export default function TestSigningPage() {
 
     // Test inputs
     const [recipientAddress, setRecipientAddress] = useState("");
-    const [sendAmount, setSendAmount] = useState("1000000"); // 1 uusdc
-    const [sendDenom, setSendDenom] = useState("uusdc");
-    const [gameType, setGameType] = useState("cash");
+    const [sendAmount, setSendAmount] = useState("1000000"); // 1 usdc
+    const [sendDenom, setSendDenom] = useState("usdc");
+    const [gameType, setGameType] = useState("sit-and-go");
     const [minPlayers, setMinPlayers] = useState(2);
     const [maxPlayers, setMaxPlayers] = useState(6);
     const [minBuyIn, setMinBuyIn] = useState("100000000"); // 100 b52USDC
     const [maxBuyIn, setMaxBuyIn] = useState("500000000"); // 500 b52USDC
+    const [sitAndGoBuyIn, setSitAndGoBuyIn] = useState("100000000"); // 100 b52USDC for sit-and-go
     const [smallBlind, setSmallBlind] = useState("1000000"); // 1 b52USDC
     const [bigBlind, setBigBlind] = useState("2000000"); // 2 b52USDC
     const [timeout, setTimeout] = useState(30);
@@ -43,6 +44,22 @@ export default function TestSigningPage() {
 
     const clubName = import.meta.env.VITE_CLUB_NAME || "Block52 Poker";
     const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
+
+    // Test accounts from genesis - Static addresses from TEST_ACTORS.md
+    const TEST_ACCOUNTS = [
+        { name: "alice", address: "b521dfe7r39q88zeqtde44efdqeky9thdtwngkzy2y", mnemonic: "cement shadow leave crash crisp aisle model hip lend february library ten cereal soul bind boil bargain barely rookie odor panda artwork damage reason" },
+        { name: "bob", address: "b521hg93rsm2f5v3zlepf20ru88uweajt3nf492s2p", mnemonic: "vanish legend pelican blush control spike useful usage into any remove wear flee short october naive swear wall spy cup sort avoid agent credit" },
+        { name: "charlie", address: "b521xkh7eznh50km2lxh783sqqyml8fjwl0tqjsc0c", mnemonic: "video short denial minimum vague arm dose parrot poverty saddle kingdom life buyer globe fashion topic vicious theme voice keep try jacket fresh potato" },
+        { name: "diana", address: "b521n25h4eg6uhtdvs26988k9ye497sylum8lz5vns", mnemonic: "twice bacon whale space improve galaxy liberty trumpet outside sunny action reflect doll hill ugly torch ride gossip snack fork talk market proud nothing" },
+    ];
+
+    const [testAccountBalances, setTestAccountBalances] = useState<Record<string, { denom: string; amount: string }[]>>({});
+
+    const copyCommand = (account: string, denom: string, amount: string) => {
+        const command = `pokerchaind tx bank send ${account} ${walletAddress} ${amount}${denom} --chain-id pokerchain --keyring-backend test -y`;
+        navigator.clipboard.writeText(command);
+        alert(`Command copied to clipboard!\n\n${command}`);
+    };
 
     // Styles
     const containerStyle = useMemo(() => ({
@@ -91,8 +108,8 @@ export default function TestSigningPage() {
                 restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317",
                 chainId: "pokerchain",
                 prefix: "b52",
-                denom: "stake", // Gas token
-                gasPrice: "0.001stake",
+                denom: "b52Token", // Native gas token (changed from 'stake' Oct 18, 2025)
+                gasPrice: "0.01b52Token", // Must match validator minimum-gas-prices
                 wallet: hdWallet
             });
 
@@ -223,8 +240,8 @@ export default function TestSigningPage() {
                 data: {
                     from: walletAddress,
                     to: recipientAddress,
-                    amount: sendAmount,
-                    denom: "b52USDC"
+                    amount: cleanAmount,
+                    denom: sendDenom
                 }
             });
         } catch (error: any) {
@@ -254,9 +271,12 @@ export default function TestSigningPage() {
         });
 
         try {
+            // For sit-and-go/tournament games, use single buy-in for both min and max
+            const isTournament = gameType === "SIT_AND_GO" || gameType === "TOURNAMENT";
+
             // Validate and clean all BigInt inputs
-            const cleanMinBuyIn = minBuyIn.split('.')[0];
-            const cleanMaxBuyIn = maxBuyIn.split('.')[0];
+            const cleanMinBuyIn = isTournament ? sitAndGoBuyIn.split('.')[0] : minBuyIn.split('.')[0];
+            const cleanMaxBuyIn = isTournament ? sitAndGoBuyIn.split('.')[0] : maxBuyIn.split('.')[0];
             const cleanSmallBlind = smallBlind.split('.')[0];
             const cleanBigBlind = bigBlind.split('.')[0];
 
@@ -486,23 +506,25 @@ export default function TestSigningPage() {
                         </div>
                         <div className="ml-4 space-y-2">
                             <div>
-                                <span className="font-semibold" style={{ color: colors.brand.primary }}>1. stake</span> (or b52) - For gas fees
+                                <span className="font-semibold" style={{ color: colors.brand.primary }}>1. b52Token</span> - For gas fees
                                 <div className="text-xs text-gray-400 ml-4 mt-1">
                                     • Used to pay for ALL blockchain transactions
                                     <br />
                                     • Without this, your transactions will fail!
                                     <br />
                                     • Get from: Faucet or genesis account
+                                    <br />
+                                    • Note: Changed from 'stake' to 'b52Token' on Oct 18, 2025
                                 </div>
                             </div>
                             <div>
-                                <span className="font-semibold" style={{ color: colors.accent.success }}>2. uusdc</span> - For poker games
+                                <span className="font-semibold" style={{ color: colors.accent.success }}>2. usdc</span> - For poker games
                                 <div className="text-xs text-gray-400 ml-4 mt-1">
                                     • Used for game buy-ins and bets
                                     <br />
                                     • Get from: Bridge deposit from Base Chain or mint via blockchain command
                                     <br />
-                                    • ⚠️ Note: Use "uusdc" denom, NOT "b52USDC"!
+                                    • ⚠️ Note: Use "usdc" denom (not "uusdc" or "b52USDC")
                                 </div>
                             </div>
                         </div>
@@ -512,13 +534,109 @@ export default function TestSigningPage() {
                                 <div># Option 1: Use genesis account (has tokens by default)</div>
                                 <div className="text-gray-500">pokerchaind keys list</div>
                                 <div className="mt-2"># Option 2: Send from another account</div>
-                                <div className="text-gray-500">pokerchaind tx bank send [from] {walletAddress || "[your-address]"} 1000000stake</div>
+                                <div className="text-gray-500">pokerchaind tx bank send [from] {walletAddress || "[your-address]"} 1000000b52Token</div>
                                 <div className="mt-2"># Option 3: Bridge USDC from Base Chain</div>
                                 <div className="text-gray-500">Use the bridge at /deposit page</div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Test Accounts Section */}
+                {walletAddress && (
+                    <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={{
+                        backgroundColor: hexToRgba(colors.accent.success, 0.1),
+                        border: `1px solid ${hexToRgba(colors.accent.success, 0.3)}`
+                    }}>
+                        <h2 className="text-xl font-bold mb-4" style={{ color: colors.accent.success }}>
+                            🏦 Test Accounts - Send Tokens to Your Wallet
+                        </h2>
+                        <div className="text-sm text-gray-300 mb-4">
+                            Click "Copy Command" to copy the CLI command, then run it in your terminal where pokerchaind is running.
+                        </div>
+
+                        {/* Command Explanation */}
+                        <div className="mb-4 p-3 rounded text-xs" style={{
+                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                        }}>
+                            <div className="font-semibold text-white mb-2">📚 Command Breakdown:</div>
+                            <div className="space-y-1 text-gray-400 font-mono">
+                                <div><span className="text-gray-300">pokerchaind tx bank send</span> - Send tokens command</div>
+                                <div><span className="text-gray-300">[from]</span> - Source account name (alice, bob, etc.)</div>
+                                <div><span className="text-gray-300">[to]</span> - Your wallet address (destination)</div>
+                                <div><span className="text-gray-300">[amount][denom]</span> - Amount + token type (10000000b52Token or 50000000usdc)</div>
+                                <div><span className="text-gray-300">--chain-id pokerchain</span> - Blockchain network ID</div>
+                                <div><span className="text-gray-300">--keyring-backend test</span> - Use test keyring (for development)</div>
+                                <div><span className="text-gray-300">-y</span> - Auto-confirm transaction (skip prompt)</div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {TEST_ACCOUNTS.map((account) => (
+                                <div
+                                    key={account.address}
+                                    className="p-4 rounded-lg"
+                                    style={{
+                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-bold text-white capitalize">{account.name}</span>
+                                        <span className="text-xs text-gray-400 font-mono">
+                                            {account.address.substring(0, 10)}...{account.address.substring(account.address.length - 6)}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {/* b52Token command */}
+                                        <div>
+                                            <div className="text-xs text-gray-400 mb-1 font-mono">
+                                                pokerchaind tx bank send {account.name} {walletAddress.substring(0, 10)}... 10000000b52Token
+                                            </div>
+                                            <button
+                                                onClick={() => copyCommand(account.name, "b52Token", "10000000")}
+                                                className="w-full py-2 px-3 text-xs font-medium rounded transition duration-200 hover:opacity-80"
+                                                style={{
+                                                    backgroundColor: hexToRgba(colors.brand.primary, 0.2),
+                                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.4)}`,
+                                                    color: colors.brand.primary
+                                                }}
+                                            >
+                                                📋 Copy: Send 10 b52Token (gas)
+                                            </button>
+                                        </div>
+                                        {/* usdc command */}
+                                        <div>
+                                            <div className="text-xs text-gray-400 mb-1 font-mono">
+                                                pokerchaind tx bank send {account.name} {walletAddress.substring(0, 10)}... 50000000usdc
+                                            </div>
+                                            <button
+                                                onClick={() => copyCommand(account.name, "usdc", "50000000")}
+                                                className="w-full py-2 px-3 text-xs font-medium rounded transition duration-200 hover:opacity-80"
+                                                style={{
+                                                    backgroundColor: hexToRgba(colors.accent.success, 0.2),
+                                                    border: `1px solid ${hexToRgba(colors.accent.success, 0.4)}`,
+                                                    color: colors.accent.success
+                                                }}
+                                            >
+                                                📋 Copy: Send 50 usdc (poker)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-4 p-3 rounded text-xs" style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.4) }}>
+                            <div className="text-gray-400">
+                                <strong className="text-white">Your address:</strong>{" "}
+                                <span className="font-mono text-gray-300">{walletAddress}</span>
+                            </div>
+                            <div className="text-gray-500 mt-2">
+                                After running the command, refresh this page to see your new balance.
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Initialization Section */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
@@ -556,21 +674,49 @@ export default function TestSigningPage() {
                                         ⚠️ No tokens found - You need tokens to send transactions!
                                     </div>
                                 ) : (
-                                    <div className="ml-4 space-y-1">
-                                        {balances.map((balance, idx) => (
-                                            <div key={idx} className="text-sm">
-                                                <span className="font-mono" style={{ color: colors.accent.success }}>
-                                                    {balance.denom === "stake" || balance.denom === "b52"
-                                                        ? `${(Number(balance.amount) / 1_000_000).toFixed(6)} ${balance.denom}`
-                                                        : balance.denom === "b52USDC" || balance.denom === "uusdc"
-                                                        ? `${(Number(balance.amount) / 1_000_000).toFixed(6)} ${balance.denom}`
-                                                        : `${balance.amount} ${balance.denom}`}
-                                                </span>
-                                                <span className="text-gray-500 text-xs ml-2">
-                                                    ({balance.amount} micro-units)
-                                                </span>
-                                            </div>
-                                        ))}
+                                    <div className="ml-4 space-y-2">
+                                        {balances.map((balance, idx) => {
+                                            // Format balance with proper decimals (6 for micro-denominated tokens)
+                                            const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
+                                            const numericAmount = isMicroDenom
+                                                ? Number(balance.amount) / 1_000_000
+                                                : Number(balance.amount);
+
+                                            const displayAmount = numericAmount.toLocaleString('en-US', {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 6
+                                            });
+
+                                            // For usdc, show USD equivalent
+                                            const isUSDC = balance.denom === "usdc";
+                                            const usdValue = isUSDC ? numericAmount.toLocaleString('en-US', {
+                                                style: 'currency',
+                                                currency: 'USD',
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2
+                                            }) : null;
+
+                                            return (
+                                                <div key={idx} className="text-sm">
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="font-bold text-lg" style={{ color: colors.accent.success }}>
+                                                            {displayAmount}
+                                                        </span>
+                                                        <span className="text-white font-medium">
+                                                            {balance.denom}
+                                                        </span>
+                                                        {usdValue && (
+                                                            <span className="text-gray-400 text-sm">
+                                                                ≈ {usdValue}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 ml-1">
+                                                        {Number(balance.amount).toLocaleString('en-US')} micro-units
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -597,31 +743,52 @@ export default function TestSigningPage() {
                             {/* sendTokens() */}
                             <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl" style={containerStyle}>
                                 <h3 className="text-xl font-bold text-white mb-4">3. sendTokens()</h3>
-                                <input
-                                    type="text"
-                                    placeholder="Recipient address"
-                                    value={recipientAddress}
-                                    onChange={(e) => setRecipientAddress(e.target.value)}
-                                    className="w-full p-2 rounded-lg text-white mb-2"
-                                    style={inputStyle}
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Amount (micro-units)"
-                                    value={sendAmount}
-                                    onChange={(e) => setSendAmount(e.target.value)}
-                                    className="w-full p-2 rounded-lg text-white mb-2"
-                                    style={inputStyle}
-                                />
-                                <select
-                                    value={sendDenom}
-                                    onChange={(e) => setSendDenom(e.target.value)}
-                                    className="w-full p-2 rounded-lg text-white mb-3"
-                                    style={inputStyle}
-                                >
-                                    <option value="uusdc">uusdc (poker tokens)</option>
-                                    <option value="stake">stake (gas tokens)</option>
-                                </select>
+                                <div className="space-y-3 mb-3">
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-1">Recipient Address</label>
+                                        <input
+                                            type="text"
+                                            placeholder="b521..."
+                                            value={recipientAddress}
+                                            onChange={(e) => setRecipientAddress(e.target.value)}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-1">
+                                            Amount (micro-units)
+                                            {sendAmount && (
+                                                <span className="ml-2 text-xs" style={{ color: colors.accent.success }}>
+                                                    = {(Number(sendAmount) / 1_000_000).toFixed(6)} {sendDenom}
+                                                </span>
+                                            )}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            placeholder="1000000"
+                                            value={sendAmount}
+                                            onChange={(e) => setSendAmount(e.target.value)}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Example: 1000000 = 1 {sendDenom}, 10000 = 0.01 {sendDenom}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-400 mb-1">Token Type</label>
+                                        <select
+                                            value={sendDenom}
+                                            onChange={(e) => setSendDenom(e.target.value)}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        >
+                                            <option value="usdc">usdc (poker tokens)</option>
+                                            <option value="b52Token">b52Token (gas tokens)</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <button
                                     onClick={testSendTokens}
                                     className="w-full py-2 px-4 text-white font-bold rounded-lg"
@@ -636,14 +803,20 @@ export default function TestSigningPage() {
                         <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                             <h3 className="text-xl font-bold text-white mb-4">4. createGame()</h3>
                             <div className="grid grid-cols-2 gap-3 mb-3">
-                                <input
-                                    type="text"
-                                    placeholder="Game Type"
-                                    value={gameType}
-                                    onChange={(e) => setGameType(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
+                                <div className="col-span-2">
+                                    <label className="block text-sm text-gray-400 mb-1">Game Type</label>
+                                    <select
+                                        value={gameType}
+                                        onChange={(e) => setGameType(e.target.value)}
+                                        className="w-full p-2 rounded-lg text-white"
+                                        style={inputStyle}
+                                    >
+                                        <option value="sit-and-go">Sit & Go</option>
+                                        <option value="texas-holdem">Texas Hold"em</option>
+                                        <option value="omaha">Omaha</option>
+                                        <option value="seven-card-stud">Seven Card Stud</option>
+                                    </select>
+                                </div>
                                 <input
                                     type="number"
                                     placeholder="Timeout (seconds)"
@@ -668,22 +841,44 @@ export default function TestSigningPage() {
                                     className="p-2 rounded-lg text-white"
                                     style={inputStyle}
                                 />
-                                <input
-                                    type="text"
-                                    placeholder="Min Buy-In"
-                                    value={minBuyIn}
-                                    onChange={(e) => setMinBuyIn(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Max Buy-In"
-                                    value={maxBuyIn}
-                                    onChange={(e) => setMaxBuyIn(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
+
+                                {/* Conditional rendering based on game type */}
+                                {gameType === "sit-and-go" ? (
+                                    // Sit & Go / Tournament: single buy-in
+                                    <div className="col-span-2">
+                                        <label className="block text-sm text-gray-400 mb-1">Tournament Buy-In</label>
+                                        <input
+                                            type="text"
+                                            placeholder="100000000"
+                                            value={sitAndGoBuyIn}
+                                            onChange={(e) => setSitAndGoBuyIn(e.target.value)}
+                                            className="w-full p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Single buy-in amount for tournament</p>
+                                    </div>
+                                ) : (
+                                    // Cash Game: min/max buy-in range
+                                    <>
+                                        <input
+                                            type="text"
+                                            placeholder="Min Buy-In"
+                                            value={minBuyIn}
+                                            onChange={(e) => setMinBuyIn(e.target.value)}
+                                            className="p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Max Buy-In"
+                                            value={maxBuyIn}
+                                            onChange={(e) => setMaxBuyIn(e.target.value)}
+                                            className="p-2 rounded-lg text-white"
+                                            style={inputStyle}
+                                        />
+                                    </>
+                                )}
+
                                 <input
                                     type="text"
                                     placeholder="Small Blind"

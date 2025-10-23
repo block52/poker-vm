@@ -10,7 +10,7 @@
 
 ## ⚠️ CRITICAL BLOCKERS - Transaction Signing Issues
 
-### 🔴 BLOCKER #1: "Unregistered type url: /pokerchain.poker.v1.MsgCreateGame"
+### ✅ RESOLVED: "Unregistered type url: /pokerchain.poker.v1.MsgCreateGame" (Oct 21, 2025)
 
 **Root Cause:**
 CosmJS's SigningStargateClient doesn't know how to encode custom poker module messages. It only knows standard Cosmos SDK messages (bank, staking, gov, etc.).
@@ -22,26 +22,30 @@ Error: Unregistered type url: /pokerchain.poker.v1.MsgCreateGame
     at Registry.encode
 ```
 
-**Solution Options:**
-1. **Generate TypeScript client** from pokerchain protos using `ignite generate ts-client` (RECOMMENDED)
-2. **Manually register** MsgCreateGame with protobuf encoder in SDK (quick fix)
-3. **Use Telescope** to generate CosmJS-compatible types from protos
+**Solution Implemented:**
+✅ Generated TypeScript client using `ignite generate ts-client` in `/pokerchain/`
+✅ Copied generated types to SDK: `cp -r ts-client/* ../poker-vm/sdk/src/`
+✅ Added dependencies to SDK package.json: `@bufbuild/protobuf` (^2.10.0), `long` (^5.3.2)
+✅ Published SDK v3.0.1 to npm with all types included
 
-**Files to Fix:**
-- `/poker-vm/sdk/src/cosmosClient.ts` - Need to register message types before using SigningStargateClient
-- OR generate types in `/pokerchain/` and import into SDK
+**Files Changed:**
+- `/pokerchain/ts-client/pokerchain.poker.v1/` - Generated poker module types
+- `/poker-vm/sdk/src/pokerchain.poker.v1/` - Copied types location (NOT in `generated/`)
+- `/poker-vm/sdk/package.json` - Added required dependencies
 
-**Assigned to:** Alex
-**Priority:** 🔴 CRITICAL - Blocks all transaction functionality (createGame, joinGame, performAction, etc.)
+**Note:** The `/poker-vm/sdk/src/generated/` folder exists but is empty/stale. Types are in module-specific folders like `pokerchain.poker.v1/`.
+
+**Resolved by:** Lucas Coullon (commit fe0a6ac)
+**Status:** 🟢 COMPLETE - All transaction functionality works with SDK v3.0.1
 
 ---
 
-### 🟡 BLOCKER #2: Gas Token Configuration Mismatch
+### ✅ RESOLVED: Gas Token Configuration (Oct 18, 2025)
 
 **Problem:**
-SDK is using `uusdc` for gas fees, but pokerchain uses `stake` as native token.
+SDK is using `uusdc` for gas fees, but pokerchain uses native token for gas.
 
-**Current code in `/poker-vm/sdk/src/cosmosClient.ts` line 482:**
+**Current code in `/poker-vm/sdk/src/cosmosClient.ts`:**
 ```typescript
 // ❌ WRONG:
 const fee = {
@@ -51,21 +55,22 @@ const fee = {
 
 // ✅ CORRECT:
 const fee = {
-    amount: [{ denom: "stake", amount: "1000" }],  // Must use native chain token
+    amount: [{ denom: "b52Token", amount: "1000" }],  // Must use native chain token
     gas: "200000"
 };
 ```
 
 **Why this matters:**
 - `uusdc` is for poker games (bridged USDC)
-- `stake` is for blockchain operations (gas fees, staking)
+- `b52Token` is for blockchain operations (gas fees, staking)
 - Mixing them causes transaction failures
 
-**Long-term TODO:**
-Before mainnet, rename `stake` to `b52` in `pokerchain/config.yml` to match branding.
+**Resolution:**
+✅ Token denomination changed from `stake` to `b52Token` in PR #10 (Oct 18, 2025)
+✅ Updated in `app.toml` and `genesis.json`
+✅ Minimum gas price set to `0.01b52Token`
 
-**Assigned to:** Alex
-**Priority:** 🟡 HIGH - Will cause transaction rejection even after message registration
+**Status:** 🟢 COMPLETE - SDK and chain now aligned on gas token
 
 ---
 
@@ -73,21 +78,27 @@ Before mainnet, rename `stake` to `b52` in `pokerchain/config.yml` to match bran
 
 ### Three-Token System Explained:
 
-#### 1. **`stake`** (Native Chain Token - Gas/Staking)
+#### 1. **`b52Token`** (Native Chain Token - Gas/Staking) ✅ **RENAMED Oct 18, 2025**
 - **Purpose**: Pay gas fees, validator staking, governance voting
-- **Defined in**: `pokerchain/config.yml` → `default_denom: stake`
+- **Defined in**: `pokerchain/app.toml` → `minimum-gas-prices = "0.01b52Token"`
 - **Who has it**: Development accounts (alice, bob, etc.) get billions for testing
-- **Future name**: Will be renamed to `b52` or `ub52` (micro-b52) for mainnet
-- **Why "stake"?**: This is just the default Cosmos SDK development token name - like "eth" for Ethereum testnets
+- **Previously**: Was called `stake` (standard Cosmos SDK dev token name)
+- **Changed**: Oct 18, 2025 via PR #10 to align with project branding
 
-**Example from config.yml:**
-```yaml
-default_denom: stake  # TODO: Change to "b52" for mainnet
-accounts:
-  - name: alice
-    coins:
-      - 3000000000000stake  # 3 trillion micro-stake for gas fees
+**Example from genesis.json:**
+```json
+{
+  "address": "b521dfe7r39q88zeqtde44efdqeky9thdtwngkzy2y",
+  "coins": [
+    {
+      "denom": "b52Token",
+      "amount": "1000000000000"
+    }
+  ]
+}
 ```
+
+**Note**: All configuration files now use `b52Token` consistently across `config.yml`, `app.toml`, and `genesis.json`.
 
 #### 2. **`uusdc`** (Bridge Token - Gaming Currency)
 - **Purpose**: In-game poker currency (buy-ins, pots, payouts)
@@ -119,14 +130,14 @@ User plays poker with b52USDC
 ### Why Two Separate Tokens?
 
 **Separation of Concerns:**
-- `stake/b52` = **Blockchain utility** (like ETH for Ethereum)
+- `b52Token` = **Blockchain utility** (like ETH for Ethereum)
 - `uusdc/b52USDC` = **Application currency** (like USDC for payments)
 
 **Benefits:**
-- Gas prices stable (in b52)
+- Gas prices stable (in b52Token)
 - Game currency stable (pegged to USDC)
 - Can't accidentally spend game winnings on gas fees
-- Validators stake b52, not game currency
+- Validators stake b52Token, not game currency
 
 ---
 
@@ -144,10 +155,16 @@ User plays poker with b52USDC
 accounts:
   - name: alice
     coins:
-      - 3000000000000stake
-      - 20000token
+      - 100usdc
+      - 52000b52Token  # Native token for gas fees
     mnemonic: moon town sad rebuild sad gather note lion desk pen letter invite...
+
+validators:
+  - name: alice
+    bonded: 50000b52Token  # Initial validator stake
 ```
+
+**Note**: All configuration files (`config.yml`, `app.toml`, `genesis.json`) now consistently use `b52Token`.
 
 **Security Note:**
 ⚠️ These accounts are for DEVELOPMENT ONLY! Never use these mnemonics on mainnet or with real funds.
@@ -215,8 +232,8 @@ const client = new CosmosClient({
     restEndpoint: "http://localhost:1317",
     chainId: "pokerchain",
     prefix: "b52",
-    denom: "stake",
-    gasPrice: "0.001stake"
+    denom: "b52Token",
+    gasPrice: "0.01b52Token"  // Must match or exceed validator minimum (app.toml)
 });
 
 const result = await client.createGame(...);
@@ -243,10 +260,11 @@ const result = await client.createGame(...);
 **Critical Understanding:**
 Users need TWO different tokens to play poker on Pokerchain:
 
-1. **`stake`** (will be renamed to `b52`) - For gas fees
+1. **`b52Token`** - For gas fees ✅ **UPDATED Oct 18, 2025**
    - Required for ALL blockchain transactions
    - Used to pay transaction fees (like ETH for Ethereum)
    - Without it: Transactions will be rejected!
+   - **Previously**: Was called `stake` (changed via PR #10)
 
 2. **`uusdc`** (displays as `b52USDC`) - For poker games
    - Required for playing poker (buy-ins, bets)
@@ -255,7 +273,7 @@ Users need TWO different tokens to play poker on Pokerchain:
 **Example Transaction Flow:**
 ```
 User creates a game with $100 buy-in:
-├── Gas fee: 1000 stake (deducted from user's stake balance)
+├── Gas fee: 1000 b52Token (deducted from user's b52Token balance)
 └── Buy-in: 100,000,000 uusdc (locked from user's uusdc balance)
 ```
 
@@ -273,13 +291,16 @@ User creates a game with $100 buy-in:
 # The minimum gas prices a validator is willing to accept for processing a
 # transaction. A transaction's fees must meet the minimum of any denomination
 # specified in this config (e.g. 0.25token1;0.0001token2).
-minimum-gas-prices = "0stake"
+minimum-gas-prices = "0.01b52Token"
 ```
 
 **What this means:**
-- Validators will accept transactions with **0 stake** gas price (FREE transactions!)
-- You can change this to enforce minimum fees: `"0.001stake"` = require 0.001 stake per unit of gas
-- Format: `"<amount><denom>"` (e.g., `"0.025stake"` or `"0.001b52"`)
+- Validators require **0.01 b52Token** per unit of gas (current setting)
+- Your SDK must set `gasPrice` to **at least** `0.01b52Token` or transactions will be rejected
+- You can change this to adjust minimum fees: `"0.001b52Token"` = require 0.001 b52Token per unit of gas
+- Format: `"<amount><denom>"` (e.g., `"0.025b52Token"` or `"0b52Token"` for free)
+
+**⚠️ CRITICAL:** SDK `gasPrice` must be ≥ validator `minimum-gas-prices`
 
 **How to Change Gas Prices (Step-by-Step):**
 
@@ -297,14 +318,15 @@ minimum-gas-prices = "0stake"
 
 3. **Find and change the minimum-gas-prices line:**
    ```toml
-   # Change this line (around line 124):
-   minimum-gas-prices = "0stake"
+   # Current setting (around line 11):
+   minimum-gas-prices = "0.01b52Token"
 
-   # To one of these options:
-   minimum-gas-prices = "0stake"              # FREE (current - dev only)
-   minimum-gas-prices = "0.001stake"          # Tiny fee (testing)
-   minimum-gas-prices = "0.025stake"          # Mainnet level
-   minimum-gas-prices = "0stake,0.001uusdc"   # Accept either token
+   # Options you can change to:
+   minimum-gas-prices = "0b52Token"                    # FREE (dev/testing only)
+   minimum-gas-prices = "0.001b52Token"                # Tiny fee (testing)
+   minimum-gas-prices = "0.01b52Token"                 # Current setting
+   minimum-gas-prices = "0.025b52Token"                # Higher fee (mainnet level)
+   minimum-gas-prices = "0.01b52Token,0.001uusdc"      # Accept either token
    ```
 
 4. **Save the file** (Ctrl+O in nano, :wq in vim)
@@ -493,40 +515,28 @@ const fee = {
 };
 ```
 
-### 🔧 Fixes Needed
+### ✅ SDK Configuration (Fixed Oct 18, 2025)
 
-#### Fix #1: Change Default Gas Denom
+#### Default Gas Denom Configuration
 
-**File:** `/poker-vm/sdk/src/cosmosClient.ts` line ~573
+**File:** `/poker-vm/sdk/src/cosmosClient.ts`
 
 ```typescript
-// ❌ WRONG:
+// ✅ CURRENT (using b52Token):
 export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
-    denom: "b52USDC",
-    gasPrice: "0.001b52USDC"
-});
-
-// ✅ CORRECT:
-export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
-    denom: "stake",  // Native token for gas
-    gasPrice: "0.001stake"  // 0.001 stake per gas unit
+    denom: "b52Token",  // Native token for gas
+    gasPrice: "0.01b52Token"  // Must match validator minimum-gas-prices
 });
 ```
 
-#### Fix #2: Use Correct Denom in createGame Fee
+#### Transaction Fee Configuration
 
-**File:** `/poker-vm/sdk/src/cosmosClient.ts` line ~482
+**File:** `/poker-vm/sdk/src/cosmosClient.ts`
 
 ```typescript
-// ❌ WRONG:
+// ✅ CURRENT (using b52Token):
 const fee = {
-    amount: [{ denom: "uusdc", amount: "1000" }],
-    gas: "200000"
-};
-
-// ✅ CORRECT:
-const fee = {
-    amount: [{ denom: "stake", amount: "1000" }],  // 1000 ustake = 0.001 stake
+    amount: [{ denom: "b52Token", amount: "1000" }],  // 1000 micro-b52Token
     gas: "200000"
 };
 ```
@@ -539,23 +549,30 @@ Total Fee = gasPrice × gasUsed
 ```
 
 **Example:**
-- Gas price: `0.001stake` per gas unit
+- Gas price: `0.01b52Token` per gas unit (validator minimum)
 - Gas used: 100,000 units
-- Total fee: 0.001 × 100,000 = **100 stake**
+- Total fee: 0.01 × 100,000 = **1,000 b52Token**
 
 **Current Configuration:**
-- Gas price: `0stake` (FREE transactions!)
-- Gas limit: `200000` units
-- Total fee: **0 stake** (no cost)
+- Validator minimum: `0.01b52Token` (set in app.toml)
+- SDK gas price: `0.01b52Token` (must be ≥ validator minimum)
+- Typical gas limit: `200,000` units
+- Typical transaction fee: **2,000 b52Token** (0.01 × 200,000)
+
+**Important Rule:**
+```
+SDK gasPrice >= Validator minimum-gas-prices
+```
+If your SDK sets a lower gas price than the validator minimum, your transactions will be **rejected**.
 
 **For mainnet, consider:**
-- Gas price: `0.025stake` (prevents spam)
+- Gas price: `0.025b52Token` (prevents spam)
 - Average transaction: ~100,000 gas
-- Fee per transaction: ~2,500 stake (0.0025 b52 tokens)
+- Fee per transaction: ~2,500 b52Token
 
-### TODO: Before Mainnet
+### ✅ Completed Changes
 
-1. **Rename token:** `stake` → `b52` in `config.yml`
+1. **✅ Rename token:** `stake` → `b52Token` in all config files (completed Oct 18, 2025 + updated config.yml)
 2. **Set minimum gas price:** `0.025b52` in `app.toml`
 3. **Update SDK config:** Change all references from `stake` to `b52`
 4. **Add UI validation:** Warn users if insufficient `b52` for gas fees

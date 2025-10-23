@@ -1,4 +1,4 @@
-import { TexasHoldemRound } from "./game";
+import { TexasHoldemRound, Card } from "./game";
 
 export interface CosmosConfig {
     rpcEndpoint: string;
@@ -37,11 +37,6 @@ export interface Player {
     cards: Card[];
     isActive: boolean;
     hasActed: boolean;
-}
-
-export interface Card {
-    suit: string;
-    rank: string;
 }
 
 export interface LegalAction {
