@@ -131,7 +131,7 @@ fi
 
 # Setup SSL certificates with certbot for all required domains
 log "Setting up SSL certificates with certbot..."
-certbot --nginx -d node1.block52.xyz -d botapi.block52.xyz -d rest.block52.xyz --non-interactive --agree-tos -m admin@block52.xyz || warning "Certbot may require manual intervention. Check certbot output."
+certbot --nginx --expand -d node1.block52.xyz -d botapi.block52.xyz -d rest.block52.xyz --non-interactive --agree-tos -m admin@block52.xyz || warning "Certbot may require manual intervention. Check certbot output."
 
 # Final nginx config test and restart
 log "Final nginx configuration test..."
