@@ -343,7 +343,15 @@ Updated Game State: {
 - ✅ Balance validation uses USDC from cosmosWallet hook
 - ✅ Removed ethers dependency from BuyInModal
 - ✅ Buy-in amount conversion uses native BigInt (microunits)
-- ⚠️ **CURRENT BLOCKER:** GameStateContext looking for player address but we're using Cosmos wallets now
+- ✅ **FIXED:** GameStateContext now uses Cosmos address from localStorage
+- ✅ **joinTable hook already using Cosmos SDK** - calls `SigningCosmosClient.joinGame()`
+- ⏳ **NEXT:** Test WebSocket subscription with Cosmos address
+
+**Key Discovery:**
+The PVM WebSocket subscribes using the **player address**. Previously used Ethereum addresses, now uses Cosmos addresses (b52...). GameStateContext updated to:
+1. Try `cosmos_address` from localStorage first
+2. Fallback to `user_eth_public_key` for backwards compatibility
+3. Use the address for WebSocket subscription: `ws://localhost:8545?tableAddress=${tableId}&playerId=${cosmosAddress}`
 
 ---
 
