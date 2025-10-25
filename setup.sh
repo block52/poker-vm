@@ -192,8 +192,8 @@ case $key_choice in
 esac
 
 # Create .env from .env.example and update with user values
-ENV_EXAMPLE_PATH="poker-vm/pvm/ts/.env.example"
-ENV_PATH="poker-vm/pvm/ts/.env"
+ENV_EXAMPLE_PATH="pvm/ts/.env.example"
+ENV_PATH="pvm/ts/.env"
 
 echo -e "\n${BLUE}Creating .env file from .env.example...${NC}"
 if [ ! -f "$ENV_EXAMPLE_PATH" ]; then
