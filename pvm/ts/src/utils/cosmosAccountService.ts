@@ -64,6 +64,7 @@ export class CosmosAccountService {
 async function example() {
     const config: CosmosConfig = {
         rpcEndpoint: "https://node1.block52.xyz",
+        restEndpoint: "https://node1.block52.xyz/api",
         chainId: "poker-chain",
         prefix: "poker",
         denom: "upoker",

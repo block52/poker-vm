@@ -6,6 +6,7 @@ import { CosmosConfig } from "@bitcoinbrisbane/block52";
 export const DEFAULT_COSMOS_CONFIG: CosmosConfig = {
     prefix: "b52",
     rpcEndpoint: "http://localhost:26657",
+    restEndpoint: "http://localhost:1317",
     chainId: "pokerchain",
     denom: "b52USD",
     gasPrice: "0.025",
@@ -17,6 +18,7 @@ export const DEFAULT_COSMOS_CONFIG: CosmosConfig = {
 export const TEST_COSMOS_CONFIG: CosmosConfig = {
     prefix: "b52",
     rpcEndpoint: "http://localhost:36657",
+    restEndpoint: "http://localhost:1318",
     chainId: "pokerchain-test",
     denom: "b52USD",
     gasPrice: "0.01",
@@ -27,6 +29,7 @@ export const TEST_COSMOS_CONFIG: CosmosConfig = {
  */
 export const DEV_COSMOS_CONFIG: CosmosConfig = {
     rpcEndpoint: "http://localhost:26657",
+    restEndpoint: "http://localhost:1317",
     chainId: "poker-vm-dev",
     prefix: "poker",
     denom: "upvm",
@@ -38,6 +41,7 @@ export const DEV_COSMOS_CONFIG: CosmosConfig = {
  */
 export const PROD_COSMOS_CONFIG: CosmosConfig = {
     rpcEndpoint: process.env.COSMOS_RPC_ENDPOINT!,
+    restEndpoint: process.env.COSMOS_REST_ENDPOINT!,
     chainId: process.env.COSMOS_CHAIN_ID!,
     prefix: process.env.COSMOS_PREFIX!,
     denom: process.env.COSMOS_DENOM!,

@@ -4,6 +4,7 @@ import { CosmosConfig } from "@bitcoinbrisbane/block52";
 describe("CosmosAccountCommand", () => {
     const mockCosmosConfig: CosmosConfig = {
         rpcEndpoint: "https://node1.block52.xyz",
+        restEndpoint: "https://node1.block52.xyz/api",
         chainId: "poker-chain",
         prefix: "poker",
         denom: "b52USD",

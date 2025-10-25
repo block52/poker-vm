@@ -223,5 +223,6 @@ export const KEYS = {
     ACTION_TYPE: "action_type",
     INDEX: "index",
     VALUE: "value",
-    SEAT: "seat"
+    SEAT: "seat",
+    SEED: "seed"
 } as const;

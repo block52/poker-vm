@@ -7,6 +7,7 @@ import { CosmosClient, CosmosConfig, initializeCosmosClient } from '@bitcoinbris
 // Cosmos configuration for your blockchain
 const cosmosConfig: CosmosConfig = {
     rpcEndpoint: 'https://node1.block52.xyz',
+    restEndpoint: 'https://node1.block52.xyz/api',
     chainId: 'pokerchain',
     prefix: 'poker',
     denom: 'upoker',

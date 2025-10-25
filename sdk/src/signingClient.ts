@@ -3,6 +3,7 @@ import { SigningStargateClient, GasPrice, calculateFee } from "@cosmjs/stargate"
 import { Registry, EncodeObject } from "@cosmjs/proto-signing";
 import { CosmosClient, CosmosConfig, COSMOS_CONSTANTS } from "./cosmosClient";
 import { msgTypes } from "./pokerchain.poker.v1/registry";
+import Long from "long";
 
 /**
  * Extended configuration for signing client
@@ -233,12 +234,12 @@ export class SigningCosmosClient extends CosmosClient {
         const [account] = await this.wallet.getAccounts();
         const player = account.address;
 
-        // Create the message object
+        // Create the message object with Long type conversions for protobuf encoding
         const msgJoinGame = {
             player,
             gameId,
-            seat,
-            buyInAmount: buyInAmount.toString()
+            seat: Long.fromNumber(seat, true),
+            buyInAmount: Long.fromString(buyInAmount.toString(), true)
         };
 
         // Create the transaction message
@@ -286,7 +287,7 @@ export class SigningCosmosClient extends CosmosClient {
             player,
             gameId,
             action,
-            amount: amount.toString()
+            amount: Long.fromString(amount.toString(), true)
         };
 
         // Create the transaction message
