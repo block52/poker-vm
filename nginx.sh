@@ -83,10 +83,20 @@ if [[ $? -ne 0 ]]; then
 fi
 
 
-# Optionally, generate nginx/default config here if needed
-# (Assume install.sh generates nginx/default for now)
+
+# Remove old sites-enabled/default symlink or file if it exists (to avoid SSL config errors)
+if [ -L "/etc/nginx/sites-enabled/default" ] || [ -f "/etc/nginx/sites-enabled/default" ]; then
+    log "Removing old /etc/nginx/sites-enabled/default symlink or file..."
+    rm -f /etc/nginx/sites-enabled/default
+fi
+
+# Copy new configuration
 log "Copying new configuration..."
 cp "$SOURCE_CONF" "$DEFAULT_CONF"
+
+# Create new symlink to our config
+log "Linking $DEFAULT_CONF to /etc/nginx/sites-enabled/default..."
+ln -s "$DEFAULT_CONF" /etc/nginx/sites-enabled/default
 
 # Set correct permissions and ownership
 log "Setting correct permissions..."
