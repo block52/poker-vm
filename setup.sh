@@ -191,38 +191,69 @@ case $key_choice in
         ;;
 esac
 
-# Create .env file
-echo -e "\n${BLUE}Creating .env file...${NC}"
-if [ -f .env ]; then
-    read -p ".env file already exists. Do you want to overwrite it? (y/n): " overwrite
-    if [ "$overwrite" != "y" ]; then
-        echo -e "${RED}Setup cancelled. Existing .env file was not modified.${NC}"
-        exit 1
+# Create .env from .env.example and update with user values
+ENV_EXAMPLE_PATH="poker-vm/pvm/ts/.env.example"
+ENV_PATH="poker-vm/pvm/ts/.env"
+
+echo -e "\n${BLUE}Creating .env file from .env.example...${NC}"
+if [ ! -f "$ENV_EXAMPLE_PATH" ]; then
+    echo -e "${RED}.env.example not found at $ENV_EXAMPLE_PATH. Exiting.${NC}"
+    exit 1
+fi
+
+cp "$ENV_EXAMPLE_PATH" "$ENV_PATH"
+
+# Prompt for SEED if not already set
+if [ -z "$SEED" ]; then
+    read -p "Enter SEED phrase (or leave blank to generate): " SEED
+fi
+
+# Prompt for RPC_URL if not already set
+if [ -z "$RPC_URL" ]; then
+    echo -e "\n${BLUE}Node RPC URL Setup${NC}"
+    echo "Please enter your Ethereum node RPC URL (e.g., from Infura, Alchemy, etc.)"
+    while true; do
+        read -p "Enter RPC URL: " RPC_URL
+        if validate_url "$RPC_URL"; then
+            break
+        else
+            echo -e "${RED}Invalid URL format. URL must start with http:// or https://${NC}"
+        fi
+    done
+fi
+
+# Prompt for VALIDATOR_KEY if not already set
+if [ -z "$VALIDATOR_KEY" ]; then
+    read -p "Enter Validator Private Key (or leave blank to generate): " VALIDATOR_KEY
+    if [ -z "$VALIDATOR_KEY" ]; then
+        VALIDATOR_KEY=$(generate_eth_key)
+        echo -e "${GREEN}Generated new private key: ${VALIDATOR_KEY}${NC}"
+        echo -e "${RED}IMPORTANT: Save this private key in a secure location!${NC}"
     fi
 fi
 
-cat > .env << EOL
-# Generated on $(date)
-VALIDATOR_KEY=${VALIDATOR_KEY}
-RPC_URL=${RPC_URL}
-VAULT_CONTRACT_ADDRESS=0x893c26846d7cE76445230B2b6285a663BF4C3BF5
-BRIDGE_CONTRACT_ADDRESS=0x859329813d8e500F4f6Be0fc934E53AC16670fa0
-EOL
-
-# Handle Node RPC URL
-echo -e "\n${BLUE}Node RPC URL Setup${NC}"
-echo "Please enter your Ethereum node RPC URL (e.g., from Infura, Alchemy, etc.)"
-while true; do
-    read -p "Enter RPC URL: " RPC_URL
-    if validate_url "$RPC_URL"; then
-        break
-    else
-        echo -e "${RED}Invalid URL format. URL must start with http:// or https://${NC}"
-    fi
-done
-
-mv .env poker-vm/pvm/ts/.env
+# Update .env with user values
+sed -i "s|^SEED=.*$|SEED=\"$SEED\"|" "$ENV_PATH"
+sed -i "s|^RPC_URL=.*$|RPC_URL=\"$RPC_URL\"|" "$ENV_PATH"
+sed -i "s|^VALIDATOR_KEY=.*$|VALIDATOR_KEY=$VALIDATOR_KEY|" "$ENV_PATH"
 
 echo -e "${GREEN}Setup completed successfully!${NC}"
-echo -e "Your configuration has been saved to .env file."
+echo -e "Your configuration has been saved to $ENV_PATH."
 echo -e "${RED}REMINDER: Keep your private key secure and never share it with anyone!${NC}"
+
+# Build Docker images
+echo -e "\n${BLUE}Building Docker images...${NC}"
+if [ -f Makefile ]; then
+    make build
+else
+    docker compose build --no-cache
+fi
+
+# Start Docker containers
+echo -e "\n${BLUE}Starting Docker containers...${NC}"
+if [ -f Makefile ]; then
+    make up
+else
+    docker compose up -d
+fi
+echo -e "${GREEN}Docker containers are up and running!${NC}"
