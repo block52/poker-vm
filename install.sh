@@ -80,30 +80,76 @@ case $key_choice in
         ;;
 esac
 
-# Prompt for SEED if not already set
-if [ -z "$SEED" ]; then
-    read -p "Enter SEED phrase (or leave blank to generate): " SEED
-fi
 
-# Prompt for RPC_URL if not already set
-if [ -z "$RPC_URL" ]; then
-    echo -e "\n${BLUE}Node RPC URL Setup${NC}"
-    echo "Please enter your Ethereum node RPC URL (e.g., from Infura, Alchemy, etc.)"
-    while true; do
-        read -p "Enter RPC URL: " RPC_URL
-        if validate_url "$RPC_URL"; then
-            break
-        else
-            echo -e "${RED}Invalid URL format. URL must start with http:// or https://${NC}"
-        fi
-    done
-fi
 
-# Create .env file with all required fields
+# Prompt for main domain (e.g., example.com)
+echo -e "\n${BLUE}Domain Setup${NC}"
+while true; do
+    read -p "Enter your main domain (e.g., example.com): " MAIN_DOMAIN
+    if [[ "$MAIN_DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        break
+    else
+        echo -e "${RED}Invalid domain format. Please enter a valid domain (e.g., example.com).${NC}"
+    fi
+done
+
+# Set subdomains
+APP_DOMAIN="app.$MAIN_DOMAIN"
+NODE_DOMAIN="node.$MAIN_DOMAIN"
+
+# Set URLs for .env
+PUBLIC_URL="https://$APP_DOMAIN"
+RPC_URL="https://$NODE_DOMAIN"
+
+# Generate nginx/default config for app. and node. subdomains
+NGINX_CONF="nginx/default"
+cat > "$NGINX_CONF" <<EOL
+server {
+    index index.html;
+    server_name $NODE_DOMAIN;
+    location / {
+        proxy_pass http://127.0.0.1:8545/;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+    listen [::]:443 ssl ipv6only=on;
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/$NODE_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$NODE_DOMAIN/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+    index index.html;
+    server_name $APP_DOMAIN;
+    location / {
+        proxy_pass http://127.0.0.1:5173/;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+    listen [::]:443 ssl ipv6only=on;
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/$APP_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$APP_DOMAIN/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+EOL
+
+
+# Create .env file with all required fields (no SEED)
 ENV_PATH="pvm/ts/.env"
 cat > "$ENV_PATH" <<EOL
 PORT=8545
-SEED="$SEED"
 DB_URL=mongodb://user:password@localhost:27017/
 VALIDATOR_KEY=$VALIDATOR_KEY
 RPC_URL="$RPC_URL"
@@ -112,7 +158,7 @@ ADMIN_PASSWORD=password
 TOKEN_CONTRACT_ADDRESS=0x7D9aAe2950a2c703159Bc42d2D28882904029130
 VAULT_CONTRACT_ADDRESS=0x687e526CE88a3E2aB889b3F110cF1C3cCfebafd7
 BRIDGE_CONTRACT_ADDRESS=0x0B6052D3951b001E4884eD93a6030f92B1d76cf0
-PUBLIC_URL=https://${MAIN_DOMAIN}
+PUBLIC_URL=$PUBLIC_URL
 PK=
 MONGO_INITDB_ROOT_USERNAME=node1
 MONGO_INITDB_ROOT_PASSWORD=Passw0rd123
@@ -334,6 +380,8 @@ main() {
             log_error "Docker is not installed. Please install Docker first."
             exit 1
         fi
+        # Setup nginx
+        setup_nginx
         # Build and start Docker containers
         log_info "Building Docker images..."
         docker compose build || {
