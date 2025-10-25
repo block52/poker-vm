@@ -131,12 +131,12 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
             console.log(`[GameStateContext] Subscribing to table: ${tableId}`);
 
             // Get player address - try Cosmos first, fallback to Ethereum for backwards compatibility
-            const cosmosAddress = localStorage.getItem("cosmos_address");
+            const cosmosAddress = localStorage.getItem("user_cosmos_address");
             const ethAddress = localStorage.getItem("user_eth_public_key");
             const playerAddress = cosmosAddress || ethAddress;
 
             if (!playerAddress) {
-                console.error("[GameStateContext] No player address found (tried cosmos_address and user_eth_public_key)");
+                console.error("[GameStateContext] No player address found (tried user_cosmos_address and user_eth_public_key)");
                 setError(new Error("No player address found"));
                 setIsLoading(false);
                 return;
