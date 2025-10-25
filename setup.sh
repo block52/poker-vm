@@ -256,4 +256,14 @@ if [ -f Makefile ]; then
 else
     docker compose up -d
 fi
-echo -e "${GREEN}Docker containers are up and running!${NC}"
+
+# Health check for PVM
+echo -e "\n${BLUE}Checking PVM health at http://localhost:8545 ...${NC}"
+PVM_HEALTH=$(curl -s http://localhost:8545 || true)
+if [[ "$PVM_HEALTH" == *"PVM RPC Server"* ]]; then
+    echo -e "${GREEN}PVM is running and healthy!${NC}"
+    echo -e "Response: $PVM_HEALTH"
+else
+    echo -e "${RED}PVM health check failed. Response: $PVM_HEALTH${NC}"
+    echo -e "${YELLOW}Check Docker logs and configuration if the service is not running as expected.${NC}"
+fi
