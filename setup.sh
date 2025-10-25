@@ -192,16 +192,6 @@ case $key_choice in
 esac
 
 # Create .env from .env.example and update with user values
-ENV_EXAMPLE_PATH="pvm/ts/.env.example"
-ENV_PATH="pvm/ts/.env"
-
-echo -e "\n${BLUE}Creating .env file from .env.example...${NC}"
-if [ ! -f "$ENV_EXAMPLE_PATH" ]; then
-    echo -e "${RED}.env.example not found at $ENV_EXAMPLE_PATH. Exiting.${NC}"
-    exit 1
-fi
-
-cp "$ENV_EXAMPLE_PATH" "$ENV_PATH"
 
 # Prompt for SEED if not already set
 if [ -z "$SEED" ]; then
@@ -232,10 +222,25 @@ if [ -z "$VALIDATOR_KEY" ]; then
     fi
 fi
 
-# Update .env with user values
-sed -i "s|^SEED=.*$|SEED=\"$SEED\"|" "$ENV_PATH"
-sed -i "s|^RPC_URL=.*$|RPC_URL=\"$RPC_URL\"|" "$ENV_PATH"
-sed -i "s|^VALIDATOR_KEY=.*$|VALIDATOR_KEY=$VALIDATOR_KEY|" "$ENV_PATH"
+# Create .env file with all required fields
+ENV_PATH="pvm/ts/.env"
+cat > "$ENV_PATH" <<EOL
+PORT=8545
+SEED="$SEED"
+DB_URL=mongodb://user:password@localhost:27017/
+VALIDATOR_KEY=$VALIDATOR_KEY
+RPC_URL="$RPC_URL"
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=password
+TOKEN_CONTRACT_ADDRESS=0x7D9aAe2950a2c703159Bc42d2D28882904029130
+VAULT_CONTRACT_ADDRESS=0x687e526CE88a3E2aB889b3F110cF1C3cCfebafd7
+BRIDGE_CONTRACT_ADDRESS=0x0B6052D3951b001E4884eD93a6030f92B1d76cf0
+PUBLIC_URL=https://node1.block52.xyz
+PK=
+MONGO_INITDB_ROOT_USERNAME=node1
+MONGO_INITDB_ROOT_PASSWORD=Passw0rd123
+MONGO_INITDB_DATABASE=pvm
+EOL
 
 echo -e "${GREEN}Setup completed successfully!${NC}"
 echo -e "Your configuration has been saved to $ENV_PATH."
