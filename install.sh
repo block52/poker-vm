@@ -101,10 +101,11 @@ NODE_DOMAIN="node.$MAIN_DOMAIN"
 PUBLIC_URL="https://$APP_DOMAIN"
 RPC_URL="https://$NODE_DOMAIN"
 
-# Generate nginx/default config for app. and node. subdomains
+# Generate nginx/default config for app. and node. subdomains (HTTP only, no SSL)
 NGINX_CONF="nginx/default"
 cat > "$NGINX_CONF" <<EOL
 server {
+    listen 80;
     index index.html;
     server_name $NODE_DOMAIN;
     location / {
@@ -119,6 +120,7 @@ server {
 }
 
 server {
+    listen 80;
     index index.html;
     server_name $APP_DOMAIN;
     location / {
