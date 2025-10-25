@@ -256,7 +256,7 @@ update_code() {
 setup_nginx() {
     log_info "Setting up nginx..."
     if [ -f "nginx.sh" ]; then
-        bash nginx.sh || {
+        bash nginx.sh "$MAIN_DOMAIN" || {
             log_error "Failed to setup nginx"
             exit 1
         }

@@ -12,12 +12,12 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 
-# Accept main domain as argument or prompt if not provided
+# Require main domain as argument (no prompt)
 if [ -z "$1" ]; then
-    read -p "Enter your main domain (e.g., example.com): " MAIN_DOMAIN
-else
-    MAIN_DOMAIN="$1"
+    echo -e "${RED}[ERROR] Main domain must be provided as an argument (e.g., bash nginx.sh example.com)${NC}"
+    exit 1
 fi
+MAIN_DOMAIN="$1"
 
 APP_DOMAIN="app.$MAIN_DOMAIN"
 NODE_DOMAIN="node.$MAIN_DOMAIN"
