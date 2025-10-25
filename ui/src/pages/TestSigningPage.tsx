@@ -30,15 +30,15 @@ export default function TestSigningPage() {
     const [gameType, setGameType] = useState("sit-and-go");
     const [minPlayers, setMinPlayers] = useState(2);
     const [maxPlayers, setMaxPlayers] = useState(6);
-    const [minBuyIn, setMinBuyIn] = useState("100000000"); // 100 b52USDC
-    const [maxBuyIn, setMaxBuyIn] = useState("500000000"); // 500 b52USDC
-    const [sitAndGoBuyIn, setSitAndGoBuyIn] = useState("100000000"); // 100 b52USDC for sit-and-go
-    const [smallBlind, setSmallBlind] = useState("1000000"); // 1 b52USDC
-    const [bigBlind, setBigBlind] = useState("2000000"); // 2 b52USDC
+    const [minBuyIn, setMinBuyIn] = useState("5000000"); // 5 usdc
+    const [maxBuyIn, setMaxBuyIn] = useState("50000000"); // 50 usdc (max you can afford!)
+    const [sitAndGoBuyIn, setSitAndGoBuyIn] = useState("10000000"); // 10 usdc for sit-and-go
+    const [smallBlind, setSmallBlind] = useState("100000"); // 0.1 usdc
+    const [bigBlind, setBigBlind] = useState("200000"); // 0.2 usdc
     const [timeout, setTimeout] = useState(30);
     const [gameId, setGameId] = useState("");
-    const [seat, setSeat] = useState(0);
-    const [buyInAmount, setBuyInAmount] = useState("100000000");
+    const [seat, setSeat] = useState(1);
+    const [buyInAmount, setBuyInAmount] = useState("10000000"); // 10 usdc - matches sit-and-go default
     const [action, setAction] = useState("fold");
     const [actionAmount, setActionAmount] = useState("0");
 
@@ -846,16 +846,16 @@ export default function TestSigningPage() {
                                 {gameType === "sit-and-go" ? (
                                     // Sit & Go / Tournament: single buy-in
                                     <div className="col-span-2">
-                                        <label className="block text-sm text-gray-400 mb-1">Tournament Buy-In</label>
+                                        <label className="block text-sm text-gray-400 mb-1">Tournament Buy-In (usdc micro-units)</label>
                                         <input
                                             type="text"
-                                            placeholder="100000000"
+                                            placeholder="10000000"
                                             value={sitAndGoBuyIn}
                                             onChange={(e) => setSitAndGoBuyIn(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Single buy-in amount for tournament</p>
+                                        <p className="text-xs text-gray-500 mt-1">10,000,000 = 10 usdc (your balance: 50 usdc)</p>
                                     </div>
                                 ) : (
                                     // Cash Game: min/max buy-in range
@@ -879,22 +879,30 @@ export default function TestSigningPage() {
                                     </>
                                 )}
 
-                                <input
-                                    type="text"
-                                    placeholder="Small Blind"
-                                    value={smallBlind}
-                                    onChange={(e) => setSmallBlind(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Big Blind"
-                                    value={bigBlind}
-                                    onChange={(e) => setBigBlind(e.target.value)}
-                                    className="p-2 rounded-lg text-white"
-                                    style={inputStyle}
-                                />
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Small Blind (usdc micro-units)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="100000"
+                                        value={smallBlind}
+                                        onChange={(e) => setSmallBlind(e.target.value)}
+                                        className="w-full p-2 rounded-lg text-white"
+                                        style={inputStyle}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">100,000 = 0.1 usdc</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Big Blind (usdc micro-units)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="200000"
+                                        value={bigBlind}
+                                        onChange={(e) => setBigBlind(e.target.value)}
+                                        className="w-full p-2 rounded-lg text-white"
+                                        style={inputStyle}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">200,000 = 0.2 usdc</p>
+                                </div>
                             </div>
                             <button
                                 onClick={testCreateGame}
@@ -933,15 +941,16 @@ export default function TestSigningPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm text-gray-400 mb-1">Buy-In Amount (micro-units)</label>
+                                        <label className="block text-sm text-gray-400 mb-1">Buy-In Amount (usdc micro-units)</label>
                                         <input
                                             type="text"
-                                            placeholder="100000000"
+                                            placeholder="10000000"
                                             value={buyInAmount}
                                             onChange={(e) => setBuyInAmount(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
+                                        <p className="text-xs text-gray-500 mt-1">10,000,000 = 10 usdc (must match game's buy-in)</p>
                                     </div>
                                 </div>
                             </div>
