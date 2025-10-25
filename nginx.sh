@@ -83,18 +83,14 @@ if [[ $? -ne 0 ]]; then
 fi
 
 
-# Remove or overwrite any config with SSL/certbot lines in /etc/nginx/sites-enabled/default
-NEEDS_OVERWRITE=false
-if [ -f "/etc/nginx/sites-enabled/default" ]; then
-    if grep -qE 'ssl_|letsencrypt|certbot|443' /etc/nginx/sites-enabled/default; then
-        log "Old /etc/nginx/sites-enabled/default contains SSL/certbot config. Removing..."
-        NEEDS_OVERWRITE=true
+
+# Remove any config files in /etc/nginx/sites-enabled/ and /etc/nginx/conf.d/ with SSL/certbot/letsencrypt/443 lines
+for f in /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*; do
+    if [ -f "$f" ] && grep -qE 'ssl_|letsencrypt|certbot|443' "$f"; then
+        log "Removing old nginx config with SSL/certbot: $f"
+        rm -f "$f"
     fi
-fi
-if [ -L "/etc/nginx/sites-enabled/default" ] || [ "$NEEDS_OVERWRITE" = true ]; then
-    log "Removing old /etc/nginx/sites-enabled/default symlink or file..."
-    rm -f /etc/nginx/sites-enabled/default
-fi
+done
 
 # Copy new configuration
 log "Copying new configuration..."
