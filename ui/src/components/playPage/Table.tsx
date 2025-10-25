@@ -165,6 +165,13 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
+    // Game state context and subscription
+    const { subscribeToTable, gameState } = useGameStateContext();
+    useEffect(() => {
+        if (id) {
+            subscribeToTable(id);
+        }
+    }, [id, subscribeToTable]);
 
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
@@ -241,7 +248,7 @@ const Table = React.memo(() => {
     } = useNextToActInfo(id);
 
     // Add the useTableState hook to get table state properties
-    const { formattedTotalPot, tableSize } = useTableState();
+    const { tableSize } = useTableState();
 
     // Use the table layout configuration system (only 4 and 9 players supported)
     // TODO: Add support for 2, 3, 5, 6, 7, 8 player tables - positions need to be configured in tableLayoutConfig.ts
@@ -554,20 +561,16 @@ const Table = React.memo(() => {
 
     // Memoize expensive pot calculations
     const potDisplayValues = useMemo(() => {
-        const totalPotCalculated =
-            tableDataValues.tableDataPots?.[0] === "0"
-                ? "0.00"
-                : tableDataValues.tableDataPots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0).toFixed(2) ||
-                  formattedTotalPot;
+        const pots = gameState?.pots || [];
+        const totalPotCalculated = pots.length === 0 || pots[0] === "0" ? "0.00" : pots.reduce((sum, pot) => sum + Number(pot), 0).toFixed(2);
 
-        const mainPotCalculated =
-            tableDataValues.tableDataPots?.[0] === "0" ? "0.00" : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2);
+        const mainPotCalculated = pots.length === 0 || pots[0] === "0" ? "0.00" : Number(pots[0]).toFixed(2);
 
         return {
             totalPot: totalPotCalculated,
             mainPot: mainPotCalculated
         };
-    }, [tableDataValues.tableDataPots, formattedTotalPot]);
+    }, [gameState]);
 
     // Memoize community cards rendering
     const communityCardsElements = useMemo(() => {
@@ -766,14 +769,6 @@ const Table = React.memo(() => {
         console.error("Error loading table data:", tableDataValues.error);
         // Continue rendering instead of returning early
     }
-
-    // This component manages the subscription:
-    const { subscribeToTable, gameState } = useGameStateContext();
-    useEffect(() => {
-        if (id) {
-            subscribeToTable(id);
-        }
-    }, [id, subscribeToTable]);
 
     return (
         <div className="table-container">

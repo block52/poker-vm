@@ -3,6 +3,7 @@ import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHo
 import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
 import { ethers } from "ethers";
+import { calculatePotBetAmount } from "../utils/calculatePotBetAmount";
 
 // Import hooks from barrel file
 import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
@@ -624,7 +625,15 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const newAmt = Math.max(totalPot, hasBetAction ? minBet : minRaise);
+                                                        const newAmt = calculatePotBetAmount({
+                                                            currentRound,
+                                                            previousActions: gameState?.previousActions || [],
+                                                            formattedTotalPot,
+                                                            hasBetAction,
+                                                            minBet,
+                                                            minRaise,
+                                                            totalPot
+                                                        });
                                                         setRaiseAmountAbsolute(newAmt);
                                                         setLastAmountSource("button");
                                                     }}
