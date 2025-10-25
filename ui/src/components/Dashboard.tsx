@@ -9,9 +9,7 @@ import { Wallet, ethers } from "ethers";
 import { TOKEN_ADDRESS } from "../config/constants";
 
 const RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL || "https://eth.llamarpc.com";
-const USDC_ABI = [
-    "function balanceOf(address account) view returns (uint256)"
-];
+const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
 
 import BuyInModal from "./playPage/BuyInModal";
 import WithdrawalModal from "./WithdrawalModal";
@@ -30,10 +28,10 @@ import { CreateTableOptions, useNewTable } from "../hooks/useNewTable"; // Impor
 import { useTablePlayerCounts } from "../hooks/useTablePlayerCounts"; // Import useTablePlayerCounts hook
 
 // Password protection utils
-import { 
-    checkAuthCookie, 
+import {
+    checkAuthCookie,
     handlePasswordSubmit as utilHandlePasswordSubmit,
-    handlePasswordKeyPress as utilHandlePasswordKeyPress 
+    handlePasswordKeyPress as utilHandlePasswordKeyPress
 } from "../utils/passwordProtectionUtils";
 
 // Club branding imports
@@ -42,47 +40,48 @@ import { colors, getAnimationGradient, getHexagonStroke, hexToRgba } from "../ut
 
 // Add network display component - Memoized to prevent re-renders
 const NetworkDisplay = React.memo(({ isMainnet = false }: { isMainnet?: boolean }) => {
-    const containerStyle = useMemo(() => ({ 
-        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-    }), []);
-    
-    const dotStyle = useMemo(() => 
-        !isMainnet ? { backgroundColor: colors.brand.primary } : {}, 
-    [isMainnet]);
-    
+    const containerStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+        }),
+        []
+    );
+
+    const dotStyle = useMemo(() => (!isMainnet ? { backgroundColor: colors.brand.primary } : {}), [isMainnet]);
+
     return (
         <div className="flex items-center gap-1.5 px-2 py-1 rounded-full text-xs" style={containerStyle}>
-            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : ""}`}
-                 style={dotStyle}></div>
+            <div className={`w-2 h-2 rounded-full ${isMainnet ? "bg-green-500" : ""}`} style={dotStyle}></div>
             <span className="text-gray-300">Block52 Chain</span>
         </div>
     );
 });
 
-// Memoized Deposit button component  
+// Memoized Deposit button component
 const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) => {
-    const buttonStyle = useMemo(() => ({ 
-        background: disabled 
-            ? `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 0.5)} 0%, ${hexToRgba(colors.ui.bgDark, 0.3)} 100%)`
-            : `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)` 
-    }), [disabled]);
-    
+    const buttonStyle = useMemo(
+        () => ({
+            background: disabled
+                ? `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 0.5)} 0%, ${hexToRgba(colors.ui.bgDark, 0.3)} 100%)`
+                : `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)`
+        }),
+        [disabled]
+    );
+
     const handleClick = useCallback(() => {
         if (!disabled) {
             onClick();
         }
     }, [onClick, disabled]);
-    
+
     return (
         <button
             type="button"
             onClick={handleClick}
             disabled={disabled}
             className={`flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 shadow-md ${
-                disabled 
-                    ? "cursor-not-allowed opacity-50" 
-                    : "transform hover:scale-105 hover:opacity-90"
+                disabled ? "cursor-not-allowed opacity-50" : "transform hover:scale-105 hover:opacity-90"
             }`}
             style={buttonStyle}
             title={disabled ? "Connect Web3 wallet to deposit" : "Deposit USDC"}
@@ -94,14 +93,17 @@ const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () =
 
 // Memoized Withdraw button component
 const WithdrawButton = React.memo(({ onClick }: { onClick: () => void }) => {
-    const buttonStyle = useMemo(() => ({ 
-        background: `linear-gradient(135deg, ${colors.accent.withdraw} 0%, ${hexToRgba(colors.accent.withdraw, 0.8)} 100%)` 
-    }), []);
-    
+    const buttonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(135deg, ${colors.accent.withdraw} 0%, ${hexToRgba(colors.accent.withdraw, 0.8)} 100%)`
+        }),
+        []
+    );
+
     const handleClick = useCallback(() => {
         onClick();
     }, [onClick]);
-    
+
     return (
         <button
             type="button"
@@ -116,14 +118,17 @@ const WithdrawButton = React.memo(({ onClick }: { onClick: () => void }) => {
 
 // Memoized Create New Table button component
 const CreateTableButton = React.memo(({ onClick }: { onClick: () => void }) => {
-    const buttonStyle = useMemo(() => ({ 
-        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)` 
-    }), []);
-    
+    const buttonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+        }),
+        []
+    );
+
     const handleClick = useCallback(() => {
         onClick();
     }, [onClick]);
-    
+
     return (
         <button
             type="button"
@@ -167,17 +172,17 @@ const Dashboard: React.FC = () => {
     const [showPassword, setShowPassword] = useState<boolean>(false);
 
     const { isConnected, open, disconnect, address } = useUserWalletConnect();
-    
+
     // Use the findGames hook
     const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
-    
+
     // Get player counts for all games
     const gameAddresses = useMemo(() => games.map(g => g.address), [games]);
     const { playerCounts } = useTablePlayerCounts(gameAddresses);
 
     // Add useAccount hook to get account nonce
     const { account, isLoading: accountLoading, error: accountError, refetch: refetchAccount } = useAccount(publicKey);
-    
+
     // Use the new useNewTable hook from hooks directory
     const { createTable, isCreating: isCreatingTable, error: createTableError } = useNewTable();
 
@@ -196,32 +201,35 @@ const Dashboard: React.FC = () => {
     const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
     const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
     const [modalPlayerCount, setModalPlayerCount] = useState(4);
+    // For Cash Game: min/max players
+    const [modalMinPlayers, setModalMinPlayers] = useState(2);
+    const [modalMaxPlayers, setModalMaxPlayers] = useState(9);
 
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
     const [buyInTableId, setBuyInTableId] = useState(""); // Optional, if needed later
-    
+
     // Withdrawal Modal
     const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
-    
+
     // USDC Deposit Modal
     const [showUSDCDepositModal, setShowUSDCDepositModal] = useState(false);
-    
+
     // Wallet connection warning
     const [showWalletWarning, setShowWalletWarning] = useState(false);
-    
+
     // State for showing all tables
     const [showAllTables, setShowAllTables] = useState(false);
-    
+
     // State for copy notification
     const [copiedTableId, setCopiedTableId] = useState<string | null>(null);
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    
+
     // Web3 wallet balance state
     const [web3Balance, setWeb3Balance] = useState<string>("0.00");
-    
+
     // Function to get USDC balance of connected wallet
     const fetchWeb3Balance = useCallback(async () => {
         if (!address) return;
@@ -294,7 +302,6 @@ const Dashboard: React.FC = () => {
         };
     }, [handleMouseMove]);
 
-
     const DEFAULT_GAME_CONTRACT = "0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7"; // Example address
 
     // Function to handle creating a new game using the new hook
@@ -315,7 +322,7 @@ const Dashboard: React.FC = () => {
             // Build game options from modal selections
             // For Sit & Go/Tournament, use the same value for min and max buy-in
             const isTournament = modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT;
-            
+
             // Log the modal values before creating game options
             console.log("🎲 Modal Values:");
             console.log("  Game Type:", modalGameType);
@@ -329,26 +336,26 @@ const Dashboard: React.FC = () => {
                 type: modalGameType,
                 minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
                 maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
-                minPlayers: modalPlayerCount,
-                maxPlayers: modalPlayerCount
+                minPlayers: modalGameType === GameType.CASH ? modalMinPlayers : modalPlayerCount,
+                maxPlayers: modalGameType === GameType.CASH ? modalMaxPlayers : modalPlayerCount
             };
-            
+
             console.log("📦 Final CreateTableOptions being sent to SDK:");
             console.log("  type:", gameOptions.type);
             console.log("  minBuyIn:", gameOptions.minBuyIn);
             console.log("  maxBuyIn:", gameOptions.maxBuyIn);
             console.log("  minPlayers:", gameOptions.minPlayers);
             console.log("  maxPlayers:", gameOptions.maxPlayers);
-            
+
             // Use the createTable function from the hook
             const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
-            
+
             if (tableAddress) {
                 setShowCreateGameModal(false);
-                
+
                 // Refresh account data to get updated nonce
                 await refetchAccount();
-                
+
                 // Refresh the games list
                 await refetchGames();
             }
@@ -362,14 +369,14 @@ const Dashboard: React.FC = () => {
         try {
             // Create a new random wallet
             const newWallet = Wallet.createRandom();
-            
+
             // Save to localStorage
             localStorage.setItem(STORAGE_PRIVATE_KEY, newWallet.privateKey);
             localStorage.setItem("user_eth_public_key", newWallet.address);
-            
+
             // Update the state
             setPublicKey(newWallet.address);
-            
+
             // Force refresh data
             // fetchAccountBalance(true);
         } catch (err) {
@@ -446,17 +453,21 @@ const Dashboard: React.FC = () => {
 
     // CSS for disabled buttons
     const disabledButtonClass = "text-gray-300 bg-gradient-to-br from-gray-600 to-gray-700 cursor-not-allowed shadow-inner border border-gray-600/30";
-    
+
     // Memoized background styles to prevent re-renders
-    const backgroundStyle1 = useMemo(() => ({
-        backgroundImage: getAnimationGradient(mousePosition.x, mousePosition.y),
-        backgroundColor: colors.table.bgBase,
-        filter: "blur(40px)",
-        transition: "all 0.3s ease-out"
-    }), [mousePosition.x, mousePosition.y]);
-    
-    const backgroundStyle2 = useMemo(() => ({
-        backgroundImage: `
+    const backgroundStyle1 = useMemo(
+        () => ({
+            backgroundImage: getAnimationGradient(mousePosition.x, mousePosition.y),
+            backgroundColor: colors.table.bgBase,
+            filter: "blur(40px)",
+            transition: "all 0.3s ease-out"
+        }),
+        [mousePosition.x, mousePosition.y]
+    );
+
+    const backgroundStyle2 = useMemo(
+        () => ({
+            backgroundImage: `
             repeating-linear-gradient(
                 ${45 + mousePosition.x / 10}deg,
                 ${hexToRgba(colors.animation.color2, 0.1)} 0%,
@@ -466,26 +477,40 @@ const Dashboard: React.FC = () => {
                 ${hexToRgba(colors.animation.color2, 0.1)} 100%
             )
         `,
-        backgroundSize: "400% 400%",
-        animation: "gradient 15s ease infinite",
-        transition: "background 0.5s ease"
-    }), [mousePosition.x]);
-    
-    const backgroundStyle3 = useMemo(() => ({
-        backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${hexToRgba(colors.brand.primary, 0.1)} 25%, rgba(0,0,0,0) 50%, ${hexToRgba(colors.brand.primary, 0.1)} 75%, rgba(0,0,0,0) 100%)`,
-        backgroundSize: "200% 100%",
-        animation: "shimmer 8s infinite linear"
-    }), []);
-    
+            backgroundSize: "400% 400%",
+            animation: "gradient 15s ease infinite",
+            transition: "background 0.5s ease"
+        }),
+        [mousePosition.x]
+    );
+
+    const backgroundStyle3 = useMemo(
+        () => ({
+            backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${hexToRgba(colors.brand.primary, 0.1)} 25%, rgba(0,0,0,0) 50%, ${hexToRgba(
+                colors.brand.primary,
+                0.1
+            )} 75%, rgba(0,0,0,0) 100%)`,
+            backgroundSize: "200% 100%",
+            animation: "shimmer 8s infinite linear"
+        }),
+        []
+    );
+
     // Memoized card styles
-    const mainCardStyle = useMemo(() => ({
-        borderColor: hexToRgba(colors.brand.primary, 0.2)
-    }), []);
-    
-    const walletSectionStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
-        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-    }), []);
+    const mainCardStyle = useMemo(
+        () => ({
+            borderColor: hexToRgba(colors.brand.primary, 0.2)
+        }),
+        []
+    );
+
+    const walletSectionStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
+            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+        }),
+        []
+    );
 
     useEffect(() => {
         setLimitTypeSelected("no-limit"); // Default when changing variant
@@ -494,32 +519,35 @@ const Dashboard: React.FC = () => {
     const handleGameType = (type: string) => {
         if (type === GameType.CASH) {
             setTypeSelected("cash");
-        } 
+        }
         if (type === GameType.TOURNAMENT) {
             setTypeSelected("tournament");
         }
     };
-    
+
     // Memoized hover handlers
     const handleWalletMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
     }, []);
-    
+
     const handleWalletMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
     }, []);
-    
+
     // Memoized BuyInModal callbacks
     const handleBuyInModalClose = useCallback(() => {
         setShowBuyInModal(false);
     }, []);
-    
-    const handleBuyInModalJoin = useCallback((buyInAmount: string, waitForBigBlind: boolean) => {
-        localStorage.setItem("buy_in_amount", buyInAmount);
-        localStorage.setItem("wait_for_big_blind", JSON.stringify(waitForBigBlind));
-        navigate(`/table/${buyInTableId}`);
-    }, [navigate, buyInTableId]);
-    
+
+    const handleBuyInModalJoin = useCallback(
+        (buyInAmount: string, waitForBigBlind: boolean) => {
+            localStorage.setItem("buy_in_amount", buyInAmount);
+            localStorage.setItem("wait_for_big_blind", JSON.stringify(waitForBigBlind));
+            navigate(`/table/${buyInTableId}`);
+        },
+        [navigate, buyInTableId]
+    );
+
     // Memoized Create Table callback
     const handleCreateTableClick = useCallback(() => {
         // Reset modal values to defaults when opening
@@ -530,7 +558,7 @@ const Dashboard: React.FC = () => {
         setModalPlayerCount(4);
         setShowCreateGameModal(true);
     }, []);
-    
+
     // Memoized Deposit callback
     const handleDepositClick = useCallback(() => {
         if (isConnected) {
@@ -542,30 +570,30 @@ const Dashboard: React.FC = () => {
             setTimeout(() => setShowWalletWarning(false), 3000);
         }
     }, [isConnected]);
-    
+
     // Memoized Withdrawal callback
     const handleWithdrawClick = useCallback(() => {
         setShowWithdrawalModal(true);
     }, []);
-    
+
     // Memoized Import Modal callback
     const handleImportModalClick = useCallback(() => {
         setShowImportModal(true);
     }, []);
-    
+
     // Memoized game selection callbacks
     const handleCashGameClick = useCallback(() => {
         handleGameType(GameType.CASH);
     }, []);
-    
+
     const handleTexasHoldemClick = useCallback(() => {
         handleGameVariant(Variant.TEXAS_HOLDEM);
     }, []);
-    
+
     const handleHeadsUpClick = useCallback(() => {
         handleSeat(2);
     }, []);
-    
+
     // Memoized Choose Table callback
     const handleChooseTableClick = useCallback(() => {
         if (games && games.length > 0) {
@@ -577,60 +605,74 @@ const Dashboard: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
             {/* Background animations */}
-            <div
-                className="fixed inset-0 z-0"
-                style={backgroundStyle1}
-            />
+            <div className="fixed inset-0 z-0" style={backgroundStyle1} />
 
             {/* Add hexagon pattern overlay */}
             <HexagonPattern />
 
             {/* Animated pattern overlay */}
-            <div
-                className="fixed inset-0 z-0 opacity-20"
-                style={backgroundStyle2}
-            />
+            <div className="fixed inset-0 z-0 opacity-20" style={backgroundStyle2} />
 
             {/* Moving light animation */}
-            <div
-                className="fixed inset-0 z-0 opacity-30"
-                style={backgroundStyle3}
-            />
+            <div className="fixed inset-0 z-0 opacity-30" style={backgroundStyle3} />
 
             {/* Password Protection Modal */}
             {!isAuthenticated && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                    <div className="backdrop-blur-md p-8 rounded-xl w-96 shadow-2xl relative overflow-hidden" style={{ 
-                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.9),
-                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                    }}>
+                    <div
+                        className="backdrop-blur-md p-8 rounded-xl w-96 shadow-2xl relative overflow-hidden"
+                        style={{
+                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.9),
+                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                        }}
+                    >
                         {/* Web3 styled background */}
-                        <div className="absolute inset-0 rounded-xl" style={{ 
-                            background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.1)} 0%, ${hexToRgba(colors.brand.secondary, 0.1)} 100%)`
-                        }}></div>
-                        <div className="absolute top-0 left-0 w-full h-1 animate-pulse" style={{ 
-                            background: `linear-gradient(90deg, ${colors.brand.primary}, ${colors.accent.glow}, ${colors.brand.primary})`
-                        }}></div>
-                        
+                        <div
+                            className="absolute inset-0 rounded-xl"
+                            style={{
+                                background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.1)} 0%, ${hexToRgba(
+                                    colors.brand.secondary,
+                                    0.1
+                                )} 100%)`
+                            }}
+                        ></div>
+                        <div
+                            className="absolute top-0 left-0 w-full h-1 animate-pulse"
+                            style={{
+                                background: `linear-gradient(90deg, ${colors.brand.primary}, ${colors.accent.glow}, ${colors.brand.primary})`
+                            }}
+                        ></div>
+
                         <div className="relative z-10">
                             <div className="flex items-center justify-center mb-4">
                                 <img src="/block52.png" alt="Block52 Logo" className="h-16 w-auto object-contain" />
                             </div>
-                            
+
                             <div className="flex items-center justify-center mb-6">
-                                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{
-                                    background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.2)} 0%, ${hexToRgba(colors.brand.secondary, 0.2)} 100%)`,
-                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
-                                }}>
+                                <div
+                                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.2)} 0%, ${hexToRgba(
+                                            colors.brand.secondary,
+                                            0.2
+                                        )} 100%)`,
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
+                                    }}
+                                >
                                     <svg className="w-8 h-8" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                        />
                                     </svg>
                                 </div>
                             </div>
-                            
+
                             <h2 className="text-2xl font-bold text-white text-center mb-2 text-shadow">Secure Access</h2>
                             <p className="text-gray-300 text-center mb-6 text-sm">Enter password to access the Block52 demo</p>
-                            
+
                             <div className="space-y-4">
                                 <div className="relative">
                                     <input
@@ -645,8 +687,8 @@ const Dashboard: React.FC = () => {
                                             border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`,
                                             boxShadow: `0 0 0 2px ${hexToRgba(colors.brand.primary, 0.5)}`
                                         }}
-                                        onFocus={(e) => e.target.style.border = `1px solid ${colors.brand.primary}`}
-                                        onBlur={(e) => e.target.style.border = `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`}
+                                        onFocus={e => (e.target.style.border = `1px solid ${colors.brand.primary}`)}
+                                        onBlur={e => (e.target.style.border = `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`)}
                                         autoFocus
                                     />
                                     <button
@@ -656,23 +698,33 @@ const Dashboard: React.FC = () => {
                                     >
                                         {showPassword ? (
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+                                                />
                                             </svg>
                                         ) : (
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                                />
                                             </svg>
                                         )}
                                     </button>
                                 </div>
-                                
+
                                 {passwordError && (
                                     <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
                                         <p className="text-red-400 text-sm text-center">{passwordError}</p>
                                     </div>
                                 )}
-                                
+
                                 <button
                                     onClick={handlePasswordSubmit}
                                     className="w-full py-3 text-white rounded-lg transition duration-300 transform hover:scale-105 shadow-md font-semibold"
@@ -680,22 +732,33 @@ const Dashboard: React.FC = () => {
                                         background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`,
                                         border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
                                     }}
-                                    onMouseEnter={(e) => {
-                                        (e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.9)} 0%, ${hexToRgba(colors.brand.primary, 0.7)} 100%)`;
+                                    onMouseEnter={e => {
+                                        (e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${hexToRgba(
+                                            colors.brand.primary,
+                                            0.9
+                                        )} 0%, ${hexToRgba(colors.brand.primary, 0.7)} 100%)`;
                                     }}
-                                    onMouseLeave={(e) => {
-                                        (e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`;
+                                    onMouseLeave={e => {
+                                        (e.target as HTMLButtonElement).style.background = `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(
+                                            colors.brand.primary,
+                                            0.8
+                                        )} 100%)`;
                                     }}
                                 >
                                     <div className="flex items-center justify-center gap-2">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                                            />
                                         </svg>
                                         Access Platform
                                     </div>
                                 </button>
                             </div>
-                            
+
                             <div className="mt-6 text-center">
                                 <p className="text-xs text-gray-400">Block52 Blockchain Infrastructure Demo</p>
                                 <div className="flex items-center justify-center gap-1 mt-2">
@@ -714,7 +777,10 @@ const Dashboard: React.FC = () => {
                     {/* Import Private Key Modal */}
                     {showImportModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                            <div className="p-6 rounded-xl w-96 shadow-2xl border" style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}>
+                            <div
+                                className="p-6 rounded-xl w-96 shadow-2xl border"
+                                style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}
+                            >
                                 <h3 className="text-xl font-bold text-white mb-4">Import Private Key</h3>
                                 <div className="space-y-4">
                                     <input
@@ -752,7 +818,10 @@ const Dashboard: React.FC = () => {
                     {/* Create New Game Modal */}
                     {showCreateGameModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                            <div className="p-6 rounded-xl w-96 shadow-2xl border" style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}>
+                            <div
+                                className="p-6 rounded-xl w-96 shadow-2xl border"
+                                style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}
+                            >
                                 <h3 className="text-xl font-bold text-white mb-4">Create New Table</h3>
                                 <div className="space-y-4">
                                     <div>
@@ -768,20 +837,47 @@ const Dashboard: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-white text-sm mb-1">Number of Players</label>
-                                        <select
-                                            value={modalPlayerCount}
-                                            onChange={e => setModalPlayerCount(Number(e.target.value))}
-                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                        >
-                                            <option value={4}>4 Players (Sit & Go)</option>
-                                            <option value={9}>9 Players (Full Ring)</option>
-                                        </select>
-                                    </div>
+                                    {modalGameType === GameType.CASH ? (
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <label className="block text-white text-sm mb-1">Min Players</label>
+                                                <input
+                                                    type="number"
+                                                    min={2}
+                                                    max={9}
+                                                    value={modalMinPlayers ?? 2}
+                                                    onChange={e => setModalMinPlayers(Number(e.target.value))}
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-white text-sm mb-1">Max Players</label>
+                                                <input
+                                                    type="number"
+                                                    min={2}
+                                                    max={9}
+                                                    value={modalMaxPlayers ?? 9}
+                                                    onChange={e => setModalMaxPlayers(Number(e.target.value))}
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <label className="block text-white text-sm mb-1">Number of Players</label>
+                                            <select
+                                                value={modalPlayerCount}
+                                                onChange={e => setModalPlayerCount(Number(e.target.value))}
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            >
+                                                <option value={4}>4 Players (Sit & Go)</option>
+                                                <option value={9}>9 Players (Full Ring)</option>
+                                            </select>
+                                        </div>
+                                    )}
 
                                     {/* Show different fields based on game type */}
-                                    {(modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT) ? (
+                                    {modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT ? (
                                         // For Sit & Go and Tournament: Single buy-in field
                                         <div>
                                             <label className="block text-white text-sm mb-1">Tournament Buy-In ($)</label>
@@ -833,9 +929,15 @@ const Dashboard: React.FC = () => {
                                         >
                                             <React.Fragment>
                                                 <option value={DEFAULT_GAME_CONTRACT}>Texas Hold'em</option>
-                                                <option value="" disabled>Omaha (Coming Soon)</option>
-                                                <option value="" disabled>Seven Card Stud (Coming Soon)</option>
-                                                <option value="" disabled>Blackjack (Coming Soon)</option>
+                                                <option value="" disabled>
+                                                    Omaha (Coming Soon)
+                                                </option>
+                                                <option value="" disabled>
+                                                    Seven Card Stud (Coming Soon)
+                                                </option>
+                                                <option value="" disabled>
+                                                    Blackjack (Coming Soon)
+                                                </option>
                                             </React.Fragment>
                                         </select>
                                     </div>
@@ -890,26 +992,27 @@ const Dashboard: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border z-10 transition-all duration-300 hover:shadow-blue-500/10" style={mainCardStyle}>
+                    <div
+                        className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border z-10 transition-all duration-300 hover:shadow-blue-500/10"
+                        style={mainCardStyle}
+                    >
                         {/* Club Logo */}
                         <div className="flex flex-col items-center mb-6">
-                            <img 
-                                src={import.meta.env.VITE_CLUB_LOGO || defaultLogo} 
-                                alt="Club Logo" 
-                                className="w-32 h-32 object-contain"
-                            />
+                            <img src={import.meta.env.VITE_CLUB_LOGO || defaultLogo} alt="Club Logo" className="w-32 h-32 object-contain" />
                         </div>
-                        
+
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
                             <NetworkDisplay isMainnet={false} />
                         </div>
 
                         {/* Block52 Wallet Section */}
-                        <div className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300" 
-                             style={walletSectionStyle}
-                             onMouseEnter={handleWalletMouseEnter}
-                             onMouseLeave={handleWalletMouseLeave}>
+                        <div
+                            className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300"
+                            style={walletSectionStyle}
+                            onMouseEnter={handleWalletMouseEnter}
+                            onMouseLeave={handleWalletMouseLeave}
+                        >
                             <div className="flex items-center gap-2 mb-2">
                                 <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
                                 <div className="relative group">
@@ -926,15 +1029,25 @@ const Dashboard: React.FC = () => {
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20" style={{
-                                        backgroundColor: colors.ui.bgDark,
-                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                    }}>
-                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>Layer 2 Gaming Wallet</h3>
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
+                                        style={{
+                                            backgroundColor: colors.ui.bgDark,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
+                                    >
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
+                                            Layer 2 Gaming Wallet
+                                        </h3>
                                         <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you with no Web3 wallet required!</p>
-                                        <p className="mb-2">You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.</p>
+                                        <p className="mb-2">
+                                            You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.
+                                        </p>
                                         <p>All your in-game funds are secured on the blockchain and can be withdrawn at any time.</p>
-                                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent" style={{ borderTopColor: colors.ui.bgDark }}></div>
+                                        <div
+                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
+                                            style={{ borderTopColor: colors.ui.bgDark }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
@@ -946,12 +1059,19 @@ const Dashboard: React.FC = () => {
                                             <span className="text-gray-400 text-xs mr-2">Address</span>
                                             <div className="flex-1"></div>
                                         </div>
-                                        <div className="flex items-center justify-between p-2 rounded-lg" style={{
-                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                        }}>
-                                            <p className="font-mono text-xs tracking-wider break-all hidden md:block" style={{ color: colors.brand.primary }}>{publicKey}</p>
-                                            <p className="font-mono text-xs tracking-wider md:hidden" style={{ color: colors.brand.primary }}>{formatAddress(publicKey)}</p>
+                                        <div
+                                            className="flex items-center justify-between p-2 rounded-lg"
+                                            style={{
+                                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                            }}
+                                        >
+                                            <p className="font-mono text-xs tracking-wider break-all hidden md:block" style={{ color: colors.brand.primary }}>
+                                                {publicKey}
+                                            </p>
+                                            <p className="font-mono text-xs tracking-wider md:hidden" style={{ color: colors.brand.primary }}>
+                                                {formatAddress(publicKey)}
+                                            </p>
                                             <div className="flex items-center">
                                                 <button
                                                     onClick={() => {
@@ -960,7 +1080,13 @@ const Dashboard: React.FC = () => {
                                                     className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                                                     title="Copy address"
                                                 >
-                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg
+                                                        className="w-4 h-4"
+                                                        style={{ color: colors.brand.primary }}
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
@@ -973,13 +1099,21 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-3 rounded-lg" style={{
-                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                    }}>
+                                    <div
+                                        className="flex items-center justify-between p-3 rounded-lg"
+                                        style={{
+                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                        }}
+                                    >
                                         <div className="flex items-center">
-                                            <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
-                                                <span className="font-bold" style={{ color: colors.brand.primary }}>$</span>
+                                            <div
+                                                className="w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
+                                            >
+                                                <span className="font-bold" style={{ color: colors.brand.primary }}>
+                                                    $
+                                                </span>
                                             </div>
                                             <div>
                                                 <p className="text-white text-sm font-bold">USDC</p>
@@ -1000,7 +1134,8 @@ const Dashboard: React.FC = () => {
                                             </p>
                                             <button
                                                 onClick={() => setShowPrivateKey(!showPrivateKey)}
-                                                className="text-xs transition duration-300 hover:opacity-80" style={{ color: colors.brand.primary }}
+                                                className="text-xs transition duration-300 hover:opacity-80"
+                                                style={{ color: colors.brand.primary }}
                                             >
                                                 {showPrivateKey ? "Hide Private Key" : "Show Private Key"}
                                             </button>
@@ -1016,7 +1151,13 @@ const Dashboard: React.FC = () => {
                                                     className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                                                     title="Copy private key"
                                                 >
-                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg
+                                                        className="w-4 h-4"
+                                                        style={{ color: colors.brand.primary }}
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
@@ -1047,17 +1188,19 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Web3 Wallet Section */}
-                        <div className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300" 
-                             style={{
-                                 backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
-                                 border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                             }}
-                             onMouseEnter={(e) => {
-                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
-                             }}
-                             onMouseLeave={(e) => {
-                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
-                             }}>
+                        <div
+                            className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300"
+                            style={{
+                                backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
+                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
+                            }}
+                        >
                             <div className="flex items-center gap-2 mb-4">
                                 <h2 className="text-xl font-bold text-white">
                                     Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
@@ -1076,15 +1219,23 @@ const Dashboard: React.FC = () => {
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20" style={{
-                                        backgroundColor: colors.ui.bgDark,
-                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                    }}>
-                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>External Web3 Wallet</h3>
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
+                                        style={{
+                                            backgroundColor: colors.ui.bgDark,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
+                                    >
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
+                                            External Web3 Wallet
+                                        </h3>
                                         <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
                                         <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
                                         <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
-                                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent" style={{ borderTopColor: colors.ui.bgDark }}></div>
+                                        <div
+                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
+                                            style={{ borderTopColor: colors.ui.bgDark }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
@@ -1093,8 +1244,11 @@ const Dashboard: React.FC = () => {
                                 <button
                                     onClick={open}
                                     className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                    style={{ 
-                                        background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)` 
+                                    style={{
+                                        background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(
+                                            colors.brand.primary,
+                                            0.8
+                                        )} 100%)`
                                     }}
                                 >
                                     <div className="flex items-center justify-center gap-2">
@@ -1117,19 +1271,31 @@ const Dashboard: React.FC = () => {
                                             Disconnect
                                         </button>
                                     </div>
-                                    
-                                    <div className="p-3 rounded-lg" style={{
-                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                    }}>
+
+                                    <div
+                                        className="p-3 rounded-lg"
+                                        style={{
+                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                        }}
+                                    >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
-                                                    <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>$</span>
+                                                <div
+                                                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                                                    style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
+                                                >
+                                                    <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>
+                                                        $
+                                                    </span>
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold" style={{ color: "white" }}>Web3 Wallet USDC Balance</p>
-                                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>Available on Ethereum Mainnet</p>
+                                                    <p className="text-sm font-bold" style={{ color: "white" }}>
+                                                        Web3 Wallet USDC Balance
+                                                    </p>
+                                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
+                                                        Available on Ethereum Mainnet
+                                                    </p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -1143,8 +1309,19 @@ const Dashboard: React.FC = () => {
                                                     className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                                                     title="Refresh balance"
                                                 >
-                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    <svg
+                                                        className="w-4 h-4"
+                                                        style={{ color: colors.brand.primary }}
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                                        />
                                                     </svg>
                                                 </button>
                                             </div>
@@ -1162,8 +1339,17 @@ const Dashboard: React.FC = () => {
                                     {games.slice(0, showAllTables ? undefined : 3).map((game, index) => (
                                         <div key={index} className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
-                                                    <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div
+                                                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                                                    style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
+                                                >
+                                                    <svg
+                                                        className="w-4 h-4"
+                                                        style={{ color: colors.brand.primary }}
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
@@ -1174,7 +1360,7 @@ const Dashboard: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-gray-300 text-xs">
-                                                        Texas Hold'em 
+                                                        Texas Hold'em
                                                         {game.gameOptions?.maxPlayers && (
                                                             <span className="ml-1">
                                                                 ({playerCounts.get(game.address)?.currentPlayers || 0}/{game.gameOptions.maxPlayers} Players)
@@ -1184,13 +1370,16 @@ const Dashboard: React.FC = () => {
                                                     <p className="text-gray-500 text-xs font-mono mb-1">{formatAddress(game.address)}</p>
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
                                                         {/* Check if it's a Sit & Go (minBuyIn equals maxBuyIn) */}
-                                                        {game.gameOptions?.type === GameType.SIT_AND_GO || 
-                                                         (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn && 
-                                                          game.gameOptions?.smallBlind === "100000000000000000000" && 
-                                                          game.gameOptions?.bigBlind === "200000000000000000000") ? (
+                                                        {game.gameOptions?.type === GameType.SIT_AND_GO ||
+                                                        (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn &&
+                                                            game.gameOptions?.smallBlind === "100000000000000000000" &&
+                                                            game.gameOptions?.bigBlind === "200000000000000000000") ? (
                                                             <>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Buy-in: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "1.00"}
+                                                                    Buy-in: $
+                                                                    {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
+                                                                        ? formatBalance(game.gameOptions.maxBuyIn)
+                                                                        : "1.00"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
                                                                     Blinds: 100/200
@@ -1202,13 +1391,26 @@ const Dashboard: React.FC = () => {
                                                         ) : (
                                                             <>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Min: ${game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0" ? formatBalance(game.gameOptions.minBuyIn) : "1.00"}
+                                                                    Min: $
+                                                                    {game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0"
+                                                                        ? formatBalance(game.gameOptions.minBuyIn)
+                                                                        : "1.00"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Max: ${game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0" ? formatBalance(game.gameOptions.maxBuyIn) : "100.00"}
+                                                                    Max: $
+                                                                    {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
+                                                                        ? formatBalance(game.gameOptions.maxBuyIn)
+                                                                        : "100.00"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Blinds: ${game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0" ? formatBalance(game.gameOptions.smallBlind) : "0.50"}/${game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0" ? formatBalance(game.gameOptions.bigBlind) : "1.00"}
+                                                                    Blinds: $
+                                                                    {game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0"
+                                                                        ? formatBalance(game.gameOptions.smallBlind)
+                                                                        : "0.50"}
+                                                                    /$
+                                                                    {game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0"
+                                                                        ? formatBalance(game.gameOptions.bigBlind)
+                                                                        : "1.00"}
                                                                 </span>
                                                             </>
                                                         )}
@@ -1237,11 +1439,15 @@ const Dashboard: React.FC = () => {
                                                         </svg>
                                                     </button>
                                                     {copiedTableId === game.address && (
-                                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white rounded shadow-lg whitespace-nowrap z-10" 
-                                                             style={{ backgroundColor: colors.accent.success }}>
+                                                        <div
+                                                            className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white rounded shadow-lg whitespace-nowrap z-10"
+                                                            style={{ backgroundColor: colors.accent.success }}
+                                                        >
                                                             Table link copied!
-                                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent" 
-                                                                 style={{ borderTopColor: colors.accent.success }}></div>
+                                                            <div
+                                                                className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent"
+                                                                style={{ borderTopColor: colors.accent.success }}
+                                                            ></div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1265,16 +1471,12 @@ const Dashboard: React.FC = () => {
                                         <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderBottomColor: colors.brand.primary }}></div>
                                     </div>
                                 )}
-                                {gamesError && (
-                                    <div className="text-red-400 text-sm text-center py-2">
-                                        Failed to load games. Please try again.
-                                    </div>
-                                )}
+                                {gamesError && <div className="text-red-400 text-sm text-center py-2">Failed to load games. Please try again.</div>}
                                 {games.length > 3 && (
                                     <div className="mt-2 flex justify-center">
-                                        <button 
+                                        <button
                                             onClick={() => setShowAllTables(!showAllTables)}
-                                            className="text-sm transition duration-300 hover:opacity-80" 
+                                            className="text-sm transition duration-300 hover:opacity-80"
                                             style={{ color: colors.brand.primary }}
                                         >
                                             {showAllTables ? "Show less" : `View more tables (${games.length - 3} more)`}
@@ -1282,9 +1484,7 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 )}
                                 {games.length === 0 && !gamesLoading && !gamesError && (
-                                    <div className="text-gray-300 text-sm text-center py-2">
-                                        No tables found. Create your own table below!
-                                    </div>
+                                    <div className="text-gray-300 text-sm text-center py-2">No tables found. Create your own table below!</div>
                                 )}
                             </div>
                         )}
@@ -1364,7 +1564,7 @@ const Dashboard: React.FC = () => {
                                 <button
                                     onClick={handleCashGameClick}
                                     className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                    style={{ 
+                                    style={{
                                         backgroundColor: typeSelected === "cash" ? colors.brand.primary : colors.ui.bgMedium,
                                         opacity: typeSelected === "cash" ? 1 : 0.7
                                     }}
@@ -1380,7 +1580,7 @@ const Dashboard: React.FC = () => {
                                 <button
                                     onClick={handleTexasHoldemClick}
                                     className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                    style={{ 
+                                    style={{
                                         backgroundColor: variantSelected === "texas-holdem" ? colors.brand.primary : colors.ui.bgMedium,
                                         opacity: variantSelected === "texas-holdem" ? 1 : 0.7
                                     }}
@@ -1400,7 +1600,7 @@ const Dashboard: React.FC = () => {
                                             // TODO: Wire limitTypeSelected into game creation logic
                                         }}
                                         className="text-white capitalize hover:opacity-90 rounded-xl py-3 px-4 w-[33%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                        style={{ 
+                                        style={{
                                             backgroundColor: limitTypeSelected === limit ? colors.brand.primary : colors.ui.bgMedium,
                                             opacity: limitTypeSelected === limit ? 1 : 0.7
                                         }}
@@ -1413,7 +1613,7 @@ const Dashboard: React.FC = () => {
                                 <button
                                     onClick={handleHeadsUpClick}
                                     className="text-white hover:opacity-90 rounded-xl py-3 px-6 w-[50%] text-center transition duration-300 transform hover:scale-105 shadow-md"
-                                    style={{ 
+                                    style={{
                                         backgroundColor: seatSelected === 2 ? colors.brand.primary : colors.ui.bgMedium,
                                         opacity: seatSelected === 2 ? 1 : 0.7
                                     }}
@@ -1456,13 +1656,7 @@ const Dashboard: React.FC = () => {
                             <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                         </div>
                     </div>
-                    {showBuyInModal && (
-                        <BuyInModal
-                            tableId={buyInTableId}
-                            onClose={handleBuyInModalClose}
-                            onJoin={handleBuyInModalJoin}
-                        />
-                    )}
+                    {showBuyInModal && <BuyInModal tableId={buyInTableId} onClose={handleBuyInModalClose} onJoin={handleBuyInModalJoin} />}
                     {showWithdrawalModal && (
                         <WithdrawalModal
                             isOpen={showWithdrawalModal}
@@ -1484,11 +1678,11 @@ const Dashboard: React.FC = () => {
                             }}
                         />
                     )}
-                    
+
                     {/* Wallet Connection Warning Popup */}
                     {showWalletWarning && (
                         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-slide-down">
-                            <div 
+                            <div
                                 className="px-6 py-4 rounded-lg shadow-lg flex items-center gap-3"
                                 style={{
                                     backgroundColor: hexToRgba(colors.ui.bgDark, 0.95),
