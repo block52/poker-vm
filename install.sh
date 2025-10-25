@@ -82,16 +82,22 @@ esac
 
 
 
-# Prompt for main domain (e.g., example.com)
-echo -e "\n${BLUE}Domain Setup${NC}"
-while true; do
-    read -p "Enter your main domain (e.g., example.com): " MAIN_DOMAIN
-    if [[ "$MAIN_DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-        break
-    else
-        echo -e "${RED}Invalid domain format. Please enter a valid domain (e.g., example.com).${NC}"
-    fi
-done
+
+# Accept domain as argument or prompt if not provided
+if [ -n "$1" ]; then
+    MAIN_DOMAIN="$1"
+    echo -e "${BLUE}Domain provided as argument: $MAIN_DOMAIN${NC}"
+else
+    echo -e "\n${BLUE}Domain Setup${NC}"
+    while true; do
+        read -p "Enter your main domain (e.g., example.com): " MAIN_DOMAIN
+        if [[ "$MAIN_DOMAIN" =~ ^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            break
+        else
+            echo -e "${RED}Invalid domain format. Please enter a valid domain (e.g., example.com).${NC}"
+        fi
+    done
+fi
 
 # Set subdomains
 APP_DOMAIN="app.$MAIN_DOMAIN"

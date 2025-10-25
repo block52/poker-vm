@@ -35,6 +35,8 @@ SOURCE_CONF="$PWD_DIR/nginx/default"
 BACKUP_DIR="/etc/nginx/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
+
+
 # Function to log messages
 log() {
     echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
@@ -81,7 +83,6 @@ if [[ $? -ne 0 ]]; then
     error "Current nginx configuration has syntax errors. Please fix before updating."
     exit 1
 fi
-
 
 
 # Remove any config files in /etc/nginx/sites-enabled/ and /etc/nginx/conf.d/ with SSL/certbot/letsencrypt/443 lines
@@ -152,7 +153,6 @@ else
     error "❌ Nginx failed to start properly after configuration update"
     exit 1
 fi
-
 
 
 # Setup SSL certificates with certbot for app and node subdomains
