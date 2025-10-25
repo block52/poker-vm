@@ -116,12 +116,6 @@ server {
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
     }
-    listen [::]:443 ssl ipv6only=on;
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/$NODE_DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$NODE_DOMAIN/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
 server {
@@ -136,12 +130,6 @@ server {
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
     }
-    listen [::]:443 ssl ipv6only=on;
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/$APP_DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$APP_DOMAIN/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 EOL
 
