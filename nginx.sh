@@ -83,9 +83,15 @@ if [[ $? -ne 0 ]]; then
 fi
 
 
-
-# Remove old sites-enabled/default symlink or file if it exists (to avoid SSL config errors)
-if [ -L "/etc/nginx/sites-enabled/default" ] || [ -f "/etc/nginx/sites-enabled/default" ]; then
+# Remove or overwrite any config with SSL/certbot lines in /etc/nginx/sites-enabled/default
+NEEDS_OVERWRITE=false
+if [ -f "/etc/nginx/sites-enabled/default" ]; then
+    if grep -qE 'ssl_|letsencrypt|certbot|443' /etc/nginx/sites-enabled/default; then
+        log "Old /etc/nginx/sites-enabled/default contains SSL/certbot config. Removing..."
+        NEEDS_OVERWRITE=true
+    fi
+fi
+if [ -L "/etc/nginx/sites-enabled/default" ] || [ "$NEEDS_OVERWRITE" = true ]; then
     log "Removing old /etc/nginx/sites-enabled/default symlink or file..."
     rm -f /etc/nginx/sites-enabled/default
 fi
