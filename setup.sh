@@ -1,3 +1,23 @@
+# Check nginx installation and prompt to install if missing
+echo -e "${BLUE}Checking for nginx installation...${NC}"
+if ! command -v nginx > /dev/null; then
+    echo -e "${YELLOW}nginx is not installed.${NC}"
+    read -p "Would you like to install nginx now? (y/n): " install_nginx
+    if [ "$install_nginx" = "y" ]; then
+        if command -v apt-get > /dev/null; then
+            sudo apt-get update && sudo apt-get install -y nginx
+        elif command -v brew > /dev/null; then
+            brew install nginx
+        else
+            echo -e "${RED}Automatic install not supported on this OS. Please install nginx manually.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}Skipping nginx installation. Some features may not work until nginx is installed.${NC}"
+    fi
+else
+    echo -e "${GREEN}nginx is already installed.${NC}"
+fi
 # Prompt for domain and update nginx config
 echo -e "\n${BLUE}Nginx Domain Setup${NC}"
 read -p "Enter the main domain for this machine (e.g. poker.example.com): " MAIN_DOMAIN
