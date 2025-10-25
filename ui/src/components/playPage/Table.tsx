@@ -559,18 +559,16 @@ const Table = React.memo(() => {
     // Memoize formatted balance
     const balanceFormatted = useMemo(() => (accountBalance ? formatWeiToUSD(accountBalance) : "0.00"), [accountBalance]);
 
-    // Memoize expensive pot calculations
     const potDisplayValues = useMemo(() => {
-        const pots = gameState?.pots || [];
-        const totalPotCalculated = pots.length === 0 || pots[0] === "0" ? "0.00" : pots.reduce((sum, pot) => sum + Number(pot), 0).toFixed(2);
-
-        const mainPotCalculated = pots.length === 0 || pots[0] === "0" ? "0.00" : Number(pots[0]).toFixed(2);
-
+        const pots = Array.isArray(gameState?.pots) ? (gameState?.pots as string[]) : [];
+        const totalPotWei = pots.reduce<bigint>((sum, pot) => sum + BigInt(pot), 0n);
+        const totalPotCalculated = totalPotWei === 0n ? "0.00" : formatWeiToSimpleDollars(totalPotWei.toString());
+        const mainPotCalculated = pots.length === 0 ? "0.00" : formatWeiToSimpleDollars(pots[0]);
         return {
             totalPot: totalPotCalculated,
             mainPot: mainPotCalculated
         };
-    }, [gameState]);
+    }, [gameState?.pots]);
 
     // Memoize community cards rendering
     const communityCardsElements = useMemo(() => {

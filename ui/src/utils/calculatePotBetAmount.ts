@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
-import { TexasHoldemRound, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { TexasHoldemRound, PlayerActionType, ActionDTO } from "@bitcoinbrisbane/block52";
+import { act } from "@testing-library/react";
 
 /**
  * Calculates the pot bet amount for ante/preflop rounds or uses fallback for other rounds.
@@ -22,7 +23,7 @@ export function calculatePotBetAmount({
     totalPot
 }: {
     currentRound: TexasHoldemRound;
-    previousActions: any[];
+    previousActions: ActionDTO[];
     formattedTotalPot: string;
     hasBetAction: boolean;
     minBet: number;
@@ -37,9 +38,9 @@ export function calculatePotBetAmount({
         let lastBet = 0;
         if (Array.isArray(previousActions)) {
             for (let i = previousActions.length - 1; i >= 0; i--) {
-                const act = previousActions[i];
-                if (act.action === PlayerActionType.BET && act.amount) {
-                    lastBet = Number(ethers.formatUnits(act.amount, 18));
+                const previousAction = previousActions[i];
+                if (previousAction.action === PlayerActionType.BET || (previousAction.action === PlayerActionType.RAISE && previousAction.amount)) {
+                    lastBet = Number(ethers.formatUnits(previousAction.amount, 18));
                     break;
                 }
             }
