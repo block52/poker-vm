@@ -1,11 +1,11 @@
 # PVM on Cosmos - Working Checklist
 
-**Last Updated**: October 25, 2025 @ 5:15 PM
-**Status**: ✅ PHASE 2 COMPLETE - SDK Core Functions Working! Moving to Dashboard Integration
+**Last Updated**: October 26, 2025 @ 12:00 PM
+**Status**: ✅ PHASE 3 IN PROGRESS - Dashboard & BuyInModal migrated to Cosmos!
 **Current Phase**: Phase 3 - Dashboard & UI Integration
 **CosmosClient Progress**: ✅ createGame, joinGame, performAction all working!
 **Architecture**: ✅ Hybrid - Cosmos for transactions, PVM WebSocket for real-time updates
-**Next**: Add query functions to SDK, wire up Dashboard hooks
+**Next**: Fix GameStateContext to use Cosmos address instead of Ethereum address
 
 ---
 
@@ -50,17 +50,25 @@
    - Solution: Implemented full logic with validation, token transfer, PVM call, state update
    - File: `pokerchain/x/poker/keeper/msg_server_join_game.go`
 
-### 📋 Next Steps - Phase 3
+### 📋 Phase 3 Progress - Dashboard & UI Integration (Oct 26, 2025)
 
 **Goal:** Wire up Dashboard and Table pages to use Cosmos SDK
 
-**Tasks:**
-1. Add `queryGames()` and `queryGameState()` to SDK
-2. Add auto action index tracking to SDK (mimic original client)
-3. Migrate Dashboard hooks (`useFindGames`, `useNewTable`)
-4. Update Dashboard page to use SDK
-5. Update Table page to use SDK + PVM WebSocket hybrid
-6. Test full flow: Dashboard → Create → Join → Play
+**Recent Progress:**
+1. ✅ Add `queryGames()` and `queryGameState()` to SDK
+2. ✅ Add auto action index tracking to SDK (mimic original client)
+3. ✅ Migrate Dashboard hooks (`useFindGames`, `useNewTable`)
+4. ✅ Update Dashboard page to use SDK
+5. ✅ **NEW:** BuyInModal now displays full Cosmos balances (all tokens)
+6. ✅ **NEW:** Removed ethers dependency, using native BigInt for USDC microunits
+7. ⏳ Update Table page to use SDK + PVM WebSocket hybrid
+8. ⏳ Test full flow: Dashboard → Create → Join → Play
+
+**Current Blocker:**
+- ❌ **GameStateContext Error:** "No player address found"
+  - Location: `poker-vm/ui/src/context/GameStateContext.tsx:136`
+  - Issue: Looking for Ethereum address but we're using Cosmos wallets now
+  - **Next Fix:** Update GameStateContext to use `cosmos_address` from localStorage
 
 **See `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/STRADBROKE_ISLAND.md` for detailed plan!**
 

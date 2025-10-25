@@ -327,15 +327,23 @@ Updated Game State: {
 
 ---
 
-### 🎮 Phase 3: Dashboard & UI Integration (CURRENT PHASE!)
+### ✅ Phase 3: Dashboard & UI Integration (IN PROGRESS!)
 
 **Goal:** Wire up Dashboard to create/join games using Cosmos SDK, then play on Table page
 
 **The Flow:**
-1. **Dashboard** (`ui/src/pages/Dashboard.tsx`) → Create/list games
-2. **Click "Join"** → Navigate to Table page with gameId
-3. **Table** (`ui/src/components/playPage/Table.tsx`) → Play the game
-4. **WebSocket** → Get real-time game state updates from PVM
+1. ✅ **Dashboard** (`ui/src/pages/Dashboard.tsx`) → Create/list games using Cosmos SDK
+2. ✅ **BuyInModal** (`ui/src/components/playPage/BuyInModal.tsx`) → Shows Cosmos balances, validates buy-in
+3. ⏳ **Click "Join"** → Navigate to Table page with gameId
+4. ⏳ **Table** (`ui/src/components/playPage/Table.tsx`) → Play the game
+5. ⏳ **WebSocket** → Get real-time game state updates from PVM
+
+**Recent Progress (Oct 26, 2025):**
+- ✅ BuyInModal now displays full Cosmos wallet balances (all tokens)
+- ✅ Balance validation uses USDC from cosmosWallet hook
+- ✅ Removed ethers dependency from BuyInModal
+- ✅ Buy-in amount conversion uses native BigInt (microunits)
+- ⚠️ **CURRENT BLOCKER:** GameStateContext looking for player address but we're using Cosmos wallets now
 
 ---
 

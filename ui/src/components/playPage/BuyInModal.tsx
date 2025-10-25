@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { ethers } from "ethers";
+import React, { useState, useMemo, useCallback } from "react";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
-import { getCosmosClient } from "../../utils/cosmos/client";
-import { colors, getHexagonStroke } from "../../utils/colorConfig";
+import { colors, getHexagonStroke, hexToRgba } from "../../utils/colorConfig";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { joinTable } from "../../hooks/playerActions/joinTable";
 import { JoinTableOptions } from "../../hooks/playerActions/types";
+import { useCosmosWallet } from "../../hooks";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {
@@ -62,24 +61,25 @@ const HexagonPattern = React.memo(() => (
 
 interface BuyInModalProps {
     tableId?: string; // Optional tableId for joining specific table
+    minBuyIn?: string; // Optional min buy-in from Dashboard (USDC micro-units)
+    maxBuyIn?: string; // Optional max buy-in from Dashboard (USDC micro-units)
     onClose: () => void;
     onJoin: (amount: string, waitForBigBlind: boolean) => void;
 }
 
-const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tableId }) => {
-    const [accountBalance, setAccountBalance] = useState<string>("0");
-    const [, setIsBalanceLoading] = useState<boolean>(true);
-    const [, setBalanceError] = useState<Error | null>(null);
+const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tableId, minBuyIn, maxBuyIn }) => {
     const [buyInError, setBuyInError] = useState("");
     const [waitForBigBlind, setWaitForBigBlind] = useState(true);
     const [isJoiningRandomSeat, setIsJoiningRandomSeat] = useState(false);
 
-    // Get Cosmos address once and memoize it (synchronously from localStorage)
-    const cosmosAddress = useMemo(() => {
-        return localStorage.getItem("cosmos_address") || undefined;
-    }, []);
+    // Get Cosmos wallet hook
+    const cosmosWallet = useCosmosWallet();
 
-    const { minBuyInWei, maxBuyInWei } = useMinAndMaxBuyIns();
+    // Use props if provided, otherwise fall back to hook
+    const hookBuyIns = useMinAndMaxBuyIns();
+    const minBuyInWei = minBuyIn || hookBuyIns.minBuyInWei;
+    const maxBuyInWei = maxBuyIn || hookBuyIns.maxBuyInWei;
+
     const { emptySeatIndexes, isUserAlreadyPlaying } = useVacantSeatData();
     const navigate = useNavigate();
 
@@ -92,18 +92,26 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         minBuyInNumber,
         maxBuyInNumber: _maxBuyInNumber
     } = useMemo(() => {
+        console.log("🎰 BuyInModal - Using buy-in values:", {
+            fromProps: { minBuyIn, maxBuyIn },
+            fromHook: { min: hookBuyIns.minBuyInWei, max: hookBuyIns.maxBuyInWei },
+            finalUsed: { minBuyInWei, maxBuyInWei }
+        });
+
         // Format USDC microunits (6 decimals) from Cosmos
         const minFormatted = formatUSDCToSimpleDollars(minBuyInWei);
         const maxFormatted = formatUSDCToSimpleDollars(maxBuyInWei);
-        // Balance is stored as USDC microunits (6 decimals)
-        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 6)) : 0;
+
+        // Get USDC balance from cosmosWallet hook (which shows all token balances)
+        const usdcBalance = cosmosWallet.balance.find(b => b.denom === "usdc");
+        const balance = usdcBalance ? Number(usdcBalance.amount) / 1_000_000 : 0;
 
         console.log("💵 BuyInModal - Buy-in limits (Cosmos USDC):");
         console.log("  minBuyInWei:", minBuyInWei);
         console.log("  maxBuyInWei:", maxBuyInWei);
         console.log("  minFormatted:", minFormatted);
         console.log("  maxFormatted:", maxFormatted);
-        console.log("  accountBalance (microunits):", accountBalance);
+        console.log("  USDC balance from wallet:", usdcBalance?.amount);
         console.log("  balanceFormatted (dollars):", balance);
 
         // Calculate stake label from max buy-in
@@ -119,15 +127,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             minBuyInNumber: parseFloat(minFormatted),
             maxBuyInNumber: parseFloat(maxFormatted)
         };
-    }, [minBuyInWei, maxBuyInWei, accountBalance]);
+    }, [minBuyInWei, maxBuyInWei, cosmosWallet.balance, minBuyIn, maxBuyIn, hookBuyIns.minBuyInWei, hookBuyIns.maxBuyInWei]);
 
     // Initialize buyInAmount with maxBuyInFormatted
     const [buyInAmount, setBuyInAmount] = useState(() => maxBuyInFormatted);
-
-    // Update buyInAmount when maxBuyInFormatted changes
-    useEffect(() => {
-        setBuyInAmount(maxBuyInFormatted);
-    }, [maxBuyInFormatted]);
 
     // Memoize isDisabled calculation
     const isDisabled = useMemo(() => {
@@ -138,48 +141,6 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     const canJoinRandomSeat = useMemo(() => {
         return !isUserAlreadyPlaying && emptySeatIndexes.length > 0 && !isDisabled && !isJoiningRandomSeat;
     }, [isUserAlreadyPlaying, emptySeatIndexes.length, isDisabled, isJoiningRandomSeat]);
-
-    // Fetch Cosmos balance effect
-    useEffect(() => {
-        const fetchBalance = async () => {
-            try {
-                setIsBalanceLoading(true);
-
-                if (!cosmosAddress) {
-                    setBalanceError(new Error("No Cosmos address available. Please create or import a wallet."));
-                    setIsBalanceLoading(false);
-                    return;
-                }
-
-                const cosmosClient = getCosmosClient();
-                if (!cosmosClient) {
-                    setBalanceError(new Error("Cosmos client not initialized"));
-                    setIsBalanceLoading(false);
-                    return;
-                }
-
-                console.log("💰 BuyInModal - Fetching Cosmos balance for:", cosmosAddress);
-
-                // Get wallet address and query balance
-                const address = await cosmosClient.getWalletAddress();
-                const balance = await cosmosClient.getBalance(address);
-
-                console.log("💰 BuyInModal - Balance (bigint):", balance);
-                console.log("  Amount (string):", balance.toString());
-
-                // Balance is returned as bigint, convert to string
-                setAccountBalance(balance.toString());
-                setBalanceError(null);
-            } catch (err) {
-                console.error("❌ Error fetching Cosmos balance:", err);
-                setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
-            } finally {
-                setIsBalanceLoading(false);
-            }
-        };
-
-        fetchBalance();
-    }, [cosmosAddress]);
 
     // Memoized event handlers
     const handleBuyInChange = useCallback((amount: string) => {
@@ -228,7 +189,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     const handleJoinClick = useCallback(() => {
         try {
             // Convert dollar amount to USDC microunits (6 decimals)
-            const buyInMicrounits = ethers.parseUnits(buyInAmount, 6);
+            const buyInMicrounits = BigInt(Math.floor(parseFloat(buyInAmount) * 1_000_000));
 
             console.log("💰 BuyInModal - handleJoinClick:");
             console.log("  buyInAmount (input):", buyInAmount);
@@ -267,7 +228,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             setIsJoiningRandomSeat(true);
 
             // Validate buy-in amount first - convert to USDC microunits (6 decimals)
-            const buyInMicrounits = ethers.parseUnits(buyInAmount, 6);
+            const buyInMicrounits = BigInt(Math.floor(parseFloat(buyInAmount) * 1_000_000));
 
             console.log("💰 BuyInModal - Random seat join:");
             console.log("  buyInAmount (input):", buyInAmount);
@@ -346,19 +307,66 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 </h2>
                 <div className="w-full h-0.5 mb-4 opacity-50" style={STATIC_STYLES.divider}></div>
 
-                {/* Playable Balance */}
-                <div className="mb-5 p-3 rounded-lg" style={STATIC_STYLES.playableBalance}>
-                    <p style={{ color: colors.ui.textSecondary }} className="text-sm mb-1">
-                        Playable Balance:
-                    </p>
-                    <div className="flex items-center">
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2" style={STATIC_STYLES.balanceIcon}>
-                            <span style={{ color: colors.brand.primary }} className="font-bold text-xs">
-                                $
-                            </span>
+                {/* Cosmos Wallet Balances Section */}
+                <div className="mb-5 space-y-2">
+                    <p className="text-white text-xs font-semibold mb-2">Cosmos Balances:</p>
+                    {cosmosWallet.isLoading ? (
+                        <div className="text-gray-400 text-sm text-center py-2">Loading balances...</div>
+                    ) : cosmosWallet.error ? (
+                        <div className="text-red-400 text-sm text-center py-2">Error loading balances</div>
+                    ) : !cosmosWallet.address ? (
+                        <div className="text-gray-400 text-sm text-center py-2">No wallet connected</div>
+                    ) : cosmosWallet.balance.length === 0 ? (
+                        <div className="text-yellow-400 text-sm text-center py-2">⚠️ No tokens found - You need tokens to play!</div>
+                    ) : (
+                        <div className="space-y-2">
+                            {cosmosWallet.balance.map((balance, idx) => {
+                                // Format balance with proper decimals (6 for micro-denominated tokens)
+                                const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
+                                const numericAmount = isMicroDenom ? Number(balance.amount) / 1_000_000 : Number(balance.amount);
+
+                                const displayAmount = numericAmount.toLocaleString("en-US", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 6
+                                });
+
+                                // For usdc, show USD equivalent
+                                const isUSDC = balance.denom === "usdc";
+                                const usdValue = isUSDC
+                                    ? numericAmount.toLocaleString("en-US", {
+                                          style: "currency",
+                                          currency: "USD",
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2
+                                      })
+                                    : null;
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        className="flex items-center justify-between p-3 rounded-lg"
+                                        style={{
+                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                        }}
+                                    >
+                                        <div>
+                                            <p className="text-white text-sm font-bold">{balance.denom}</p>
+                                            <p className="text-gray-400 text-xs">Cosmos Chain</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-white font-bold text-lg">{displayAmount}</span>
+                                                <span className="text-gray-400 text-xs">{balance.denom}</span>
+                                            </div>
+                                            {usdValue && <div className="text-gray-400 text-xs">≈ {usdValue}</div>}
+                                            <div className="text-xs text-gray-500">{Number(balance.amount).toLocaleString("en-US")} micro-units</div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        <p className="text-white text-xl font-bold">{balanceFormatted.toFixed(2)}</p>
-                    </div>
+                    )}
                 </div>
 
                 {/* Stake Dropdown */}
