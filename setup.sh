@@ -1,3 +1,37 @@
+# UFW (Uncomplicated Firewall) setup
+echo -e "${BLUE}Checking for UFW (Uncomplicated Firewall)...${NC}"
+if ! command -v ufw > /dev/null; then
+    echo -e "${YELLOW}UFW is not installed.${NC}"
+    read -p "Would you like to install UFW and set up a basic firewall? (y/n): " install_ufw
+    if [ "$install_ufw" = "y" ]; then
+        if command -v apt-get > /dev/null; then
+            sudo apt-get update && sudo apt-get install -y ufw
+        elif command -v brew > /dev/null; then
+            brew install ufw
+        else
+            echo -e "${RED}Automatic install not supported on this OS. Please install ufw manually.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}Skipping UFW setup.${NC}"
+    fi
+fi
+
+if command -v ufw > /dev/null; then
+    echo -e "${BLUE}Configuring UFW...${NC}"
+    sudo ufw allow OpenSSH
+    sudo ufw allow 80/tcp
+    sudo ufw allow 443/tcp
+    sudo ufw status | grep -q inactive && {
+        read -p "UFW is inactive. Would you like to enable it now? (y/n): " enable_ufw
+        if [ "$enable_ufw" = "y" ]; then
+            sudo ufw enable
+            echo -e "${GREEN}UFW enabled and basic rules applied.${NC}"
+        else
+            echo -e "${YELLOW}UFW remains inactive.${NC}"
+        fi
+    }
+fi
 #!/bin/bash
 
 # Color definitions
@@ -11,6 +45,19 @@ check_docker() {
     echo -e "${BLUE}Checking for Docker installation...${NC}"
     if ! command -v docker &> /dev/null; then
         echo -e "${RED}Docker is not installed. Please install Docker first.${NC}"
+# Check nginx status and set up if not running
+echo -e "${BLUE}Checking if nginx is running...${NC}"
+if ! pgrep nginx > /dev/null; then
+  echo -e "${YELLOW}nginx is not running. Setting up and starting nginx.${NC}"
+  bash ./nginx.sh
+  if command -v systemctl > /dev/null; then
+    sudo systemctl start nginx
+  else
+    sudo service nginx start
+  fi
+else
+  echo -e "${GREEN}nginx is already running.${NC}"
+fi
         echo "Visit https://docs.docker.com/get-docker/ for installation instructions."
         exit 1
     fi
