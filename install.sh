@@ -1,3 +1,127 @@
+###############################################
+# ENVIRONMENT & SYSTEM SETUP (from setup.sh)
+###############################################
+
+# Color definitions
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to check if Docker is installed
+check_docker() {
+    echo -e "${BLUE}Checking for Docker installation...${NC}"
+    if ! command -v docker &> /dev/null; then
+        echo -e "${RED}Docker is not installed. Please install Docker first.${NC}"
+        echo "Visit https://docs.docker.com/get-docker/ for installation instructions."
+        exit 1
+    fi
+    echo -e "${GREEN}Docker is installed!${NC}"
+}
+
+# Function to generate an Ethereum private key using openssl
+generate_eth_key() {
+    openssl rand -hex 32
+}
+
+# Function to validate URL format
+validate_url() {
+    local url=$1
+    if [[ $url =~ ^https?:// ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to validate Ethereum private key format
+validate_eth_key() {
+    local key=$1
+    if [[ ${#key} -eq 64 && "$key" =~ ^[0-9a-fA-F]+$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Main environment setup
+echo -e "${BLUE}Starting environment setup...${NC}"
+check_docker
+
+# Handle Ethereum private key
+echo -e "\n${BLUE}Ethereum Private Key Setup${NC}"
+echo "Do you want to:"
+echo "1. Enter an existing private key"
+echo "2. Generate a new private key"
+read -p "Enter your choice (1 or 2): " key_choice
+
+VALIDATOR_KEY=""
+case $key_choice in
+    1)
+        while true; do
+            read -p "Enter your Ethereum private key (64 hex characters): " input_key
+            if validate_eth_key "$input_key"; then
+                VALIDATOR_KEY=$input_key
+                break
+            else
+                echo -e "${RED}Invalid private key format. Please enter a valid 32-byte hex string.${NC}"
+            fi
+        done
+        ;;
+    2)
+        VALIDATOR_KEY=$(generate_eth_key)
+        echo -e "${GREEN}Generated new private key: ${VALIDATOR_KEY}${NC}"
+        echo -e "${RED}IMPORTANT: Save this private key in a secure location!${NC}"
+        ;;
+    *)
+        echo -e "${RED}Invalid choice. Exiting.${NC}"
+        exit 1
+        ;;
+esac
+
+# Prompt for SEED if not already set
+if [ -z "$SEED" ]; then
+    read -p "Enter SEED phrase (or leave blank to generate): " SEED
+fi
+
+# Prompt for RPC_URL if not already set
+if [ -z "$RPC_URL" ]; then
+    echo -e "\n${BLUE}Node RPC URL Setup${NC}"
+    echo "Please enter your Ethereum node RPC URL (e.g., from Infura, Alchemy, etc.)"
+    while true; do
+        read -p "Enter RPC URL: " RPC_URL
+        if validate_url "$RPC_URL"; then
+            break
+        else
+            echo -e "${RED}Invalid URL format. URL must start with http:// or https://${NC}"
+        fi
+    done
+fi
+
+# Create .env file with all required fields
+ENV_PATH="pvm/ts/.env"
+cat > "$ENV_PATH" <<EOL
+PORT=8545
+SEED="$SEED"
+DB_URL=mongodb://user:password@localhost:27017/
+VALIDATOR_KEY=$VALIDATOR_KEY
+RPC_URL="$RPC_URL"
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=password
+TOKEN_CONTRACT_ADDRESS=0x7D9aAe2950a2c703159Bc42d2D28882904029130
+VAULT_CONTRACT_ADDRESS=0x687e526CE88a3E2aB889b3F110cF1C3cCfebafd7
+BRIDGE_CONTRACT_ADDRESS=0x0B6052D3951b001E4884eD93a6030f92B1d76cf0
+PUBLIC_URL=https://${MAIN_DOMAIN}
+PK=
+MONGO_INITDB_ROOT_USERNAME=node1
+MONGO_INITDB_ROOT_PASSWORD=Passw0rd123
+MONGO_INITDB_DATABASE=pvm
+EOL
+
+echo -e "${GREEN}Setup completed successfully!${NC}"
+echo -e "Your configuration has been saved to $ENV_PATH."
+echo -e "${RED}REMINDER: Keep your private key secure and never share it with anyone!${NC}"
 #!/bin/bash
 
 # Exit on any error
@@ -196,42 +320,76 @@ health_check() {
 # Main execution
 main() {
     log_info "Starting poker-vm installation/deployment..."
-    
-    # Verify required commands exist
-    for cmd in yarn docker pm2 git curl; do
-        if ! command_exists "$cmd"; then
-            log_error "Required command '$cmd' not found"
+
+    # Prompt for Docker or bare metal
+    echo -e "\n${BLUE}Select installation mode:${NC}"
+    echo "1. Docker (recommended)"
+    echo "2. Bare metal (PM2/Node.js)"
+    read -p "Enter your choice (1 or 2): " install_mode
+
+    if [ "$install_mode" = "1" ]; then
+        log_info "Docker mode selected."
+        # Check Docker
+        if ! command_exists docker; then
+            log_error "Docker is not installed. Please install Docker first."
             exit 1
         fi
-    done
-    
-    # Execute deployment steps
-    cleanup_pm2
-    setup_node
-    prepare_project
-    # stop_docker
-    update_code
-    # setup_nginx
-    build_project
-    # start_docker
-    start_pm2
-    
-    # Wait a moment for PM2 to fully start the service
-    log_info "Waiting for service to start..."
-    sleep 5
-    
-    # Perform health check
-    if health_check; then
-        log_info "Deployment completed successfully!"
-        log_info "Server is healthy and responding correctly."
+        # Build and start Docker containers
+        log_info "Building Docker images..."
+        docker compose build || {
+            log_error "Failed to build Docker images."
+            exit 1
+        }
+        log_info "Starting Docker containers..."
+        docker compose up -d || {
+            log_error "Failed to start Docker containers."
+            exit 1
+        }
+        log_info "Waiting for containers to start..."
+        sleep 5
+        # Health check
+        if health_check; then
+            log_info "Docker deployment completed successfully!"
+            log_info "Server is healthy and responding correctly."
+        else
+            log_error "Docker deployment completed but health check failed!"
+            log_error "Please check the container logs for issues."
+            exit 1
+        fi
+        return 0
+    elif [ "$install_mode" = "2" ]; then
+        log_info "Bare metal (PM2/Node.js) mode selected."
+        # Verify required commands exist
+        for cmd in yarn pm2 git curl; do
+            if ! command_exists "$cmd"; then
+                log_error "Required command '$cmd' not found"
+                exit 1
+            fi
+        done
+        # Execute deployment steps
+        cleanup_pm2
+        setup_node
+        prepare_project
+        update_code
+        build_project
+        start_pm2
+        log_info "Waiting for service to start..."
+        sleep 5
+        if health_check; then
+            log_info "Deployment completed successfully!"
+            log_info "Server is healthy and responding correctly."
+        else
+            log_error "Deployment completed but health check failed!"
+            log_error "Please check the server logs for issues."
+            exit 1
+        fi
+        log_info "PM2 status:"
+        pm2 status
+        return 0
     else
-        log_error "Deployment completed but health check failed!"
-        log_error "Please check the server logs for issues."
+        log_error "Invalid choice. Exiting."
         exit 1
     fi
-    
-    log_info "PM2 status:"
-    pm2 status
 }
 
 # Run main function
