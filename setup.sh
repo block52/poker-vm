@@ -36,7 +36,9 @@ fi
 
 if command -v ufw > /dev/null; then
     echo -e "${BLUE}Configuring UFW...${NC}"
+    # Always allow SSH (port 22) for safety
     sudo ufw allow OpenSSH
+    sudo ufw allow 22/tcp
     sudo ufw allow 80/tcp
     sudo ufw allow 443/tcp
     sudo ufw status | grep -q inactive && {
