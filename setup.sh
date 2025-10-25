@@ -1,3 +1,26 @@
+# Check Docker installation and prompt to install if missing
+echo -e "${BLUE}Checking for Docker installation...${NC}"
+if ! command -v docker > /dev/null; then
+    echo -e "${YELLOW}Docker is not installed.${NC}"
+    read -p "Would you like to install Docker now? (y/n): " install_docker
+    if [ "$install_docker" = "y" ]; then
+        if [ -f "install-docker.sh" ]; then
+            echo -e "${BLUE}Running install-docker.sh...${NC}"
+            bash install-docker.sh
+        elif command -v apt-get > /dev/null; then
+            sudo apt-get update && sudo apt-get install -y docker.io
+        elif command -v brew > /dev/null; then
+            brew install --cask docker
+        else
+            echo -e "${RED}Automatic install not supported on this OS. Please install Docker manually.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}Skipping Docker installation. Some features may not work until Docker is installed.${NC}"
+    fi
+else
+    echo -e "${GREEN}Docker is already installed.${NC}"
+fi
 # Check nginx installation and prompt to install if missing
 echo -e "${BLUE}Checking for nginx installation...${NC}"
 if ! command -v nginx > /dev/null; then
