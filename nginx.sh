@@ -128,8 +128,28 @@ else
     exit 1
 fi
 
+
+# Setup SSL certificates with certbot for all required domains
+log "Setting up SSL certificates with certbot..."
+certbot --nginx -d node1.block52.xyz -d botapi.block52.xyz -d rest.block52.xyz --non-interactive --agree-tos -m admin@block52.xyz || warning "Certbot may require manual intervention. Check certbot output."
+
+# Final nginx config test and restart
+log "Final nginx configuration test..."
+nginx -t
+if [[ $? -ne 0 ]]; then
+    error "Nginx configuration failed after certbot. Please check manually."
+    exit 1
+fi
+
+log "Restarting nginx service..."
+systemctl restart nginx
+if systemctl is-active --quiet nginx; then
+    log "✅ Nginx is running and configuration update completed successfully"
+    log "Configuration backup saved as: $BACKUP_DIR/default_$TIMESTAMP.bak"
+else
+    error "❌ Nginx failed to start properly after configuration update"
+    exit 1
+fi
+
 log "🎉 Nginx configuration update completed successfully!"
-log "Remember to:"
-log "  - Update DNS records for new domains"
-log "  - Generate SSL certificates with: sudo certbot --nginx -d botapi.block52.xyz"
-log "  - Monitor nginx logs: sudo tail -f /var/log/nginx/error.log"
+log "Monitor nginx logs: sudo tail -f /var/log/nginx/error.log"

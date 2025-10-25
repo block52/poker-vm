@@ -126,35 +126,3 @@ server {
     server_name node1.block52.xyz;
     return 404; # managed by Certbot
 }
-
-server {
-    if ($host = node1.block52.xyz) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-    server_name chat.block52.xyz; # managed by Certbot
-    return 404; # managed by Certbot
-
-    listen [::]:443 ssl; # managed by Certbot
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/chat.block52.xyz/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/chat.block52.xyz/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-}
-
-server {
-    server_name chat.block52.xyz;
-
-    client_max_body_size 10M;
-    location /static/ {
-        autoindex off;
-        root /usr/lib/python3/dist-packages/sogs;
-    }
-    location / {
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_pass http://127.3.2.1:4242/;
-    }
-
-    listen 80;
-    listen [::]:80;
-}
