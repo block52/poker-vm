@@ -471,6 +471,95 @@ export default function TestSigningPage() {
         }
     };
 
+    const testQueryGames = async () => {
+        if (!signingClient) {
+            addResult({
+                functionName: "queryGames()",
+                status: "error",
+                message: "Client not initialized"
+            });
+            return;
+        }
+
+        addResult({
+            functionName: "queryGames()",
+            status: "pending",
+            message: "Querying all games from blockchain..."
+        });
+
+        try {
+            const games = await signingClient.queryGames();
+
+            console.log("✅ queryGames() successful:", games);
+
+            addResult({
+                functionName: "queryGames()",
+                status: "success",
+                message: `Found ${games.length} game(s)!`,
+                data: { count: games.length, games }
+            });
+        } catch (error: any) {
+            console.error("❌ queryGames() failed:", error);
+            addResult({
+                functionName: "queryGames()",
+                status: "error",
+                message: error.message
+            });
+        }
+    };
+
+    const testQueryGameState = async () => {
+        if (!signingClient) {
+            addResult({
+                functionName: "queryGameState()",
+                status: "error",
+                message: "Client not initialized"
+            });
+            return;
+        }
+
+        if (!gameId) {
+            addResult({
+                functionName: "queryGameState()",
+                status: "error",
+                message: "Please enter game ID"
+            });
+            return;
+        }
+
+        addResult({
+            functionName: "queryGameState()",
+            status: "pending",
+            message: `Querying game state for ${gameId}...`
+        });
+
+        try {
+            const gameState = await signingClient.queryGameState(gameId);
+
+            console.log("✅ queryGameState() successful:", gameState);
+
+            addResult({
+                functionName: "queryGameState()",
+                status: "success",
+                message: `Game state retrieved!`,
+                data: {
+                    gameId,
+                    players: gameState.players?.length || 0,
+                    round: gameState.round,
+                    actionCount: gameState.actionCount,
+                    gameState
+                }
+            });
+        } catch (error: any) {
+            console.error("❌ queryGameState() failed:", error);
+            addResult({
+                functionName: "queryGameState()",
+                status: "error",
+                message: error.message
+            });
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
             <div className="w-full max-w-7xl">
@@ -1013,6 +1102,45 @@ export default function TestSigningPage() {
                                 style={{ background: colors.accent.withdraw }}
                             >
                                 Test Perform Action
+                            </button>
+                        </div>
+
+                        {/* queryGames() */}
+                        <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
+                            <h3 className="text-xl font-bold text-white mb-4">7. queryGames()</h3>
+                            <p className="text-gray-400 text-sm mb-4">Query all games from the blockchain</p>
+                            <button
+                                onClick={testQueryGames}
+                                className="w-full py-2 px-4 text-white font-bold rounded-lg"
+                                style={{ background: colors.brand.primary }}
+                            >
+                                Test Query Games
+                            </button>
+                        </div>
+
+                        {/* queryGameState() */}
+                        <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
+                            <h3 className="text-xl font-bold text-white mb-4">8. queryGameState()</h3>
+                            <div className="space-y-3 mb-3">
+                                <div>
+                                    <label className="block text-sm text-gray-400 mb-1">Game ID (from createGame or list)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="0x..."
+                                        value={gameId}
+                                        onChange={(e) => setGameId(e.target.value)}
+                                        className="w-full p-2 rounded-lg text-white"
+                                        style={inputStyle}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Same Game ID used above</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={testQueryGameState}
+                                className="w-full py-2 px-4 text-white font-bold rounded-lg"
+                                style={{ background: colors.brand.primary }}
+                            >
+                                Test Query Game State
                             </button>
                         </div>
                     </>

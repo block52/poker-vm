@@ -271,6 +271,7 @@ export class SigningCosmosClient extends CosmosClient {
 
     /**
      * Perform a game action (fold, call, raise, etc.)
+     * Automatically tracks action index like the original client
      */
     async performAction(gameId: string, action: string, amount: bigint = 0n): Promise<string> {
         await this.initializeSigningClient();
@@ -281,6 +282,10 @@ export class SigningCosmosClient extends CosmosClient {
 
         const [account] = await this.wallet.getAccounts();
         const player = account.address;
+
+        // Get next action index - follows original client pattern
+        // Check previousActions array first, fallback to actionCount
+        const nextActionIndex = await this.getNextActionIndex(gameId);
 
         // Create the message object
         const msgPerformAction = {
@@ -299,7 +304,12 @@ export class SigningCosmosClient extends CosmosClient {
         const fee = calculateFee(100_000, this.gasPrice);
         const memo = `Poker action: ${action}`;
 
-        console.log("🃏 Performing action:", { gameId, action, amount: amount.toString() });
+        console.log("🃏 Performing action:", {
+            gameId,
+            action,
+            amount: amount.toString(),
+            actionIndex: nextActionIndex
+        });
 
         try {
             const result = await this.signingClient.signAndBroadcast(
@@ -313,6 +323,106 @@ export class SigningCosmosClient extends CosmosClient {
             return result.transactionHash;
         } catch (error) {
             console.error("❌ Action failed:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get next action index for a game - matches original client pattern
+     * Checks previousActions array first, falls back to actionCount + 1
+     */
+    private async getNextActionIndex(gameId: string): Promise<number> {
+        try {
+            const gameState = await this.queryGameState(gameId);
+
+            if (!gameState) {
+                throw new Error("Game state not found");
+            }
+
+            let nextIndex: number;
+
+            // Match original client logic exactly
+            if (!gameState.previousActions || gameState.previousActions.length === 0) {
+                nextIndex = gameState.actionCount + 1;
+                console.log("📊 Action Index Calculation:", {
+                    gameId: gameId.substring(0, 20) + "...",
+                    method: "actionCount + 1",
+                    actionCount: gameState.actionCount,
+                    nextIndex,
+                    previousActionsLength: 0
+                });
+            } else {
+                const lastAction = gameState.previousActions[gameState.previousActions.length - 1];
+                nextIndex = lastAction.index + 1;
+                console.log("📊 Action Index Calculation:", {
+                    gameId: gameId.substring(0, 20) + "...",
+                    method: "lastAction.index + 1",
+                    lastActionIndex: lastAction.index,
+                    nextIndex,
+                    previousActionsLength: gameState.previousActions.length,
+                    lastAction: {
+                        action: lastAction.action,
+                        player: lastAction.playerId?.substring(0, 10) + "...",
+                        round: lastAction.round
+                    }
+                });
+            }
+
+            return nextIndex;
+        } catch (error) {
+            console.error(`Error getting next action index: ${(error as Error).message}`);
+            throw error; // Rethrow to be handled by caller
+        }
+    }
+
+    /**
+     * Query all games from the blockchain
+     */
+    async queryGames(): Promise<any[]> {
+        try {
+            const response = await fetch(`${this.config.restEndpoint}/pokerchain/poker/v1/games`);
+
+            if (!response.ok) {
+                throw new Error(`Failed to query games: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // The response has games as a JSON string, need to parse it
+            if (data.games) {
+                return JSON.parse(data.games);
+            }
+
+            return [];
+        } catch (error) {
+            console.error("❌ queryGames() failed:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Query game state for a specific game
+     */
+    async queryGameState(gameId: string): Promise<any> {
+        try {
+            const response = await fetch(
+                `${this.config.restEndpoint}/pokerchain/poker/v1/game_state?game_id=${encodeURIComponent(gameId)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to query game state: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // The response has game_state as a JSON string, need to parse it
+            if (data.game_state) {
+                return JSON.parse(data.game_state);
+            }
+
+            return null;
+        } catch (error) {
+            console.error("❌ queryGameState() failed:", error);
             throw error;
         }
     }

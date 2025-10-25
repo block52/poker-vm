@@ -33,27 +33,44 @@
 ## ✅ Phase 2: SDK Core Functions (COMPLETE! 🎊)
 
 ### High Priority - ALL WORKING! 🎊
-- [x] **performAction()** - WORKING! ✅
-  - Transaction: `287B0B24BEBA9751561B6EBA1DB2FEA432B75E79E6099B6BAC000FF97C568BD4`
-  - Successfully tested "fold" action
-  - Location: `poker-vm/sdk/src/signingClient.ts:276-295`
+- [x] **performAction()** - SDK READY, BLOCKED BY BLOCKCHAIN! ⚠️
+  - SDK Location: `poker-vm/sdk/src/signingClient.ts:277-329`
+  - **Auto action index tracking implemented!** ✅
+    - Queries blockchain game state before each action
+    - Checks `previousActions` array, falls back to `actionCount + 1`
+    - Matches original client pattern exactly
+    - Enhanced logging: `📊 Action Index Calculation` (line 347-368)
+  - **BLOCKER:** `queryGameState()` returns 501 Not Implemented
+    - Query handler exists: `pokerchain/x/poker/keeper/query_game_state.go`
+    - Issue: Blockchain never saves game state to `GameStates` collection
+    - `msg_server_join_game.go` calls PVM but doesn't save returned state
+  - **NEXT:** Implement game state persistence in blockchain keepers
   - Uses Long.fromString() for amount
-  - **STATUS:** Fully functional end-to-end with PVM!
 
 - [x] **joinGame()** - WORKING! ✅
-  - Transaction: `09B55BD0367B7B807F86B076BF1ADE8A10ABAF1D20B7AFDAE96E35C2FC949F0F`
+  - Transaction: `07ABEDBB2ABF394FAE29DF3D312D428A861444BF8A4AB2947C58E6CA76C27871`
   - Successfully joined game and called PVM
   - Keeper transfers tokens and updates game state
   - **STATUS:** Complete integration with blockchain + PVM!
 
 - [x] **createGame()** - WORKING! ✅
-  - Transaction: `0xf89f717e6e9f059f70cd8c8338910ef256e80eb1113fe19fbd15195af0b978ec`
+  - Transaction: `E06838112D4DC9BEC72A3B00C860D1D32545E3E750D19969A91A52141944CE29`
   - Creates game metadata and initial state
   - **STATUS:** Fully functional!
 
+- [x] **queryGames()** - SDK READY! ✅
+  - SDK Location: `poker-vm/sdk/src/signingClient.ts:378-392`
+  - Fetches all games via REST API
+  - Test button on `/test-signing` Section 7
+
+- [x] **queryGameState(gameId)** - SDK READY, BLOCKED! ⚠️
+  - SDK Location: `poker-vm/sdk/src/signingClient.ts:397-419`
+  - **BLOCKER:** Same as performAction - no game state in blockchain
+  - Test button on `/test-signing` Section 8
+
 ### Medium Priority
 - [x] **sendTokens()** - Transfer USDC between players ✅
-  - Location: `poker-vm/sdk/src/signingClient.ts:185-216`
+  - Location: `poker-vm/sdk/src/signingClient.ts:110-139`
   - Tested on `/test-signing` page - successfully transfers tokens!
   - **STATUS:** Fully functional!
 
@@ -158,6 +175,54 @@ All hooks in `poker-vm/ui/src/hooks/playerActions/`:
 - [ ] **usePlayerActionDropBox** (`usePlayerActionDropBox.ts`)
 - [ ] **usePlayerChipData** (`usePlayerChipData.ts`)
 - [ ] **useSitAndGoPlayerResults** (`useSitAndGoPlayerResults.ts`)
+
+---
+
+---
+
+## 📚 SDK Architecture - cosmosClient.ts vs signingClient.ts
+
+**Important:** The SDK has TWO client classes that work together:
+
+### 1. CosmosClient (`cosmosClient.ts`)
+**Purpose:** Read-only blockchain queries (no wallet needed)
+- Query balances
+- Query block height
+- Query chain info
+- Future: Query games, game state (when read-only methods are added)
+
+**Used by:** Background services, explorers, read-only dashboards
+
+### 2. SigningCosmosClient (`signingClient.ts`)
+**Purpose:** Full blockchain interaction (requires wallet for signing)
+- **Extends** CosmosClient (inherits all read methods)
+- **Adds** transaction signing capabilities:
+  - `createGame()` - Sign & broadcast create game tx
+  - `joinGame()` - Sign & broadcast join game tx
+  - `performAction()` - Sign & broadcast player actions
+  - `sendTokens()` - Sign & broadcast token transfers
+  - `queryGames()` - Query all games (no signature needed)
+  - `queryGameState()` - Query game state (no signature needed)
+
+**Used by:** UI, players, anyone who needs to send transactions
+
+### Relationship
+```typescript
+class SigningCosmosClient extends CosmosClient {
+  // Inherits all CosmosClient query methods
+  // + Adds wallet & signing capabilities
+  // + Adds transaction methods
+}
+```
+
+**In the UI:** We use `SigningCosmosClient` because:
+- Players need to sign transactions (create, join, actions)
+- Still have access to all query methods
+- One client does everything!
+
+**Rule of thumb:**
+- Need to send transactions? → `SigningCosmosClient`
+- Only reading data? → `CosmosClient` (lighter weight)
 
 ---
 
@@ -402,17 +467,40 @@ Updated Game State: {
 
 ---
 
-### 📋 IMMEDIATE ACTION ITEMS
+### 📋 IMMEDIATE ACTION ITEMS (Updated Oct 25, 2025)
 
-**RIGHT NOW:**
-1. ✅ Restart PVM manually (port 8545)
-2. ✅ Test joinGame + performAction with PVM running
-3. ⏳ Add query functions to SDK (queryGames, queryGame, queryGameState)
-4. ⏳ Update Dashboard to use queryGames()
-5. ⏳ Migrate player action hooks one by one
+**CURRENT STATUS:**
+- ✅ SDK fully implemented with auto action index tracking
+- ✅ All transaction methods working (createGame, joinGame, sendTokens)
+- ✅ Query methods implemented (queryGames, queryGameState)
+- ⚠️ **BLOCKED:** Blockchain doesn't persist game state to `GameStates` collection
 
-**Current Blocker:** PVM not running
-**Next Blocker After PVM:** Missing query functions in SDK
+**NEXT STEPS - BLOCKCHAIN WORK REQUIRED:**
+
+1. **Fix `msg_server_join_game.go`** - Save game state after PVM call
+   - Location: `pokerchain/x/poker/keeper/msg_server_join_game.go:77`
+   - Current: Calls `callGameEngine()` but doesn't save returned state
+   - Need: Parse PVM response and save to `k.GameStates.Set(ctx, gameId, parsedState)`
+
+2. **Fix `msg_server_create_game.go`** - Initialize game state
+   - Create initial empty game state in `GameStates` collection
+   - So queryGameState() has something to return
+
+3. **Fix `msg_server_perform_action.go`** - Save state after actions
+   - After calling PVM, save updated game state
+   - Enables action index tracking to work
+
+4. **Test queryGameState() endpoint**
+   - Once blockchain saves state, test: `http://localhost:1317/pokerchain/poker/v1/game_state?game_id=0x...`
+   - Should return JSON game state
+
+**THEN WE CAN:**
+5. ✅ Test performAction() with auto action index tracking
+6. ✅ Test queryGames() on Dashboard
+7. ✅ Start migrating player action hooks
+
+**Current Blocker:** Blockchain keepers don't persist PVM game state
+**SDK Status:** ✅ Ready and waiting for blockchain fixes!
 
 ---
 
