@@ -11,6 +11,17 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+
+# Accept main domain as argument or prompt if not provided
+if [ -z "$1" ]; then
+    read -p "Enter your main domain (e.g., example.com): " MAIN_DOMAIN
+else
+    MAIN_DOMAIN="$1"
+fi
+
+APP_DOMAIN="app.$MAIN_DOMAIN"
+NODE_DOMAIN="node.$MAIN_DOMAIN"
+
 # Get pwd
 PWD_DIR=$(pwd)
 echo -e "${GREEN}Current working directory: $PWD_DIR${NC}"
@@ -71,7 +82,9 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-# Copy new configuration
+
+# Optionally, generate nginx/default config here if needed
+# (Assume install.sh generates nginx/default for now)
 log "Copying new configuration..."
 cp "$SOURCE_CONF" "$DEFAULT_CONF"
 
@@ -129,9 +142,10 @@ else
 fi
 
 
-# Setup SSL certificates with certbot for all required domains
+
+# Setup SSL certificates with certbot for app and node subdomains
 log "Setting up SSL certificates with certbot..."
-certbot --nginx --expand -d node1.block52.xyz -d botapi.block52.xyz -d rest.block52.xyz --non-interactive --agree-tos -m admin@block52.xyz || warning "Certbot may require manual intervention. Check certbot output."
+certbot --nginx --expand -d "$NODE_DOMAIN" -d "$APP_DOMAIN" --non-interactive --agree-tos -m admin@$MAIN_DOMAIN || warning "Certbot may require manual intervention. Check certbot output."
 
 # Final nginx config test and restart
 log "Final nginx configuration test..."
