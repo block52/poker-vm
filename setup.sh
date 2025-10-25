@@ -1,3 +1,20 @@
+# Prompt for domain and update nginx config
+echo -e "\n${BLUE}Nginx Domain Setup${NC}"
+read -p "Enter the main domain for this machine (e.g. poker.example.com): " MAIN_DOMAIN
+
+# Update nginx/default with the provided domain
+NGINX_DEFAULT_PATH="nginx/default"
+if [ -f "$NGINX_DEFAULT_PATH" ]; then
+    echo -e "${BLUE}Configuring nginx/default for domain: $MAIN_DOMAIN${NC}"
+    # Replace all server_name and SSL cert paths with the new domain
+    sed -i.bak \
+        -e "s/server_name [^;]*;/server_name $MAIN_DOMAIN;/g" \
+        -e "s|/etc/letsencrypt/live/[^/]*/|/etc/letsencrypt/live/$MAIN_DOMAIN/|g" \
+        "$NGINX_DEFAULT_PATH"
+    echo -e "${GREEN}nginx/default updated. Backup saved as nginx/default.bak${NC}"
+else
+    echo -e "${YELLOW}nginx/default not found. Skipping nginx config update.${NC}"
+fi
 # UFW (Uncomplicated Firewall) setup
 echo -e "${BLUE}Checking for UFW (Uncomplicated Firewall)...${NC}"
 if ! command -v ufw > /dev/null; then
