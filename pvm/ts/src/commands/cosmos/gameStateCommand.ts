@@ -11,7 +11,7 @@ export class GameStateCommand {
 
     public async execute(): Promise<TexasHoldemStateDTO> {
         try {
-            const gameState = await axios.get(`${this.cosmosUrl}/poker/game/${this.address}`);
+            const gameState = await axios.get(`${this.cosmosUrl}/block52/pokerchain/poker/v1/game_state/${this.address}`);
 
             if (!gameState) {
                 // If game state does not exist, call 

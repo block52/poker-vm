@@ -428,6 +428,6 @@ export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConf
     restEndpoint: `http://${domain}:1317`,
     chainId: "pokerchain",
     prefix: "b52",
-    denom: "b52USDC", // Use b52USDC as the denomination
-    gasPrice: "0.001b52USDC" // Gas price in b52USDC (not used in REST-only mode)
+    denom: "usdc", // Use usdc as the denomination (lowercase, as stored on blockchain)
+    gasPrice: "0.001usdc" // Gas price in usdc (not used in REST-only mode)
 });

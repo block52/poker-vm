@@ -185,6 +185,7 @@ const Dashboard: React.FC = () => {
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
     const [buyInTableId, setBuyInTableId] = useState(""); // Optional, if needed later
+    const [selectedGameForBuyIn, setSelectedGameForBuyIn] = useState<any>(null); // Store selected game for buy-in modal
 
     // Withdrawal Modal
     const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
@@ -1104,37 +1105,74 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Cosmos Wallet Section */}
-                                    <div
-                                        className="flex items-center justify-between p-3 rounded-lg mt-3"
-                                        style={{
-                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                        }}
-                                    >
-                                        <div className="flex items-center">
-                                            <div>
-                                                <p className="text-white text-sm font-bold">b52USD</p>
-                                                <p className="text-gray-400 text-xs">Cosmos Chain</p>
+                                    {/* Cosmos Wallet Balances Section */}
+                                    <div className="space-y-2 mt-3">
+                                        <p className="text-white text-xs font-semibold mb-2">Cosmos Balances:</p>
+                                        {cosmosWallet.isLoading ? (
+                                            <div className="text-gray-400 text-sm text-center py-2">Loading balances...</div>
+                                        ) : cosmosWallet.error ? (
+                                            <div className="text-red-400 text-sm text-center py-2">Error loading balances</div>
+                                        ) : !cosmosWallet.address ? (
+                                            <div className="text-gray-400 text-sm text-center py-2">No wallet connected</div>
+                                        ) : cosmosWallet.balance.length === 0 ? (
+                                            <div className="text-yellow-400 text-sm text-center py-2">
+                                                ⚠️ No tokens found - You need tokens to play!
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-white font-bold">
-                                                {cosmosWallet.isLoading ? (
-                                                    <span className="text-gray-400">Loading...</span>
-                                                ) : cosmosWallet.error ? (
-                                                    <span className="text-red-400">Error</span>
-                                                ) : cosmosWallet.address ? (
-                                                    cosmosWallet.balance.length > 0 ? (
-                                                        `${(parseInt(cosmosWallet.balance[0].amount) / 1000000).toFixed(2)} b52USD`
-                                                    ) : (
-                                                        "0.00 b52USD"
-                                                    )
-                                                ) : (
-                                                    <span className="text-gray-400">No wallet</span>
-                                                )}
-                                            </p>
-                                        </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {cosmosWallet.balance.map((balance, idx) => {
+                                                    // Format balance with proper decimals (6 for micro-denominated tokens)
+                                                    const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
+                                                    const numericAmount = isMicroDenom
+                                                        ? Number(balance.amount) / 1_000_000
+                                                        : Number(balance.amount);
+
+                                                    const displayAmount = numericAmount.toLocaleString("en-US", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 6
+                                                    });
+
+                                                    // For usdc, show USD equivalent
+                                                    const isUSDC = balance.denom === "usdc";
+                                                    const usdValue = isUSDC
+                                                        ? numericAmount.toLocaleString("en-US", {
+                                                              style: "currency",
+                                                              currency: "USD",
+                                                              minimumFractionDigits: 2,
+                                                              maximumFractionDigits: 2
+                                                          })
+                                                        : null;
+
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            className="flex items-center justify-between p-3 rounded-lg"
+                                                            style={{
+                                                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                                            }}
+                                                        >
+                                                            <div>
+                                                                <p className="text-white text-sm font-bold">{balance.denom}</p>
+                                                                <p className="text-gray-400 text-xs">Cosmos Chain</p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="flex items-baseline gap-2">
+                                                                    <span className="text-white font-bold text-lg">{displayAmount}</span>
+                                                                    <span className="text-gray-400 text-xs">{balance.denom}</span>
+                                                                </div>
+                                                                {usdValue && (
+                                                                    <div className="text-gray-400 text-xs">≈ {usdValue}</div>
+                                                                )}
+                                                                <div className="text-xs text-gray-500">
+                                                                    {Number(balance.amount).toLocaleString("en-US")} micro-units
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {cosmosWallet.address && (
@@ -1483,6 +1521,7 @@ const Dashboard: React.FC = () => {
                                                     onClick={() => {
                                                         setShowBuyInModal(true);
                                                         setBuyInTableId(game.address);
+                                                        setSelectedGameForBuyIn(game); // Pass entire game object
                                                     }}
                                                     title="Join this table"
                                                     className="px-3 py-1 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
@@ -1618,7 +1657,7 @@ const Dashboard: React.FC = () => {
                             <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                         </div>
                     </div>
-                    {showBuyInModal && <BuyInModal tableId={buyInTableId} onClose={handleBuyInModalClose} onJoin={handleBuyInModalJoin} />}
+                    {showBuyInModal && <BuyInModal tableId={buyInTableId} minBuyIn={selectedGameForBuyIn?.minBuyIn} maxBuyIn={selectedGameForBuyIn?.maxBuyIn} onClose={handleBuyInModalClose} onJoin={handleBuyInModalJoin} />}
                     {showWithdrawalModal && (
                         <WithdrawalModal
                             isOpen={showWithdrawalModal}

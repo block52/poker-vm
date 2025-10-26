@@ -36,8 +36,8 @@ export const useFindGames = (): FindGamesReturn => {
             // Map Cosmos game structure to GameOptionsResponse format
             // Cosmos returns camelCase JSON (gameId, minBuyIn, etc.)
             const availableGames: GameOptionsResponse[] = cosmosGames.map((game: any) => {
-                // Convert uint64 values to strings for consistency with Ethereum format
-                // Cosmos returns numbers, need to convert to strings
+                // Cosmos blockchain returns values in USDC micro-units (6 decimals)
+                // These are already the correct values, just need to convert to strings
                 const minBuyInStr = game.minBuyIn ? String(game.minBuyIn) : (game.min_buy_in ? String(game.min_buy_in) : "0");
                 const maxBuyInStr = game.maxBuyIn ? String(game.maxBuyIn) : (game.max_buy_in ? String(game.max_buy_in) : "0");
                 const smallBlindStr = game.smallBlind ? String(game.smallBlind) : (game.small_blind ? String(game.small_blind) : "0");
@@ -51,7 +51,8 @@ export const useFindGames = (): FindGamesReturn => {
                     minBuyInStr,
                     maxBuyInStr,
                     smallBlindStr,
-                    bigBlindStr
+                    bigBlindStr,
+                    note: "Values are in USDC micro-units (6 decimals, e.g., 5000000 = $5.00)"
                 });
 
                 return {
