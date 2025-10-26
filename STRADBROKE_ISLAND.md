@@ -348,8 +348,9 @@ Updated Game State: {
 - ✅ **FIXED:** .env now points to local PVM WebSocket (ws://localhost:8545, not Base Chain)
 - ✅ **FIXED:** socketserver.ts now uses cosmosConfig.restEndpoint instead of playerId (commit 5109aa7)
 - ✅ **FIXED:** gameStateCommand.ts now uses correct Cosmos REST path (commit b03c70b)
+- ✅ **FIXED:** gameStateCommand.ts now parses Cosmos JSON response correctly (commit 95daf20)
 - ✅ **joinTable hook already using Cosmos SDK** - calls `SigningCosmosClient.joinGame()`
-- ✅ **ALL WEBSOCKET INTEGRATION COMPLETE!** - PVM now queries Cosmos blockchain for game state
+- ✅ **ALL WEBSOCKET INTEGRATION COMPLETE!** - PVM successfully loads game state from Cosmos!
 
 **Key Discovery:**
 The PVM WebSocket subscribes using the **player address**. Previously used Ethereum addresses, now uses Cosmos addresses (b52...). GameStateContext updated to:
@@ -363,12 +364,17 @@ The PVM WebSocket subscribes using the **player address**. Previously used Ether
 3. **PVM Cosmos URL**: socketserver.ts now passes `cosmosConfig.restEndpoint` to GameStateCommand (lines 285-287, 780-782)
 4. **REST API path**: gameStateCommand.ts now uses `/block52/pokerchain/poker/v1/game_state/{id}` instead of `/poker/game/{id}`
    - Matches proto definition: `pokerchain/proto/pokerchain/poker/v1/query.proto:42`
+5. **JSON parsing**: gameStateCommand.ts now correctly parses `{ game_state: "..." }` response from Cosmos
+   - Parses the JSON string and extracts gameOptions from the state object
+   - Fixes: `TypeError: Cannot read properties of undefined (reading 'players')`
 
 **Troubleshooting:**
 - ✅ Error "No player address found" = FIXED (correct localStorage key)
 - ✅ Error "WebSocket connecting to Base Chain" = FIXED (.env update)
 - ✅ Error "Invalid URL" in GameStateCommand = FIXED (cosmosConfig.restEndpoint)
 - ✅ Error "HTTP 501 Not Implemented" = FIXED (correct REST path)
+- ✅ Error "Cannot read properties of undefined (reading 'players')" = FIXED (JSON parsing)
+- ✅ VacantPlayer modal not appearing = FIXED (game state now loads correctly)
 - Expected log: `[GameStateContext] Using player address: b52... (type: Cosmos)`
 
 ---

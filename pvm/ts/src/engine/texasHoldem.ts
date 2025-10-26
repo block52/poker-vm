@@ -1689,6 +1689,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             gameOptions.minPlayers = Number(gameOptions?.minPlayers);
             gameOptions.smallBlind = BigInt(gameOptions?.smallBlind);
             gameOptions.bigBlind = BigInt(gameOptions?.bigBlind);
+            gameOptions.timeout = gameOptions?.timeout ?? 30; // Default to 30 seconds if not provided
             gameOptions.type = gameOptions?.type;
         }
 

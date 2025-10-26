@@ -49,7 +49,6 @@
 import * as React from "react";
 import { memo, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { ethers } from "ethers";
 import PokerProfile from "../../../assets/PokerProfile.svg";
 
 import { useVacantSeatData } from "../../../hooks/useVacantSeatData";
@@ -66,8 +65,6 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const { isUserAlreadyPlaying, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
-        const userAddress = localStorage.getItem("user_eth_public_key");
-        const privateKey = localStorage.getItem("user_eth_private_key");
 
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
@@ -102,21 +99,21 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
 
         const handleConfirmSeat = useCallback(async () => {
-            if (!userAddress || !privateKey || !tableId) {
-                setJoinError("Missing required information to join table");
+            if (!tableId) {
+                setJoinError("Missing table ID");
                 return;
             }
 
+            // Get buy-in amount from localStorage or use max buy-in from game options
             let buyInAmount = localStorage.getItem("buy_in_amount");
             if (!buyInAmount) {
-                // No saved amount, use max buy-in from game options
-                const maxBuyInWei = gameOptions?.maxBuyIn;
-                if (!maxBuyInWei) {
+                // No saved amount, use max buy-in from game options (already in microunits)
+                const maxBuyInMicro = gameOptions?.maxBuyIn;
+                if (!maxBuyInMicro) {
                     setJoinError("Unable to determine buy-in amount");
                     return;
                 }
-                // Convert from Wei to regular units and save it
-                buyInAmount = ethers.formatUnits(maxBuyInWei, 18);
+                buyInAmount = maxBuyInMicro;
                 localStorage.setItem("buy_in_amount", buyInAmount);
             }
 
@@ -125,19 +122,17 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             setJoinSuccess(false);
 
             try {
-                // Convert amount to Wei for the join function
-                const buyInWei = ethers.parseUnits(buyInAmount, 18).toString();
-                
+                // joinTable expects amount in microunits (string)
                 const response = await joinTable(tableId, {
-                    amount: buyInWei,
+                    amount: buyInAmount,
                     seatNumber: index
                 });
-                
+
                 setJoinResponse(response);
                 setJoinSuccess(true);
                 setShowConfirmModal(false);
                 setIsJoining(false);
-                
+
                 // Call onJoin after successful join
                 if (onJoin) {
                     onJoin();
@@ -147,7 +142,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [userAddress, privateKey, tableId, index, onJoin, gameOptions?.maxBuyIn]);
+        }, [tableId, index, onJoin, gameOptions?.maxBuyIn]);
 
 
         // Memoize container styles
