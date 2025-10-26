@@ -30,9 +30,10 @@ const debugLog = (eventType: string, data: any) => {
 export function usePlayerLegalActions(): PlayerLegalActionsResult {
     // 🎯 PERFORMANCE FIX: Move localStorage access outside render cycle
     const [userAddress, setUserAddress] = useState<string | null>(null);
-    
+
     useEffect(() => {
-        const address = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+        // Use Cosmos address instead of Ethereum address
+        const address = localStorage.getItem("user_cosmos_address")?.toLowerCase();
         setUserAddress(address || null);
     }, []);
 
