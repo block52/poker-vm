@@ -7,6 +7,7 @@ import { GameStateCommand } from "../commands";
 import { ZeroHash } from "ethers";
 import * as fs from "fs";
 import * as path from "path";
+import { getCosmosConfig } from "../state/cosmos/config";
 
 // Create logs directory if it doesn't exist
 const LOGS_DIR = path.join(process.cwd(), "websocket-logs");
@@ -280,8 +281,9 @@ export class SocketService implements SocketServiceInterface {
                         method: "URL_PARAMS"
                     });
 
-                    // Get initial game state for this table
-                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, playerId);
+                    // Get initial game state for this table from Cosmos
+                    const cosmosConfig = getCosmosConfig();
+                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, cosmosConfig.restEndpoint);
                     const state = await gameStateCommand.execute();
 
                     // Log detailed game state
@@ -773,9 +775,10 @@ export class SocketService implements SocketServiceInterface {
                     try {
                         // 🔍 TIMING DEBUG: Log before getting game state
                         console.log(`🔄 [TIMING DEBUG] Getting game state for subscriber ${subscriberId} at ${new Date().toISOString()}`);
-                        
-                        // Get game state from this subscriber's perspective
-                        const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, subscriberId);
+
+                        // Get game state from this subscriber's perspective from Cosmos
+                        const cosmosConfig = getCosmosConfig();
+                        const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, cosmosConfig.restEndpoint);
                         const gameStateResponse = await gameStateCommand.execute();
 
                         // 🔍 TIMING DEBUG: Log the game state being sent via WebSocket
