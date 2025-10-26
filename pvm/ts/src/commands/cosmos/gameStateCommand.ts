@@ -11,16 +11,17 @@ export class GameStateCommand {
 
     public async execute(): Promise<TexasHoldemStateDTO> {
         try {
-            const gameState = await axios.get(`${this.cosmosUrl}/block52/pokerchain/poker/v1/game_state/${this.address}`);
+            const response = await axios.get(`${this.cosmosUrl}/block52/pokerchain/poker/v1/game_state/${this.address}`);
 
-            if (!gameState) {
-                // If game state does not exist, call 
-
-
+            if (!response || !response.data || !response.data.game_state) {
                 throw new Error(`Game state not found for address: ${this.address}`);
             }
 
-            const game = TexasHoldemGame.fromJson(gameState.data.state, gameState.data.gameOptions);
+            // Parse the JSON string from Cosmos response
+            const gameStateJson = JSON.parse(response.data.game_state);
+
+            // The Cosmos response has gameOptions as a property of the state object
+            const game = TexasHoldemGame.fromJson(gameStateJson, gameStateJson.gameOptions);
 
             return game.toJson(this.caller);
         } catch (error) {
