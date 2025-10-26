@@ -76,44 +76,59 @@
 
 ---
 
-## 🎮 Phase 3: Migrate Player Action Hooks (IN PROGRESS!)
+## 🎮 Phase 3: Migrate Player Action Hooks (COMPLETE! 🎉)
 
 All hooks in `poker-vm/ui/src/hooks/playerActions/`:
 
-### Critical Game Actions (Must migrate first)
+### Critical Game Actions (ALL MIGRATED! ✅)
 - [x] **foldHand** (`foldHand.ts`) → ✅ Gas token fixed (b52Token)
 - [x] **checkHand** (`checkHand.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
 - [x] **callHand** (`callHand.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
 - [x] **betHand** (`betHand.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
-- [ ] **raiseHand** (`raiseHand.ts`) → Use `performAction()`
+- [x] **raiseHand** (`raiseHand.ts`) → ✅ Migrated to Cosmos SDK (commit c748733)
 
-### Table Management Actions
+### Table Management Actions (ALL MIGRATED! ✅)
 - [x] **joinTable** (`joinTable.ts`) → ✅ Uses Cosmos SDK (already migrated)
-- [ ] **leaveTable** (`leaveTable.ts`) → Use `performAction()` or new SDK method
-- [ ] **sitIn** (`sitIn.ts`) → Use `performAction()`
-- [ ] **sitOut** (`sitOut.ts`) → Use `performAction()`
+- [x] **leaveTable** (`leaveTable.ts`) → ✅ Migrated to Cosmos SDK (commit c748733)
+- [x] **sitIn** (`sitIn.ts`) → ✅ Migrated to Cosmos SDK (commit c748733)
+- [x] **sitOut** (`sitOut.ts`) → ✅ Migrated to Cosmos SDK (commit c748733)
 
-### Hand Flow Actions
-- [ ] **startNewHand** (`startNewHand.ts`) → Use `performAction()`
+### Hand Flow Actions (ALL MIGRATED! ✅)
+- [x] **startNewHand** (`startNewHand.ts`) → ✅ Migrated to Cosmos SDK (commit c748733)
 - [x] **dealCards** (`dealCards.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
-- [ ] **showCards** (`showCards.ts`) → Use `performAction()`
-- [ ] **muckCards** (`muckCards.ts`) → Use `performAction()`
+- [x] **showCards** (`showCards.ts`) → ✅ Migrated to Cosmos SDK (commit c748733)
+- [x] **muckCards** (`muckCards.ts`) → ✅ Migrated to Cosmos SDK (commit c748733)
 - [x] **postSmallBlind** (`postSmallBlind.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
 - [x] **postBigBlind** (`postBigBlind.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
 
-### Support Hooks
-- [ ] **usePlayerLegalActions** (`usePlayerLegalActions.ts`) - Validate actions
-- [ ] **types.ts** - Update action type definitions
+### Support Hooks (UPDATED! ✅)
+- [x] **usePlayerLegalActions** (`usePlayerLegalActions.ts`) → ✅ Updated to use user_cosmos_address (commit c748733)
+- [x] **types.ts** → ✅ Added legacy comment for Ethereum types (commit c748733)
 
-**✅ Player Action Hook Migration (Oct 26, 2025 - Commit 2676e85):**
+**✅ Player Action Hook Migration - COMPLETE! (Oct 26, 2025):**
 
-Successfully migrated 6 core gameplay hooks to Cosmos SDK:
+**First batch (Commit 2676e85):** Successfully migrated 6 core gameplay hooks:
 1. **postSmallBlind** - Post small blind action
 2. **postBigBlind** - Post big blind action
 3. **betHand** - Betting action
 4. **callHand** - Call action
 5. **checkHand** - Check action (0 amount)
 6. **dealCards** - Deal cards action (0 amount, removed Ethereum seed logic)
+
+**Second batch (Commit c748733):** Successfully migrated 7 additional hooks:
+7. **raiseHand** - Raise action using Cosmos blockchain
+8. **leaveTable** - Leave table action on Cosmos
+9. **sitIn** - Sit in action using Cosmos
+10. **sitOut** - Sit out action using Cosmos
+11. **startNewHand** - Start new hand action on Cosmos
+12. **showCards** - Show cards action using Cosmos
+13. **muckCards** - Muck cards action using Cosmos
+
+**Also updated:**
+- **usePlayerLegalActions** - Changed from user_eth_public_key to user_cosmos_address
+- **types.ts** - Added legacy comment for Ethereum-specific type definitions
+
+**ALL 13 player action hooks now use Cosmos SDK exclusively!** 🎉
 
 **Migration Pattern Used:**
 ```typescript
