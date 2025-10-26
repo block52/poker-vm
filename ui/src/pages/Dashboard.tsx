@@ -24,7 +24,7 @@ import { formatBalance, formatUSDCToSimpleDollars } from "../utils/numberUtils";
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
-import { useUserWalletConnect, useAccount, useFindGames, useNewTable, useTablePlayerCounts, useCosmosWallet } from "../hooks";
+import { useUserWalletConnect, useFindGames, useNewTable, useTablePlayerCounts, useCosmosWallet } from "../hooks";
 import type { CreateTableOptions } from "../hooks/useNewTable"; // Import type separately
 
 // Cosmos wallet utils

@@ -1,5 +1,4 @@
 // Main hooks (named exports)
-export { useAccount } from "./useAccount";
 export { useCardAnimations } from "./useCardAnimations";
 export { useCardsForHandStrength } from "./useCardsForHandStrength";
 export { useChipPositions } from "./useChipPositions";

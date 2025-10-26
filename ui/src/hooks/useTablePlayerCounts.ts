@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { getClient } from "../utils/b52AccountUtils";
 
 interface TablePlayerCount {
     tableId: string;
@@ -8,19 +7,12 @@ interface TablePlayerCount {
 }
 
 /**
- * Hook to fetch player counts for multiple tables
- * 
- * IMPORTANT: This hook creates separate client instances rather than using GameStateContext
- * because:
- * 1. GameStateContext is designed for a SINGLE table subscription via WebSocket
- * 2. We need to fetch data for MULTIPLE tables simultaneously  
- * 3. GameStateContext maintains a persistent WebSocket connection for real-time updates on one table
- * 4. This hook does periodic polling of multiple tables for dashboard display
- * 
- * Using separate clients here avoids interfering with the main game's WebSocket connection
- * and allows us to efficiently fetch player counts for all available tables.
- * 
- * @param tableAddresses Array of table addresses to fetch player counts for
+ * Hook to fetch player counts for multiple tables from Cosmos blockchain
+ *
+ * Queries Cosmos REST API for game states to get player counts for the dashboard.
+ * This hook does periodic polling of multiple tables for lobby display.
+ *
+ * @param tableAddresses Array of table/game IDs to fetch player counts for
  * @returns Map of table addresses to player counts
  */
 export const useTablePlayerCounts = (tableAddresses: string[]) => {
@@ -35,39 +27,46 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
             const newCounts = new Map<string, TablePlayerCount>();
 
             try {
-                // Create a client instance for fetching multiple table states
-                // Note: We're NOT using GameStateContext here as it's for single-table WebSocket subscriptions
-                const client = getClient();
-                
-                // Fetch game state for each table in parallel
-                const promises = tableAddresses.map(async (address) => {
+                const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+
+                // Fetch game state for each table in parallel from Cosmos blockchain
+                const promises = tableAddresses.map(async (gameId) => {
                     try {
-                        // Get the game state for this table
-                        // getGameState expects (tableAddress, playerAddress)
-                        const playerAddress = localStorage.getItem("user_eth_public_key") || "";
-                        const gameState = await client.getGameState(address, playerAddress);
-                        
-                        if (gameState) {
-                            // Count non-null players
-                            const activePlayers = gameState.players?.filter(p => p !== null).length || 0;
+                        // Query Cosmos REST API for game state
+                        const response = await fetch(
+                            `${restEndpoint}/block52/pokerchain/poker/v1/game_state/${gameId}`
+                        );
+
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch game state: ${response.statusText}`);
+                        }
+
+                        const data = await response.json();
+
+                        // Parse the game_state JSON string
+                        if (data.game_state) {
+                            const gameState = JSON.parse(data.game_state);
+
+                            // Count non-null active players
+                            const activePlayers = gameState.players?.filter((p: any) => p !== null).length || 0;
                             const maxPlayers = gameState.gameOptions?.maxPlayers || 0;
-                            
+
                             return {
-                                tableId: address,
+                                tableId: gameId,
                                 currentPlayers: activePlayers,
                                 maxPlayers: maxPlayers
                             };
                         }
-                        
+
                         return {
-                            tableId: address,
+                            tableId: gameId,
                             currentPlayers: 0,
                             maxPlayers: 0
                         };
                     } catch (error) {
-                        console.error(`Error fetching player count for table ${address}:`, error);
+                        console.error(`Error fetching player count for table ${gameId}:`, error);
                         return {
-                            tableId: address,
+                            tableId: gameId,
                             currentPlayers: 0,
                             maxPlayers: 0
                         };
@@ -75,12 +74,12 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
                 });
 
                 const results = await Promise.all(promises);
-                
+
                 // Convert to map
                 results.forEach(result => {
                     newCounts.set(result.tableId, result);
                 });
-                
+
                 setPlayerCounts(newCounts);
             } catch (error) {
                 console.error("Error fetching player counts:", error);
@@ -90,10 +89,10 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
         };
 
         fetchPlayerCounts();
-        
+
         // Refresh every 10 seconds
         const interval = setInterval(fetchPlayerCounts, 10000);
-        
+
         return () => clearInterval(interval);
     }, [tableAddresses.join(",")]); // Re-run when table list changes
 
