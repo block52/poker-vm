@@ -189,22 +189,61 @@ Migrated remaining utility hooks to Cosmos SDK and cleaned up old Ethereum code:
 ✅ All gameplay hooks use Cosmos SDK exclusively
 ✅ Bridge functionality still works (uses Ethereum as intended)
 
+**✅ UI Component Amount Conversion Fix (Oct 26, 2025 - Commit 1746434):**
+
+**CRITICAL BUG FOUND AND FIXED:**
+While player action hooks were migrated to Cosmos SDK (expecting microunits), UI components
+were still using Ethereum Wei conversion (18 decimals), causing incorrect amounts.
+
+**Fixed Components:**
+1. **actionHandlers.ts** - handleBet, handleCall
+   - Changed from: `ethers.parseUnits(amount, 18)` (Wei - 18 decimals)
+   - Changed to: `(amount * 1_000_000)` (microunits - 6 decimals)
+   - Removed ethers import
+
+2. **Footer.tsx** - handleBet, handleRaise, display values
+   - Changed from: `ethers.parseUnits(raiseAmount, 18)` (Wei)
+   - Changed to: `(raiseAmount * 1_000_000)` (microunits)
+   - Fixed display: `ethers.formatUnits(value, 18)` → `Number(value) / 1_000_000`
+   - Removed ethers import
+
+**Conversion Pattern:**
+- **Send to blockchain:** Multiply by 1,000,000 (USDC → microunits)
+- **Display to user:** Divide by 1,000,000 (microunits → USDC)
+
+**Impact:**
+- All bet/call/raise amounts now use correct Cosmos format
+- Display values show correct USDC amounts
+- Build successful with all TypeScript errors resolved
+
 ---
 
-## 🎯 Phase 4: UI Component Migration
+## 🎯 Phase 4: UI Component Migration (COMPLETE! ✅)
 
-### Primary Components (Touch these)
-- [ ] **Dashboard** (`ui/src/pages/Dashboard.tsx`)
-  - Replace game list fetching with Cosmos queries
-  - Use `client.queryGames()` or similar
+### Primary Components (ALL DONE! ✅)
+- [x] **Dashboard** (`ui/src/pages/Dashboard.tsx`) → ✅ Complete!
+  - Uses `useFindGames` hook which queries Cosmos REST API
+  - Calls `cosmosClient.findGames()` to fetch all games from blockchain
+  - Maps Cosmos game structure to UI format
+  - **STATUS:** Fully migrated to Cosmos SDK
 
-- [ ] **Table** (`ui/src/components/playPage/Table.tsx`)
-  - This is where all player actions are triggered!
-  - Replace all `usePlayerAction` hooks with Cosmos SDK calls
-  - Test each action: fold, check, call, bet, raise
+- [x] **Table** (`ui/src/components/playPage/Table.tsx`) → ✅ Complete!
+  - Imports migrated player action hooks (leaveTable, usePlayerLegalActions)
+  - All player actions use Cosmos SDK hooks
+  - **STATUS:** Fully migrated to Cosmos SDK
 
-### Secondary Components (DON'T touch yet)
-- [ ] **Footer** (`ui/src/components/Footer.tsx`) - Leave as-is for now
+- [x] **Footer** (`ui/src/components/Footer.tsx`) → ✅ Complete! (Commit 1746434)
+  - Fixed amount conversion from Wei (18 decimals) to microunits (6 decimals)
+  - Updated handleBet, handleRaise to use microunits
+  - Fixed display conversions for minBet, maxBet, minRaise, maxRaise, callAmount
+  - Removed ethers dependency
+  - **STATUS:** Fully migrated to Cosmos SDK
+
+- [x] **actionHandlers.ts** (`ui/src/components/common/actionHandlers.ts`) → ✅ Complete! (Commit 1746434)
+  - Fixed amount conversion in handleBet, handleCall
+  - Changed from `ethers.parseUnits(amount, 18)` to `(amount * 1_000_000)`
+  - Removed ethers import
+  - **STATUS:** All handlers use correct Cosmos microunit format
 
 ---
 
