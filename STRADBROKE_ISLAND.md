@@ -76,34 +76,74 @@
 
 ---
 
-## 🎮 Phase 3: Migrate Player Action Hooks
+## 🎮 Phase 3: Migrate Player Action Hooks (IN PROGRESS!)
 
 All hooks in `poker-vm/ui/src/hooks/playerActions/`:
 
 ### Critical Game Actions (Must migrate first)
-- [ ] **foldHand** (`foldHand.ts`) → Use `performAction()`
-- [ ] **checkHand** (`checkHand.ts`) → Use `performAction()`
-- [ ] **callHand** (`callHand.ts`) → Use `performAction()`
-- [ ] **betHand** (`betHand.ts`) → Use `performAction()`
+- [x] **foldHand** (`foldHand.ts`) → ✅ Gas token fixed (b52Token)
+- [x] **checkHand** (`checkHand.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
+- [x] **callHand** (`callHand.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
+- [x] **betHand** (`betHand.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
 - [ ] **raiseHand** (`raiseHand.ts`) → Use `performAction()`
 
 ### Table Management Actions
-- [ ] **joinTable** (`joinTable.ts`) → Use `joinGame()`
+- [x] **joinTable** (`joinTable.ts`) → ✅ Uses Cosmos SDK (already migrated)
 - [ ] **leaveTable** (`leaveTable.ts`) → Use `performAction()` or new SDK method
 - [ ] **sitIn** (`sitIn.ts`) → Use `performAction()`
 - [ ] **sitOut** (`sitOut.ts`) → Use `performAction()`
 
 ### Hand Flow Actions
 - [ ] **startNewHand** (`startNewHand.ts`) → Use `performAction()`
-- [ ] **dealCards** (`dealCards.ts`) → Use `performAction()`
+- [x] **dealCards** (`dealCards.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
 - [ ] **showCards** (`showCards.ts`) → Use `performAction()`
 - [ ] **muckCards** (`muckCards.ts`) → Use `performAction()`
-- [ ] **postSmallBlind** (`postSmallBlind.ts`) → Use `performAction()`
-- [ ] **postBigBlind** (`postBigBlind.ts`) → Use `performAction()`
+- [x] **postSmallBlind** (`postSmallBlind.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
+- [x] **postBigBlind** (`postBigBlind.ts`) → ✅ Migrated to Cosmos SDK (commit 2676e85)
 
 ### Support Hooks
 - [ ] **usePlayerLegalActions** (`usePlayerLegalActions.ts`) - Validate actions
 - [ ] **types.ts** - Update action type definitions
+
+**✅ Player Action Hook Migration (Oct 26, 2025 - Commit 2676e85):**
+
+Successfully migrated 6 core gameplay hooks to Cosmos SDK:
+1. **postSmallBlind** - Post small blind action
+2. **postBigBlind** - Post big blind action
+3. **betHand** - Betting action
+4. **callHand** - Call action
+5. **checkHand** - Check action (0 amount)
+6. **dealCards** - Deal cards action (0 amount, removed Ethereum seed logic)
+
+**Migration Pattern Used:**
+```typescript
+import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
+
+const userAddress = getCosmosAddress();
+const mnemonic = getCosmosMnemonic();
+const signingClient = await createSigningClientFromMnemonic({
+    rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657",
+    restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317",
+    chainId: COSMOS_CONSTANTS.CHAIN_ID,
+    prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
+    denom: "b52Token",
+    gasPrice: "0.025b52Token"
+}, mnemonic);
+const transactionHash = await signingClient.performAction(tableId, actionName, amount);
+```
+
+**Removed Dependencies:**
+- ❌ `getClient()` from ethereum/client
+- ❌ `b52AccountUtils` from ethereum/b52Account
+- ❌ All ethers dependencies
+- ❌ Ethereum-specific seed generation logic (dealCards)
+
+**Ready for Testing:**
+- Multi-player join scenarios
+- Posting blinds (small + big)
+- Gameplay actions (bet, call, check)
+- Deal cards flow
 
 ---
 
@@ -351,6 +391,7 @@ Updated Game State: {
 - ✅ **FIXED:** gameStateCommand.ts now parses Cosmos JSON response correctly (commit 95daf20)
 - ✅ **FIXED:** VacantPlayer and useVacantSeatData now use Cosmos addresses (commit 8b75e3a)
 - ✅ **FIXED:** TexasHoldem.fromJson() now parses timeout field with 30s default (commit 8b75e3a)
+- ✅ **FIXED:** Gas token changed from "stake" to "b52Token" (commit 6cdd340)
 - ✅ **joinTable hook already using Cosmos SDK** - calls `SigningCosmosClient.joinGame()`
 - ✅ **createTable hook already using Cosmos SDK** - calls `SigningCosmosClient.createGame()`
 - ✅ **ALL WEBSOCKET INTEGRATION COMPLETE!** - PVM successfully loads game state from Cosmos!
@@ -408,18 +449,61 @@ The PVM WebSocket subscribes using the **player address**. Previously used Ether
 - 🔗 Dashboard USDC balance display (reads Base Chain)
 - 🔗 Wagmi wallet connection (for bridge transactions only)
 
+**Token Architecture:**
+- **b52Token** = Native gas token for Cosmos transaction fees (configured in config.yml:64)
+- **usdc** = In-game poker currency for buy-ins and payouts
+- All Cosmos SDK transactions require b52Token for gas fees
+- Players need both: b52Token for gas + usdc for playing poker
+
+**Common Error Fixed (commit 6cdd340):**
+- Error: "Broadcasting transaction failed with code 5: insufficient funds"
+- Error: "spendable balance 0stake is smaller than 5000stake"
+- **Cause**: SDK was using "stake" instead of "b52Token" for gas
+- **Fixed in**: useNewTable, joinTable, foldHand hooks
+
 **Remaining Ethereum Code is Intentional:**
 - Dashboard.tsx still has `ethers`, `wagmi`, `useSwitchChain` - these are for the **bridge**
 - This is correct architecture: Base Chain handles USD deposits, Cosmos handles gameplay
 - Don't remove these - they're needed for deposit/withdrawal flow!
 
-**Join Flow Test:**
-1. Refresh browser (hard refresh: Cmd+Shift+R)
-2. Verify localStorage has `user_cosmos_address` (should be b52...)
-3. Click "Click to Join" on any vacant seat
-4. Modal should appear with "Ready to join at seat X?"
-5. Click "Yes" - should call Cosmos SDK joinGame transaction
-6. Check PVM logs for game state update after join
+**Before Testing - Check Your Wallet:**
+
+Your Cosmos wallet needs TWO tokens:
+1. **b52Token** (for gas fees) - Check balance:
+   ```bash
+   pokerchaind query bank balances <your-b52-address>
+   ```
+
+2. **usdc** (for poker buy-ins) - Should also show in balance query
+
+If you have 0 b52Token, you need to fund your wallet. Options:
+- **Faucet** (if available): Request b52Token from the faucet
+- **Transfer from alice**: Alice has 10000000000000b52Token in config.yml
+  ```bash
+  pokerchaind tx bank send alice <your-address> 1000000000b52Token --from alice
+  ```
+
+**✅ Create Table Test - SUCCESSFUL:**
+1. ✅ Created Sit & Go table with 4 players, $1 buy-in
+2. ✅ Transaction hash: `894BA189D5E0DEA91A14ED9FBB55258382DED48AACECD3CA70710FD9691EA262`
+3. ✅ Table appears in lobby with correct game options
+4. ✅ Cosmos blockchain query shows 2 games in list_games
+
+**✅ Join Flow Test - SUCCESSFUL:**
+1. ✅ Navigated to table: `0xd29653bc8f7ab8494b91ed3787fbc6ff92127a9c6292216475d7f93d8937247a`
+2. ✅ Join transaction submitted successfully
+3. ✅ Transaction hash: `3936965E1A95E71D20658B0B99C6580F1F46D74B17910E7C0A325EE1E40D7855`
+4. ✅ Player appears at seat 1 with 10,000 chips
+5. ✅ WebSocket broadcasts game state update
+6. ✅ PVM logs show join command executed successfully
+7. ✅ UI displays player correctly with dealer button
+
+**Next Steps:**
+- Test multi-player join (2+ players)
+- Migrate remaining player action hooks to Cosmos SDK
+- Test posting blinds (small blind, big blind)
+- Test gameplay actions (bet, call, check, fold, raise)
+- Test deal cards flow
 
 ---
 
