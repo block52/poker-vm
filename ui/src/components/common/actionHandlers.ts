@@ -1,4 +1,3 @@
-import { ethers } from "ethers";
 import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
 import { LegalActionDTO } from "@bitcoinbrisbane/block52";
 
@@ -27,9 +26,9 @@ const handleCall = async (callAction: LegalActionDTO | undefined, amount: number
 
     if (callAction) {
         try {
-            // Use our function to bet with the current raiseAmount
-            const amountWei = ethers.parseUnits(amount.toString(), 18).toString();
-            await callHand(tableId, amountWei);
+            // Convert amount to microunits (6 decimals for USDC on Cosmos)
+            const amountMicrounits = (amount * 1_000_000).toString();
+            await callHand(tableId, amountMicrounits);
         } catch (error: any) {
             console.error("Failed to call:", error);
         }
@@ -41,11 +40,11 @@ const handleCall = async (callAction: LegalActionDTO | undefined, amount: number
 const handleBet = async (betAction: LegalActionDTO | undefined, amount: number, tableId?: string) => {
     if (!tableId) return;
 
-    // Use our function to bet with the current raiseAmount
-    const amountWei = ethers.parseUnits(amount.toString(), 18).toString();
+    // Convert amount to microunits (6 decimals for USDC on Cosmos)
+    const amountMicrounits = (amount * 1_000_000).toString();
 
     try {
-        await betHand(tableId, amountWei);
+        await betHand(tableId, amountMicrounits);
     } catch (error: any) {
         console.error("Failed to bet:", error);
     }
