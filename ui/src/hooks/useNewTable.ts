@@ -54,8 +54,8 @@ export const useNewTable = (): UseNewTableReturn => {
                     restEndpoint,
                     chainId: COSMOS_CONSTANTS.CHAIN_ID,
                     prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-                    denom: "stake", // Gas token
-                    gasPrice: "0.025stake"
+                    denom: "b52Token", // Gas token (changed from "stake")
+                    gasPrice: "0.025b52Token"
                 },
                 mnemonic
             );

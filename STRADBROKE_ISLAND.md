@@ -349,8 +349,13 @@ Updated Game State: {
 - ✅ **FIXED:** socketserver.ts now uses cosmosConfig.restEndpoint instead of playerId (commit 5109aa7)
 - ✅ **FIXED:** gameStateCommand.ts now uses correct Cosmos REST path (commit b03c70b)
 - ✅ **FIXED:** gameStateCommand.ts now parses Cosmos JSON response correctly (commit 95daf20)
+- ✅ **FIXED:** VacantPlayer and useVacantSeatData now use Cosmos addresses (commit 8b75e3a)
+- ✅ **FIXED:** TexasHoldem.fromJson() now parses timeout field with 30s default (commit 8b75e3a)
 - ✅ **joinTable hook already using Cosmos SDK** - calls `SigningCosmosClient.joinGame()`
+- ✅ **createTable hook already using Cosmos SDK** - calls `SigningCosmosClient.createGame()`
 - ✅ **ALL WEBSOCKET INTEGRATION COMPLETE!** - PVM successfully loads game state from Cosmos!
+- ✅ **JOIN FLOW MIGRATED TO COSMOS!** - No more Ethereum dependencies in join flow!
+- ✅ **CREATE TABLE FLOW MIGRATED TO COSMOS!** - Dashboard uses `useNewTable` hook with Cosmos SDK!
 
 **Key Discovery:**
 The PVM WebSocket subscribes using the **player address**. Previously used Ethereum addresses, now uses Cosmos addresses (b52...). GameStateContext updated to:
@@ -367,6 +372,15 @@ The PVM WebSocket subscribes using the **player address**. Previously used Ether
 5. **JSON parsing**: gameStateCommand.ts now correctly parses `{ game_state: "..." }` response from Cosmos
    - Parses the JSON string and extracts gameOptions from the state object
    - Fixes: `TypeError: Cannot read properties of undefined (reading 'players')`
+6. **Join Flow Migration** (commit 8b75e3a):
+   - VacantPlayer.tsx: Removed Ethereum key checks (user_eth_public_key, user_eth_private_key)
+   - VacantPlayer.tsx: Removed ethers dependency (no more Wei conversion)
+   - VacantPlayer.tsx: Buy-in amounts use microunits directly
+   - useVacantSeatData.ts: Changed to user_cosmos_address instead of user_eth_public_key
+   - useVacantSeatData.ts: Removed ethers.ZeroAddress checks
+   - TexasHoldem.fromJson(): Added timeout field parsing with 30s default
+   - Fixes: "Missing required information to join table" error
+   - Fixes: "Missing game options fields from server" warning
 
 **Troubleshooting:**
 - ✅ Error "No player address found" = FIXED (correct localStorage key)
@@ -374,8 +388,38 @@ The PVM WebSocket subscribes using the **player address**. Previously used Ether
 - ✅ Error "Invalid URL" in GameStateCommand = FIXED (cosmosConfig.restEndpoint)
 - ✅ Error "HTTP 501 Not Implemented" = FIXED (correct REST path)
 - ✅ Error "Cannot read properties of undefined (reading 'players')" = FIXED (JSON parsing)
+- ✅ Error "Missing required information to join table" = FIXED (VacantPlayer using Cosmos)
+- ✅ Warning "Missing game options fields from server" = FIXED (timeout field parsing)
 - ✅ VacantPlayer modal not appearing = FIXED (game state now loads correctly)
 - Expected log: `[GameStateContext] Using player address: b52... (type: Cosmos)`
+
+**Architecture Summary - What Uses Cosmos vs Base Chain:**
+
+✅ **Cosmos Blockchain (Primary):**
+- ✅ Create Table → `useNewTable` → `SigningCosmosClient.createGame()`
+- ✅ Join Table → `joinTable` hook → `SigningCosmosClient.joinGame()`
+- ✅ Game State → PVM queries Cosmos REST API → WebSocket broadcasts to UI
+- ✅ All poker gameplay actions (fold, call, raise, etc.)
+- ✅ Player balances in b52USDC (Cosmos native token)
+
+🔗 **Base Chain (Ethereum L2) - Bridge Only:**
+- 🔗 USDC deposits → Base Chain bridge → Cosmos b52USDC minting
+- 🔗 USDC withdrawals → Cosmos b52USDC burning → Base Chain USDC release
+- 🔗 Dashboard USDC balance display (reads Base Chain)
+- 🔗 Wagmi wallet connection (for bridge transactions only)
+
+**Remaining Ethereum Code is Intentional:**
+- Dashboard.tsx still has `ethers`, `wagmi`, `useSwitchChain` - these are for the **bridge**
+- This is correct architecture: Base Chain handles USD deposits, Cosmos handles gameplay
+- Don't remove these - they're needed for deposit/withdrawal flow!
+
+**Join Flow Test:**
+1. Refresh browser (hard refresh: Cmd+Shift+R)
+2. Verify localStorage has `user_cosmos_address` (should be b52...)
+3. Click "Click to Join" on any vacant seat
+4. Modal should appear with "Ready to join at seat X?"
+5. Click "Yes" - should call Cosmos SDK joinGame transaction
+6. Check PVM logs for game state update after join
 
 ---
 
