@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { TexasHoldemRound, PlayerActionType, ActionDTO } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, ActionDTO } from "@bitcoinbrisbane/block52";
 import { act } from "@testing-library/react";
 
 /**
@@ -14,7 +14,6 @@ import { act } from "@testing-library/react";
  * @returns The calculated pot bet amount
  */
 export function calculatePotBetAmount({
-    currentRound,
     previousActions,
     formattedTotalPot,
     hasBetAction,
@@ -22,7 +21,6 @@ export function calculatePotBetAmount({
     minRaise,
     totalPot
 }: {
-    currentRound: TexasHoldemRound;
     previousActions: ActionDTO[];
     formattedTotalPot: string;
     hasBetAction: boolean;
@@ -30,31 +28,32 @@ export function calculatePotBetAmount({
     minRaise: number;
     totalPot: number;
 }): number {
-    if (
-        currentRound === TexasHoldemRound.ANTE ||
-        currentRound === TexasHoldemRound.PREFLOP
-    ) {
-        // Find last bet (HR) from previousActions
-        let lastBet = 0;
-        if (Array.isArray(previousActions)) {
-            for (let i = previousActions.length - 1; i >= 0; i--) {
-                const previousAction = previousActions[i];
-                if (previousAction.action === PlayerActionType.BET || (previousAction.action === PlayerActionType.RAISE && previousAction.amount)) {
-                    lastBet = Number(ethers.formatUnits(previousAction.amount, 18));
-                    break;
-                }
+    // Find the highest bet (HB) in the round
+    let highestBet = 0;
+    if (Array.isArray(previousActions)) {
+        for (let i = 0; i < previousActions.length; i++) {
+            const action = previousActions[i];
+            if ((action.action === PlayerActionType.BET || action.action === PlayerActionType.RAISE) && action.amount) {
+                const amt = Number(ethers.formatUnits(action.amount, 18));
+                if (amt > highestBet) highestBet = amt;
             }
         }
-        // Calculate DM (dead money)
-        const pot = Number(formattedTotalPot) || 0;
-        const DM = pot - lastBet;
-        let newAmt = DM + 3 * lastBet;
-        // Fallback to minBet/minRaise if needed
-        if (isNaN(newAmt) || newAmt <= 0) {
-            newAmt = hasBetAction ? minBet : minRaise;
-        }
-        return newAmt;
-    } else {
-        return Math.max(totalPot, hasBetAction ? minBet : minRaise);
     }
+
+    // The amount the player must call to match the highest bet (CALL)
+    // For this function, we assume minBet is the call amount for the player to act
+    // (If you have a more accurate call amount, pass it in instead of minBet)
+    const callAmount = minBet;
+
+    // The current pot
+    const pot = Number(formattedTotalPot) || totalPot || 0;
+
+    // Pot bet calculation: CALL + HB + POT
+    let potBet = callAmount + highestBet + pot;
+
+    // Fallback to minBet/minRaise if needed
+    if (isNaN(potBet) || potBet <= 0) {
+        potBet = hasBetAction ? minBet : minRaise;
+    }
+    return potBet;
 }
