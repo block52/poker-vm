@@ -42,12 +42,12 @@ The API will be available at [http://localhost:8080/bots](http://localhost:8080/
 
 ```sh
 sudo useradd -r -s /bin/false apiuser
-sudo mkdir -p /opt/api/{logs,data}
-sudo chown -R apiuser:apiuser /opt/api
+sudo mkdir -p /opt/bot-api/{logs,data}
+sudo chown -R apiuser:apiuser /opt/bot-api
 make build
-sudo cp api /opt/api/api
-sudo chown apiuser:apiuser /opt/gin-api/gin-api
-sudo chmod +x /opt/gin-api/gin-api
+sudo cp api /opt/bot-api/api
+sudo chown apiuser:apiuser /opt/bot-api/api
+sudo chmod +x /opt/bot-api/api
 
 sudo cp api.service /etc/systemd/system/
 sudo systemctl daemon-reload
