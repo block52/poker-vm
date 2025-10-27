@@ -16,6 +16,7 @@ let play = true;
 const allBots: Record<string, IBot> = {};
 let client: NodeRpcClient;
 const blackList: string[] = []; // Add blacklisted addresses here
+const enableBlacklist = process.env.ENABLE_BLACKLIST === "true" || false;
 
 // Modify the main loop to include small blind posting
 async function main() {
@@ -107,7 +108,9 @@ async function main() {
                         allBots[bot.address] = botInstance;
                     } else {
                         logger.error(`Bot with address ${bot.address} failed to join the game at table ${bot.tableAddress}. It will not be activated.`);
-                        blackList.push(bot.tableAddress);
+                        if (enableBlacklist) {
+                            blackList.push(bot.tableAddress);
+                        }
                     }
                 }
             }
