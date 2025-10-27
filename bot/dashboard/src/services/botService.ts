@@ -15,9 +15,16 @@ const api = axios.create({
     withCredentials: false
 });
 
-// Request interceptor
+// Request interceptor: add x-api-key from cookie if present
 api.interceptors.request.use(
     config => {
+        // Get API key from cookie
+        const match = document.cookie.match(new RegExp("(^| )bot_api_key=([^;]+)"));
+        const apiKey = match ? decodeURIComponent(match[2]) : null;
+        if (apiKey) {
+            config.headers = config.headers || {};
+            config.headers["x-api-key"] = apiKey;
+        }
         console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
         return config;
     },

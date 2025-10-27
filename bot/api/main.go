@@ -49,7 +49,23 @@ func getBots(c *gin.Context) {
 }
 
 // PATCH /bots/:address - update enabled and/or tableAddress
+
+var apiKeyEnv string
+
+func requireAPIKey(c *gin.Context) bool {
+	apiKey := c.GetHeader("x-api-key")
+	if apiKey == "" || apiKeyEnv == "" || apiKey != apiKeyEnv {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid API key"})
+		return false
+	}
+	return true
+}
+
+// PATCH /bots/:address - update enabled and/or tableAddress
 func patchBot(c *gin.Context) {
+	if !requireAPIKey(c) {
+		return
+	}
 	address := c.Param("address")
 	var req struct {
 		Enabled      *bool   `json:"enabled"`
@@ -86,9 +102,30 @@ func patchBot(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"updated": true})
 }
 
+// POST /bots - add a new bot
+func postBot(c *gin.Context) {
+	if !requireAPIKey(c) {
+		return
+	}
+	var bot Bot
+	if err := c.ShouldBindJSON(&bot); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := botCollection.InsertOne(ctx, bot)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add bot"})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"created": true})
+}
+
 var logger *Logger
 
 func main() {
+	apiKeyEnv = os.Getenv("API_KEY")
 	// Load .env if present
 	_ = godotenv.Load()
 
@@ -128,6 +165,7 @@ func main() {
 	// }))
 
 	r.GET("/bots", getBots)
+	r.POST("/bots", postBot)
 	r.PATCH("/bots/:address", patchBot)
 
 	// Add logs route
