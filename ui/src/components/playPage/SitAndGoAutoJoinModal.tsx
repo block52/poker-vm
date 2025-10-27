@@ -92,7 +92,7 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                     return;
                 }
 
-                const balance = await getCosmosBalance("b52usdc");
+                const balance = await getCosmosBalance("usdc");
                 setAccountBalance(balance);
             } catch (err) {
                 console.error("Error fetching Cosmos balance:", err);
