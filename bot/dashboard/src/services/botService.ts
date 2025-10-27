@@ -1,3 +1,4 @@
+
 import axios, { AxiosResponse } from "axios";
 import type { Bot, ApiError, LogsResponse } from "../types";
 
@@ -113,8 +114,6 @@ export class BotService {
         }
     }
 
-
-
     /**
      * Create a new bot
      */
@@ -125,6 +124,27 @@ export class BotService {
         } catch (error) {
             console.error("Error creating bot:", error);
             throw error;
+        }
+    }
+
+    /**
+     * Get logs from the API
+     */
+    static async getLogs(limit: number = 50): Promise<LogsResponse> {
+        try {
+            const response: AxiosResponse<LogsResponse> = await api.get(`/logs?limit=${limit}`);
+            return response.data;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                throw {
+                    message: error.response?.data?.message || error.message,
+                    status: error.response?.status || 500
+                } as ApiError;
+            }
+            throw {
+                message: "An unexpected error occurred while fetching logs",
+                status: 500
+            } as ApiError;
         }
     }
 }
