@@ -10,6 +10,8 @@ export interface CreateTableOptions {
     maxBuyIn: number;
     minPlayers: number;
     maxPlayers: number;
+    smallBlind: number;
+    bigBlind: number;
 }
 
 // Type for useNewTable hook return
@@ -45,18 +47,14 @@ export const useNewTable = (): UseNewTableReturn => {
             const minBuyIn: bigint = ethers.parseEther(gameOptions.minBuyIn.toString());
             const maxBuyIn: bigint = ethers.parseEther(gameOptions.maxBuyIn.toString());
 
-            // Calculate blind values based on game type
-            const calculatedSmallBlind: bigint = minBuyIn / 100n; // 1% of min buy-in
-            const calculatedBigBlind: bigint = maxBuyIn / 100n; // 1% of max buy-in
-
-            let smallBlind = calculatedSmallBlind.toString();
-            let bigBlind = calculatedBigBlind.toString();
+            let smallBlind = ethers.parseEther(gameOptions.smallBlind.toString());
+            let bigBlind = ethers.parseEther(gameOptions.bigBlind.toString());
 
             if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
                 // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in
                 // Buy-in represents tournament entry fee, not chip value
-                smallBlind = ethers.parseEther("100").toString();
-                bigBlind = ethers.parseEther("200").toString();
+                smallBlind = ethers.parseEther("100");
+                bigBlind = ethers.parseEther("200");
 
                 console.log("🎮 Sit & Go Tournament Settings:");
                 console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
@@ -70,8 +68,8 @@ export const useNewTable = (): UseNewTableReturn => {
                 maxBuyIn: maxBuyIn.toString(),
                 minPlayers: gameOptions.minPlayers,
                 maxPlayers: gameOptions.maxPlayers,
-                smallBlind,
-                bigBlind,
+                smallBlind: smallBlind.toString(),
+                bigBlind: bigBlind.toString(),
                 timeout: 300000 // Standard 30,000 millisecond timeout for decisions
             };
             
