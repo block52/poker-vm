@@ -27,8 +27,8 @@ export const getCosmosAddress = async (): Promise<string | null> => {
  * @returns The Cosmos address from localStorage or null
  */
 export const getCosmosAddressSync = (): string | null => {
-    // Get from localStorage where CosmosContext stores it
-    return localStorage.getItem("cosmos_address") || null;
+    // Get from localStorage using the correct key (see utils/cosmos/storage.ts)
+    return localStorage.getItem("user_cosmos_address") || null;
 };
 
 /**
@@ -57,20 +57,25 @@ export const hasCosmosWallet = (): boolean => {
  * @returns Promise with the account balance as string in microunits (6 decimals)
  * @throws Error if wallet is not connected or fetch fails
  */
-export const getCosmosBalance = async (denom: string = "b52usdc"): Promise<string> => {
+export const getCosmosBalance = async (denom: string = "usdc"): Promise<string> => {
     const client = getCosmosClient();
 
     if (!client) {
         throw new Error("No Cosmos wallet connected. Please create or import a wallet first.");
     }
 
+    // Get address from localStorage instead of client.getWalletAddress() (which doesn't work in REST-only mode)
+    const address = getCosmosAddressSync();
+    if (!address) {
+        throw new Error("No Cosmos address found. Please create or import a wallet first.");
+    }
+
     try {
-        const address = await client.getWalletAddress();
         console.log("💰 cosmosAccountUtils - Fetching balance for:", address);
         console.log("   Denomination:", denom);
 
         // getBalance returns bigint directly
-        const balance = await client.getBalance(address);
+        const balance = await client.getBalance(address, denom);
 
         console.log("💰 cosmosAccountUtils - Balance (bigint):", balance);
         console.log("   Amount (string):", balance.toString());
@@ -94,8 +99,13 @@ export const getAllCosmosBalances = async (): Promise<Array<{denom: string; amou
         throw new Error("No Cosmos wallet connected. Please create or import a wallet first.");
     }
 
+    // Get address from localStorage instead of client.getWalletAddress() (which doesn't work in REST-only mode)
+    const address = getCosmosAddressSync();
+    if (!address) {
+        throw new Error("No Cosmos address found. Please create or import a wallet first.");
+    }
+
     try {
-        const address = await client.getWalletAddress();
         const balances = await client.getAllBalances(address);
         console.log("💰 cosmosAccountUtils - All balances:", balances);
 
