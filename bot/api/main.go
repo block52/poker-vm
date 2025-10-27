@@ -91,43 +91,43 @@ var logger *Logger
 func main() {
 	// Load .env if present
 
-       _ = godotenv.Load()
+	_ = godotenv.Load()
 
-       // Gather .env configs to log (obfuscated)
-       envVars := []string{
-	       "MONGODB_URI", "MONGODB_DB", "REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "PORT", "GIN_MODE",
-       }
-       obfuscated := make(map[string]string)
-       for _, k := range envVars {
-	       v := os.Getenv(k)
-	       if v == "" {
-		       obfuscated[k] = "<empty>"
-		       continue
-	       }
-	       // Obfuscate sensitive values
-	       if k == "MONGODB_URI" || k == "REDIS_PASSWORD" {
-		       if len(v) > 6 {
-			       obfuscated[k] = v[:2] + "***" + v[len(v)-2:]
-		       } else if len(v) > 2 {
-			       obfuscated[k] = v[:1] + "***" + v[len(v)-1:]
-		       } else {
-			       obfuscated[k] = "***"
-		       }
-	       } else {
-		       obfuscated[k] = v
-	       }
-       }
-       logger = NewLogger("bot-api")
-       logger.Info("Loaded .env config", obfuscated, "", "")
+	// Gather .env configs to log (obfuscated)
+	envVars := []string{
+		"MONGODB_URI", "MONGODB_DB", "REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "PORT", "GIN_MODE",
+	}
+	obfuscated := make(map[string]string)
+	for _, k := range envVars {
+		v := os.Getenv(k)
+		if v == "" {
+			obfuscated[k] = "<empty>"
+			continue
+		}
+		// Obfuscate sensitive values
+		if k == "MONGODB_URI" || k == "REDIS_PASSWORD" {
+			if len(v) > 6 {
+				obfuscated[k] = v[:2] + "***" + v[len(v)-2:]
+			} else if len(v) > 2 {
+				obfuscated[k] = v[:1] + "***" + v[len(v)-1:]
+			} else {
+				obfuscated[k] = "***"
+			}
+		} else {
+			obfuscated[k] = v
+		}
+	}
+	logger = NewLogger("bot-api")
+	logger.Info("Loaded .env config", obfuscated, "", "")
 
-       mongoURI := os.Getenv("MONGODB_URI")
-       dbName := os.Getenv("MONGODB_DB")
-       if mongoURI == "" {
-	       mongoURI = "mongodb://localhost:27017"
-       }
-       if dbName == "" {
-	       dbName = "pvm"
-       }
+	mongoURI := os.Getenv("MONGODB_URI")
+	dbName := os.Getenv("MONGODB_DB")
+	if mongoURI == "" {
+		mongoURI = "mongodb://localhost:27017"
+	}
+	if dbName == "" {
+		dbName = "pvm"
+	}
 
 	// Initialize logger
 	logger = NewLogger("bot-api")

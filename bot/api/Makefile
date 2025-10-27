@@ -1,5 +1,6 @@
+
 run:
-	go run main.go
+	go run .
 
 tidy:
 	go mod tidy
@@ -8,5 +9,4 @@ install:
 	go get ./...
 	go get github.com/joho/godotenv
 
-build:
-	go build -o api main.go
+	go build -o api .
