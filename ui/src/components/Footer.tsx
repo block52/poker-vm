@@ -48,7 +48,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const { isCurrentUserTurn } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
-    const { currentRound, formattedTotalPot } = useTableState();
+    const { formattedTotalPot } = useTableState();
 
     const [publicKey, setPublicKey] = useState<string>();
     const [privateKey, setPrivateKey] = useState<string>();
@@ -110,7 +110,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
     // Handle raise amount changes from slider or input
-    const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], currentRound, userAddress || "");
+    const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], gameState?.round ?? TexasHoldemRound.ANTE, userAddress || "");
     console.log(`Raise action amount: ${raiseActionAmount}`);
 
     const isRaiseAmountInvalid = hasRaiseAction
@@ -276,7 +276,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 )}
 
                 {/* New Hand Button - Show when the round is "end" */}
-                {currentRound === TexasHoldemRound.END && (
+                {gameState?.round === TexasHoldemRound.END && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
                             onClick={() => handleStartNewHand(tableId)}
@@ -626,7 +626,6 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const newAmt = calculatePotBetAmount({
-                                                            currentRound,
                                                             previousActions: gameState?.previousActions || [],
                                                             formattedTotalPot,
                                                             hasBetAction,
