@@ -165,6 +165,13 @@ const MemoizedTurnAnimation = React.memo(TurnAnimation);
 
 const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
+    // Game state context and subscription
+    const { subscribeToTable, gameState } = useGameStateContext();
+    useEffect(() => {
+        if (id) {
+            subscribeToTable(id);
+        }
+    }, [id, subscribeToTable]);
 
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
@@ -241,7 +248,7 @@ const Table = React.memo(() => {
     } = useNextToActInfo(id);
 
     // Add the useTableState hook to get table state properties
-    const { formattedTotalPot, tableSize } = useTableState();
+    const { tableSize } = useTableState();
 
     // Use the table layout configuration system (only 4 and 9 players supported)
     // TODO: Add support for 2, 3, 5, 6, 7, 8 player tables - positions need to be configured in tableLayoutConfig.ts
@@ -552,22 +559,16 @@ const Table = React.memo(() => {
     // Memoize formatted balance
     const balanceFormatted = useMemo(() => (accountBalance ? formatWeiToUSD(accountBalance) : "0.00"), [accountBalance]);
 
-    // Memoize expensive pot calculations
     const potDisplayValues = useMemo(() => {
-        const totalPotCalculated =
-            tableDataValues.tableDataPots?.[0] === "0"
-                ? "0.00"
-                : tableDataValues.tableDataPots?.reduce((sum: number, pot: string) => sum + Number(ethers.formatUnits(pot, 18)), 0).toFixed(2) ||
-                  formattedTotalPot;
-
-        const mainPotCalculated =
-            tableDataValues.tableDataPots?.[0] === "0" ? "0.00" : Number(ethers.formatUnits(tableDataValues.tableDataPots?.[0] || "0", 18)).toFixed(2);
-
+        const pots = Array.isArray(gameState?.pots) ? (gameState?.pots as string[]) : [];
+        const totalPotWei = pots.reduce<bigint>((sum, pot) => sum + BigInt(pot), 0n);
+        const totalPotCalculated = totalPotWei === 0n ? "0.00" : formatWeiToSimpleDollars(totalPotWei.toString());
+        const mainPotCalculated = pots.length === 0 ? "0.00" : formatWeiToSimpleDollars(pots[0]);
         return {
             totalPot: totalPotCalculated,
             mainPot: mainPotCalculated
         };
-    }, [tableDataValues.tableDataPots, formattedTotalPot]);
+    }, [gameState?.pots]);
 
     // Memoize community cards rendering
     const communityCardsElements = useMemo(() => {
@@ -766,14 +767,6 @@ const Table = React.memo(() => {
         console.error("Error loading table data:", tableDataValues.error);
         // Continue rendering instead of returning early
     }
-
-    // This component manages the subscription:
-    const { subscribeToTable, gameState } = useGameStateContext();
-    useEffect(() => {
-        if (id) {
-            subscribeToTable(id);
-        }
-    }, [id, subscribeToTable]);
 
     return (
         <div className="table-container">
