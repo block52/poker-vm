@@ -31,7 +31,7 @@ function App() {
 
     return (
         <div className="container-fluid mt-4">
-            <h1 className="mb-4">Bot Dashboard</h1>
+            <h1 className="mb-4">🤖 Bot Dashboard</h1>
 
             <ul className="nav nav-tabs mb-4">
                 <li className="nav-item">

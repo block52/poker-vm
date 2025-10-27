@@ -113,21 +113,18 @@ export class BotService {
         }
     }
 
-    static async getLogs(limit: number = 50): Promise<LogsResponse> {
+
+
+    /**
+     * Create a new bot
+     */
+    static async createBot(bot: Partial<Bot>): Promise<Bot> {
         try {
-            const response: AxiosResponse<LogsResponse> = await api.get(`/logs?limit=${limit}`);
+            const response = await api.post<Bot>("/bots", bot);
             return response.data;
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                throw {
-                    message: error.response?.data?.message || error.message,
-                    status: error.response?.status || 500
-                } as ApiError;
-            }
-            throw {
-                message: "An unexpected error occurred while fetching logs",
-                status: 500
-            } as ApiError;
+            console.error("Error creating bot:", error);
+            throw error;
         }
     }
 }

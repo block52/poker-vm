@@ -25,7 +25,7 @@ A simple REST API for managing poker bots using Go, Gin, and MongoDB.
 ### With Go
 
 ```sh
-go run main.go
+go run .
 ```
 
 ### With Makefile

@@ -10,6 +10,41 @@ const BotTable = () => {
     const [showModal, setShowModal] = useState<boolean>(false);
     const [selectedBot, setSelectedBot] = useState<Bot | null>(null);
     const [formData, setFormData] = useState({ tableAddress: "", type: "", enabled: false });
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createForm, setCreateForm] = useState({ address: "", privateKey: "", tableAddress: "", type: "random", enabled: false });
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState<ApiError | null>(null);
+    const openCreateModal = () => {
+        setCreateForm({ address: "", privateKey: "", tableAddress: "", type: "random", enabled: false });
+        setCreateError(null);
+        setShowCreateModal(true);
+    };
+
+    const closeCreateModal = () => {
+        setShowCreateModal(false);
+        setCreateError(null);
+    };
+
+    const handleCreateFormChange = (field: string, value: string | boolean) => {
+        setCreateForm(prev => ({ ...prev, [field]: value }));
+    };
+
+    const saveNewBot = async () => {
+        setCreating(true);
+        setCreateError(null);
+        try {
+            // POST to API
+            await BotService.createBot(createForm);
+            // Refresh bots
+            const botsData = await BotService.getBots();
+            setBots(botsData);
+            closeCreateModal();
+        } catch (err) {
+            setCreateError(err as ApiError);
+        } finally {
+            setCreating(false);
+        }
+    };
 
     useEffect(() => {
         const fetchBots = async () => {
@@ -134,8 +169,114 @@ const BotTable = () => {
 
     return (
         <div className="container mt-4">
-            <h2 className="mb-4">Bots Dashboard</h2>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h2>Bots Dashboard</h2>
+                <button className="btn btn-success" onClick={openCreateModal}>
+                    + Create Bot
+                </button>
+            </div>
             <div className="table-responsive">
+                {/* Modal for creating a new bot */}
+                {showCreateModal && (
+                    <div className="modal fade show" style={{ display: "block" }} aria-labelledby="createBotModal" aria-hidden="true">
+                        <div className="modal-dialog">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title" id="createBotModal">
+                                        Create New Bot
+                                    </h5>
+                                    <button type="button" className="btn-close" onClick={closeCreateModal} aria-label="Close"></button>
+                                </div>
+                                <div className="modal-body">
+                                    {createError && <div className="alert alert-danger">{createError.message}</div>}
+                                    <form>
+                                        <div className="mb-3">
+                                            <label htmlFor="address" className="form-label">
+                                                Address
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="address"
+                                                value={createForm.address}
+                                                onChange={e => handleCreateFormChange("address", e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="privateKey" className="form-label">
+                                                Private Key
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="privateKey"
+                                                value={createForm.privateKey}
+                                                onChange={e => handleCreateFormChange("privateKey", e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="tableAddress" className="form-label">
+                                                Table Address
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                id="tableAddress"
+                                                value={createForm.tableAddress}
+                                                onChange={e => handleCreateFormChange("tableAddress", e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label htmlFor="type" className="form-label">
+                                                Type
+                                            </label>
+                                            <select
+                                                className="form-select"
+                                                id="type"
+                                                value={createForm.type}
+                                                onChange={e => handleCreateFormChange("type", e.target.value)}
+                                            >
+                                                <option value="random">Random</option>
+                                                <option value="raiseOrCall">Raise or Call</option>
+                                                <option value="aggressive">Aggressive</option>
+                                                <option value="conservative">Conservative</option>
+                                            </select>
+                                        </div>
+                                        <div className="mb-3">
+                                            <div className="form-check form-switch">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id="enabledCreate"
+                                                    checked={createForm.enabled}
+                                                    onChange={e => handleCreateFormChange("enabled", e.target.checked)}
+                                                />
+                                                <label className="form-check-label" htmlFor="enabledCreate">
+                                                    {createForm.enabled ? "Enabled" : "Disabled"}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-secondary" onClick={closeCreateModal} disabled={creating}>
+                                        Cancel
+                                    </button>
+                                    <button type="button" className="btn btn-primary" onClick={saveNewBot} disabled={creating}>
+                                        {creating ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...
+                                            </>
+                                        ) : (
+                                            "Save"
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showCreateModal && <div className="modal-backdrop fade show"></div>}
                 <table className="table table-striped table-hover">
                     <thead className="table-dark">
                         <tr>
@@ -229,6 +370,26 @@ const BotTable = () => {
                                             <option value="raiseOrCall">Raise or Call</option>
                                             <option value="aggressive">Aggressive</option>
                                             <option value="conservative">Conservative</option>
+                                        </select>
+                                        <select
+                                            className="form-select"
+                                            id="type"
+                                            value={formData.type}
+                                            onChange={e => handleFormChange("type", e.target.value)}
+                                        >
+                                            <option value="check">Check</option>
+                                            <option value="raiseOrCall">Raise or Call</option>
+                                            <option value="random">Random</option>
+                                        </select>
+                                        <select
+                                            className="form-select"
+                                            id="type"
+                                            value={createForm.type}
+                                            onChange={e => handleCreateFormChange("type", e.target.value)}
+                                        >
+                                            <option value="check">Check</option>
+                                            <option value="raiseOrCall">Raise or Call</option>
+                                            <option value="random">Random</option>
                                         </select>
                                     </div>
                                     <div className="mb-3">
