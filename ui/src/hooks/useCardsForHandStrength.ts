@@ -8,6 +8,7 @@ export interface HandStrength {
   descr: string; // Obsolete, use description instead.  Was used in the old lib
   description: string;
   score: number;
+  hand: string[]; // Your cards that make up the hand
 }
 
 export const useCardsForHandStrength = (seatIndex?: number): HandStrength | null => {
@@ -28,7 +29,8 @@ export const useCardsForHandStrength = (seatIndex?: number): HandStrength | null
         name: description,
         descr: description,
         description: description,
-        score: evaluation.handType
+        score: evaluation.handType,
+        hand: evaluation.bestHand.map(card => card.toString()),
       };
     } catch (error) {
       console.error("Error calculating hand strength:", error);
