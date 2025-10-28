@@ -162,7 +162,7 @@ const BotTable = () => {
 
     return (
         <div className="container mt-4">
-            {(!bots || bots.length === 0) && (
+            {(!bots || bots?.length === 0) && (
                 <div className="alert alert-info" role="alert">
                     No bots found.
                 </div>
@@ -326,7 +326,7 @@ const BotTable = () => {
                 </table>
             </div>
             <div className="mt-3">
-                <small className="text-muted">Total bots: {bots.length}</small>
+                <small className="text-muted">Total bots: {bots ? bots.length : 0}</small>
             </div>
 
             {/* Modal for editing bot */}
@@ -366,8 +366,7 @@ const BotTable = () => {
                                         >
                                             <option value="random">Random</option>
                                             <option value="raiseOrCall">Raise or Call</option>
-                                            <option value="aggressive">Aggressive</option>
-                                            <option value="conservative">Conservative</option>
+                                            <option value="check">Check</option>
                                         </select>
                                         <select
                                             className="form-select"

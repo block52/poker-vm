@@ -7,7 +7,7 @@ export default defineConfig({
     server: {
         proxy: {
             "/api": {
-                target: "https://botapi.block52.xyz",
+                target: "http://localhost:8080",
                 changeOrigin: true,
                 secure: true,
             },
