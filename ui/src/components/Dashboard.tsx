@@ -20,7 +20,7 @@ import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { Variant } from "./types";
 import { formatAddress } from "./common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
+import { formatBalance, formatToFixedFromString, formatWeiToDollars } from "../utils/numberUtils"; // Import formatBalance utility function
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
@@ -351,6 +351,8 @@ const Dashboard: React.FC = () => {
             console.log("  maxBuyIn:", gameOptions.maxBuyIn);
             console.log("  minPlayers:", gameOptions.minPlayers);
             console.log("  maxPlayers:", gameOptions.maxPlayers);
+            console.log("  smallBlind:", gameOptions.smallBlind);
+            console.log("  bigBlind:", gameOptions.bigBlind);
 
             // Use the createTable function from the hook
             const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
@@ -1402,9 +1404,7 @@ const Dashboard: React.FC = () => {
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
                                                         {/* Check if it's a Sit & Go (minBuyIn equals maxBuyIn) */}
                                                         {game.gameOptions?.type === GameType.SIT_AND_GO ||
-                                                        (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn &&
-                                                            game.gameOptions?.smallBlind === "100000000000000000000" &&
-                                                            game.gameOptions?.bigBlind === "200000000000000000000") ? (
+                                                        game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn ? (
                                                             <>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
                                                                     Buy-in: $
@@ -1431,17 +1431,12 @@ const Dashboard: React.FC = () => {
                                                                     Max: $
                                                                     {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
                                                                         ? formatBalance(game.gameOptions.maxBuyIn)
-                                                                        : "100.00"}
+                                                                        : "NAN"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Blinds: $
-                                                                    {game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0"
-                                                                        ? formatBalance(game.gameOptions.smallBlind)
-                                                                        : "0.50"}
+                                                                    Blinds: ${game.gameOptions?.smallBlind ? formatWeiToDollars(game.gameOptions.smallBlind) : ""}
                                                                     /$
-                                                                    {game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0"
-                                                                        ? formatBalance(game.gameOptions.bigBlind)
-                                                                        : "1.00"}
+                                                                    {game.gameOptions?.bigBlind ? formatWeiToDollars(game.gameOptions.bigBlind) : ""}
                                                                 </span>
                                                             </>
                                                         )}
