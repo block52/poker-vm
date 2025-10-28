@@ -1002,7 +1002,7 @@ const Table = React.memo(() => {
                     {/* Static base gradient - mouse tracking removed for performance */}
                     <div className="background-base-static" />
                     {/*//! TABLE */}
-                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-250px)] sm:min-h-[calc(100vh-350px)] z-[0] relative">
+                    <div className="flex-grow flex flex-col align-center justify-center min-h-[calc(100vh-150px)] sm:min-h-[calc(100vh-350px)] z-[0] relative">
                         {/* Hexagon pattern overlay */}
 
                         <div
