@@ -5,7 +5,8 @@ import { PokerSolver, PokerGameIntegration, Deck } from "@bitcoinbrisbane/block5
 
 export interface HandStrength {
   name: string;
-  descr: string;
+  descr: string; // Obsolete, use description instead.  Was used in the old lib
+  description: string;
   score: number;
 }
 
@@ -14,11 +15,6 @@ export const useCardsForHandStrength = (seatIndex?: number): HandStrength | null
   const { tableDataCommunityCards } = useTableData();
 
   return useMemo(() => {
-    // If we don't have hole cards, return null
-    if (!holeCards || holeCards.length !== 2) {
-      return null;
-    }
-
     // Combine hole cards and community cards
     const allCards = [...holeCards, ...tableDataCommunityCards];
 
@@ -31,6 +27,7 @@ export const useCardsForHandStrength = (seatIndex?: number): HandStrength | null
       return {
         name: description,
         descr: description,
+        description: description,
         score: evaluation.handType
       };
     } catch (error) {
@@ -38,4 +35,4 @@ export const useCardsForHandStrength = (seatIndex?: number): HandStrength | null
       return null;
     }
   }, [holeCards, tableDataCommunityCards]);
-}; 
+};
