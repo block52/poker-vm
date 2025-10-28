@@ -162,11 +162,11 @@ const BotTable = () => {
 
     return (
         <div className="container mt-4">
-            {/* {(!bots || bots.length === 0) && (
+            {(!bots || bots.length === 0) && (
                 <div className="alert alert-info" role="alert">
                     No bots found.
                 </div>
-            )} */}
+            )}
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2>Bots Dashboard</h2>
                 <button className="btn btn-success" onClick={openCreateModal}>
@@ -286,7 +286,7 @@ const BotTable = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {bots.map((bot: Bot) => (
+                        {bots && bots.map((bot: Bot) => (
                             <tr key={bot.address}>
                                 <td>
                                     <code className="text-primary">{bot.address}</code>
