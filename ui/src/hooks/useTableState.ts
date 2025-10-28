@@ -1,8 +1,6 @@
-import { ethers } from "ethers";
 import { useGameStateContext } from "../context/GameStateContext";
 import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
 import { TableStateReturn } from "../types/index";
-
 
 const DEFAULT_TABLE_SIZE = 9;
 
@@ -22,8 +20,7 @@ export const useTableState = (): TableStateReturn => {
     // Default values in case of error or loading
     const defaultState: TableStateReturn = {
         currentRound: TexasHoldemRound.PREFLOP,
-        totalPot: "0",
-        formattedTotalPot: "0.00",
+        pot: "0",
         tableSize: DEFAULT_TABLE_SIZE,
         tableType: GameType.CASH,
         roundType: TexasHoldemRound.PREFLOP,
@@ -38,17 +35,14 @@ export const useTableState = (): TableStateReturn => {
 
     try {
         // Calculate the total pot from all pots
-        let totalPotWei = "0";
+        let totalPotWei: bigint = 0n;
         if (gameState.pots && Array.isArray(gameState.pots)) {
-            totalPotWei = gameState.pots.reduce((sum: string, pot: string) => {
-                const sumBigInt = BigInt(sum);
-                const potBigInt = BigInt(pot);
-                return (sumBigInt + potBigInt).toString();
-            }, "0");
+            totalPotWei = gameState.pots.reduce((sum: bigint, pot: string) => {
+                const sumBigInt: bigint = sum;
+                const potBigInt: bigint = BigInt(pot);
+                return (sumBigInt + potBigInt);
+            }, 0n);
         }
-
-        // Format total pot value to display format
-        const formattedTotalPot = ethers.formatUnits(totalPotWei, 18);
 
         // Extract the current round
         const currentRound = gameState.round || TexasHoldemRound.PREFLOP;
@@ -61,8 +55,7 @@ export const useTableState = (): TableStateReturn => {
 
         const result: TableStateReturn = {
             currentRound,
-            totalPot: totalPotWei,
-            formattedTotalPot,
+            pot: totalPotWei.toString(),
             tableSize,
             tableType: tableType as GameType,
             roundType: currentRound,

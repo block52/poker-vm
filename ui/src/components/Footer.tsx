@@ -17,6 +17,7 @@ import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
+import { convertAmountToBigInt, formatWeiToDollars } from "../utils/numberUtils";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -48,7 +49,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const { isCurrentUserTurn } = useNextToActInfo(tableId);
 
     // Add the useTableState hook to get table state properties
-    const { formattedTotalPot } = useTableState();
+    const { pot } = useTableState();
 
     const [publicKey, setPublicKey] = useState<string>();
     const [privateKey, setPrivateKey] = useState<string>();
@@ -90,21 +91,22 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const raiseAction = getActionByType(legalActions, PlayerActionType.RAISE);
 
     // Convert values to USDC for faster display
-    const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
-    const maxBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0), [betAction]);
-    const minRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0), [raiseAction]);
-    const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
-    const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
+    // const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
+    // const maxBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0), [betAction]);
+    // const minRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0), [raiseAction]);
+    // const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
+    // const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
     // // Do as bigint
-    // const bigintMinBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.min || "0", 18)) : 0n), [betAction]);
-    // const bigintMaxBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.max || "0", 18)) : 0n), [betAction]);
-    // const bigintMinRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.min || "0", 18)) : 0n), [raiseAction]);
-    // const bigintMaxRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.max || "0", 18)) : 0n), [raiseAction]);
-    // const bigintCallAmount = useMemo(() => (callAction ? BigInt(ethers.formatUnits(callAction.min || "0", 18)) : 0n), [callAction]);
+    const minBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.min || "0", 18)) : 0n), [betAction]);
+    const maxBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.max || "0", 18)) : 0n), [betAction]);
+    const minRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.min || "0", 18)) : 0n), [raiseAction]);
+    const maxRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.max || "0", 18)) : 0n), [raiseAction]);
+    const callAmount = useMemo(() => (callAction ? BigInt(ethers.formatUnits(callAction.min || "0", 18)) : 0n), [callAction]);
 
     const getStep = (): number => {
-        return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
+        const step =  hasBetAction ? minBet : hasRaiseAction ? minRaise : 0n;
+        return Number(step);
     };
 
     // const getStep = (): bigint => {
@@ -112,33 +114,37 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // };
 
     // These are the default amounts - initialize with proper minimum
-    const initialAmount = hasBetAction ? (minBet > 0 ? minBet : 0) : minRaise > 0 ? minRaise : 0;
-    const [raiseAmount, setRaiseAmount] = useState<number>(initialAmount);
-    const [, setRaiseInputRaw] = useState<string>(initialAmount.toFixed(2));
-    const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
+    const initialAmount: bigint = hasBetAction ? (minBet > 0n ? minBet : 0n) : minRaise > 0n ? minRaise : 0n;
+    const [raiseAmount, setRaiseAmount] = useState<number>(Number(initialAmount));
+    // const [, setRaiseInputRaw] = useState<string>(Number(initialAmount).toFixed(2));
+    // const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
 
     // Handle raise amount changes from slider or input
-    const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], gameState?.round ?? TexasHoldemRound.ANTE, userAddress || "");
-    console.log(`Raise action amount: ${raiseActionAmount}`);
+    // const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], gameState?.round ?? TexasHoldemRound.ANTE, userAddress || "");
 
-    const isRaiseAmountInvalid = hasRaiseAction
+    const isRaiseAmountInvalid: boolean = hasRaiseAction
         ? raiseAmount < minRaise || raiseAmount > maxRaise
         : hasBetAction
         ? raiseAmount < minBet || raiseAmount > maxBet
         : false;
 
     // Get total pot for percentage calculations
-    const totalPot = Number(formattedTotalPot) || 0;
+    const totalPot = Number(pot) || 0;
 
     // Dynamic class names based on validation state
     const inputFieldClassName = useMemo(() => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
     const minMaxTextClassName = useMemo(() => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
     // Memoize expensive computations
-    const formattedSmallBlindAmount = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
-    const formattedBigBlindAmount = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
-    const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
-    const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
+    // const formattedSmallBlindAmount: string = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
+    // const formattedBigBlindAmount: string = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
+    // const formattedCallAmount: string = useMemo(() => callAmount.toFixed(2), [callAmount]);
+    // const formattedMaxBetAmount: string = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
+
+    const formattedSmallBlindAmount: string = useMemo(() => formatWeiToDollars(smallBlindAction?.min), [smallBlindAction?.min]);
+    const formattedBigBlindAmount: string = useMemo(() => formatWeiToDollars(bigBlindAction?.min), [bigBlindAction?.min]);
+    const formattedCallAmount: string = useMemo(() => formatWeiToDollars(callAmount), [callAmount]);
+    const formattedMaxBetAmount: string = useMemo(() => (hasBetAction ? formatWeiToDollars(maxBet) : formatWeiToDollars(maxRaise)), [hasBetAction, maxBet, maxRaise]);
 
     // Remove hover event handlers since we're using CSS hover states
 
@@ -155,9 +161,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
     }, [privateKey]);
 
     // Handlers for adjusting raise amount on the slider or buttons
-    const handleRaiseChange = (delta: number) => {
-        const currentRaiseAmount = raiseAmount || minRaise;
-        let newRaiseAmount = currentRaiseAmount + delta;
+    const handleRaiseChange = (delta: number): void => {
+        const currentRaiseAmount = BigInt(raiseAmount) || minRaise;
+        let newRaiseAmount = currentRaiseAmount + BigInt(delta);
 
         if (newRaiseAmount < minRaise) {
             newRaiseAmount = minRaise;
@@ -167,22 +173,21 @@ const PokerActionPanel: React.FC = React.memo(() => {
             newRaiseAmount = maxRaise;
         }
 
-        setRaiseAmount(newRaiseAmount);
+        setRaiseAmount(Number(newRaiseAmount));
     };
 
-    const setRaiseAmountAbsolute = (amount: number, source: "slider" | "input" | "button") => {
+    const setRaiseAmountAbsolute = (amount: number): void => {
         setRaiseAmount(amount);
-        setLastAmountSource(source);
     };
 
     // Min Raise Text Prefill - Always set to minimum when actions become available
     useEffect(() => {
-        if (hasRaiseAction && minRaise > 0) {
-            setRaiseAmount(minRaise);
-            setRaiseInputRaw(minRaise.toFixed(2));
-        } else if (hasBetAction && minBet > 0) {
-            setRaiseAmount(minBet);
-            setRaiseInputRaw(minBet.toFixed(2));
+        if (hasRaiseAction && minRaise > 0n) {
+            setRaiseAmount(Number(minRaise));
+            // setRaiseInputRaw(minRaise.toFixed(2));
+        } else if (hasBetAction && minBet > 0n) {
+            setRaiseAmount(Number(minBet));
+            // setRaiseInputRaw(minBet.toFixed(2));
         }
     }, [hasRaiseAction, hasBetAction, minRaise, minBet]);
 
@@ -208,7 +213,8 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const handleBet = async () => {
         if (!tableId) return;
 
-        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18);
+        // const amountWei: bigint = ethers.parseUnits(raiseAmount.toString(), 18);
+        const amountWei: bigint = convertAmountToBigInt(raiseAmount);
 
         try {
             await betHand(tableId, amountWei);

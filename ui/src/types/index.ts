@@ -178,8 +178,7 @@ export interface CardAnimationsReturn {
 // Type for the return value of useTableState hook
 export interface TableStateReturn extends BaseHookReturn {
     currentRound: TexasHoldemRound;
-    totalPot: string;
-    formattedTotalPot: string;
+    pot: string;
     tableSize: number;
     tableType: GameType;
     roundType: TexasHoldemRound;

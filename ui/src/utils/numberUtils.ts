@@ -27,10 +27,12 @@ export const formatWeiToDollars = (weiAmount: string | bigint | undefined | null
         const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
 
         // Format to always show 2 decimal places
-        return usdValue.toLocaleString("en-US", {
+        const result: string = usdValue.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+
+        return result;
     } catch (error) {
         console.error("Error formatting Wei amount:", error);
         return "0.00";
@@ -89,12 +91,12 @@ export const formatWinningAmount = (amount: string): string => {
 
 /**
  * Converts a string amount to BigInt using specified decimals
- * @param amount The amount as a string
+ * @param amount The amount as a string or number
  * @param decimals The number of decimals to use for conversion
  * @returns BigInt representation of the amount
  */
-export const convertAmountToBigInt = (amount: string, decimals: number): bigint => {
-    if (!decimals || !amount || !+amount) return BigInt(0);
+export const convertAmountToBigInt = (amount: string | number, decimals: number = 18): bigint => {
+    if (!decimals || !amount || !+amount) return 0n;
     return BigUnit.from(+amount, decimals).toBigInt();
 };
 
