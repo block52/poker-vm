@@ -5,11 +5,11 @@ import { getClient } from "../../utils/b52AccountUtils";
  * Bet in a poker game.
  * 
  * @param tableId - The ID of the table where the action will be performed
- * @param amount - The amount to bet (as string)
+ * @param amount - The amount to bet
  * @returns Promise with the bet response
  * @throws Error if private key is missing or if the action fails
  */
-export async function betHand(tableId: string, amount: string): Promise<PerformActionResponse> {
+export async function betHand(tableId: string, amount: bigint): Promise<PerformActionResponse> {
     // Get the singleton client instance
     const client = getClient();
 
@@ -21,7 +21,7 @@ export async function betHand(tableId: string, amount: string): Promise<PerformA
     const response = await client.playerAction(
         tableId,
         PlayerActionType.BET,
-        amount
+        amount.toString()
     );
 
     console.log("💰 Bet response:", response);

@@ -96,9 +96,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
-    // Slider step values
-    const step = minBet;
-
     const getStep = () => {
         return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
     };
@@ -152,12 +149,12 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
     const handleRaiseChange = (delta: number) => {
         const currentRaiseAmount = raiseAmount || minRaise;
+        let newRaiseAmount = currentRaiseAmount + delta;
 
-        if (delta === 0) {
-            delta = getStep(); // Reset to minimum raise amount
+        if (newRaiseAmount < 0) {
+            newRaiseAmount = 0;
         }
 
-        const newRaiseAmount = currentRaiseAmount + delta;
         setRaiseAmount(newRaiseAmount);
     };
 
@@ -201,7 +198,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18);
 
         try {
             await betHand(tableId, amountWei);
@@ -216,7 +213,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
             return;
         }
 
-        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18).toString();
+        const amountWei: bigint = ethers.parseUnits(raiseAmount.toString(), 18);
 
         try {
             await raiseHand(tableId, amountWei);
@@ -476,7 +473,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 type="range"
                                                 min={hasBetAction ? minBet : minRaise}
                                                 max={hasBetAction ? maxBet : maxRaise}
-                                                step={step}
+                                                step={getStep()}
                                                 value={raiseAmount}
                                                 onChange={e => {
                                                     setRaiseAmountAbsolute(Number(e.target.value));

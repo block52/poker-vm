@@ -5,11 +5,11 @@ import { getClient } from "../../utils/b52AccountUtils";
  * Raise in a poker game.
  * 
  * @param tableId - The ID of the table where the action will be performed
- * @param amount - The amount to raise (as string)
+ * @param amount - The amount to raise
  * @returns Promise with the raise response
  * @throws Error if private key is missing or if the action fails
  */
-export async function raiseHand(tableId: string, amount: string): Promise<PerformActionResponse> {
+export async function raiseHand(tableId: string, amount: bigint): Promise<PerformActionResponse> {
     // Get the singleton client instance
     const client = getClient();
 
@@ -21,7 +21,7 @@ export async function raiseHand(tableId: string, amount: string): Promise<Perfor
     const response = await client.playerAction(
         tableId,
         PlayerActionType.RAISE,
-        amount
+        amount.toString()
     );
 
     console.log("📈 Raise response:", response);
