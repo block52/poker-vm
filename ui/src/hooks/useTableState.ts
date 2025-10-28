@@ -59,16 +59,13 @@ export const useTableState = (): TableStateReturn => {
         // Extract table type
         const tableType = gameState.type || GameType.CASH;
 
-        // Round type is the same as current round in this context
-        const roundType = currentRound;
-
         const result: TableStateReturn = {
             currentRound,
             totalPot: totalPotWei,
             formattedTotalPot,
             tableSize,
             tableType: tableType as GameType,
-            roundType,
+            roundType: currentRound,
             isLoading: false,
             error: null
         };
