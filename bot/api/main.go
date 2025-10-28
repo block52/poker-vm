@@ -36,6 +36,7 @@ func getBots(c *gin.Context) {
 
 	cursor, err := botCollection.Find(ctx, bson.M{})
 	if err != nil {
+		log.Printf("Error fetching bots: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch bots"})
 		return
 	}
@@ -43,6 +44,7 @@ func getBots(c *gin.Context) {
 
 	var bots []Bot
 	if err := cursor.All(ctx, &bots); err != nil {
+		log.Printf("Error decoding bots: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode bots"})
 		return
 	}
@@ -133,9 +135,13 @@ func main() {
 	mongoURI := os.Getenv("MONGODB_URI")
 	dbName := os.Getenv("MONGODB_DB")
 	if mongoURI == "" {
+		log.Print("MONGODB_URI not set, using default")
+		logger.Info("MONGODB_URI not set, using default", nil, "", "")
 		mongoURI = "mongodb://localhost:27017"
 	}
 	if dbName == "" {
+		log.Print("MONGODB_DB not set, using default")
+		logger.Info("MONGODB_DB not set, using default", nil, "", "")
 		dbName = "pvm"
 	}
 
