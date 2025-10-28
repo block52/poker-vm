@@ -132,6 +132,10 @@ func main() {
 	// Load .env if present
 	_ = godotenv.Load()
 
+	// Initialize logger
+	logger = NewLogger("bot-api")
+	logger.Info("Starting bot API server", nil, "", "")
+
 	mongoURI := os.Getenv("MONGODB_URI")
 	dbName := os.Getenv("MONGODB_DB")
 	if mongoURI == "" {
@@ -145,9 +149,7 @@ func main() {
 		dbName = "pvm"
 	}
 
-	// Initialize logger
-	logger = NewLogger("bot-api")
-	logger.Info("Starting bot API server", nil, "", "")
+	log.Println("Using ", mongoURI, " for MongoDB")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
