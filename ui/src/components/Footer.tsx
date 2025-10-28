@@ -147,12 +147,17 @@ const PokerActionPanel: React.FC = React.memo(() => {
         setPrivateKey(localKey);
     }, [privateKey]);
 
+    // Handlers for adjusting raise amount on the slider or buttons
     const handleRaiseChange = (delta: number) => {
         const currentRaiseAmount = raiseAmount || minRaise;
         let newRaiseAmount = currentRaiseAmount + delta;
 
-        if (newRaiseAmount < 0) {
-            newRaiseAmount = 0;
+        if (newRaiseAmount < minRaise) {
+            newRaiseAmount = minRaise;
+        }
+
+        if (newRaiseAmount > maxRaise) {
+            newRaiseAmount = maxRaise;
         }
 
         setRaiseAmount(newRaiseAmount);
