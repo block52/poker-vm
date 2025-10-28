@@ -20,7 +20,7 @@ fi
 MAIN_DOMAIN="$1"
 
 APP_DOMAIN="app.$MAIN_DOMAIN"
-NODE_DOMAIN="node.$MAIN_DOMAIN"
+NODE_DOMAIN="node1.$MAIN_DOMAIN"
 
 # Get pwd
 PWD_DIR=$(pwd)
@@ -34,8 +34,6 @@ DEFAULT_CONF="$SITES_AVAILABLE/default"
 SOURCE_CONF="$PWD_DIR/nginx/default"
 BACKUP_DIR="/etc/nginx/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-
-
 
 # Function to log messages
 log() {
