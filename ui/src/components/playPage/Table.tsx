@@ -410,28 +410,6 @@ const Table = React.memo(() => {
     const tableActivePlayers = useMemo(() => {
         const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
 
-        // Debug logging for seat mapping
-        console.log(
-            "🎲 TABLE - Active Players Mapping: " +
-                JSON.stringify(
-                    {
-                        totalPlayers: activePlayers.length,
-                        currentUserAddress: userWalletAddress,
-                        currentUserSeat: currentUserSeat,
-                        players: activePlayers.map((p: PlayerDTO) => ({
-                            seat: p.seat,
-                            address: p.address,
-                            stack: p.stack,
-                            status: p.status,
-                            lastAction: p.lastAction,
-                            sumOfBets: p.sumOfBets
-                        }))
-                    },
-                    null,
-                    2
-                )
-        );
-
         return activePlayers;
     }, [tableDataValues.tableDataPlayers, userWalletAddress, currentUserSeat]);
 
@@ -777,6 +755,37 @@ const Table = React.memo(() => {
             subscribeToTable(id);
         }
     }, [id, subscribeToTable]);
+
+    // Debug logging - full game state from WebSocket
+    useEffect(() => {
+        console.log(
+            "🎲 TABLE - Full Game State from WebSocket:\n" +
+                JSON.stringify(gameState, null, 2)
+        );
+
+        // Also log active players mapping
+        const activePlayers = gameState?.players?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        console.log(
+            "🎲 TABLE - Active Players Mapping: " +
+                JSON.stringify(
+                    {
+                        totalPlayers: activePlayers.length,
+                        currentUserAddress: userWalletAddress,
+                        currentUserSeat: currentUserSeat,
+                        players: activePlayers.map((p: any) => ({
+                            seat: p.seat,
+                            address: p.address,
+                            stack: p.stack,
+                            status: p.status,
+                            lastAction: p.lastAction,
+                            sumOfBets: p.sumOfBets
+                        }))
+                    },
+                    null,
+                    2
+                )
+        );
+    }, [gameState, userWalletAddress, currentUserSeat]);
 
     return (
         <div className="table-container">

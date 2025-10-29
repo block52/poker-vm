@@ -248,7 +248,10 @@ export class SigningCosmosClient extends CosmosClient {
             value: msgJoinGame
         };
 
-        const fee = calculateFee(150_000, this.gasPrice);
+        // Use 400k gas limit to safely accommodate join transactions
+        // Observed usage: 141k-184k, so 400k provides 2x+ buffer for edge cases
+        // Better to overestimate than risk "out of gas" failures
+        const fee = calculateFee(400_000, this.gasPrice);
         const memo = "Join poker game via SDK";
 
         console.log("🪑 Joining game:", { gameId, seat, buyInAmount: buyInAmount.toString() });

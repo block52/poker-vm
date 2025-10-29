@@ -1,11 +1,12 @@
 # PVM on Cosmos - Working Checklist
 
-**Last Updated**: October 26, 2025 @ 12:00 PM
+**Last Updated**: October 29, 2025 @ 2:30 PM
 **Status**: ✅ PHASE 3 IN PROGRESS - Dashboard & BuyInModal migrated to Cosmos!
 **Current Phase**: Phase 3 - Dashboard & UI Integration
 **CosmosClient Progress**: ✅ createGame, joinGame, performAction all working!
 **Architecture**: ✅ Hybrid - Cosmos for transactions, PVM WebSocket for real-time updates
-**Next**: Fix GameStateContext to use Cosmos address instead of Ethereum address
+**Current Issue**: ⚠️ MsgJoinGame type URL error - SDK package needs rebuild
+**Next**: Rebuild and publish @bitcoinbrisbane/block52 SDK package
 
 ---
 
@@ -71,6 +72,49 @@
   - **Next Fix:** Update GameStateContext to use `cosmos_address` from localStorage
 
 **See `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/STRADBROKE_ISLAND.md` for detailed plan!**
+
+---
+
+## ✅ RESOLVED: MsgJoinGame Type URL & Gas Limit (Oct 29, 2025)
+
+### Issue
+Transaction failures when joining games due to:
+1. Type URL mismatch: `/block52.pokerchain.poker.MsgJoinGame` (wrong) vs `/pokerchain.poker.v1.MsgJoinGame` (correct)
+2. Insufficient gas: 150,000 gas limit too low (actual usage: 141k-184k)
+
+### Solution Applied
+1. **Rebuilt SDK locally** with correct type URLs (using symlink for development)
+2. **Increased gas limit** from 150,000 to 400,000 (provides comfortable buffer)
+3. **Cleared Vite cache** to force UI to use fresh SDK build
+4. **Restarted services** with `--force` flag
+
+### Test Results
+✅ **Both transactions successful:**
+- Transaction 1: `945C6D674F64A37636F61863C74A699663C2B470092BB29735341A6291F33D56`
+  - Gas used: 141,125 / 200,000 wanted
+  - Status: SUCCESS
+  - Player 1 joined seat 1
+
+- Transaction 2: `AE9E6AD11E0A62A5EF18064CCC84383286FA2D19DAABC47DC95A4D35F62EF4CD`
+  - Gas used: 183,976 / 200,000 wanted
+  - Status: SUCCESS
+  - Player 2 joined seat 2
+
+### Gas Limit Decision
+**Why 400,000?**
+- Observed gas usage range: 141k-184k per join
+- 400k provides 2x+ buffer for edge cases and variations
+- Prevents "out of gas" failures during high load or complex game states
+- Minimal cost increase (gas price is low: 0.025b52Token per unit)
+- Better safe than sorry - failed transactions waste gas anyway
+
+### Development Setup
+Using symlinks for local SDK development (no npm publish needed):
+```bash
+# UI and PVM link to local SDK
+poker-vm/ui/package.json: "@bitcoinbrisbane/block52": "file:../sdk"
+poker-vm/pvm/ts/package.json: "@bitcoinbrisbane/block52": "file:../sdk"
+```
 
 ---
 

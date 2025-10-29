@@ -262,7 +262,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
                         // If it's a game not found error, clear the game state
                         if (message.code === "GAME_NOT_FOUND") {
-                            setGameState(null);
+                            setGameState(undefined);
                         }
                     }
                 } catch (err) {

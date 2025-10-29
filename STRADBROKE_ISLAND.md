@@ -751,6 +751,266 @@ If you have 0 b52Token, you need to fund your wallet. Options:
 
 ---
 
+## 🐛 Bug Fixes & Investigations
+
+### Bug #1: Invalid Action Index on Second Player Join (Oct 28, 2025)
+
+**Symptom:**
+- First player joins Sit & Go successfully
+- Second player gets error: `Error: Invalid action index.`
+- PVM logs show: `index: 1` (expected: 2)
+
+**Investigation:**
+```bash
+# PVM error log:
+handleWriteMethod perform_action {
+  params: ['b521t29f...', '0xb9de98e...', 'join', '1000000', 1, ...],  # index = 1
+}
+Error: Invalid action index.
+    at TexasHoldemGame.performAction (/poker-vm/pvm/ts/src/engine/texasHoldem.ts:1052:19)
+```
+
+**Root Cause:**
+The blockchain keeper was calculating action index incorrectly. It was using:
+```go
+actionIndex := gameState.ActionCount + 1  // ❌ WRONG!
+```
+
+But the PVM expects (from `texasHoldem.ts:983`):
+```typescript
+return this._actionCount + this.getPreviousActions().length + 1;
+```
+
+**Example:**
+- Player 1 joins: ActionCount=0, PreviousActions=[], Index = 0 + 0 + 1 = 1 ✅
+- Player 2 joins: ActionCount=0, PreviousActions=[1], Index = 0 + 1 + 1 = 2 ✅
+
+Keeper was calculating: `0 + 1 = 1` ❌ (missing previousActions length)
+
+**Fix:**
+Updated `pokerchain/x/poker/keeper/msg_server_perform_action.go:145`:
+```go
+// OLD:
+actionIndex := gameState.ActionCount + 1
+
+// NEW:
+actionIndex := gameState.ActionCount + len(gameState.PreviousActions) + 1
+```
+
+**Debug Script Created:**
+`pokerchain/scripts/debug-action-index.sh` - Check game state and calculate expected action index
+
+**Files Changed:**
+- `pokerchain/x/poker/keeper/msg_server_perform_action.go` (line 145)
+
+**Test:**
+```bash
+# Rebuild and restart blockchain
+cd pokerchain && make install && ignite chain serve --reset-once
+
+# Try joining with second player
+# Should now succeed with correct action index
+```
+
+---
+
+### Bug #2: Seat Assignment Hardcoded to Seat 1 (Oct 28, 2025)
+
+**Symptom:**
+- Both players successfully join Sit & Go (action index fix worked!)
+- But BOTH players are assigned to seat 1
+- Second player overwrites first player in game state
+- Each player's browser shows only themselves in seat 1
+
+**Root Cause:**
+The keeper was **not passing the seat number** from the join message to the PVM. Instead, it hardcoded `seat=1` in the RPC call.
+
+**Evidence:**
+```typescript
+// UI hook sends seat=0 for random assignment:
+// useSitAndGoPlayerJoinRandomSeat.ts:72-76
+const transactionHash = await signingClient.joinGame(
+    options.tableId,
+    0, // Seat 0 = random seat selection
+    BigInt(amountInMicrounits)
+);
+```
+
+```go
+// Keeper receives the seat in the message:
+// msg_server_join_game.go:20
+sdkCtx.Logger().Info("🎮 JoinGame called",
+    "seat", msg.Seat,  // ✅ Seat is in the message!
+```
+
+```go
+// BUT keeper doesn't pass seat to PVM:
+// msg_server_join_game.go:77
+err = k.callGameEngine(ctx, msg.Player, msg.GameId, "join", msg.BuyInAmount)
+// ❌ No seat parameter!
+```
+
+```go
+// AND hardcodes seat=1 in the RPC call:
+// msg_server_perform_action.go:157
+request := JSONRPCRequest{
+    Params: []interface{}{
+        // ...
+        `seat=1`,  // ❌ BUG: Always seat 1!
+    },
+}
+```
+
+**Expected Behavior:**
+- UI sends `seat=0` for random seat selection
+- Keeper passes `seat=0` to PVM
+- PVM automatically assigns next available seat (1, 2, 3, etc.)
+- Each player gets a unique seat number
+
+**Fix:**
+1. Modify `callGameEngine()` function to accept seat parameter
+2. Pass `msg.Seat` to `callGameEngine()` in `JoinGame` handler
+3. When seat=0 (random), send empty string to PVM (let PVM auto-assign)
+4. When seat>0 (specific), send `seat=N` to request that seat
+
+**The Critical Issue:**
+The PVM **requires an explicit seat number** and doesn't support auto-assignment. The Ethereum SDK handled this by picking an available seat before calling the contract. The Cosmos keeper now does the same.
+
+**How It Works (matching Ethereum SDK pattern):**
+1. UI/hook sends `seat=0` for "random seat selection"
+2. Keeper checks if `seat=0`
+3. If yes, keeper fetches game state and finds first available seat (1 to maxPlayers)
+4. Keeper passes the **specific seat number** to PVM (e.g., `seat=1`, `seat=2`)
+5. PVM assigns player to that seat
+
+```go
+// In msg_server_join_game.go:
+if seatNumber == 0 {
+    // Get game state and find occupied seats
+    occupiedSeats := make(map[int]bool)
+    for _, player := range gameState.Players {
+        occupiedSeats[player.Seat] = true
+    }
+
+    // Find first available seat
+    for seat := int(1); int64(seat) <= game.MaxPlayers; seat++ {
+        if !occupiedSeats[seat] {
+            seatNumber = uint64(seat)  // Use this seat
+            break
+        }
+    }
+}
+```
+
+**Files Changed:**
+- `pokerchain/x/poker/keeper/msg_server_perform_action.go` (callGameEngine signature and lines 148-156, 168)
+- `pokerchain/x/poker/keeper/msg_server_join_game.go` (line 78 - pass seat to callGameEngine)
+
+**Test:**
+```bash
+# Rebuild and restart blockchain
+cd pokerchain && make install && ignite chain serve --reset-once
+
+# Try joining with 2+ players
+# Each should get a different seat (1, 2, 3, etc.)
+```
+
+**Status:** ✅ **FIXED** (Oct 28, 2025)
+- Rebuilt binary with seat selection logic
+- Restarted chain with fresh state
+- Ready for testing
+
+---
+
+### Token Transfer Order: Why Transfer-First is Correct
+
+**Question:** Should the keeper transfer tokens FIRST (current approach) or call PVM first (Ethereum approach)?
+
+**Current Cosmos Flow:**
+```
+1. Validate inputs (address, game exists, buy-in amount)
+2. ✅ Transfer buy-in: player → module account (escrow)
+3. 🎲 Call PVM to join game
+4a. If PVM fails: ❌ Refund: module → player (atomically)
+4b. If PVM succeeds: ✅ Keep tokens in module, update game.Players
+```
+
+**Why This is Correct:**
+
+1. **Atomic Transactions**: Either everything succeeds (tokens transferred + PVM updated) or everything fails (tokens refunded)
+2. **Cosmos SDK Pattern**: Module account acts as escrow/pot during the game
+3. **Error Recovery**: Simple refund if PVM fails - no inconsistent state
+4. **Minimal Keeper Logic**: Keeper is just a vessel - transfers tokens, calls PVM, handles cleanup
+
+**Comparison to Ethereum:**
+- On Ethereum, the contract ALSO takes tokens first (via `transferFrom`)
+- Then calls internal game logic
+- If logic fails, transaction reverts (automatic refund)
+- **Cosmos uses explicit refund** but same atomic guarantee
+
+**Why Balance Goes Down:**
+- When you join with $1 buy-in, your wallet balance **should** decrease by $1
+- Those tokens are now in the module account (game pot)
+- When game ends, winners receive the pot
+- This is identical to Ethereum - tokens are locked in contract/module
+
+**UI Clarification Needed:**
+The test-signing page shows two different balances:
+- Top bar: "$0.00USDC" (wallet balance AFTER buy-in deducted)
+- Modal: "Your Balance: $50.00" (might be showing different source)
+
+This is confusing UX but **not a bug** - tokens are correctly held in the game pot.
+
+---
+
+## 🧹 Phase 7: Legacy Code Cleanup
+
+### Ethereum Wallet References to Remove
+
+The following files still reference the old Ethereum wallet system (`user_eth_public_key`). These need to be updated to use Cosmos addresses (`user_cosmos_address`) or removed if no longer needed:
+
+- [ ] **useUserWallet.ts** (line 25)
+  - `export const STORAGE_PUBLIC_KEY = "user_eth_public_key"`
+  - Action: Update or remove if wallet is Ethereum-bridge only
+
+- [ ] **b52AccountUtils.ts** (line 23)
+  - `return localStorage.getItem("user_eth_public_key")`
+  - Action: Check if this util is still needed for bridge, otherwise remove
+
+- [ ] **usePlayerSeatInfo.ts** (line 21)
+  - `const address = localStorage.getItem("user_eth_public_key")`
+  - Action: Change to `user_cosmos_address`
+
+- [ ] **GameStateContext.tsx** (lines 135, 139)
+  - Falls back to `user_eth_public_key` if Cosmos address not found
+  - Action: Remove fallback once all components migrated
+
+- [ ] **useNextToActInfo.ts** (line 49)
+  - `const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase()`
+  - Action: Change to `user_cosmos_address`
+
+- [ ] **usePlayerTimer.ts** (line 93)
+  - `const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase()`
+  - Action: Change to `user_cosmos_address`
+
+- [ ] **QRDeposit.tsx** (line 207)
+  - `const storedKey = localStorage.getItem("user_eth_public_key")`
+  - Action: Keep if needed for Ethereum bridge deposits, otherwise remove
+
+- [ ] **Footer.tsx** (lines 55, 140)
+  - Two references to `user_eth_public_key`
+  - Action: Change to `user_cosmos_address` (footer was migrated to Cosmos)
+
+### Related Cleanup Tasks
+
+- [ ] Remove ethers.js imports from files that no longer use Ethereum
+- [ ] Update all Wei → microunit conversions (18 decimals → 6 decimals)
+- [ ] Remove `user_eth_private_key` references once Ethereum bridge is migrated
+- [ ] Clean up old RPC client references
+- [ ] Update all documentation comments mentioning "Wei" or "Ethereum"
+
+---
+
 ## 📚 Reference Documents
 
 - Original migration checklist: `poker-vm/ui/src/hooks/COSMOS_MIGRATION_CHECKLIST.md`
