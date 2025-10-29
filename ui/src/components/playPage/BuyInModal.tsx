@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
-import { convertAmountToBigInt, formatWeiToDollars, formatWeiToSimpleDollars } from "../../utils/numberUtils";
+import { convertAmountToBigInt, formatWeiToDollars, formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
@@ -86,12 +86,12 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         minBuyInFormatted,
         maxBuyInFormatted,
         balanceFormatted,
-        minBuyInNumber,
-        maxBuyInNumber: _maxBuyInNumber
+        // minBuyInNumber,
+        // maxBuyInNumber: _maxBuyInNumber
     } = useMemo(() => {
         const minFormatted:string = formatWeiToSimpleDollars(minBuyInWei);
         const maxFormatted:string = formatWeiToSimpleDollars(maxBuyInWei);
-        const balanceFormatted:string = formatWeiToSimpleDollars(accountBalance);
+        const balanceFormatted:string = formatWeiToDollars(accountBalance);
 
         console.log("💵 BuyInModal - Buy-in limits:");
         console.log("  minBuyInWei:", minBuyInWei);
@@ -103,8 +103,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             minBuyInFormatted: minFormatted,
             maxBuyInFormatted: maxFormatted,
             balanceFormatted: balanceFormatted,
-            minBuyInNumber: parseFloat(minFormatted),
-            maxBuyInNumber: parseFloat(maxFormatted)
+            // minBuyInNumber: formatWeiToUSD(minBuyInWei),
+            // maxBuyInNumber: formatWeiToUSD(maxBuyInWei)
         };
     }, [minBuyInWei, maxBuyInWei, accountBalance]);
 
@@ -118,8 +118,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
     // Memoize isDisabled calculation
     const isDisabled = useMemo(() => {
-        return accountBalance < minBuyInNumber;
-    }, [accountBalance, minBuyInNumber]);
+        return accountBalance < minBuyInWei;
+    }, [accountBalance, minBuyInWei]);
 
     // Check if random seat join is available
     const canJoinRandomSeat = useMemo(() => {
@@ -139,7 +139,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 }
 
                 const balance: string = await getAccountBalance();
-                setAccountBalance(convertAmountToBigInt(balance));
+                console.log("Fetched account balance:", balance);
+                setAccountBalance(BigInt(balance));
                 setBalanceError(null);
             } catch (err) {
                 console.error("Error fetching account balance:", err);
@@ -210,7 +211,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 return;
             }
 
-            if (accountBalance < minBuyInNumber) {
+            if (accountBalance < maxBuyInWei) {
                 setBuyInError("Your available balance does not reach the minimum buy-in amount for this game. Please deposit to continue.");
                 return;
             }
@@ -222,7 +223,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         } catch {
             setBuyInError("Invalid input amount.");
         }
-    }, [accountBalance, buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, minBuyInNumber, waitForBigBlind, onJoin]);
+    }, [accountBalance, buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, waitForBigBlind, onJoin]);
 
     const handleRandomSeatJoin = useCallback(async () => {
         try {
@@ -242,7 +243,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 return;
             }
 
-            if (accountBalance < minBuyInNumber) {
+            if (accountBalance < minBuyInWei) {
                 setBuyInError("Your available balance does not reach the minimum buy-in amount for this game. Please deposit to continue.");
                 return;
             }
@@ -279,7 +280,6 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         minBuyInWei,
         maxBuyInWei,
         accountBalance,
-        minBuyInNumber,
         emptySeatIndexes.length,
         navigate,
         tableId,

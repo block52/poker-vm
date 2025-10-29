@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { GameOptionsDTO, GameType } from "@bitcoinbrisbane/block52";
 import { getClient } from "../utils/b52AccountUtils";
 import { ethers } from "ethers";
+import { convertAmountToBigInt } from "../utils/numberUtils";
 
 // Type for creating new table options
 export interface CreateTableOptions {
@@ -44,11 +45,11 @@ export const useNewTable = (): UseNewTableReturn => {
             // Get the singleton client instance
             const client = getClient();
 
-            const minBuyIn: bigint = ethers.parseEther(gameOptions.minBuyIn.toString());
-            const maxBuyIn: bigint = ethers.parseEther(gameOptions.maxBuyIn.toString());
+            const minBuyIn: bigint = convertAmountToBigInt(gameOptions.minBuyIn);
+            const maxBuyIn: bigint = convertAmountToBigInt(gameOptions.maxBuyIn);
 
-            let smallBlind: bigint = ethers.parseEther(gameOptions.smallBlind.toString());
-            let bigBlind: bigint = ethers.parseEther(gameOptions.bigBlind.toString());
+            let smallBlind: bigint = convertAmountToBigInt(gameOptions.smallBlind);
+            let bigBlind: bigint = convertAmountToBigInt(gameOptions.bigBlind);
 
             if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
                 // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in

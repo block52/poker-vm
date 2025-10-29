@@ -204,8 +204,8 @@ export interface FindGamesReturn extends BaseHookReturn {
 
 // Type for the return value of useMinAndMaxBuyIns hook
 export interface MinAndMaxBuyInsReturn extends BaseHookReturn {
-    minBuyInWei: string;
-    maxBuyInWei: string;
+    minBuyInWei: bigint;
+    maxBuyInWei: bigint;
 }
 
 // Type for the return value of useNextToActInfo hook
