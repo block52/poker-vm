@@ -1047,10 +1047,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check action index for replay protection
-        const actionIndex = this.getActionIndex();
-        if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
-            throw new Error("Invalid action index.");
-        }
+        // const actionIndex = this.getActionIndex();
+        // if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
+        //     throw new Error("Invalid action index.");
+        // }
 
         // Convert amount to BigInt if provided
         const _amount: bigint = amount ? BigInt(amount) : 0n;
