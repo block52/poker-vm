@@ -4,8 +4,7 @@ import { ethers } from "ethers";
 // Modify formatBalance to add logging
 export const formatBalance = (balance: string | number) => {
     const value = Number(balance) / 1e18;
-    const formatted = value.toFixed(2);
-    return formatted;
+    return formatToFixed(value);
 };
 
 export const formatToFixed = (value: number | number): string => {
@@ -13,7 +12,7 @@ export const formatToFixed = (value: number | number): string => {
 };
 
 export const formatToFixedFromString = (value: string | number): string => {
-    return Number(ethers.formatUnits(value || "0", 18)).toFixed(2);
+    return Number(ethers.formatUnits(value, 18)).toFixed(2);
 };
 
 // Update the formatting function to ensure two decimal places

@@ -20,7 +20,7 @@ import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { Variant } from "./types";
 import { formatAddress } from "./common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
+import { formatBalance, formatToFixedFromString, formatWeiToDollars } from "../utils/numberUtils"; // Import formatBalance utility function
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
@@ -204,6 +204,9 @@ const Dashboard: React.FC = () => {
     // For Cash Game: min/max players
     const [modalMinPlayers, setModalMinPlayers] = useState(2);
     const [modalMaxPlayers, setModalMaxPlayers] = useState(9);
+    // Small/Big Blind fields
+    const [modalSmallBlind, setModalSmallBlind] = useState(1);
+    const [modalBigBlind, setModalBigBlind] = useState(2);
 
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -337,7 +340,9 @@ const Dashboard: React.FC = () => {
                 minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
                 maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
                 minPlayers: modalGameType === GameType.CASH ? modalMinPlayers : modalPlayerCount,
-                maxPlayers: modalGameType === GameType.CASH ? modalMaxPlayers : modalPlayerCount
+                maxPlayers: modalGameType === GameType.CASH ? modalMaxPlayers : modalPlayerCount,
+                smallBlind: modalSmallBlind,
+                bigBlind: modalBigBlind
             };
 
             console.log("📦 Final CreateTableOptions being sent to SDK:");
@@ -346,6 +351,8 @@ const Dashboard: React.FC = () => {
             console.log("  maxBuyIn:", gameOptions.maxBuyIn);
             console.log("  minPlayers:", gameOptions.minPlayers);
             console.log("  maxPlayers:", gameOptions.maxPlayers);
+            console.log("  smallBlind:", gameOptions.smallBlind);
+            console.log("  bigBlind:", gameOptions.bigBlind);
 
             // Use the createTable function from the hook
             const tableAddress = await createTable(publicKey, account.nonce, gameOptions);
@@ -920,6 +927,32 @@ const Dashboard: React.FC = () => {
                                         </>
                                     )}
 
+                                    {/* Small Blind and Big Blind fields (always shown) */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="block text-white text-sm mb-1">Small Blind ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalSmallBlind}
+                                                onChange={e => setModalSmallBlind(Number(e.target.value))}
+                                                min="1"
+                                                max="10000"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-white text-sm mb-1">Big Blind ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalBigBlind}
+                                                onChange={e => setModalBigBlind(Number(e.target.value))}
+                                                min="1"
+                                                max="10000"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <label className="block text-white text-sm mb-1">Variant</label>
                                         <select
@@ -1371,9 +1404,7 @@ const Dashboard: React.FC = () => {
                                                     <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
                                                         {/* Check if it's a Sit & Go (minBuyIn equals maxBuyIn) */}
                                                         {game.gameOptions?.type === GameType.SIT_AND_GO ||
-                                                        (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn &&
-                                                            game.gameOptions?.smallBlind === "100000000000000000000" &&
-                                                            game.gameOptions?.bigBlind === "200000000000000000000") ? (
+                                                        game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn ? (
                                                             <>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
                                                                     Buy-in: $
@@ -1400,17 +1431,12 @@ const Dashboard: React.FC = () => {
                                                                     Max: $
                                                                     {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
                                                                         ? formatBalance(game.gameOptions.maxBuyIn)
-                                                                        : "100.00"}
+                                                                        : "NAN"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Blinds: $
-                                                                    {game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0"
-                                                                        ? formatBalance(game.gameOptions.smallBlind)
-                                                                        : "0.50"}
+                                                                    Blinds: ${game.gameOptions?.smallBlind ? formatWeiToDollars(game.gameOptions.smallBlind) : ""}
                                                                     /$
-                                                                    {game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0"
-                                                                        ? formatBalance(game.gameOptions.bigBlind)
-                                                                        : "1.00"}
+                                                                    {game.gameOptions?.bigBlind ? formatWeiToDollars(game.gameOptions.bigBlind) : ""}
                                                                 </span>
                                                             </>
                                                         )}

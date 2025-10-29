@@ -1,3 +1,4 @@
+
 import axios, { AxiosResponse } from "axios";
 import type { Bot, ApiError, LogsResponse } from "../types";
 
@@ -15,9 +16,16 @@ const api = axios.create({
     withCredentials: false
 });
 
-// Request interceptor
+// Request interceptor: add x-api-key from cookie if present
 api.interceptors.request.use(
     config => {
+        // Get API key from cookie
+        const match = document.cookie.match(new RegExp("(^| )bot_api_key=([^;]+)"));
+        const apiKey = match ? decodeURIComponent(match[2]) : null;
+        if (apiKey) {
+            config.headers = config.headers || {};
+            config.headers["x-api-key"] = apiKey;
+        }
         console.log(`Making ${config.method?.toUpperCase()} request to ${config.url}`);
         return config;
     },
@@ -106,6 +114,22 @@ export class BotService {
         }
     }
 
+    /**
+     * Create a new bot
+     */
+    static async createBot(bot: Partial<Bot>): Promise<Bot> {
+        try {
+            const response = await api.post<Bot>("/bots", bot);
+            return response.data;
+        } catch (error) {
+            console.error("Error creating bot:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get logs from the API
+     */
     static async getLogs(limit: number = 50): Promise<LogsResponse> {
         try {
             const response: AxiosResponse<LogsResponse> = await api.get(`/logs?limit=${limit}`);
