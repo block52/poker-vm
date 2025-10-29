@@ -105,7 +105,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const callAmount = useMemo(() => (callAction ? BigInt(ethers.formatUnits(callAction.min || "0", 18)) : 0n), [callAction]);
 
     const getStep = (): number => {
-        const step =  hasBetAction ? minBet : hasRaiseAction ? minRaise : 0n;
+        const step = hasBetAction ? minBet : hasRaiseAction ? minRaise : 0n;
         return Number(step);
     };
 
@@ -144,7 +144,13 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const formattedSmallBlindAmount: string = useMemo(() => formatWeiToDollars(smallBlindAction?.min), [smallBlindAction?.min]);
     const formattedBigBlindAmount: string = useMemo(() => formatWeiToDollars(bigBlindAction?.min), [bigBlindAction?.min]);
     const formattedCallAmount: string = useMemo(() => formatWeiToDollars(callAmount), [callAmount]);
-    const formattedMaxBetAmount: string = useMemo(() => (hasBetAction ? formatWeiToDollars(maxBet) : formatWeiToDollars(maxRaise)), [hasBetAction, maxBet, maxRaise]);
+    const formattedRaiseAmount: string = useMemo(() => formatWeiToDollars(raiseAmount.toString()), [raiseAmount]);
+
+    // const formattedMinBetAmount: string = useMemo(() => formatWeiToDollars(minBet), [minBet]);
+    const formattedMaxBetAmount: string = useMemo(
+        () => (hasBetAction ? formatWeiToDollars(maxBet) : formatWeiToDollars(maxRaise)),
+        [hasBetAction, maxBet, maxRaise]
+    );
 
     // Remove hover event handlers since we're using CSS hover states
 
@@ -213,7 +219,6 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const handleBet = async () => {
         if (!tableId) return;
 
-        // const amountWei: bigint = ethers.parseUnits(raiseAmount.toString(), 18);
         const amountWei: bigint = convertAmountToBigInt(raiseAmount);
 
         try {
@@ -226,7 +231,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const handleRaise = async () => {
         if (!tableId) return;
 
-        const amountWei: bigint = ethers.parseUnits(raiseAmount.toString(), 18);
+        const amountWei: bigint = convertAmountToBigInt(raiseAmount);
 
         try {
             await raiseHand(tableId, amountWei);
@@ -433,7 +438,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             transition-all duration-200 font-medium transform active:scale-105 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
-                                            onClick={() => handleCall(callAction, callAmount, tableId)}
+                                            onClick={() => handleCall(callAmount, tableId)}
                                         >
                                             CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span>
                                         </button>
@@ -446,7 +451,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
                                         >
-                                            {hasRaiseAction ? "RAISE" : "BET"} <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span>
+                                            {hasRaiseAction ? "RAISE" : "BET"} <span style={{ color: colors.brand.primary }}>${formattedRaiseAmount}</span>
                                         </button>
                                     )}
                                 </div>
@@ -463,7 +468,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Min/Max text - placed first in mobile landscape */}
                                             {isMobileLandscape && (
                                                 <div className="flex items-center text-[9px] text-gray-400 whitespace-nowrap">
-                                                    <span>Min:${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</span>
+                                                    <span>Min:${hasBetAction ? formatWeiToDollars(minBet) : formatWeiToDollars(minRaise)}</span>
                                                     <span className="mx-1">/</span>
                                                     <span>Max:${formattedMaxBetAmount}</span>
                                                 </div>
@@ -484,12 +489,12 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             {/* Slider with dynamic fill */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? minBet : minRaise}
-                                                max={hasBetAction ? maxBet : maxRaise}
+                                                min={hasBetAction ? Number(minBet) : Number(minRaise)}
+                                                max={hasBetAction ? Number(maxBet) : Number(maxRaise)}
                                                 step={getStep()}
                                                 value={raiseAmount}
                                                 onChange={e => {
-                                                    setRaiseAmountAbsolute(Number(e.target.value), "slider");
+                                                    setRaiseAmountAbsolute(Number(e.target.value));
                                                 }}
                                                 className={
                                                     isMobileLandscape
@@ -498,12 +503,14 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 }
                                                 style={{
                                                     background: `linear-gradient(to right, #64ffda 0%, #64ffda ${
-                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
-                                                            ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
+                                                        ((raiseAmount - (hasBetAction ? Number(minBet) : Number(minRaise))) /
+                                                            ((hasBetAction ? Number(maxBet) : Number(maxRaise)) -
+                                                                (hasBetAction ? Number(minBet) : Number(minRaise)))) *
                                                         100
                                                     }%, #1e293b ${
-                                                        ((raiseAmount - (hasBetAction ? minBet : minRaise)) /
-                                                            ((hasBetAction ? maxBet : maxRaise) - (hasBetAction ? minBet : minRaise))) *
+                                                        ((raiseAmount - (hasBetAction ? Number(minBet) : Number(minRaise))) /
+                                                            ((hasBetAction ? Number(maxBet) : Number(maxRaise)) -
+                                                                (hasBetAction ? Number(minBet) : Number(minRaise)))) *
                                                         100
                                                     }%, #1e293b 100%)`
                                                 }}
@@ -531,21 +538,11 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                         onChange={e => {
                                                             const raw = e.target.value;
 
-                                                            // Always allow clearing the field
-                                                            if (raw === "") {
-                                                                setRaiseInputRaw("");
-                                                                setRaiseAmount(0);
-                                                                return;
-                                                            }
-
                                                             // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
                                                             if (/^\d*\.?\d{0,2}$/.test(raw)) {
-                                                                setRaiseInputRaw(raw);
-
                                                                 // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
                                                                 if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
                                                                     setRaiseAmount(parseFloat(raw));
-                                                                    setLastAmountSource("input");
                                                                 }
                                                             }
                                                         }}
@@ -553,7 +550,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                         disabled={!isPlayerTurn}
                                                     />
                                                     <div className={`${minMaxTextClassName} text-[8px] lg:text-[10px] text-right leading-snug`}>
-                                                        <div>Min: ${hasBetAction ? minBet.toFixed(2) : minRaise.toFixed(2)}</div>
+                                                        <div>Min: ${hasBetAction ? formatWeiToDollars(minBet) : formatWeiToDollars(minRaise)}</div>
                                                         <div>Max: ${formattedMaxBetAmount}</div>
                                                     </div>
                                                 </div>
@@ -567,21 +564,11 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     onChange={e => {
                                                         const raw = e.target.value;
 
-                                                        // Always allow clearing the field
-                                                        if (raw === "") {
-                                                            setRaiseInputRaw("");
-                                                            setRaiseAmount(0);
-                                                            return;
-                                                        }
-
                                                         // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
                                                         if (/^\d*\.?\d{0,2}$/.test(raw)) {
-                                                            setRaiseInputRaw(raw);
-
                                                             // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
                                                             if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
                                                                 setRaiseAmount(parseFloat(raw));
-                                                                setLastAmountSource("input");
                                                             }
                                                         }
                                                     }}
@@ -598,8 +585,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const newAmt = Math.max(totalPot / 4, hasBetAction ? minBet : minRaise);
-                                                        setRaiseAmountAbsolute(newAmt, "button");
+                                                        const amount = 0.25 * totalPot;
+                                                        setRaiseAmountAbsolute(amount);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -609,8 +596,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const newAmt = Math.max(totalPot / 2, hasBetAction ? minBet : minRaise);
-                                                        setRaiseAmountAbsolute(newAmt, "button");
+                                                        const amount = 0.5 * totalPot;
+                                                        setRaiseAmountAbsolute(amount);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -620,8 +607,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const newAmt = Math.max((totalPot * 3) / 4, hasBetAction ? minBet : minRaise);
-                                                        setRaiseAmountAbsolute(newAmt, "button");
+                                                        const amount = 0.75 * totalPot;
+                                                        setRaiseAmountAbsolute(amount);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -638,7 +625,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                             pot: BigInt(totalPot || 0)
                                                         });
 
-                                                        setRaiseAmountAbsolute(Number(potBet), "button");
+                                                        setRaiseAmountAbsolute(Number(potBet));
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -648,8 +635,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-all-in px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 font-medium transform active:scale-105"
                                                     onClick={() => {
-                                                        const newAmt = hasBetAction ? maxBet : maxRaise;
-                                                        setRaiseAmountAbsolute(newAmt, "button");
+                                                        const amount = hasBetAction ? maxBet : maxRaise;
+                                                        setRaiseAmountAbsolute(Number(amount));
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
