@@ -25,7 +25,18 @@ export class GameStateCommand {
 
             return game.toJson(this.caller);
         } catch (error) {
-            console.error(`Error executing GameStateCommand: ${(error as Error).message}`);
+            // Only log the error message, not the full error object
+            const errorMessage = (error as any)?.response?.data?.message ||
+                               (error as Error).message ||
+                               String(error);
+
+            // Don't log stack trace for 404s (game not found is normal)
+            if ((error as any)?.response?.status === 404 || (error as any)?.status === 404) {
+                // Silent for 404s - handled gracefully by caller
+            } else {
+                console.error(`Error executing GameStateCommand: ${errorMessage}`);
+            }
+
             throw error; // Rethrow the error to be handled by the caller
         }
     }

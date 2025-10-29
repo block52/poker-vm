@@ -313,16 +313,63 @@ export class SocketService implements SocketServiceInterface {
                 // }
             } catch (error) {
                 this.activeConnections--;
-                console.error("Error during WebSocket connection setup:", error);
-                
+
+                // Check if this is a 404 game not found error
+                const isGameNotFound = (error as any)?.response?.status === 404 ||
+                                      (error as any)?.status === 404;
+
+                // Log error concisely (don't dump entire error object)
+                if (isGameNotFound) {
+                    console.log(`⚠️  Game not found: ${tableAddress || "unknown table"}`);
+                } else {
+                    console.error(`❌ Error during WebSocket connection setup: ${error instanceof Error ? error.message : String(error)}`);
+                }
+
                 // Log error if we have playerId
                 if (playerId) {
                     logConnectionEvent(playerId, "SETUP_ERROR", {
-                        error: error instanceof Error ? error.message : String(error)
+                        error: error instanceof Error ? error.message : String(error),
+                        isGameNotFound
                     });
                 }
-                
-                ws.close(1011, "Internal server error"); // 1011 = "Unexpected condition"
+
+                // Send user-friendly error message to client before closing
+                try {
+                    if (isGameNotFound && tableAddress) {
+                        // Send specific game not found error
+                        const errorMessage = {
+                            type: "error",
+                            code: "GAME_NOT_FOUND",
+                            message: `Game with ID ${tableAddress} does not exist on this chain`,
+                            details: {
+                                tableAddress,
+                                suggestion: "This game may not have been created yet, or it may exist on a different blockchain."
+                            }
+                        };
+                        ws.send(JSON.stringify(errorMessage));
+                        console.log(`Sent game not found error to client for table ${tableAddress}`);
+
+                        // Close with code 1008 (Policy Violation) for game not found
+                        ws.close(1008, "Game not found");
+                    } else {
+                        // Send generic error message
+                        const errorMessage = {
+                            type: "error",
+                            code: "CONNECTION_ERROR",
+                            message: error instanceof Error ? error.message : "Failed to establish connection",
+                            details: {}
+                        };
+                        ws.send(JSON.stringify(errorMessage));
+
+                        // Close with code 1011 (Internal Error) for other errors
+                        ws.close(1011, "Internal server error");
+                    }
+                } catch (sendError) {
+                    console.error("Failed to send error message to client:", sendError);
+                    // Close connection anyway
+                    ws.close(1011, "Internal server error");
+                }
+
                 return;
             }
 
