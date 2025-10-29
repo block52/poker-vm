@@ -248,6 +248,22 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                         } else {
                             console.warn("⚠️ [GameStateContext] No players data in game state update");
                         }
+                    } else if (message.type === "error") {
+                        // Handle error messages from the backend
+                        console.error("[GameStateContext] Received error from backend:", message);
+
+                        // Create a user-friendly error message
+                        const errorMsg = message.code === "GAME_NOT_FOUND"
+                            ? `${message.message}${message.details?.suggestion ? "\n\n" + message.details.suggestion : ""}`
+                            : message.message || "An error occurred";
+
+                        setError(new Error(errorMsg));
+                        setIsLoading(false);
+
+                        // If it's a game not found error, clear the game state
+                        if (message.code === "GAME_NOT_FOUND") {
+                            setGameState(null);
+                        }
                     }
                 } catch (err) {
                     console.error("[GameStateContext] Error parsing WebSocket message:", err);
