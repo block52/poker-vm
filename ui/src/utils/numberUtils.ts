@@ -39,6 +39,24 @@ export const formatWeiToDollars = (weiAmount: string | bigint | undefined | null
     }
 };
 
+// Update the formatting function to ensure two decimal places
+export const formatWeiToDollarsAmount = (weiAmount: string | bigint | undefined | null): number => {
+    try {
+        // Handle undefined or null values
+        if (weiAmount === undefined || weiAmount === null) {
+            return 0;
+        }
+
+        // Convert from Wei (18 decimals) to standard units
+        const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
+
+        return parseFloat(usdValue.toFixed(2));
+    } catch (error) {
+        console.error("Error formatting Wei amount:", error);
+        return 0;
+    }
+};
+
 // Simplified version without commas if needed
 export const formatWeiToSimpleDollars = (weiAmount: string | bigint | undefined | null): string => {
     try {

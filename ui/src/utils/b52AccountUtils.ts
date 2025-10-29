@@ -105,5 +105,5 @@ export const getAccountBalance = async (): Promise<string> => {
     // Use singleton client instance
     const client = getClient();
     const account = await client.getAccount(publicKey);
-    return account.balance.toString();
+    return account.balance;
 };

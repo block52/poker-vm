@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
-import { ethers } from "ethers";
 import { calculatePotBetAmount } from "../utils/calculatePotBetAmount";
 
 // Import hooks from barrel file
@@ -17,7 +16,7 @@ import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
-import { convertAmountToBigInt, formatWeiToDollars } from "../utils/numberUtils";
+import { convertAmountToBigInt, formatWeiToDollars, formatWeiToDollarsAmount } from "../utils/numberUtils";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -105,8 +104,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const callAmount = useMemo(() => (callAction ? convertAmountToBigInt(callAction.min) : 0n), [callAction]);
 
     const getStep = (): number => {
+        // Return step as a formatted dollar amount
         const step = hasBetAction ? minBet : hasRaiseAction ? minRaise : 0n;
-        return Number(step);
+        return formatWeiToDollarsAmount(step);
     };
 
     // const getStep = (): bigint => {
@@ -491,11 +491,11 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 -
                                             </button>
 
-                                            {/* Slider with dynamic fill */}
+                                            {/* Slider with dynamic fill.  Needs to be in USD not bigint */}
                                             <input
                                                 type="range"
-                                                min={hasBetAction ? Number(minBet) : Number(minRaise)}
-                                                max={hasBetAction ? Number(maxBet) : Number(maxRaise)}
+                                                min={hasBetAction ? formatWeiToDollarsAmount(minBet) : formatWeiToDollarsAmount(minRaise)}
+                                                max={hasBetAction ? formatWeiToDollarsAmount(maxBet) : formatWeiToDollarsAmount(maxRaise)}
                                                 step={getStep()}
                                                 value={raiseAmount}
                                                 onChange={e => {

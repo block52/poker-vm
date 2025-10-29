@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useMinAndMaxBuyIns } from "../../hooks/useMinAndMaxBuyIns";
 import { useNavigate } from "react-router-dom";
-import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
+import { convertAmountToBigInt, formatWeiToDollars, formatWeiToSimpleDollars } from "../../utils/numberUtils";
 import { getAccountBalance } from "../../utils/b52AccountUtils";
 import { colors, getHexagonStroke } from "../../utils/colorConfig";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
@@ -67,7 +67,7 @@ interface BuyInModalProps {
 }
 
 const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tableId }) => {
-    const [accountBalance, setAccountBalance] = useState<string>("0");
+    const [accountBalance, setAccountBalance] = useState<bigint>(0n);
     const [, setIsBalanceLoading] = useState<boolean>(true);
     const [, setBalanceError] = useState<Error | null>(null);
     const [buyInError, setBuyInError] = useState("");
@@ -86,13 +86,12 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         minBuyInFormatted,
         maxBuyInFormatted,
         balanceFormatted,
-        stakeLabel,
         minBuyInNumber,
         maxBuyInNumber: _maxBuyInNumber
     } = useMemo(() => {
-        const minFormatted = formatWeiToSimpleDollars(minBuyInWei);
-        const maxFormatted = formatWeiToSimpleDollars(maxBuyInWei);
-        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
+        const minFormatted:string = formatWeiToSimpleDollars(minBuyInWei);
+        const maxFormatted:string = formatWeiToSimpleDollars(maxBuyInWei);
+        const balanceFormatted:string = formatWeiToSimpleDollars(accountBalance);
 
         console.log("💵 BuyInModal - Buy-in limits:");
         console.log("  minBuyInWei:", minBuyInWei);
@@ -100,16 +99,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         console.log("  minFormatted:", minFormatted);
         console.log("  maxFormatted:", maxFormatted);
 
-        // Calculate stake label
-        const bigBlind = parseFloat(maxFormatted) / 100;
-        const smallBlind = bigBlind / 2;
-        const stake = `$${smallBlind.toFixed(2)} / $${bigBlind.toFixed(2)}`;
-
         return {
             minBuyInFormatted: minFormatted,
             maxBuyInFormatted: maxFormatted,
-            balanceFormatted: balance,
-            stakeLabel: stake,
+            balanceFormatted: balanceFormatted,
             minBuyInNumber: parseFloat(minFormatted),
             maxBuyInNumber: parseFloat(maxFormatted)
         };
@@ -125,8 +118,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
     // Memoize isDisabled calculation
     const isDisabled = useMemo(() => {
-        return balanceFormatted < minBuyInNumber;
-    }, [balanceFormatted, minBuyInNumber]);
+        return accountBalance < minBuyInNumber;
+    }, [accountBalance, minBuyInNumber]);
 
     // Check if random seat join is available
     const canJoinRandomSeat = useMemo(() => {
@@ -145,8 +138,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                     return;
                 }
 
-                const balance = await getAccountBalance();
-                setAccountBalance(balance);
+                const balance: string = await getAccountBalance();
+                setAccountBalance(convertAmountToBigInt(balance));
                 setBalanceError(null);
             } catch (err) {
                 console.error("Error fetching account balance:", err);
@@ -205,7 +198,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
     const handleJoinClick = useCallback(() => {
         try {
-            const buyInWei = ethers.parseUnits(buyInAmount, 18);
+            const buyInWei: bigint = convertAmountToBigInt(buyInAmount);
 
             if (buyInWei < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is $${minBuyInFormatted}`);
@@ -217,7 +210,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 return;
             }
 
-            if (balanceFormatted < minBuyInNumber) {
+            if (accountBalance < minBuyInNumber) {
                 setBuyInError("Your available balance does not reach the minimum buy-in amount for this game. Please deposit to continue.");
                 return;
             }
@@ -229,7 +222,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         } catch {
             setBuyInError("Invalid input amount.");
         }
-    }, [buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, balanceFormatted, minBuyInNumber, waitForBigBlind, onJoin]);
+    }, [accountBalance, buyInAmount, minBuyInWei, maxBuyInWei, minBuyInFormatted, maxBuyInFormatted, minBuyInNumber, waitForBigBlind, onJoin]);
 
     const handleRandomSeatJoin = useCallback(async () => {
         try {
@@ -237,7 +230,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             setIsJoiningRandomSeat(true);
 
             // Validate buy-in amount first
-            const buyInWei = ethers.parseUnits(buyInAmount, 18);
+            const buyInWei = convertAmountToBigInt(buyInAmount);
 
             if (buyInWei < BigInt(minBuyInWei)) {
                 setBuyInError(`Minimum buy-in is ${minBuyInFormatted}`);
@@ -249,7 +242,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                 return;
             }
 
-            if (balanceFormatted < minBuyInNumber) {
+            if (accountBalance < minBuyInNumber) {
                 setBuyInError("Your available balance does not reach the minimum buy-in amount for this game. Please deposit to continue.");
                 return;
             }
@@ -285,7 +278,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         buyInAmount,
         minBuyInWei,
         maxBuyInWei,
-        balanceFormatted,
+        accountBalance,
         minBuyInNumber,
         emptySeatIndexes.length,
         navigate,
@@ -325,16 +318,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                                 $
                             </span>
                         </div>
-                        <p className="text-white text-xl font-bold">{balanceFormatted.toFixed(2)}</p>
+                        <p className="text-white text-xl font-bold">{balanceFormatted}</p>
                     </div>
-                </div>
-
-                {/* Stake Dropdown */}
-                <div className="mb-6">
-                    <label className="block text-gray-300 mb-1 font-medium text-sm">Select Stake</label>
-                    <select disabled value={stakeLabel} className="w-full p-2 rounded text-white focus:outline-none text-sm" style={STATIC_STYLES.select}>
-                        <option>{stakeLabel}</option>
-                    </select>
                 </div>
 
                 {/* Buy-In Amount Selection */}

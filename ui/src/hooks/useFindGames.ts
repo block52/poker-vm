@@ -20,10 +20,6 @@ export const useFindGames = (): FindGamesReturn => {
             return;
         }
 
-        // Create the client directly with the private key
-        const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-        const _client = new NodeRpcClient(nodeUrl, privateKey);
-
         setIsLoading(true);
         setError(null);
 

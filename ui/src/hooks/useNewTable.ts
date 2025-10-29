@@ -47,8 +47,8 @@ export const useNewTable = (): UseNewTableReturn => {
             const minBuyIn: bigint = ethers.parseEther(gameOptions.minBuyIn.toString());
             const maxBuyIn: bigint = ethers.parseEther(gameOptions.maxBuyIn.toString());
 
-            let smallBlind = ethers.parseEther(gameOptions.smallBlind.toString());
-            let bigBlind = ethers.parseEther(gameOptions.bigBlind.toString());
+            let smallBlind: bigint = ethers.parseEther(gameOptions.smallBlind.toString());
+            let bigBlind: bigint = ethers.parseEther(gameOptions.bigBlind.toString());
 
             if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
                 // For Sit & Go and Tournament: Fixed starting blinds regardless of buy-in
@@ -76,6 +76,8 @@ export const useNewTable = (): UseNewTableReturn => {
             console.log("📊 Final game parameters:");
             console.log(`  Game Type: ${gameOptions.type}`);
             console.log(`  Players: ${gameOptions.minPlayers}-${gameOptions.maxPlayers}`);
+            console.log(`  Buy-In: $${gameOptions.minBuyIn} - $${gameOptions.maxBuyIn}`);
+            console.log(`  Blinds: ${ethers.formatEther(smallBlind)}/${ethers.formatEther(bigBlind)}`);
             console.log("  Timeout: 30 seconds");
             
             console.log("🚀 Creating New Table with SDK:");

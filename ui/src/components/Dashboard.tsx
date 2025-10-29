@@ -20,7 +20,7 @@ import { STORAGE_PRIVATE_KEY } from "../hooks/useUserWallet";
 import { Variant } from "./types";
 import { formatAddress } from "./common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatBalance, formatToFixedFromString, formatWeiToDollars } from "../utils/numberUtils"; // Import formatBalance utility function
+import { formatBalance, formatWeiToDollars } from "../utils/numberUtils"; // Import formatBalance utility function
 import { useFindGames } from "../hooks/useFindGames"; // Import useFindGames hook
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 import { useAccount } from "../hooks/useAccount"; // Import useAccount hook
@@ -1434,9 +1434,9 @@ const Dashboard: React.FC = () => {
                                                                         : "NAN"}
                                                                 </span>
                                                                 <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Blinds: ${game.gameOptions?.smallBlind ? formatWeiToDollars(game.gameOptions.smallBlind) : ""}
+                                                                    Blinds: ${formatWeiToDollars(game.gameOptions.smallBlind)}
                                                                     /$
-                                                                    {game.gameOptions?.bigBlind ? formatWeiToDollars(game.gameOptions.bigBlind) : ""}
+                                                                    {formatWeiToDollars(game.gameOptions.bigBlind)}
                                                                 </span>
                                                             </>
                                                         )}
