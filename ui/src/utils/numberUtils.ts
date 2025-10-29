@@ -118,6 +118,11 @@ export const convertAmountToBigInt = (amount?: string | number, decimals: number
     return BigUnit.from(+amount, decimals).toBigInt();
 };
 
+export const castToBigInt = (amount?: string): bigint => {
+    if (!amount) return 0n;
+    return BigInt(amount);
+});
+
 // Format USDC amounts (6 decimals) to simple dollar format
 export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefined | null): string => {
     try {

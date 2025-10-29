@@ -16,7 +16,7 @@ import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
-import { convertAmountToBigInt, formatWeiToDollars, formatWeiToDollarsAmount } from "../utils/numberUtils";
+import { castToBigInt, convertAmountToBigInt, formatWeiToDollars, formatWeiToDollarsAmount } from "../utils/numberUtils";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -89,19 +89,12 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const betAction = getActionByType(legalActions, PlayerActionType.BET);
     const raiseAction = getActionByType(legalActions, PlayerActionType.RAISE);
 
-    // Convert values to USDC for faster display
-    // const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
-    // const maxBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0), [betAction]);
-    // const minRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0), [raiseAction]);
-    // const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
-    // const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
-
     // // Do as bigint
-    const minBet = useMemo(() => (betAction ? convertAmountToBigInt(betAction.min) : 0n), [betAction]);
-    const maxBet = useMemo(() => (betAction ? convertAmountToBigInt(betAction.max) : 0n), [betAction]);
-    const minRaise = useMemo(() => (raiseAction ? convertAmountToBigInt(raiseAction.min) : 0n), [raiseAction]);
-    const maxRaise = useMemo(() => (raiseAction ? convertAmountToBigInt(raiseAction.max) : 0n), [raiseAction]);
-    const callAmount = useMemo(() => (callAction ? convertAmountToBigInt(callAction.min) : 0n), [callAction]);
+    const minBet = useMemo(() => (betAction ? castToBigInt(betAction.min) : 0n), [betAction]);
+    const maxBet = useMemo(() => (betAction ? castToBigInt(betAction.max) : 0n), [betAction]);
+    const minRaise = useMemo(() => (raiseAction ? castToBigInt(raiseAction.min) : 0n), [raiseAction]);
+    const maxRaise = useMemo(() => (raiseAction ? castToBigInt(raiseAction.max) : 0n), [raiseAction]);
+    const callAmount = useMemo(() => (callAction ? castToBigInt(callAction.min) : 0n), [callAction]);
 
     const getStep = (): number => {
         // Return step as a formatted dollar amount
