@@ -98,11 +98,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
 
     // // Do as bigint
-    const minBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.min || "0", 18)) : 0n), [betAction]);
-    const maxBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.max || "0", 18)) : 0n), [betAction]);
-    const minRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.min || "0", 18)) : 0n), [raiseAction]);
-    const maxRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.max || "0", 18)) : 0n), [raiseAction]);
-    const callAmount = useMemo(() => (callAction ? BigInt(ethers.formatUnits(callAction.min || "0", 18)) : 0n), [callAction]);
+    const minBet = useMemo(() => (betAction ? convertAmountToBigInt(betAction.min) : 0n), [betAction]);
+    const maxBet = useMemo(() => (betAction ? convertAmountToBigInt(betAction.max) : 0n), [betAction]);
+    const minRaise = useMemo(() => (raiseAction ? convertAmountToBigInt(raiseAction.min) : 0n), [raiseAction]);
+    const maxRaise = useMemo(() => (raiseAction ? convertAmountToBigInt(raiseAction.max) : 0n), [raiseAction]);
+    const callAmount = useMemo(() => (callAction ? convertAmountToBigInt(callAction.min) : 0n), [callAction]);
 
     const getStep = (): number => {
         const step = hasBetAction ? minBet : hasRaiseAction ? minRaise : 0n;
@@ -169,7 +169,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // Handlers for adjusting raise amount on the slider or buttons
     const handleRaiseChange = (delta: number): void => {
         const currentRaiseAmount = BigInt(raiseAmount) || minRaise;
-        let newRaiseAmount = currentRaiseAmount + BigInt(delta);
+        let newRaiseAmount: bigint = currentRaiseAmount + BigInt(delta);
 
         if (newRaiseAmount < minRaise) {
             newRaiseAmount = minRaise;
@@ -179,21 +179,24 @@ const PokerActionPanel: React.FC = React.memo(() => {
             newRaiseAmount = maxRaise;
         }
 
-        setRaiseAmount(Number(newRaiseAmount));
+        setRaiseAmountBN(newRaiseAmount);
     };
 
+    // Todo: refactor to use bigint throughout
     const setRaiseAmountAbsolute = (amount: number): void => {
         setRaiseAmount(amount);
+    };
+
+    const setRaiseAmountBN = (amount: bigint): void => {
+        setRaiseAmount(Number(amount));
     };
 
     // Min Raise Text Prefill - Always set to minimum when actions become available
     useEffect(() => {
         if (hasRaiseAction && minRaise > 0n) {
-            setRaiseAmount(Number(minRaise));
-            // setRaiseInputRaw(minRaise.toFixed(2));
+            setRaiseAmountBN(minRaise);
         } else if (hasBetAction && minBet > 0n) {
-            setRaiseAmount(Number(minBet));
-            // setRaiseInputRaw(minBet.toFixed(2));
+            setRaiseAmountBN(minBet);
         }
     }, [hasRaiseAction, hasBetAction, minRaise, minBet]);
 
@@ -216,6 +219,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         await postBigBlind(tableId, bigBlindAmount);
     };
 
+    // Todo: remove duplication with actionHandlers.ts
     const handleBet = async () => {
         if (!tableId) return;
 
@@ -228,6 +232,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
         }
     };
 
+    // Todo: remove duplication with actionHandlers.ts
     const handleRaise = async () => {
         if (!tableId) return;
 

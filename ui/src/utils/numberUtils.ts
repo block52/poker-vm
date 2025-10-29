@@ -95,7 +95,7 @@ export const formatWinningAmount = (amount: string): string => {
  * @param decimals The number of decimals to use for conversion
  * @returns BigInt representation of the amount
  */
-export const convertAmountToBigInt = (amount: string | number, decimals: number = 18): bigint => {
+export const convertAmountToBigInt = (amount?: string | number, decimals: number = 18): bigint => {
     if (!decimals || !amount || !+amount) return 0n;
     return BigUnit.from(+amount, decimals).toBigInt();
 };

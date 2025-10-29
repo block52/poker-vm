@@ -1,4 +1,17 @@
-import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
+import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, postBigBlind, postSmallBlind, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
+
+// Handler functions for different actions - simplified
+const handlePostSmallBlind = async (amount: bigint, tableId?: string) => {
+    if (!tableId) return;
+
+    await postSmallBlind(tableId, amount.toString());
+};
+
+const handlePostBigBlind = async (amount: bigint, tableId?: string) => {
+    if (!tableId) return;
+
+    await postBigBlind(tableId, amount.toString());
+};
 
 const handleCheck = async (tableId?: string) => {
     if (!tableId) return;
