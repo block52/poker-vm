@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 
@@ -21,11 +22,15 @@ interface CosmosBlock {
 }
 
 export default function BlocksPage() {
+  const navigate = useNavigate();
   const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Set page title
+    document.title = "Block Explorer - Block52 Chain";
+
     const fetchBlocks = async () => {
       try {
         setLoading(true);
@@ -35,7 +40,7 @@ export default function BlocksPage() {
           throw new Error("Cosmos client not initialized. Please check your wallet connection.");
         }
 
-        const recentBlocks = await cosmosClient.getLatestBlocks(20);
+        const recentBlocks = await cosmosClient.getLatestBlocks(500);
         setBlocks(recentBlocks);
         setError(null);
       } catch (err: any) {
@@ -52,7 +57,11 @@ export default function BlocksPage() {
     // Auto-refresh every 2 seconds
     const interval = setInterval(fetchBlocks, 2000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Reset title when component unmounts
+      document.title = "Block52 Chain";
+    };
   }, []);
 
   const truncateHash = (hash: string) => {
@@ -205,15 +214,19 @@ export default function BlocksPage() {
                     <td className="px-6 py-4 font-bold" style={{ color: colors.brand.primary }}>
                       #{block.block.header.height}
                     </td>
-                    <td
-                      className="px-6 py-4 font-mono text-xs cursor-pointer transition-colors duration-200"
-                      style={{ color: colors.brand.primary }}
-                      onClick={() => copyToClipboard(block.block_id.hash)}
-                      onMouseEnter={(e) => e.currentTarget.style.color = colors.accent.glow}
-                      onMouseLeave={(e) => e.currentTarget.style.color = colors.brand.primary}
-                      title="Click to copy full hash"
-                    >
-                      {truncateHash(block.block_id.hash)}
+                    <td className="px-6 py-4">
+                      <a
+                        href={`/explorer/block/${block.block.header.height}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs cursor-pointer transition-colors duration-200 break-all block"
+                        style={{ color: colors.brand.primary }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = colors.accent.glow}
+                        onMouseLeave={(e) => e.currentTarget.style.color = colors.brand.primary}
+                        title="Click to view block details in new tab"
+                      >
+                        {block.block_id.hash}
+                      </a>
                     </td>
                     <td className="px-6 py-4">
                       {block.block.data.txs.length === 0 ? (

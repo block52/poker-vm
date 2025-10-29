@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import QRDeposit from "./components/QRDeposit";
 import CosmosWalletPage from "./components/CosmosWalletPage";
 import BlocksPage from "./pages/explorer/BlocksPage";
+import BlockDetailPage from "./pages/explorer/BlockDetailPage";
 import TransactionPage from "./pages/explorer/TransactionPage";
 import TestSigningPage from "./pages/TestSigningPage";
 import { GameStateProvider } from "./context/GameStateContext";
@@ -59,6 +60,7 @@ function AppContent() {
                 <Route path="/wallet" element={<CosmosWalletPage />} />
                 <Route path="/test-signing" element={<TestSigningPage />} />
                 <Route path="/explorer" element={<BlocksPage />} />
+                <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>

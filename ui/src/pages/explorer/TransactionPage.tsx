@@ -29,6 +29,7 @@ export default function TransactionPage() {
   const [transaction, setTransaction] = useState<CosmosTransaction | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEventExplanation, setShowEventExplanation] = useState(false);
 
   const handleSearch = async (hashToSearch?: string) => {
     const searchHash = hashToSearch || txHash;
@@ -85,6 +86,22 @@ export default function TransactionPage() {
       handleSearch(urlHash);
     }
   }, [urlHash]);
+
+  // Set page title based on transaction hash
+  useEffect(() => {
+    if (urlHash) {
+      // Show first 8 characters of hash in title
+      const shortHash = urlHash.substring(0, 8);
+      document.title = `Tx ${shortHash}... - Block52 Explorer`;
+    } else {
+      document.title = "Transaction Search - Block52 Explorer";
+    }
+
+    // Cleanup: reset title when component unmounts
+    return () => {
+      document.title = "Block52 Chain";
+    };
+  }, [urlHash, transaction]);
 
   // Memoized styles
   const containerStyle = useMemo(() => ({
@@ -302,11 +319,346 @@ export default function TransactionPage() {
                 </div>
               )}
 
+              {/* Game Events Highlights */}
+              {transaction.tx_response.events && (() => {
+                // Check for game_created event
+                const gameCreatedEvent = transaction.tx_response.events.find((e: any) => e.type === "game_created");
+                if (gameCreatedEvent) {
+                  const gameIdAttr = gameCreatedEvent.attributes?.find((a: any) => a.key === "game_id");
+                  const gameTypeAttr = gameCreatedEvent.attributes?.find((a: any) => a.key === "game_type");
+                  const minPlayersAttr = gameCreatedEvent.attributes?.find((a: any) => a.key === "min_players");
+                  const maxPlayersAttr = gameCreatedEvent.attributes?.find((a: any) => a.key === "max_players");
+
+                  if (gameIdAttr) {
+                    return (
+                      <div
+                        className="p-5 rounded-lg"
+                        style={{
+                          backgroundColor: hexToRgba(colors.accent.success, 0.1),
+                          border: `2px solid ${colors.accent.success}`
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <svg className="w-6 h-6" style={{ color: colors.accent.success }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <h3 className="text-xl font-bold" style={{ color: colors.accent.success }}>
+                            🎮 Game Created Successfully!
+                          </h3>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <label className="block text-gray-300 text-xs font-semibold mb-1">Game ID</label>
+                            <code
+                              className="text-sm font-mono break-all cursor-pointer transition-colors duration-200 block"
+                              style={{ color: colors.brand.primary }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(gameIdAttr.value);
+                                alert("Game ID copied!");
+                              }}
+                              title="Click to copy"
+                            >
+                              {gameIdAttr.value}
+                            </code>
+                          </div>
+                          {gameTypeAttr && (
+                            <div>
+                              <label className="block text-gray-300 text-xs font-semibold mb-1">Game Type</label>
+                              <span className="text-white font-bold">{gameTypeAttr.value}</span>
+                            </div>
+                          )}
+                          {minPlayersAttr && maxPlayersAttr && (
+                            <div>
+                              <label className="block text-gray-300 text-xs font-semibold mb-1">Players</label>
+                              <span className="text-white font-bold">{minPlayersAttr.value} - {maxPlayersAttr.value}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                }
+
+                // Check for player_joined_game event
+                const playerJoinedEvent = transaction.tx_response.events.find((e: any) => e.type === "player_joined_game");
+                if (playerJoinedEvent) {
+                  const gameIdAttr = playerJoinedEvent.attributes?.find((a: any) => a.key === "game_id");
+                  const playerAttr = playerJoinedEvent.attributes?.find((a: any) => a.key === "player");
+                  const buyInAttr = playerJoinedEvent.attributes?.find((a: any) => a.key === "buy_in");
+
+                  if (gameIdAttr) {
+                    return (
+                      <div
+                        className="p-5 rounded-lg"
+                        style={{
+                          backgroundColor: hexToRgba(colors.accent.success, 0.1),
+                          border: `2px solid ${colors.accent.success}`
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <svg className="w-6 h-6" style={{ color: colors.accent.success }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <h3 className="text-xl font-bold" style={{ color: colors.accent.success }}>
+                            🪑 Joined Game Successfully!
+                          </h3>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <label className="block text-gray-300 text-xs font-semibold mb-1">Game ID</label>
+                            <code
+                              className="text-sm font-mono break-all cursor-pointer transition-colors duration-200 block"
+                              style={{ color: colors.brand.primary }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(gameIdAttr.value);
+                                alert("Game ID copied!");
+                              }}
+                              title="Click to copy"
+                            >
+                              {gameIdAttr.value}
+                            </code>
+                          </div>
+                          {playerAttr && (
+                            <div>
+                              <label className="block text-gray-300 text-xs font-semibold mb-1">Player</label>
+                              <code className="text-sm font-mono text-white">{playerAttr.value}</code>
+                            </div>
+                          )}
+                          {buyInAttr && (
+                            <div>
+                              <label className="block text-gray-300 text-xs font-semibold mb-1">Buy-In</label>
+                              <span className="text-white font-bold">{buyInAttr.value}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                }
+
+                return null;
+              })()}
+
+              {/* Event Explanation */}
+              {transaction.tx_response.events && transaction.tx_response.events.length > 0 && (() => {
+                // Helper function to explain each event type
+                const explainEvent = (event: any, index: number) => {
+                  const type = event.type;
+                  const attrs = event.attributes || [];
+
+                  switch (type) {
+                    case "coin_spent":
+                      const spender = attrs.find((a: any) => a.key === "spender")?.value;
+                      const spentAmount = attrs.find((a: any) => a.key === "amount")?.value;
+                      const isFee = index < 3; // First coin_spent is usually fee
+                      return {
+                        icon: "💸",
+                        title: isFee ? "Transaction Fee Deducted" : "Payment Made",
+                        description: isFee
+                          ? `${spender?.substring(0, 20)}... paid ${spentAmount} in transaction fees to process this transaction on the blockchain.`
+                          : `${spender?.substring(0, 20)}... paid ${spentAmount} for the game creation.`
+                      };
+
+                    case "coin_received":
+                      const receiver = attrs.find((a: any) => a.key === "receiver")?.value;
+                      const receivedAmount = attrs.find((a: any) => a.key === "amount")?.value;
+                      const isFeeCollector = index < 3;
+                      return {
+                        icon: "💰",
+                        title: isFeeCollector ? "Fee Collected" : "Payment Received",
+                        description: isFeeCollector
+                          ? `Fee collector (${receiver?.substring(0, 20)}...) received ${receivedAmount} in transaction fees.`
+                          : `Poker module account (${receiver?.substring(0, 20)}...) received ${receivedAmount} as game creation payment.`
+                      };
+
+                    case "transfer":
+                      const recipient = attrs.find((a: any) => a.key === "recipient")?.value;
+                      const sender = attrs.find((a: any) => a.key === "sender")?.value;
+                      const amount = attrs.find((a: any) => a.key === "amount")?.value;
+                      return {
+                        icon: "↔️",
+                        title: "Transfer Recorded",
+                        description: `Transfer of ${amount} from ${sender?.substring(0, 15)}... to ${recipient?.substring(0, 15)}... was recorded in the blockchain state.`
+                      };
+
+                    case "message":
+                      const action = attrs.find((a: any) => a.key === "action")?.value;
+                      const module = attrs.find((a: any) => a.key === "module")?.value;
+                      if (action) {
+                        return {
+                          icon: "📨",
+                          title: "Message Executed",
+                          description: `The ${action.split(".").pop()} message was executed by the ${module || "blockchain"} module.`
+                        };
+                      }
+                      return {
+                        icon: "📨",
+                        title: "Message Metadata",
+                        description: "General message information recorded by the blockchain."
+                      };
+
+                    case "tx":
+                      const fee = attrs.find((a: any) => a.key === "fee")?.value;
+                      const signature = attrs.find((a: any) => a.key === "signature")?.value;
+                      const accSeq = attrs.find((a: any) => a.key === "acc_seq")?.value;
+
+                      if (fee) {
+                        return {
+                          icon: "💳",
+                          title: "Transaction Fee Details",
+                          description: `Total transaction fee: ${fee}. This covers the computational cost of processing and storing this transaction on the blockchain.`
+                        };
+                      }
+                      if (signature) {
+                        return {
+                          icon: "🔐",
+                          title: "Cryptographic Signature",
+                          description: "Digital signature proving the transaction was authorized by the account owner's private key. This ensures authenticity and non-repudiation."
+                        };
+                      }
+                      if (accSeq) {
+                        return {
+                          icon: "🔢",
+                          title: "Account Sequence (Nonce)",
+                          description: `Account sequence ${accSeq}. This incrementing number prevents replay attacks by ensuring each transaction can only be executed once.`
+                        };
+                      }
+                      break;
+
+                    case "game_created":
+                      const gameId = attrs.find((a: any) => a.key === "game_id")?.value;
+                      const gameType = attrs.find((a: any) => a.key === "game_type")?.value;
+                      return {
+                        icon: "🎮",
+                        title: "Poker Game Created",
+                        description: `A new ${gameType} poker game was created with ID ${gameId?.substring(0, 20)}... This is a custom event emitted by the poker module.`
+                      };
+
+                    case "player_joined_game":
+                      const joinedGameId = attrs.find((a: any) => a.key === "game_id")?.value;
+                      const player = attrs.find((a: any) => a.key === "player")?.value;
+                      return {
+                        icon: "🪑",
+                        title: "Player Joined Game",
+                        description: `Player ${player?.substring(0, 20)}... joined game ${joinedGameId?.substring(0, 20)}... This is a custom event emitted by the poker module.`
+                      };
+
+                    default:
+                      return {
+                        icon: "📋",
+                        title: type,
+                        description: `Custom blockchain event of type "${type}".`
+                      };
+                  }
+
+                  return {
+                    icon: "📋",
+                    title: type,
+                    description: "Blockchain event"
+                  };
+                };
+
+                return (
+                  <div className="mb-6">
+                    <button
+                      onClick={() => setShowEventExplanation(!showEventExplanation)}
+                      className="flex items-center gap-2 text-lg font-bold transition-colors duration-200 mb-3"
+                      style={{ color: colors.brand.primary }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = colors.accent.glow}
+                      onMouseLeave={(e) => e.currentTarget.style.color = colors.brand.primary}
+                    >
+                      <span>{showEventExplanation ? "▼" : "▶"}</span>
+                      <span>What do these {transaction.tx_response.events.length} events mean?</span>
+                    </button>
+
+                    {showEventExplanation && (
+                      <div
+                        className="p-5 rounded-lg mb-4"
+                        style={{
+                          backgroundColor: hexToRgba(colors.ui.bgMedium, 0.4),
+                          border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                        }}
+                      >
+                        {/* Cosmos Events Primer */}
+                        <div className="mb-6 pb-4" style={{ borderBottom: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}` }}>
+                          <h4 className="text-lg font-bold text-white mb-3">📚 About Cosmos Blockchain Events</h4>
+                          <div className="text-gray-300 text-sm space-y-2">
+                            <p>
+                              <strong style={{ color: colors.brand.primary }}>Events</strong> are records emitted during transaction execution that describe what happened.
+                              They're stored on the blockchain and indexed for easy querying.
+                            </p>
+                            <p>
+                              <strong style={{ color: colors.brand.primary }}>Standard SDK events</strong> (coin_spent, coin_received, transfer, message, tx)
+                              are automatically emitted by the Cosmos SDK for all transactions.
+                            </p>
+                            <p>
+                              <strong style={{ color: colors.brand.primary }}>Custom module events</strong> (game_created, player_joined_game)
+                              are emitted by your custom poker module to track game-specific actions.
+                            </p>
+                            <p>
+                              Events are crucial for block explorers, wallets, and applications to understand what happened in a transaction without parsing raw transaction data.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Event-by-Event Breakdown */}
+                        <h4 className="text-lg font-bold text-white mb-3">🔍 Event Breakdown</h4>
+                        <div className="space-y-3">
+                          {transaction.tx_response.events.map((event: any, index: number) => {
+                            const explanation = explainEvent(event, index);
+                            return (
+                              <div
+                                key={index}
+                                className="p-3 rounded-lg"
+                                style={{
+                                  backgroundColor: hexToRgba(colors.ui.bgDark, 0.5),
+                                  border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                }}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <span className="text-2xl">{explanation.icon}</span>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-xs font-bold text-gray-400">#{index + 1}</span>
+                                      <h5 className="font-bold" style={{ color: colors.brand.primary }}>
+                                        {explanation.title}
+                                      </h5>
+                                    </div>
+                                    <p className="text-sm text-gray-300">{explanation.description}</p>
+                                    <code className="text-xs text-gray-500 mt-1 block">Type: {event.type}</code>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Summary */}
+                        <div
+                          className="mt-5 p-4 rounded-lg"
+                          style={{
+                            backgroundColor: hexToRgba(colors.accent.success, 0.1),
+                            border: `1px solid ${hexToRgba(colors.accent.success, 0.3)}`
+                          }}
+                        >
+                          <h5 className="font-bold mb-2" style={{ color: colors.accent.success }}>Summary</h5>
+                          <p className="text-sm text-gray-300">
+                            This transaction executed successfully with {transaction.tx_response.events.length} events emitted.
+                            The blockchain recorded fee payments, state changes, and custom poker game events.
+                            All events are permanently stored and indexed for future queries.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Events */}
               {transaction.tx_response.events && transaction.tx_response.events.length > 0 && (
                 <div>
                   <h3 className="text-xl font-bold text-white mb-3">
-                    Events ({transaction.tx_response.events.length})
+                    Raw Events Data ({transaction.tx_response.events.length})
                   </h3>
                   <pre
                     className="p-4 rounded-lg text-xs overflow-auto font-mono text-gray-300"
