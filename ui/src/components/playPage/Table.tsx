@@ -196,7 +196,7 @@ const Table = React.memo(() => {
             setIsBalanceLoading(true);
             setBalanceError(null);
 
-            const balance = await getCosmosBalance("b52usdc");
+            const balance = await getCosmosBalance("usdc");
             setAccountBalance(balance);
         } catch (err) {
             console.error("Error fetching Cosmos balance:", err);

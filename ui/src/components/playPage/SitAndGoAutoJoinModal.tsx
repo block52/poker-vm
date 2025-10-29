@@ -1,9 +1,9 @@
 /**
- * AMOUNT HANDLING PATTERN:
+ * AMOUNT HANDLING PATTERN (Cosmos SDK):
  * - Components work with numbers (dollars): e.g., amount = 10 means $10
- * - Hooks convert numbers to wei: ethers.parseEther(amount.toString())
- * - SDK receives wei as strings: "10000000000000000000"
- * - Backend expects wei values, not simple numbers
+ * - Hooks convert numbers to USDC microunits: amount * 1_000_000
+ * - SDK receives microunits as strings: "10000000"
+ * - Backend expects USDC microunits (6 decimals), not Wei (18 decimals)
  */
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
@@ -36,8 +36,8 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
     // Get the game state context to force refresh after joining
     const { subscribeToTable, gameState: _gameState } = useGameStateContext();
 
-    // Get publicKey once
-    const publicKey = useMemo(() => localStorage.getItem("user_eth_public_key") || undefined, []);
+    // Get Cosmos address once
+    const publicKey = useMemo(() => localStorage.getItem("user_cosmos_address") || undefined, []);
 
     // Calculate formatted values
     const { maxBuyInFormatted, balanceFormatted, smallBlindFormatted, bigBlindFormatted } = useMemo(() => {
@@ -132,23 +132,23 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             }
 
             console.log("🎰 Sit & Go Join Attempt");
-            console.log(`📊 Game Options maxBuyIn (wei): ${gameOptions.maxBuyIn}`);
+            console.log(`📊 Game Options maxBuyIn (USDC microunits): ${gameOptions.maxBuyIn}`);
             console.log("🎲 Will use random seat selection");
 
-            // STEP 1: Convert wei string from gameOptions back to dollar amount (number)
-            // gameOptions.maxBuyIn is in wei (e.g., "1000000000000000000" for $1)
-            const buyInAmountInWei = gameOptions.maxBuyIn;
-            const buyInAmountInDollars = parseFloat(ethers.formatEther(buyInAmountInWei));
+            // STEP 1: Convert USDC microunits from gameOptions to dollar amount (number)
+            // gameOptions.maxBuyIn is in USDC microunits (e.g., "1000000" for $1)
+            const buyInAmountInMicrounits = gameOptions.maxBuyIn;
+            const buyInAmountInDollars = parseFloat(buyInAmountInMicrounits) / 1_000_000;
 
             console.log("💰 Converting from gameOptions:");
-            console.log(`   Wei string: "${buyInAmountInWei}"`);
+            console.log(`   USDC microunits: "${buyInAmountInMicrounits}"`);
             console.log(`   Dollar amount: $${buyInAmountInDollars}`);
 
             // STEP 2: Pass the dollar amount (number) to the hook
-            // The hook will handle the conversion back to wei internally
+            // The hook will handle the conversion back to USDC microunits internally
             await joinSitAndGo({
                 tableId,
-                amount: buyInAmountInDollars // Pass as number (dollars), not string (wei)
+                amount: buyInAmountInDollars // Pass as number (dollars), not string (microunits)
                 // No need to specify seat - SDK will pick randomly
             });
 

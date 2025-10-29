@@ -53,7 +53,7 @@ export const hasCosmosWallet = (): boolean => {
 
 /**
  * Get Cosmos account balance for specific token
- * @param denom The token denomination to query (default: "b52usdc")
+ * @param denom The token denomination to query (default: "usdc")
  * @returns Promise with the account balance as string in microunits (6 decimals)
  * @throws Error if wallet is not connected or fetch fails
  */
