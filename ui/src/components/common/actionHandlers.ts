@@ -1,6 +1,17 @@
-import { ethers } from "ethers";
-import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
-import { LegalActionDTO } from "@bitcoinbrisbane/block52";
+import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, postBigBlind, postSmallBlind, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
+
+// Handler functions for different actions - simplified
+const handlePostSmallBlind = async (amount: bigint, tableId?: string) => {
+    if (!tableId) return;
+
+    await postSmallBlind(tableId, amount.toString());
+};
+
+const handlePostBigBlind = async (amount: bigint, tableId?: string) => {
+    if (!tableId) return;
+
+    await postBigBlind(tableId, amount.toString());
+};
 
 const handleCheck = async (tableId?: string) => {
     if (!tableId) return;
@@ -22,30 +33,23 @@ const handleFold = async (tableId?: string) => {
     }
 };
 
-const handleCall = async (callAction: LegalActionDTO | undefined, amount: number, tableId?: string) => {
+const handleCall = async (amount: bigint, tableId?: string) => {
     if (!tableId) return;
-
-    if (callAction) {
-        try {
-            // Use our function to bet with the current raiseAmount
-            const amountWei = ethers.parseUnits(amount.toString(), 18).toString();
-            await callHand(tableId, amountWei);
-        } catch (error: any) {
-            console.error("Failed to call:", error);
-        }
-    } else {
-        console.error("Call action not available");
-    }
-};
-
-const handleBet = async (betAction: LegalActionDTO | undefined, amount: number, tableId?: string) => {
-    if (!tableId) return;
-
-    // Use our function to bet with the current raiseAmount
-    const amountWei = ethers.parseUnits(amount.toString(), 18).toString();
 
     try {
-        await betHand(tableId, amountWei);
+        // Use our function to bet with the current raiseAmount
+        await callHand(tableId, amount);
+    } catch (error: any) {
+        console.error("Failed to call:", error);
+    }
+
+};
+
+const handleBet = async (amount: bigint, tableId?: string) => {
+    if (!tableId) return;
+
+    try {
+        await betHand(tableId, amount);
     } catch (error: any) {
         console.error("Failed to bet:", error);
     }

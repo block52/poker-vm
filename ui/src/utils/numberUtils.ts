@@ -27,13 +27,33 @@ export const formatWeiToDollars = (weiAmount: string | bigint | undefined | null
         const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
 
         // Format to always show 2 decimal places
-        return usdValue.toLocaleString("en-US", {
+        const result: string = usdValue.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+
+        return result;
     } catch (error) {
         console.error("Error formatting Wei amount:", error);
         return "0.00";
+    }
+};
+
+// Update the formatting function to ensure two decimal places
+export const formatWeiToDollarsAmount = (weiAmount: string | bigint | undefined | null): number => {
+    try {
+        // Handle undefined or null values
+        if (weiAmount === undefined || weiAmount === null) {
+            return 0;
+        }
+
+        // Convert from Wei (18 decimals) to standard units
+        const usdValue = Number(ethers.formatUnits(weiAmount.toString(), 18));
+
+        return parseFloat(usdValue.toFixed(2));
+    } catch (error) {
+        console.error("Error formatting Wei amount:", error);
+        return 0;
     }
 };
 
@@ -89,14 +109,19 @@ export const formatWinningAmount = (amount: string): string => {
 
 /**
  * Converts a string amount to BigInt using specified decimals
- * @param amount The amount as a string
+ * @param amount The amount as a string or number
  * @param decimals The number of decimals to use for conversion
  * @returns BigInt representation of the amount
  */
-export const convertAmountToBigInt = (amount: string, decimals: number): bigint => {
-    if (!decimals || !amount || !+amount) return BigInt(0);
+export const convertAmountToBigInt = (amount?: string | number, decimals: number = 18): bigint => {
+    if (!decimals || !amount || !+amount) return 0n;
     return BigUnit.from(+amount, decimals).toBigInt();
 };
+
+export const castToBigInt = (amount?: string): bigint => {
+    if (!amount) return 0n;
+    return BigInt(amount);
+});
 
 // Format USDC amounts (6 decimals) to simple dollar format
 export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefined | null): string => {

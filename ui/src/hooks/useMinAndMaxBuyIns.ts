@@ -1,5 +1,6 @@
 import { useGameStateContext } from "../context/GameStateContext";
 import { MinAndMaxBuyInsReturn } from "../types/index";
+import { convertAmountToBigInt } from "../utils/numberUtils";
 
 /**
  * Custom hook to fetch min and max buy-in values for a table
@@ -16,8 +17,8 @@ export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
 
   // Default values in case of error or loading
   const defaultValues: MinAndMaxBuyInsReturn = {
-    minBuyInWei: "10000000000000000", // 0.01 ETH
-    maxBuyInWei: "1000000000000000000", // 1 ETH
+    minBuyInWei: 10000000000000000n, // 0.01 ETH
+    maxBuyInWei: 1000000000000000000n, // 1 ETH
     isLoading,
     error
   };
@@ -41,8 +42,8 @@ export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
     }
 
     // Get min and max buy-in values
-    const minBuyInWei = gameOptions.minBuyIn || defaultValues.minBuyInWei;
-    const maxBuyInWei = gameOptions.maxBuyIn || defaultValues.maxBuyInWei;
+    const minBuyInWei: bigint = BigInt(gameOptions.minBuyIn || defaultValues.minBuyInWei);
+    const maxBuyInWei: bigint = BigInt(gameOptions.maxBuyIn || defaultValues.maxBuyInWei);
 
     console.log("🎰 useMinAndMaxBuyIns - Buy-in values:");
     console.log("  minBuyIn from gameOptions:", gameOptions.minBuyIn);
