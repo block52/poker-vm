@@ -749,14 +749,6 @@ const Table = React.memo(() => {
         // Continue rendering instead of returning early
     }
 
-    // This component manages the subscription:
-    const { subscribeToTable, gameState } = useGameStateContext();
-    useEffect(() => {
-        if (id) {
-            subscribeToTable(id);
-        }
-    }, [id, subscribeToTable]);
-
     // Debug logging - full game state from WebSocket
     useEffect(() => {
         console.log(
