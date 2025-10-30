@@ -1158,6 +1158,223 @@ Before merging hook changes:
 
 ---
 
+## 📋 BigInt Review Checklist - Hooks & Components to Verify
+
+This checklist identifies all hooks and components that need review to ensure they:
+- **Hooks**: Return BigInt values (not formatted strings or numbers)
+- **Components**: Use formatting utilities from `src/utils/numberUtils.ts` when displaying
+
+### ✅ CORRECT PATTERN TO FOLLOW
+
+**Good Example - Chip.tsx:**
+```typescript
+// Component receives BigInt or string, formats at display time
+const Chip: React.FC<{ amount: string | bigint }> = ({ amount }) => {
+    const formattedAmount = formatWeiToSimpleDollars(amount);
+    return <span>${formattedAmount}</span>;
+};
+```
+
+---
+
+### PART 1: HOOKS TO CHECK
+
+#### ❌ CRITICAL - Hooks Doing Formatting (Must Fix)
+
+- [ ] **usePlayerData.ts** - Line 53-56
+  - **Issue**: Converts stack to `number` using `Number(ethers.formatUnits())`
+  - **Handles**: Player chip stacks
+  - **Fix**: Return `playerData.stack` as BigInt string, remove conversion
+
+- [ ] **useWinnerInfo.ts** - Line 24
+  - **Issue**: Formats winner amounts with `formatWeiToDollars()` in hook
+  - **Handles**: Winner payout amounts
+  - **Fix**: Return `winner.amount` as BigInt, remove `formattedAmount` field
+
+- [ ] **useTableData.ts** - Lines 53-54
+  - **Issue**: Formats blinds with `formatWeiToSimpleDollars()` in hook
+  - **Handles**: Small blind, big blind amounts
+  - **Fix**: Return raw BigInt values for `smallBlind`/`bigBlind`
+
+- [ ] **useTableState.ts** - Lines 43-51
+  - **Issue**: Formats total pot with `ethers.formatUnits()` in hook
+  - **Handles**: Total pot amount
+  - **Fix**: Return `totalPot` as BigInt string, remove `formattedTotalPot`
+
+- [ ] **usePlayerActionDropBox.ts** - Lines 42-51
+  - **Issue**: `formatActionAmount()` does inline formatting with division
+  - **Handles**: Action amounts (bet, raise, call)
+  - **Fix**: Return raw BigInt amounts, move formatting to components
+
+- [ ] **useSitAndGoPlayerResults.ts** - Lines 71, 81
+  - **Issue**: Formats payouts with `formatWeiToSimpleDollars()` in hook
+  - **Handles**: Tournament payout amounts
+  - **Fix**: Return raw payout BigInt, remove `formattedPayout` field
+
+#### ⚠️ MEDIUM - Hooks Needing Verification
+
+- [ ] **useMinAndMaxBuyIns.ts** - Lines 54-93
+  - **Handles**: Min/max buy-in limits
+  - **Check**: Contains Wei → microunits conversions with divisions
+  - **Verify**: Should return raw BigInt, move conversions to utility function
+
+- [ ] **usePlayerLegalActions.ts**
+  - **Handles**: Legal action min/max amounts (bet, raise, call)
+  - **Verify**: `legalActions` array min/max values are BigInt strings (not formatted)
+
+- [ ] **useNewTable.ts** - Lines 66-67, 76-77
+  - **Handles**: Create table options (buy-ins)
+  - **Check**: Interface accepts `number` instead of `string` for buy-ins
+  - **Fix**: Change `CreateTableOptions` to accept string values
+
+#### ✅ GOOD - Hooks Returning BigInt Correctly
+
+- [x] **usePlayerChipData.ts** - Returns `totalCurrentRoundBetting.toString()` ✅
+- [x] **useCosmosWallet.ts** - Returns `Balance[]` with raw `amount: string` ✅
+- [x] **useUserWallet.ts** - Returns raw balance string from SDK ✅
+- [x] **raiseHand.ts, betHand.ts, callHand.ts** - Convert to BigInt before sending ✅
+- [x] **postBigBlind.ts, postSmallBlind.ts, joinTable.ts** - Use BigInt correctly ✅
+
+---
+
+### PART 2: COMPONENTS TO CHECK
+
+#### ❌ CRITICAL - Components NOT Using Formatting Utilities
+
+- [ ] **Player.tsx** - Line 218
+  - **Issue**: Passes `stackValue` (number) to Badge
+  - **Displays**: Current player chip stack
+  - **Fix**: Receive BigInt from usePlayerData, pass to Badge or format here
+
+- [ ] **OppositePlayer.tsx** - Line 216
+  - **Issue**: Passes `stackValue` (number) to Badge
+  - **Displays**: Opponent chip stacks
+  - **Fix**: Receive BigInt from usePlayerData, pass to Badge or format here
+
+- [ ] **Badge.tsx** - Line 70
+  - **Issue**: Receives `value: number`, formats with utility functions
+  - **Displays**: Player chip amounts, tournament payouts
+  - **Fix**: Change prop to `value: bigint | string`, format internally
+
+- [ ] **BuyInModal.tsx** - Lines 106-107, 192, 231
+  - **Issue**: Uses `Number()/parseFloat()` for conversions (precision loss)
+  - **Displays**: Buy-in amounts, wallet balances, min/max limits
+  - **Fix**: Use BigInt for all conversions, not Number/parseFloat
+  - **Specific issues**:
+    - Line 106-107: `Number(usdcBalance.amount) / 1_000_000` ❌
+    - Line 192, 231: `parseFloat(buyInAmount) * 1_000_000` ❌
+
+- [ ] **Footer.tsx (PokerActionPanel)** - Lines 93-97, 138-141, 212, 225
+  - **Issue**: Uses `Number()` division and multiplication
+  - **Displays**: Bet/raise controls, action buttons with amounts
+  - **Fix**: Work with BigInt throughout, use utilities for display
+  - **Specific issues**:
+    - Lines 93-97: `Number(action.min) / 1_000_000` ❌
+    - Lines 212, 225: `raiseAmount * 1_000_000` ❌
+
+#### ⚠️ MEDIUM - Components Needing Full Review
+
+- [ ] **Table.tsx**
+  - **Displays**: Pot amounts, balance displays, winner animations
+  - **Check**: Search for `formatWeiToSimpleDollars`, `formatWeiToUSD`, number conversions
+  - **Verify**: All numeric displays use formatting utilities
+
+- [ ] **WithdrawalModal.tsx**
+  - **Displays**: Withdrawal amounts, balance conversions
+  - **Check**: All amount handling uses BigInt
+
+- [ ] **USDCDepositModal.tsx**
+  - **Displays**: Deposit amounts, allowances
+  - **Check**: BigInt handling for amounts
+
+- [ ] **QRDeposit.tsx**
+  - **Displays**: Balance information
+  - **Check**: Balance display uses formatting utilities
+
+- [ ] **Deposit.tsx**
+  - **Displays**: Deposit interface
+  - **Check**: Amount handling and display
+
+#### ✅ GOOD - Components Using Formatting Correctly
+
+- [x] **Chip.tsx** - Receives `amount: string | bigint`, uses `formatWeiToSimpleDollars()` ✅
+  - **This is the correct pattern to follow!**
+
+- [ ] **CosmosStatus.tsx** - Review for balance display patterns
+
+---
+
+### SUMMARY STATISTICS
+
+**Hooks:**
+- ❌ Critical Issues: 6 hooks doing formatting
+- ⚠️ Need Verification: 3 hooks
+- ✅ Already Compliant: 8+ hooks
+
+**Components:**
+- ❌ Critical Issues: 5 components not using utilities
+- ⚠️ Need Review: 5 components
+- ✅ Compliant: 1 component (Chip.tsx as reference)
+
+---
+
+### RECOMMENDED FIX ORDER
+
+1. **Phase 1 - Fix Hooks** (Highest Impact)
+   - [ ] usePlayerData.ts
+   - [ ] useWinnerInfo.ts
+   - [ ] useTableData.ts
+   - [ ] useTableState.ts
+   - [ ] usePlayerActionDropBox.ts
+   - [ ] useSitAndGoPlayerResults.ts
+
+2. **Phase 2 - Fix Core Display Components**
+   - [ ] Badge.tsx (central component used everywhere)
+   - [ ] Player.tsx
+   - [ ] OppositePlayer.tsx
+
+3. **Phase 3 - Fix Input/Modal Components**
+   - [ ] BuyInModal.tsx
+   - [ ] Footer.tsx (PokerActionPanel)
+
+4. **Phase 4 - Review & Verify**
+   - [ ] Table.tsx
+   - [ ] WithdrawalModal.tsx
+   - [ ] USDCDepositModal.tsx
+   - [ ] All other display components
+
+---
+
+### FORMATTING UTILITIES REFERENCE
+
+**Available in `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/ui/src/utils/numberUtils.ts`:**
+
+```typescript
+// Use these in components for display:
+formatWeiToDollars(weiAmount: string | bigint) → "1,234.56"
+formatWeiToSimpleDollars(weiAmount: string | bigint) → "1234.56"
+formatUSDCToSimpleDollars(usdcAmount: string | bigint) → "1234.56" // 6 decimals
+formatChipAmount(chipAmount: string | bigint) → "1234.56"
+formatWinningAmount(amount: string) → "1,234.56"
+
+// Sit & Go specific:
+formatForSitAndGo(value: number) → "10,000" // No dollar sign
+formatForCashGame(value: number) → "$100.00"
+
+// Conversion utility:
+convertAmountToBigInt(amount: string, decimals: number) → bigint
+```
+
+**DO NOT use in components:**
+- ❌ `Number(value) / 1_000_000`
+- ❌ `parseFloat(value) * 1_000_000`
+- ❌ `value.toFixed(2)`
+- ❌ `ethers.formatUnits()` directly
+
+**Always use the utility functions above!**
+
+---
+
 ## 🧹 Phase 7: Legacy Code Cleanup
 
 ### Ethereum Wallet References to Remove
