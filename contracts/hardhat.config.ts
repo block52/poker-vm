@@ -39,7 +39,20 @@ const config: HardhatUserConfig = {
         timeout: 40000
     },
     etherscan: {
-        apiKey: process.env.ETHERSCAN_API_KEY || ""
+        apiKey: {
+            mainnet: process.env.ETHERSCAN_API_KEY || "",
+            base: process.env.ETHERSCAN_API_KEY || ""
+        },
+        customChains: [
+            {
+                network: "base",
+                chainId: 8453,
+                urls: {
+                    apiURL: "https://api.etherscan.io/v2/api?chainid=8453",
+                    browserURL: "https://basescan.org"
+                }
+            }
+        ]
     },
     sourcify: {
         enabled: true

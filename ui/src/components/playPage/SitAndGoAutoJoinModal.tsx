@@ -1,17 +1,17 @@
 /**
- * AMOUNT HANDLING PATTERN:
+ * AMOUNT HANDLING PATTERN (Cosmos SDK):
  * - Components work with numbers (dollars): e.g., amount = 10 means $10
- * - Hooks convert numbers to wei: ethers.parseEther(amount.toString())
- * - SDK receives wei as strings: "10000000000000000000"
- * - Backend expects wei values, not simple numbers
+ * - Hooks convert numbers to USDC microunits: amount * 1_000_000
+ * - SDK receives microunits as strings: "10000000"
+ * - Backend expects USDC microunits (6 decimals), not Wei (18 decimals)
  */
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ethers } from "ethers";
 import { useGameOptions } from "../../hooks/useGameOptions";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { useSitAndGoPlayerJoinRandomSeat } from "../../hooks/useSitAndGoPlayerJoinRandomSeat";
-import { formatWeiToSimpleDollars } from "../../utils/numberUtils";
-import { getAccountBalance } from "../../utils/b52AccountUtils";
+import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
+import { getCosmosBalance } from "../../utils/cosmosAccountUtils";
 import { colors as _colors, hexToRgba as _hexToRgba } from "../../utils/colorConfig";
 import { useGameStateContext } from "../../context/GameStateContext";
 
@@ -36,8 +36,8 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
     // Get the game state context to force refresh after joining
     const { subscribeToTable, gameState: _gameState } = useGameStateContext();
 
-    // Get publicKey once
-    const publicKey = useMemo(() => localStorage.getItem("user_eth_public_key") || undefined, []);
+    // Get Cosmos address once
+    const publicKey = useMemo(() => localStorage.getItem("user_cosmos_address") || undefined, []);
 
     // Calculate formatted values
     const { maxBuyInFormatted, balanceFormatted, smallBlindFormatted, bigBlindFormatted } = useMemo(() => {
@@ -60,16 +60,17 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             };
         }
 
-        // Use actual values from gameOptions
-        const maxBuyInWei = gameOptions.maxBuyIn;
-        // If backend sends "1" Wei, interpret as $1 USD (1e18 Wei)
-        const maxFormatted = maxBuyInWei === "1" ? "1.00" : formatWeiToSimpleDollars(maxBuyInWei);
+        // Use actual values from gameOptions (Cosmos USDC microunits - 6 decimals)
+        const maxBuyInMicrounits = gameOptions.maxBuyIn;
+        // Format USDC microunits to dollars
+        const maxFormatted = maxBuyInMicrounits === "1" ? "1.00" : formatUSDCToSimpleDollars(maxBuyInMicrounits);
 
-        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 18)) : 0;
+        // Balance is stored as USDC microunits (6 decimals)
+        const balance = accountBalance ? parseFloat(ethers.formatUnits(accountBalance, 6)) : 0;
 
-        // Use actual blind values from gameOptions if they exist
-        const smallBlind = gameOptions.smallBlind ? formatWeiToSimpleDollars(gameOptions.smallBlind) : "0.00";
-        const bigBlind = gameOptions.bigBlind ? formatWeiToSimpleDollars(gameOptions.bigBlind) : "0.00";
+        // Use actual blind values from gameOptions if they exist (also in microunits)
+        const smallBlind = gameOptions.smallBlind ? formatUSDCToSimpleDollars(gameOptions.smallBlind) : "0.00";
+        const bigBlind = gameOptions.bigBlind ? formatUSDCToSimpleDollars(gameOptions.bigBlind) : "0.00";
 
         return {
             maxBuyInFormatted: maxFormatted,
@@ -86,15 +87,15 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                 setIsBalanceLoading(true);
 
                 if (!publicKey) {
-                    setBuyInError("No wallet address available");
+                    setBuyInError("No Cosmos wallet address available");
                     setIsBalanceLoading(false);
                     return;
                 }
 
-                const balance = await getAccountBalance();
+                const balance = await getCosmosBalance("usdc");
                 setAccountBalance(balance);
             } catch (err) {
-                console.error("Error fetching account balance:", err);
+                console.error("Error fetching Cosmos balance:", err);
                 setBuyInError("Failed to fetch balance");
             } finally {
                 setIsBalanceLoading(false);
@@ -131,23 +132,23 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             }
 
             console.log("🎰 Sit & Go Join Attempt");
-            console.log(`📊 Game Options maxBuyIn (wei): ${gameOptions.maxBuyIn}`);
+            console.log(`📊 Game Options maxBuyIn (USDC microunits): ${gameOptions.maxBuyIn}`);
             console.log("🎲 Will use random seat selection");
 
-            // STEP 1: Convert wei string from gameOptions back to dollar amount (number)
-            // gameOptions.maxBuyIn is in wei (e.g., "1000000000000000000" for $1)
-            const buyInAmountInWei = gameOptions.maxBuyIn;
-            const buyInAmountInDollars = parseFloat(ethers.formatEther(buyInAmountInWei));
+            // STEP 1: Convert USDC microunits from gameOptions to dollar amount (number)
+            // gameOptions.maxBuyIn is in USDC microunits (e.g., "1000000" for $1)
+            const buyInAmountInMicrounits = gameOptions.maxBuyIn;
+            const buyInAmountInDollars = parseFloat(buyInAmountInMicrounits) / 1_000_000;
 
             console.log("💰 Converting from gameOptions:");
-            console.log(`   Wei string: "${buyInAmountInWei}"`);
+            console.log(`   USDC microunits: "${buyInAmountInMicrounits}"`);
             console.log(`   Dollar amount: $${buyInAmountInDollars}`);
 
             // STEP 2: Pass the dollar amount (number) to the hook
-            // The hook will handle the conversion back to wei internally
+            // The hook will handle the conversion back to USDC microunits internally
             await joinSitAndGo({
                 tableId,
-                amount: buyInAmountInDollars // Pass as number (dollars), not string (wei)
+                amount: buyInAmountInDollars // Pass as number (dollars), not string (microunits)
                 // No need to specify seat - SDK will pick randomly
             });
 

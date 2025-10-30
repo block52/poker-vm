@@ -464,3 +464,4 @@ bot/dashboard/.env
 bot/dashboard/node_modules
 bot/dashboard/build
 bot/dashboard/dist
+pvm/ts/.DS_Store

@@ -89,12 +89,12 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const betAction = getActionByType(legalActions, PlayerActionType.BET);
     const raiseAction = getActionByType(legalActions, PlayerActionType.RAISE);
 
-    // Convert values to USDC for faster display
-    const minBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.min || "0", 18)) : 0), [betAction]);
-    const maxBet = useMemo(() => (betAction ? Number(ethers.formatUnits(betAction.max || "0", 18)) : 0), [betAction]);
-    const minRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.min || "0", 18)) : 0), [raiseAction]);
-    const maxRaise = useMemo(() => (raiseAction ? Number(ethers.formatUnits(raiseAction.max || "0", 18)) : 0), [raiseAction]);
-    const callAmount = useMemo(() => (callAction ? Number(ethers.formatUnits(callAction.min || "0", 18)) : 0), [callAction]);
+    // Convert values from microunits (6 decimals) to USDC for display
+    const minBet = useMemo(() => (betAction ? Number(betAction.min || "0") / 1_000_000 : 0), [betAction]);
+    const maxBet = useMemo(() => (betAction ? Number(betAction.max || "0") / 1_000_000 : 0), [betAction]);
+    const minRaise = useMemo(() => (raiseAction ? Number(raiseAction.min || "0") / 1_000_000 : 0), [raiseAction]);
+    const maxRaise = useMemo(() => (raiseAction ? Number(raiseAction.max || "0") / 1_000_000 : 0), [raiseAction]);
+    const callAmount = useMemo(() => (callAction ? Number(callAction.min || "0") / 1_000_000 : 0), [callAction]);
 
     // // Do as bigint
     // const bigintMinBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.min || "0", 18)) : 0n), [betAction]);
@@ -134,9 +134,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const inputFieldClassName = useMemo(() => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
     const minMaxTextClassName = useMemo(() => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
-    // Memoize expensive computations
-    const formattedSmallBlindAmount = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
-    const formattedBigBlindAmount = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
+    // Memoize expensive computations - convert from microunits (6 decimals) to USDC
+    const formattedSmallBlindAmount = useMemo(() => (Number(smallBlindAction?.min || "0") / 1_000_000).toFixed(2), [smallBlindAction?.min]);
+    const formattedBigBlindAmount = useMemo(() => (Number(bigBlindAction?.min || "0") / 1_000_000).toFixed(2), [bigBlindAction?.min]);
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
     const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
 
@@ -208,10 +208,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const handleBet = async () => {
         if (!tableId) return;
 
-        const amountWei = ethers.parseUnits(raiseAmount.toString(), 18);
+        // Convert amount to microunits (6 decimals for USDC on Cosmos)
+        const amountMicrounits = (raiseAmount * 1_000_000).toString();
 
         try {
-            await betHand(tableId, amountWei);
+            await betHand(tableId, amountMicrounits);
         } catch (error: any) {
             console.error("Failed to bet:", error);
         }
@@ -220,10 +221,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const handleRaise = async () => {
         if (!tableId) return;
 
-        const amountWei: bigint = ethers.parseUnits(raiseAmount.toString(), 18);
+        // Convert amount to microunits (6 decimals for USDC on Cosmos)
+        const amountMicrounits = (raiseAmount * 1_000_000).toString();
 
         try {
-            await raiseHand(tableId, amountWei);
+            await raiseHand(tableId, amountMicrounits);
         } catch (error: any) {
             console.error("Failed to raise:", error);
         }

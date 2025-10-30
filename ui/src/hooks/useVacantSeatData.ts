@@ -1,6 +1,5 @@
 import React from "react";
 import { useGameStateContext } from "../context/GameStateContext";
-import { ethers } from "ethers";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import { VacantSeatResponse } from "../types/index";
 
@@ -14,7 +13,8 @@ export const useVacantSeatData = (): VacantSeatResponse => {
     const { gameState, isLoading, error } = useGameStateContext();
     
     const userAddress = React.useMemo(() => {
-        return localStorage.getItem("user_eth_public_key")?.toLowerCase() || null;
+        // Use Cosmos address (b52...) instead of Ethereum address
+        return localStorage.getItem("user_cosmos_address")?.toLowerCase() || null;
     }, []);
 
     // Memoize players array and maxPlayers to avoid repeated property access
@@ -33,9 +33,9 @@ export const useVacantSeatData = (): VacantSeatResponse => {
     const isSeatVacant = React.useCallback(
         (seatIndex: number) => {
             return !players.some(
-                (player: PlayerDTO) => player.seat === seatIndex && 
-                player.address && 
-                player.address !== ethers.ZeroAddress
+                (player: PlayerDTO) => player.seat === seatIndex &&
+                player.address &&
+                player.address.trim() !== ""
             );
         },
         [players]
@@ -50,7 +50,7 @@ export const useVacantSeatData = (): VacantSeatResponse => {
         
         const occupiedSeats = new Set(
             players
-                .filter(player => player.address && player.address !== ethers.ZeroAddress)
+                .filter(player => player.address && player.address.trim() !== "")
                 .map(player => player.seat)
         );
         

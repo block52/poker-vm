@@ -106,7 +106,7 @@ import { useGameResults } from "../../hooks/useGameResults"; // Game results dis
 // other
 import { usePlayerLegalActions } from "../../hooks/playerActions/usePlayerLegalActions";
 import { useGameOptions } from "../../hooks/useGameOptions";
-import { getAccountBalance, getPublicKey, getFormattedAddress } from "../../utils/b52AccountUtils";
+import { getCosmosBalance, getCosmosAddressSync, getFormattedCosmosAddress } from "../../utils/cosmosAccountUtils";
 import { handleSitOut, handleSitIn } from "../common/actionHandlers";
 import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
@@ -118,6 +118,9 @@ import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 import GameStartCountdown from "./common/GameStartCountdown";
 import SitAndGoAutoJoinModal from "./SitAndGoAutoJoinModal";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
+
+// Cosmos Integration
+import CosmosStatus from "../cosmos/CosmosStatus";
 
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
@@ -182,7 +185,7 @@ const Table = React.memo(() => {
     const [accountBalance, setAccountBalance] = useState<string>("0");
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [, setBalanceError] = useState<Error | null>(null);
-    const publicKey = getPublicKey();
+    const publicKey = getCosmosAddressSync();
 
     // Update to use the imported hook
     const tableDataValues = useTableData();
@@ -194,16 +197,16 @@ const Table = React.memo(() => {
     // Zoom is now handled by the table layout configuration
     // const calculateZoom = useCallback(() => { ... }, []);
 
-    // Function to fetch account balance
+    // Function to fetch Cosmos account balance
     const fetchAccountBalance = useCallback(async () => {
         try {
             setIsBalanceLoading(true);
             setBalanceError(null);
 
-            const balance = await getAccountBalance();
+            const balance = await getCosmosBalance("usdc");
             setAccountBalance(balance);
         } catch (err) {
-            console.error("Error fetching account balance:", err);
+            console.error("Error fetching Cosmos balance:", err);
             setBalanceError(err instanceof Error ? err : new Error("Failed to fetch balance"));
         } finally {
             setIsBalanceLoading(false);
@@ -401,40 +404,18 @@ const Table = React.memo(() => {
     // Add the usePlayerChipData hook
     const { getChipAmount } = usePlayerChipData();
 
-    // Memoize user wallet address using utility function
+    // Memoize user wallet address using Cosmos utility function
     const userWalletAddress = useMemo(() => {
-        const storedAddress = getPublicKey();
+        const storedAddress = getCosmosAddressSync();
         return storedAddress ? storedAddress.toLowerCase() : null;
     }, []);
 
-    // Use utility function for formatted address
-    const formattedAddress = getFormattedAddress();
+    // Use Cosmos utility function for formatted address
+    const formattedAddress = getFormattedCosmosAddress();
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
         const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
-
-        // Debug logging for seat mapping
-        console.log(
-            "🎲 TABLE - Active Players Mapping: " +
-                JSON.stringify(
-                    {
-                        totalPlayers: activePlayers.length,
-                        currentUserAddress: userWalletAddress,
-                        currentUserSeat: currentUserSeat,
-                        players: activePlayers.map((p: PlayerDTO) => ({
-                            seat: p.seat,
-                            address: p.address,
-                            stack: p.stack,
-                            status: p.status,
-                            lastAction: p.lastAction,
-                            sumOfBets: p.sumOfBets
-                        }))
-                    },
-                    null,
-                    2
-                )
-        );
 
         return activePlayers;
     }, [tableDataValues.tableDataPlayers, userWalletAddress, currentUserSeat]);
@@ -767,6 +748,45 @@ const Table = React.memo(() => {
         console.error("Error loading table data:", tableDataValues.error);
         // Continue rendering instead of returning early
     }
+
+    // This component manages the subscription:
+    const { subscribeToTable, gameState } = useGameStateContext();
+    useEffect(() => {
+        if (id) {
+            subscribeToTable(id);
+        }
+    }, [id, subscribeToTable]);
+
+    // Debug logging - full game state from WebSocket
+    useEffect(() => {
+        console.log(
+            "🎲 TABLE - Full Game State from WebSocket:\n" +
+                JSON.stringify(gameState, null, 2)
+        );
+
+        // Also log active players mapping
+        const activePlayers = gameState?.players?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        console.log(
+            "🎲 TABLE - Active Players Mapping: " +
+                JSON.stringify(
+                    {
+                        totalPlayers: activePlayers.length,
+                        currentUserAddress: userWalletAddress,
+                        currentUserSeat: currentUserSeat,
+                        players: activePlayers.map((p: any) => ({
+                            seat: p.seat,
+                            address: p.address,
+                            stack: p.stack,
+                            status: p.status,
+                            lastAction: p.lastAction,
+                            sumOfBets: p.sumOfBets
+                        }))
+                    },
+                    null,
+                    2
+                )
+        );
+    }, [gameState, userWalletAddress, currentUserSeat]);
 
     return (
         <div className="table-container">
@@ -1361,6 +1381,11 @@ const Table = React.memo(() => {
                 <div className="text-xs" style={{ color: colors.ui.textSecondary, fontSize: isMobileLandscape ? "14px" : "20px" }}>
                     {clubName}
                 </div>
+            </div>
+
+            {/* Cosmos Status in Bottom Left */}
+            <div className="fixed bottom-2 left-2 z-40 opacity-60">
+                <CosmosStatus />
             </div>
         </div>
     );

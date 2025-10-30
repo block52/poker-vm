@@ -11,7 +11,7 @@ const accountSchema = new Schema<IAccountDocument>(
         },
         balance: {
             required: true,
-            type: Number, // BigInt
+            type: String, // BigInt
         },
         nonce: {
             required: true,

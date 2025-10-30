@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { ethers } from "ethers";
 import { getClient, getPublicKey } from "../utils/b52AccountUtils";
-import { useAccount } from "../hooks/useAccount";
+import useUserWallet from "../hooks/useUserWallet";
 import { formatBalance } from "../utils/numberUtils";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
@@ -70,7 +70,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     // Get the Layer 2 game account public key from localStorage
     // This is the account that holds the funds to be withdrawn
     const publicKey = getPublicKey();
-    const { account, refetch: refetchAccount } = useAccount(publicKey || undefined);
+    const { accountData: account, refreshBalance: refetchAccount } = useUserWallet();
     const { address: web3Address, isConnected: isWeb3Connected } = useUserWalletConnect();
 
     // Amount to withdraw in USDC
@@ -262,6 +262,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
             console.log("[WithdrawalModal] - To Mainnet Address:", web3Address);
 
             // STEP 1: Call the SDK to prepare the withdrawal
+            // @ts-expect-error - Old Ethereum client for bridge only, will be updated when bridge is migrated
             const result: WithdrawResponseDTO = await client.withdraw(
                 amountInWei,
                 publicKey || undefined,

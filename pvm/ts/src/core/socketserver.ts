@@ -2,13 +2,12 @@ import { Server as HttpServer } from "http";
 import * as WebSocket from "ws";
 import { TexasHoldemStateDTO, TransactionDTO } from "@bitcoinbrisbane/block52";
 import * as url from "url";
-import { verify } from "crypto";
 import { verifySignature } from "../utils/crypto";
-import { GameStateCommand, MempoolCommand } from "../commands";
-import { ZeroAddress, ZeroHash } from "ethers";
-import { getMempoolInstance } from "./mempool";
+import { GameStateCommand } from "../commands";
+import { ZeroHash } from "ethers";
 import * as fs from "fs";
 import * as path from "path";
+import { getCosmosConfig } from "../state/cosmos/config";
 
 // Create logs directory if it doesn't exist
 const LOGS_DIR = path.join(process.cwd(), "websocket-logs");
@@ -184,15 +183,15 @@ type UnsubscribeMessage = {
     signature?: string; // Optional signature field
 };
 
-type MempoolSubscribeMessage = {
-    action: "subscribe_mempool";
-};
+// type MempoolSubscribeMessage = {
+//     action: "subscribe_mempool";
+// };
 
-type MempoolUnsubscribeMessage = {
-    action: "unsubscribe_mempool";
-};
+// type MempoolUnsubscribeMessage = {
+//     action: "unsubscribe_mempool";
+// };
 
-type ClientMessage = SubscribeMessage | UnsubscribeMessage | MempoolSubscribeMessage | MempoolUnsubscribeMessage;
+type ClientMessage = SubscribeMessage | UnsubscribeMessage; // | MempoolSubscribeMessage | MempoolUnsubscribeMessage;
 
 type GameStateUpdateMessage = {
     type: "gameStateUpdate";
@@ -210,8 +209,8 @@ export interface SocketServiceInterface {
     sendGameStateToPlayer(tableAddress: string, playerId: string, gameState: TexasHoldemStateDTO): void;
     broadcastGameStateUpdate(tableAddress: string, playerId: string, gameState: TexasHoldemStateDTO): void;
     broadcastGameStateToAllSubscribers(tableAddress: string): Promise<void>;
-    broadcastMempoolUpdate(): Promise<void>;
-    getMempoolSubscriberCount(): number;
+    // broadcastMempoolUpdate(): Promise<void>;
+    // getMempoolSubscriberCount(): number;
 }
 
 export class SocketService implements SocketServiceInterface {
@@ -234,9 +233,9 @@ export class SocketService implements SocketServiceInterface {
         return Array.from(playerMap.keys());
     }
 
-    public getMempoolSubscriberCount(): number {
-        return mempoolSubscriptions.size;
-    }
+    // public getMempoolSubscriberCount(): number {
+    //     return mempoolSubscriptions.size;
+    // }
 
     private setupSocketEvents() {
         console.log("Setting up WebSocket events");
@@ -252,7 +251,7 @@ export class SocketService implements SocketServiceInterface {
             // Declare variables at function scope so they're available throughout
             let tableAddress: string | undefined;
             let playerId: string | undefined;
-            let subscribeMempool: string | undefined;
+            // let subscribeMempool: string | undefined;
 
             try {
                 this.activeConnections++;
@@ -262,7 +261,7 @@ export class SocketService implements SocketServiceInterface {
                 const parsedUrl = url.parse(req.url || "", true);
                 tableAddress = parsedUrl.query.tableAddress as string;
                 playerId = parsedUrl.query.playerId as string;
-                subscribeMempool = parsedUrl.query.subscribeMempool as string;
+                // subscribeMempool = parsedUrl.query.subscribeMempool as string;
 
                 // If tableAddress and playerId are provided in URL, auto-subscribe
                 if (tableAddress && playerId) {
@@ -282,18 +281,19 @@ export class SocketService implements SocketServiceInterface {
                         method: "URL_PARAMS"
                     });
 
-                    // Get initial game state for this table
-                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, playerId);
+                    // Get initial game state for this table from Cosmos
+                    const cosmosConfig = getCosmosConfig();
+                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, cosmosConfig.restEndpoint);
                     const state = await gameStateCommand.execute();
 
                     // Log detailed game state
-                    logGameStateEvent(playerId, tableAddress, state.data, {
+                    logGameStateEvent(playerId, tableAddress, state, {
                         triggerType: "INITIAL_CONNECTION",
                         method: "setupSocketEvents"
                     });
 
                     // Send initial game state to the newly connected player
-                    this.sendGameStateToPlayer(tableAddress, playerId, state.data);
+                    this.sendGameStateToPlayer(tableAddress, playerId, state);
                 } else if (playerId) {
                     // Log connection even without auto-subscribe
                     logConnectionEvent(playerId, "ESTABLISHED", {
@@ -303,26 +303,73 @@ export class SocketService implements SocketServiceInterface {
                     });
                 }
 
-                // If subscribeMempool is provided in URL, auto-subscribe to mempool
-                if (subscribeMempool === "true") {
-                    this.subscribeToMempool(ws);
-                    console.log("Auto-subscribed to mempool updates");
+                // // If subscribeMempool is provided in URL, auto-subscribe to mempool
+                // if (subscribeMempool === "true") {
+                //     this.subscribeToMempool(ws);
+                //     console.log("Auto-subscribed to mempool updates");
 
-                    // Send initial mempool state
-                    await this.sendMempoolToClient(ws);
-                }
+                //     // Send initial mempool state
+                //     await this.sendMempoolToClient(ws);
+                // }
             } catch (error) {
                 this.activeConnections--;
-                console.error("Error during WebSocket connection setup:", error);
-                
+
+                // Check if this is a 404 game not found error
+                const isGameNotFound = (error as any)?.response?.status === 404 ||
+                                      (error as any)?.status === 404;
+
+                // Log error concisely (don't dump entire error object)
+                if (isGameNotFound) {
+                    console.log(`⚠️  Game not found: ${tableAddress || "unknown table"}`);
+                } else {
+                    console.error(`❌ Error during WebSocket connection setup: ${error instanceof Error ? error.message : String(error)}`);
+                }
+
                 // Log error if we have playerId
                 if (playerId) {
                     logConnectionEvent(playerId, "SETUP_ERROR", {
-                        error: error instanceof Error ? error.message : String(error)
+                        error: error instanceof Error ? error.message : String(error),
+                        isGameNotFound
                     });
                 }
-                
-                ws.close(1011, "Internal server error"); // 1011 = "Unexpected condition"
+
+                // Send user-friendly error message to client before closing
+                try {
+                    if (isGameNotFound && tableAddress) {
+                        // Send specific game not found error
+                        const errorMessage = {
+                            type: "error",
+                            code: "GAME_NOT_FOUND",
+                            message: `Game with ID ${tableAddress} does not exist on this chain`,
+                            details: {
+                                tableAddress,
+                                suggestion: "This game may not have been created yet, or it may exist on a different blockchain."
+                            }
+                        };
+                        ws.send(JSON.stringify(errorMessage));
+                        console.log(`Sent game not found error to client for table ${tableAddress}`);
+
+                        // Close with code 1008 (Policy Violation) for game not found
+                        ws.close(1008, "Game not found");
+                    } else {
+                        // Send generic error message
+                        const errorMessage = {
+                            type: "error",
+                            code: "CONNECTION_ERROR",
+                            message: error instanceof Error ? error.message : "Failed to establish connection",
+                            details: {}
+                        };
+                        ws.send(JSON.stringify(errorMessage));
+
+                        // Close with code 1011 (Internal Error) for other errors
+                        ws.close(1011, "Internal server error");
+                    }
+                } catch (sendError) {
+                    console.error("Failed to send error message to client:", sendError);
+                    // Close connection anyway
+                    ws.close(1011, "Internal server error");
+                }
+
                 return;
             }
 
@@ -377,30 +424,30 @@ export class SocketService implements SocketServiceInterface {
                         }, data.playerId);
                     }
 
-                    if (data.action === "subscribe_mempool") {
-                        this.subscribeToMempool(ws);
-                        console.log("Client subscribed to mempool updates");
+                    // if (data.action === "subscribe_mempool") {
+                    //     this.subscribeToMempool(ws);
+                    //     console.log("Client subscribed to mempool updates");
 
-                        // Send initial mempool state
-                        this.sendMempoolToClient(ws);
+                    //     // Send initial mempool state
+                    //     this.sendMempoolToClient(ws);
 
-                        // Send confirmation
-                        this.sendMessage(ws, {
-                            type: "mempool_subscribed"
-                        });
-                    }
+                    //     // Send confirmation
+                    //     this.sendMessage(ws, {
+                    //         type: "mempool_subscribed"
+                    //     });
+                    // }
 
-                    if (data.action === "unsubscribe_mempool") {
-                        this.unsubscribeFromMempool(ws);
-                        console.log("Client unsubscribed from mempool updates");
+                    // if (data.action === "unsubscribe_mempool") {
+                    //     this.unsubscribeFromMempool(ws);
+                    //     console.log("Client unsubscribed from mempool updates");
 
-                        // Send confirmation
-                        this.sendMessage(ws, {
-                            type: "mempool_unsubscribed"
-                        });
-                    }
+                    //     // Send confirmation
+                    //     this.sendMessage(ws, {
+                    //         type: "mempool_unsubscribed"
+                    //     });
+                    // }
 
-                    if (!["subscribe", "unsubscribe", "subscribe_mempool", "unsubscribe_mempool"].includes(data.action)) {
+                    if (!["subscribe", "unsubscribe"].includes(data.action)) {
                         console.log(`Received unknown message: ${messageStr}`);
                         this.sendMessage(ws, {
                             type: "error",
@@ -481,10 +528,10 @@ export class SocketService implements SocketServiceInterface {
         console.log(`Table ${tableAddress} now has ${playerMap.size} subscribers`);
     }
 
-    private subscribeToMempool(ws: WebSocket) {
-        mempoolSubscriptions.add(ws);
-        console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
-    }
+    // private subscribeToMempool(ws: WebSocket) {
+    //     mempoolSubscriptions.add(ws);
+    //     console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
+    // }
 
     private unsubscribeFromTable(tableAddress: string, playerId: string) {
         const playerMap = tableSubscriptions.get(tableAddress);
@@ -501,10 +548,10 @@ export class SocketService implements SocketServiceInterface {
         }
     }
 
-    private unsubscribeFromMempool(ws: WebSocket) {
-        mempoolSubscriptions.delete(ws);
-        console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
-    }
+    // private unsubscribeFromMempool(ws: WebSocket) {
+    //     mempoolSubscriptions.delete(ws);
+    //     console.log(`Mempool now has ${mempoolSubscriptions.size} subscribers`);
+    // }
 
     private handleDisconnect(ws: WebSocket) {
         // Remove this websocket from all table subscriptions
@@ -541,71 +588,71 @@ export class SocketService implements SocketServiceInterface {
         mempoolSubscriptions.delete(ws);
     }
 
-    // Method to send mempool data to a specific client
-    private async sendMempoolToClient(ws: WebSocket) {
-        try {
-            const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
-            const mempoolResult = await mempoolCommand.execute();
+    // // Method to send mempool data to a specific client
+    // private async sendMempoolToClient(ws: WebSocket) {
+    //     try {
+    //         const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
+    //         const mempoolResult = await mempoolCommand.execute();
             
-            const updateMessage: MempoolUpdateMessage = {
-                type: "mempoolUpdate",
-                transactions: mempoolResult.data.toJson()
-            };
+    //         const updateMessage: MempoolUpdateMessage = {
+    //             type: "mempoolUpdate",
+    //             transactions: mempoolResult.data.toJson()
+    //         };
 
-            this.sendMessage(ws, updateMessage);
-            console.log("Sent initial mempool data to client");
-        } catch (error) {
-            console.error("Error sending mempool to client:", error);
-        }
-    }
+    //         this.sendMessage(ws, updateMessage);
+    //         console.log("Sent initial mempool data to client");
+    //     } catch (error) {
+    //         console.error("Error sending mempool to client:", error);
+    //     }
+    // }
 
-    // Method to broadcast mempool updates to all subscribed clients
-    public async broadcastMempoolUpdate() {
-        if (mempoolSubscriptions.size === 0) {
-            console.log("No mempool subscribers, skipping broadcast");
-            return;
-        }
+    // // Method to broadcast mempool updates to all subscribed clients
+    // public async broadcastMempoolUpdate() {
+    //     if (mempoolSubscriptions.size === 0) {
+    //         console.log("No mempool subscribers, skipping broadcast");
+    //         return;
+    //     }
 
-        try {
-            const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
-            const mempoolResult = await mempoolCommand.execute();
+    //     try {
+    //         const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
+    //         const mempoolResult = await mempoolCommand.execute();
             
-            const updateMessage: MempoolUpdateMessage = {
-                type: "mempoolUpdate",
-                transactions: mempoolResult.data.toJson()
-            };
+    //         const updateMessage: MempoolUpdateMessage = {
+    //             type: "mempoolUpdate",
+    //             transactions: mempoolResult.data.toJson()
+    //         };
 
-            const message = JSON.stringify(updateMessage);
-            console.log(`Broadcasting mempool update to ${mempoolSubscriptions.size} subscribers`);
+    //         const message = JSON.stringify(updateMessage);
+    //         console.log(`Broadcasting mempool update to ${mempoolSubscriptions.size} subscribers`);
 
-            // Send to all mempool subscribers
-            const disconnectedClients: WebSocket[] = [];
+    //         // Send to all mempool subscribers
+    //         const disconnectedClients: WebSocket[] = [];
             
-            for (const ws of mempoolSubscriptions) {
-                if (ws.readyState === WebSocket.OPEN) {
-                    try {
-                        ws.send(message);
-                    } catch (error) {
-                        console.error("Error sending mempool update to client:", error);
-                        disconnectedClients.push(ws);
-                    }
-                } else {
-                    disconnectedClients.push(ws);
-                }
-            }
+    //         for (const ws of mempoolSubscriptions) {
+    //             if (ws.readyState === WebSocket.OPEN) {
+    //                 try {
+    //                     ws.send(message);
+    //                 } catch (error) {
+    //                     console.error("Error sending mempool update to client:", error);
+    //                     disconnectedClients.push(ws);
+    //                 }
+    //             } else {
+    //                 disconnectedClients.push(ws);
+    //             }
+    //         }
 
-            // Clean up disconnected clients
-            for (const ws of disconnectedClients) {
-                mempoolSubscriptions.delete(ws);
-            }
+    //         // Clean up disconnected clients
+    //         for (const ws of disconnectedClients) {
+    //             mempoolSubscriptions.delete(ws);
+    //         }
 
-            if (disconnectedClients.length > 0) {
-                console.log(`Cleaned up ${disconnectedClients.length} disconnected mempool clients`);
-            }
-        } catch (error) {
-            console.error("Error broadcasting mempool update:", error);
-        }
-    }
+    //         if (disconnectedClients.length > 0) {
+    //             console.log(`Cleaned up ${disconnectedClients.length} disconnected mempool clients`);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error broadcasting mempool update:", error);
+    //     }
+    // }
 
     // Method to broadcast game state updates to a specific player
     public sendGameStateToPlayer(tableAddress: string, playerId: string, gameState: TexasHoldemStateDTO) {
@@ -775,26 +822,27 @@ export class SocketService implements SocketServiceInterface {
                     try {
                         // 🔍 TIMING DEBUG: Log before getting game state
                         console.log(`🔄 [TIMING DEBUG] Getting game state for subscriber ${subscriberId} at ${new Date().toISOString()}`);
-                        
-                        // Get game state from this subscriber's perspective
-                        const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, subscriberId);
+
+                        // Get game state from this subscriber's perspective from Cosmos
+                        const cosmosConfig = getCosmosConfig();
+                        const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, cosmosConfig.restEndpoint);
                         const gameStateResponse = await gameStateCommand.execute();
 
                         // 🔍 TIMING DEBUG: Log the game state being sent via WebSocket
                         console.log(`🔄 [TIMING DEBUG] Broadcasting to subscriber ${subscriberId}:`, {
                             timestamp: new Date().toISOString(),
                             tableAddress,
-                            nextToAct: gameStateResponse.data.nextToAct,
-                            round: gameStateResponse.data.round,
-                            playerCount: gameStateResponse.data.players.length,
-                            lastAction: gameStateResponse.data.previousActions[gameStateResponse.data.previousActions.length - 1]?.action || "NO_ACTIONS",
-                            lastActionIndex: gameStateResponse.data.previousActions[gameStateResponse.data.previousActions.length - 1]?.index || "NO_INDEX",
-                            actionCount: gameStateResponse.data.previousActions.length,
+                            nextToAct: gameStateResponse.nextToAct,
+                            round: gameStateResponse.round,
+                            playerCount: gameStateResponse.players.length,
+                            lastAction: gameStateResponse.previousActions[gameStateResponse.previousActions.length - 1]?.action || "NO_ACTIONS",
+                            lastActionIndex: gameStateResponse.previousActions[gameStateResponse.previousActions.length - 1]?.index || "NO_INDEX",
+                            actionCount: gameStateResponse.previousActions.length,
                             source: "WebSocket broadcastGameStateToAllSubscribers"
                         });
 
                         // Log detailed game state for this subscriber
-                        logGameStateEvent(subscriberId, tableAddress, gameStateResponse.data, {
+                        logGameStateEvent(subscriberId, tableAddress, gameStateResponse, {
                             triggerType: "BROADCAST_ALL",
                             method: "broadcastGameStateToAllSubscribers",
                             broadcastTimestamp: new Date().toISOString()
@@ -803,7 +851,7 @@ export class SocketService implements SocketServiceInterface {
                         const updateMessage: GameStateUpdateMessage = {
                             type: "gameStateUpdate",
                             tableAddress,
-                            gameState: gameStateResponse.data
+                            gameState: gameStateResponse
                         };
 
                         ws.send(JSON.stringify(updateMessage));
@@ -812,8 +860,8 @@ export class SocketService implements SocketServiceInterface {
                         // Log successful send
                         logWebSocketEvent(subscriberId, "BROADCAST_ALL_SENT_SUCCESS", {
                             tableAddress,
-                            round: gameStateResponse.data.round,
-                            nextToAct: gameStateResponse.data.nextToAct,
+                            round: gameStateResponse.round,
+                            nextToAct: gameStateResponse.nextToAct,
                             messageSize: JSON.stringify(updateMessage).length
                         });
                     } catch (error) {
@@ -868,7 +916,6 @@ export class SocketService implements SocketServiceInterface {
             maxConnections: this.maxConnections,
             tableCount: tableSubscriptions.size,
             totalPlayers,
-            mempoolSubscribers: mempoolSubscriptions.size,
             tables: tableInfo,
             logsDirectory: LOGS_DIR,
             availableLogFiles: this.getAvailableLogFiles()

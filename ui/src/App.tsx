@@ -5,10 +5,15 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { projectId, metadata, networks, wagmiAdapter } from "./config";
-import { mainnet } from "@reown/appkit/networks";
+import { base } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
-import Dashboard from "./components/Dashboard";
+import Dashboard from "./pages/Dashboard";
 import QRDeposit from "./components/QRDeposit";
+import CosmosWalletPage from "./components/CosmosWalletPage";
+import BlocksPage from "./pages/explorer/BlocksPage";
+import BlockDetailPage from "./pages/explorer/BlockDetailPage";
+import TransactionPage from "./pages/explorer/TransactionPage";
+import TestSigningPage from "./pages/TestSigningPage";
 import { GameStateProvider } from "./context/GameStateContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
@@ -28,7 +33,7 @@ createAppKit({
         analytics: true
     },
     enableCoinbase: true,
-    defaultNetwork: mainnet,
+    defaultNetwork: base,
     allWallets: "SHOW"
 });
 
@@ -39,7 +44,7 @@ function AppContent() {
         const style = document.createElement("style");
         style.innerHTML = generateCSSVariables();
         document.head.appendChild(style);
-        
+
         return () => {
             document.head.removeChild(style);
         };
@@ -52,6 +57,11 @@ function AppContent() {
                 <Route path="/table/:id" element={<Table />} />
                 <Route path="/deposit" element={<Deposit />} />
                 <Route path="/qr-deposit" element={<QRDeposit />} />
+                <Route path="/wallet" element={<CosmosWalletPage />} />
+                <Route path="/test-signing" element={<TestSigningPage />} />
+                <Route path="/explorer" element={<BlocksPage />} />
+                <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
+                <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer

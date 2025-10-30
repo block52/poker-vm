@@ -15,7 +15,7 @@ export interface ICryptoModel extends IModel {
 
 export interface IAccountDocument {
     address: string;
-    balance: number;
+    balance: string;
     nonce: number;
 }
 

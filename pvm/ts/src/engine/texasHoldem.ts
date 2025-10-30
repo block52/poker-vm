@@ -117,14 +117,19 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Initialize community cards
-        for (let i = 0; i < communityCards.length; i++) {
-            const card: Card = Deck.fromString(communityCards[i]);
-            this._communityCards.push(card);
+        if (communityCards) {
+            for (let i = 0; i < communityCards?.length; i++) {
+                const card: Card = Deck.fromString(communityCards[i]);
+                this._communityCards.push(card);
+            }
         }
 
         // Initialize pots
-        for (let i = 0; i < pots.length; i++) {
-            this._pots[i] = BigInt(pots[i]);
+        //this._pots = new Array<bigint>(pots.length).fill(0n) as [bigint];
+        if (pots) {
+            for (let i = 0; i < pots?.length; i++) {
+                this._pots[i] = BigInt(pots[i]);
+            }
         }
 
         // Initialize rounds map
@@ -188,6 +193,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Loads previous actions when initializing the game state
      */
     private loadPreviousActions(previousActions: ActionDTO[]): void {
+        if (!previousActions || previousActions.length === 0) {
+            return;
+        }
+
         for (const action of previousActions) {
             // Create TurnWithSeat directly, preserving the original seat number
             const turnWithSeat: TurnWithSeat = {
@@ -1038,10 +1047,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
         // Check action index for replay protection
-        const actionIndex = this.getActionIndex();
-        if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
-            throw new Error("Invalid action index.");
-        }
+        // const actionIndex = this.getActionIndex();
+        // if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
+        //     throw new Error("Invalid action index.");
+        // }
 
         // Convert amount to BigInt if provided
         const _amount: bigint = amount ? BigInt(amount) : 0n;
@@ -1673,38 +1682,41 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const players = new Map<number, Player | null>();
 
         // Parse game options
-        if (json?.gameOptions) {
-            gameOptions.minBuyIn = BigInt(json.gameOptions?.minBuyIn);
-            gameOptions.maxBuyIn = BigInt(json.gameOptions?.maxBuyIn);
-            gameOptions.maxPlayers = Number(json.gameOptions?.maxPlayers);
-            gameOptions.minPlayers = Number(json.gameOptions?.minPlayers);
-            gameOptions.smallBlind = BigInt(json.gameOptions?.smallBlind);
-            gameOptions.bigBlind = BigInt(json.gameOptions?.bigBlind);
-            gameOptions.type = json.gameOptions?.type;
+        if (gameOptions) {
+            gameOptions.minBuyIn = BigInt(gameOptions?.minBuyIn);
+            gameOptions.maxBuyIn = BigInt(gameOptions?.maxBuyIn);
+            gameOptions.maxPlayers = Number(gameOptions?.maxPlayers);
+            gameOptions.minPlayers = Number(gameOptions?.minPlayers);
+            gameOptions.smallBlind = BigInt(gameOptions?.smallBlind);
+            gameOptions.bigBlind = BigInt(gameOptions?.bigBlind);
+            gameOptions.timeout = gameOptions?.timeout ?? 30; // Default to 30 seconds if not provided
+            gameOptions.type = gameOptions?.type;
         }
 
         // Parse players
-        json?.players.map((p: any) => {
-            const stack: bigint = BigInt(p.stack);
+        if (json.players && Array.isArray(json.players) && json.players.length > 0) {
+            json?.players.map((p: any) => {
+                const stack: bigint = BigInt(p.stack);
 
-            // Create hole cards if they exist in the JSON
-            let holeCards: [Card, Card] | undefined = undefined;
+                // Create hole cards if they exist in the JSON
+                let holeCards: [Card, Card] | undefined = undefined;
 
-            if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
-                try {
-                    const card1 = Deck.fromString(p.holeCards[0]);
-                    const card2 = Deck.fromString(p.holeCards[1]);
-                    holeCards = [card1, card2] as [Card, Card];
-                } catch (e) {
-                    console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
+                    try {
+                        const card1 = Deck.fromString(p.holeCards[0]);
+                        const card2 = Deck.fromString(p.holeCards[1]);
+                        holeCards = [card1, card2] as [Card, Card];
+                    } catch (e) {
+                        console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                    }
                 }
-            }
 
-            const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
-            players.set(p.seat, player);
-        });
+                const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
+                players.set(p.seat, player);
+            });
+        }
 
-        const dealer = json.dealer;
+        const dealer = json.dealer as number || 1;
         if (!dealer || dealer < 1 || dealer > gameOptions.maxPlayers) {
             throw new Error("Invalid dealer position in game state.");
         }
@@ -1713,13 +1725,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const winners: WinnerDTO[] = json.winners || [];
 
         const results: Result[] = json.results?.map((r: any) => ({
-            place: r.place,
+            place: r.place as number,
             playerId: r.playerId,
-            payout: BigInt(r.payout)
+            payout: BigInt(r.payout) as bigint || 0n
         })) || [];
 
         // Create and return new game instance
-        return new TexasHoldemGame(
+        const response: TexasHoldemGame = new TexasHoldemGame(
             json.address,
             gameOptions,
             dealer,
@@ -1736,6 +1748,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             undefined,
             results
         );
+        return response;
     }
 }
 

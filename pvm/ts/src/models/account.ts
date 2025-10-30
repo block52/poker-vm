@@ -2,14 +2,14 @@ import { ethers } from "ethers";
 import { IAccountDocument } from "./interfaces";
 import { AccountDTO } from "@bitcoinbrisbane/block52";
 
-export class Account {
+export class Account implements IAccountDocument {
     address: string;
-    balance: bigint;
+    balance: string;
     nonce: number;
 
     constructor(address: string, balance: bigint, nonce: number = 0) {
         this.address = address;
-        this.balance = balance;
+        this.balance = balance.toString();
         this.nonce = nonce;
     }
 
@@ -36,7 +36,7 @@ export class Account {
     public toDocument(): IAccountDocument {
         return {
             address: this.address,
-            balance: Number(this.balance),
+            balance: this.balance,
             nonce: this.nonce
         };
     }

@@ -1,10 +1,10 @@
 import { useState, useCallback } from "react";
-import { ethers } from "ethers";
-import { getClient } from "../utils/b52AccountUtils";
+import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
 
 interface SitAndGoJoinOptions {
     tableId: string;
-    amount: number;  // Changed from string to number - user input as dollars
+    amount: number;  // Amount in USDC (will be converted to microunits)
 }
 
 interface UseSitAndGoPlayerJoinRandomSeatReturn {
@@ -14,17 +14,16 @@ interface UseSitAndGoPlayerJoinRandomSeatReturn {
 }
 
 /**
- * Custom hook for joining Sit & Go games using the SDK's playerJoinRandomSeat method
- * 
- * AMOUNT HANDLING PATTERN:
- * 1. INPUT: User inputs are received as numbers (e.g., 10 = $10 USDC)
- * 2. CONVERSION IN HOOK: This hook converts the number to wei using ethers.parseEther()
- *    Example: 10 becomes BigInt(10000000000000000000) 
- * 3. STRING CONVERSION: BigInt is converted to string at the last moment before SDK call
- *    Example: "10000000000000000000"
- * 4. SDK TRANSMISSION: The SDK receives the string and passes it to the backend as-is
- * 
- * @param options.amount - The buy-in amount as a number in dollars (e.g., 1 for $1, 10 for $10)
+ * Custom hook for joining Sit & Go games using Cosmos SDK
+ *
+ * This hook automatically selects a random available seat when joining a Sit & Go game.
+ * It uses the Cosmos SDK's joinGame method with seat number 0 to indicate random selection.
+ *
+ * AMOUNT HANDLING:
+ * - INPUT: User inputs amount as number in USDC (e.g., 10 = $10 USDC)
+ * - CONVERSION: Converts to microunits (multiply by 1,000,000)
+ * - TRANSMISSION: Passes microunits to Cosmos SDK as BigInt
+ *
  * @returns Object with joinSitAndGo function, loading state, and error
  */
 export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSeatReturn => {
@@ -36,38 +35,55 @@ export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSe
         setError(null);
 
         try {
-            // Get the singleton client instance
-            const client = getClient();
-            
+            // Get user's Cosmos address and mnemonic
+            const userAddress = getCosmosAddress();
+            const mnemonic = getCosmosMnemonic();
+
+            if (!userAddress || !mnemonic) {
+                throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
+            }
+
             console.log("🎮 [SIT & GO JOIN] Starting join process with random seat");
-            console.log(`📍 Table ID: ${options.tableId}`);
-            console.log(`💰 Amount (input as number): $${options.amount}`);
-            
-            // STEP 1: Receive amount as number (dollars)
-            const amountInDollars: number = options.amount;
-            console.log(`📊 Step 1 - User input: $${amountInDollars}`);
-            
-            // STEP 2: Convert to BigInt with 18 decimals (wei)
-            const amountInWei: bigint = ethers.parseEther(amountInDollars.toString());
-            console.log(`📊 Step 2 - Converted to BigInt: ${amountInWei}n (${amountInWei.toString().length} digits)`);
-            
-            // STEP 3: Convert BigInt to string only at the last moment for SDK
-            const amountAsString: string = amountInWei.toString();
-            console.log(`📊 Step 3 - Final string for SDK: "${amountAsString}"`);
-            console.log(`💸 Is this 1 ETH in wei? ${amountAsString === "1000000000000000000"}`);
-            console.log("🎲 Using playerJoinRandomSeat - SDK will select available seat");
-            
-            // Call playerJoinRandomSeat from SDK - it will find an available seat automatically
-            // The SDK method signature: playerJoinRandomSeat(gameAddress: string, amount: string, nonce?: number)
-            const response = await client.playerJoinRandomSeat(
-                options.tableId,
-                amountAsString  // Pass the string representation of wei amount
-                // nonce is optional - SDK will handle it automatically
+            console.log(`📍 Game ID: ${options.tableId}`);
+            console.log(`💰 Amount (USDC): $${options.amount}`);
+
+            // Convert USDC to microunits (1 USDC = 1,000,000 microunits)
+            const amountInMicrounits = options.amount * 1_000_000;
+            console.log(`📊 Amount in microunits: ${amountInMicrounits}`);
+
+            // Create signing client from mnemonic
+            const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
+            const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+
+            const signingClient = await createSigningClientFromMnemonic(
+                {
+                    rpcEndpoint,
+                    restEndpoint,
+                    chainId: COSMOS_CONSTANTS.CHAIN_ID,
+                    prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
+                    denom: "b52Token", // Gas token
+                    gasPrice: "0.025b52Token"
+                },
+                mnemonic
             );
-            
-            console.log("✅ [SIT & GO JOIN] Successfully joined at random seat:", response);
-            return response;
-            
+
+            // Join game with seat = 0 to indicate random seat selection
+            // The blockchain/PVM will automatically assign an available seat
+            const transactionHash = await signingClient.joinGame(
+                options.tableId,
+                0, // Seat 0 = random seat selection
+                BigInt(amountInMicrounits)
+            );
+
+            console.log("✅ [SIT & GO JOIN] Successfully joined at random seat:", transactionHash);
+
+            return {
+                hash: transactionHash,
+                gameId: options.tableId,
+                action: "join-random-seat",
+                amount: amountInMicrounits
+            };
+
         } catch (err: any) {
             const errorMessage = err.message || "Failed to join Sit & Go game";
             console.error("❌ [SIT & GO JOIN] Error:", err);

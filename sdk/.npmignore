@@ -1,0 +1,10 @@
+src/
+.git/
+.github/
+node_modules/
+*.log
+.DS_Store
+.env*
+tsconfig.json
+jest.config.js
+.eslintrc.*

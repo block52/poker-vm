@@ -1,5 +1,4 @@
 // Main hooks (named exports)
-export { useAccount } from "./useAccount";
 export { useCardAnimations } from "./useCardAnimations";
 export { useCardsForHandStrength } from "./useCardsForHandStrength";
 export { useChipPositions } from "./useChipPositions";
@@ -28,8 +27,17 @@ export { useTableTurnIndex } from "./useTableTurnIndex";
 export { useVacantSeatData } from "./useVacantSeatData";
 export { useWinnerInfo } from "./useWinnerInfo";
 
-// Default export hook
+// Cosmos hooks
+export { useCosmosGameState } from "./useCosmosGameState";
+export { useGameActions } from "./useGameActions";
+export { useSitAndGoPlayerResults } from "./useSitAndGoPlayerResults";
+
+// Default export hooks
 export { default as useUserWallet } from "./useUserWallet";
+export { default as useCosmosWallet } from "./useCosmosWallet";
+
+// Named exports from useUserWallet
+export { STORAGE_PRIVATE_KEY } from "./useUserWallet";
 
 // Player actions (barrel)
 export * from "./playerActions";

@@ -1,29 +1,57 @@
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
-import { getClient } from "../../utils/b52AccountUtils";
+import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
 
 /**
- * Post big blind at a poker table.
- * 
- * @param tableId - The ID of the table where the action will be performed
- * @param bigBlindAmount - The big blind amount (will use game options if not provided)
- * @returns Promise with the post big blind response
- * @throws Error if private key is missing or if the action fails
+ * Post big blind using Cosmos SDK SigningCosmosClient.
+ *
+ * @param tableId - The ID of the table (game ID on Cosmos) where the action will be performed
+ * @param bigBlindAmount - The big blind amount in microunits (uusdc)
+ * @returns Promise with transaction hash
+ * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function postBigBlind(tableId: string, bigBlindAmount: string) {
-    // Get the singleton client instance
-    const client = getClient();
+export async function postBigBlind(tableId: string, bigBlindAmount: string): Promise<any> {
+    // Get user's Cosmos address and mnemonic
+    const userAddress = getCosmosAddress();
+    const mnemonic = getCosmosMnemonic();
 
-    console.log("🎰 Post big blind attempt");
-    console.log("🎰 Table ID:", tableId);
-    console.log("🎰 Big blind amount:", bigBlindAmount);
+    if (!userAddress || !mnemonic) {
+        throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
+    }
 
-    // Call the playerAction method (let SDK handle nonce internally)
-    const response = await client.playerAction(
-        tableId,
-        PlayerActionType.BIG_BLIND,
-        bigBlindAmount
+    console.log("🎰 Post big blind on Cosmos blockchain");
+    console.log("  Player:", userAddress);
+    console.log("  Game ID:", tableId);
+    console.log("  Big blind amount:", bigBlindAmount);
+
+    // Create signing client from mnemonic
+    const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
+    const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+
+    const signingClient = await createSigningClientFromMnemonic(
+        {
+            rpcEndpoint,
+            restEndpoint,
+            chainId: COSMOS_CONSTANTS.CHAIN_ID,
+            prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
+            denom: "b52Token", // Gas token
+            gasPrice: "0.025b52Token"
+        },
+        mnemonic
     );
 
-    console.log("🎰 Post big blind response:", response);
-    return response;
+    // Call SigningCosmosClient.performAction() with "post-big-blind" action
+    const transactionHash = await signingClient.performAction(
+        tableId,
+        "post-big-blind",
+        BigInt(bigBlindAmount)
+    );
+
+    console.log("✅ Post big blind transaction submitted:", transactionHash);
+
+    return {
+        hash: transactionHash,
+        gameId: tableId,
+        action: "post-big-blind",
+        amount: bigBlindAmount
+    };
 }

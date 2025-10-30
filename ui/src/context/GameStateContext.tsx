@@ -130,14 +130,20 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
             console.log(`[GameStateContext] Subscribing to table: ${tableId}`);
 
-            // Get player address
-            const playerAddress = localStorage.getItem("user_eth_public_key");
+            // Get player address - try Cosmos first, fallback to Ethereum for backwards compatibility
+            const cosmosAddress = localStorage.getItem("user_cosmos_address");
+            const ethAddress = localStorage.getItem("user_eth_public_key");
+            const playerAddress = cosmosAddress || ethAddress;
+
             if (!playerAddress) {
-                console.error("[GameStateContext] No player address found");
+                console.error("[GameStateContext] No player address found (tried user_cosmos_address and user_eth_public_key)");
                 setError(new Error("No player address found"));
                 setIsLoading(false);
                 return;
             }
+
+            console.log(`[GameStateContext] Using player address: ${playerAddress} (type: ${cosmosAddress ? 'Cosmos' : 'Ethereum'})`);
+
 
             // Create WebSocket connection with URL parameters for auto-subscription
             const fullWsUrl = `${wsUrl}?tableAddress=${tableId}&playerId=${playerAddress}`;
@@ -162,7 +168,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                             playerTurnInfo: {
                                 nextToAct: message.gameState?.nextToAct,
                                 currentActorSeat: message.gameState?.players?.find(
-                                    (p: any) => p.address?.toLowerCase() === localStorage.getItem("user_eth_public_key")?.toLowerCase()
+                                    (p: any) => p.address?.toLowerCase() === playerAddress.toLowerCase()
                                 )?.seat
                             },
                             source: "WebSocket gameStateUpdate"
@@ -198,7 +204,6 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
                         // DEBUG: Log hole card data for all players to detect if backend sends undefined/null cards
                         if (message.gameState?.players) {
-                            const playerAddress = localStorage.getItem("user_eth_public_key");
                             const currentUser = message.gameState.players.find((player: any) => player.address?.toLowerCase() === playerAddress?.toLowerCase());
 
                             console.log("🃏 [GameStateContext] Hole Cards Debug:", {
@@ -242,6 +247,22 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                             }
                         } else {
                             console.warn("⚠️ [GameStateContext] No players data in game state update");
+                        }
+                    } else if (message.type === "error") {
+                        // Handle error messages from the backend
+                        console.error("[GameStateContext] Received error from backend:", message);
+
+                        // Create a user-friendly error message
+                        const errorMsg = message.code === "GAME_NOT_FOUND"
+                            ? `${message.message}${message.details?.suggestion ? "\n\n" + message.details.suggestion : ""}`
+                            : message.message || "An error occurred";
+
+                        setError(new Error(errorMsg));
+                        setIsLoading(false);
+
+                        // If it's a game not found error, clear the game state
+                        if (message.code === "GAME_NOT_FOUND") {
+                            setGameState(undefined);
                         }
                     }
                 } catch (err) {

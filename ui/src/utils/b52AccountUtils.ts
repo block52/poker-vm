@@ -78,8 +78,9 @@ export const getClient = (): NodeRpcClient => {
 
     // Create new client instance
     const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
+    // @ts-expect-error - Old Ethereum client for bridge only, will be updated when bridge is migrated
     clientInstance = new NodeRpcClient(nodeUrl, privateKey);
-    
+
     return clientInstance;
 };
 
@@ -104,6 +105,7 @@ export const getAccountBalance = async (): Promise<string> => {
 
     // Use singleton client instance
     const client = getClient();
+    // @ts-expect-error - Old Ethereum client for bridge only, will be updated when bridge is migrated
     const account = await client.getAccount(publicKey);
     return account.balance.toString();
 };

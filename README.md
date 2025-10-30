@@ -292,6 +292,25 @@ docker build -t poker-vm .
 docker run -p 8545:8545 poker-vm
 ```
 
+## Cosmos Notes
+
+```text
+┌─────────────────────────────────┐
+│   Your TypeScript Game Logic   │  ← Your existing TexasHoldemGame class
+│   (Validates, calculates)       │
+└─────────────┬───────────────────┘
+              ↓
+┌─────────────────────────────────┐
+│   GameStateManager (Bridge)     │  ← New: connects TS to chain
+│   (Load state, execute, submit) │
+└─────────────┬───────────────────┘
+              ↓
+┌─────────────────────────────────┐
+│   Cosmos Chain (Storage)        │  ← Simplified: just stores JSON
+│   (Store state, verify, escrow) │
+└─────────────────────────────────┘
+```
+
 ## License
 
 [License information needed]

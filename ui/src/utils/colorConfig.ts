@@ -36,6 +36,7 @@ export const colors = {
     glow: import.meta.env.VITE_ACCENT_COLOR_GLOW || "#64ffda",
     success: import.meta.env.VITE_ACCENT_COLOR_SUCCESS || "#10b981",
     danger: import.meta.env.VITE_ACCENT_COLOR_DANGER || "#ef4444",
+    warning: import.meta.env.VITE_ACCENT_COLOR_WARNING || "#f59e0b",
     withdraw: import.meta.env.VITE_ACCENT_COLOR_WITHDRAW || (import.meta.env.VITE_BRAND_COLOR_SECONDARY || "#1a2639"),
   },
 
@@ -49,7 +50,11 @@ export const colors = {
 };
 
 // Helper function to convert hex to rgba
-export const hexToRgba = (hex: string, alpha: number): string => {
+export const hexToRgba = (hex: string | undefined, alpha: number): string => {
+  if (!hex || !hex.startsWith("#")) {
+    console.warn("hexToRgba received invalid hex color:", hex);
+    return `rgba(0, 0, 0, ${alpha})`; // Fallback to transparent black
+  }
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);

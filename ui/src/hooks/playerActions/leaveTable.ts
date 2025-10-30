@@ -1,27 +1,58 @@
-import { PerformActionResponse } from "@bitcoinbrisbane/block52";
-import { getClient } from "../../utils/b52AccountUtils";
+import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
 
 /**
- * Leave a poker table.
- * 
- * @param tableId - The ID of the table to leave
- * @param value - The value to leave with (as string)
- * @param nonce - Optional nonce for the transaction
- * @returns Promise with the leave table response
- * @throws Error if private key is missing or if the action fails
+ * Leave a poker table using Cosmos SDK SigningCosmosClient.
+ *
+ * @param tableId - The ID of the table (game ID on Cosmos) to leave
+ * @param value - The value to leave with (as string, in microunits)
+ * @param nonce - Optional nonce (not used in Cosmos SDK, kept for compatibility)
+ * @returns Promise with transaction hash
+ * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function leaveTable(tableId: string, value: string, nonce?: number): Promise<PerformActionResponse> {
-    // Get the singleton client instance
-    const client = getClient();
+export async function leaveTable(tableId: string, value: string, nonce?: number): Promise<any> {
+    // Get user's Cosmos address and mnemonic
+    const userAddress = getCosmosAddress();
+    const mnemonic = getCosmosMnemonic();
 
-    console.log("👋 Leave table attempt");
-    console.log("👋 Table ID:", tableId);
-    console.log("👋 Value:", value);
-    console.log("👋 Nonce:", nonce);
+    if (!userAddress || !mnemonic) {
+        throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
+    }
 
-    // Call the playerLeave method (let SDK handle nonce if not provided)
-    const response = await client.playerLeave(tableId, value, nonce);
+    console.log("👋 Leave table on Cosmos blockchain");
+    console.log("  Player:", userAddress);
+    console.log("  Game ID:", tableId);
+    console.log("  Value:", value);
 
-    console.log("👋 Leave table response:", response);
-    return response;
+    // Create signing client from mnemonic
+    const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
+    const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+
+    const signingClient = await createSigningClientFromMnemonic(
+        {
+            rpcEndpoint,
+            restEndpoint,
+            chainId: COSMOS_CONSTANTS.CHAIN_ID,
+            prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
+            denom: "b52Token", // Gas token
+            gasPrice: "0.025b52Token"
+        },
+        mnemonic
+    );
+
+    // Call SigningCosmosClient.performAction() with "leave" action
+    const transactionHash = await signingClient.performAction(
+        tableId,
+        "leave",
+        BigInt(value)
+    );
+
+    console.log("✅ Leave table transaction submitted:", transactionHash);
+
+    return {
+        hash: transactionHash,
+        gameId: tableId,
+        action: "leave",
+        value
+    };
 }

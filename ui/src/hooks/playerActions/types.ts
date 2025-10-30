@@ -14,6 +14,15 @@ export interface PlayerLegalActionsResult extends BaseHookReturn {
     isPlayerInGame: boolean;
 }
 
+// ===================================================================
+// LEGACY ETHEREUM TYPES
+// ===================================================================
+// NOTE: The interfaces below are from the original Ethereum implementation.
+// They are kept for backwards compatibility but are NOT used by the new
+// Cosmos SDK hooks. All player action hooks now use Cosmos SDK directly
+// with mnemonic-based signing (no privateKey/nonce management required).
+// ===================================================================
+
 // Interface for Account data structure
 export interface AccountData {
     address: string;
@@ -30,7 +39,7 @@ export interface AccountApiResponse {
     };
 }
 
-// 
+//
 export interface HandParams {
     tableId: string;
     amount: string;
