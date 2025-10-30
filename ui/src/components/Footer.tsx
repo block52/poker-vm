@@ -124,8 +124,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const formattedSmallBlindAmount: string = useMemo(() => formatWeiToDollars(smallBlindAction?.min), [smallBlindAction?.min]);
     const formattedBigBlindAmount: string = useMemo(() => formatWeiToDollars(bigBlindAction?.min), [bigBlindAction?.min]);
     const formattedCallAmount: string = useMemo(() => formatWeiToDollars(callAmount), [callAmount]);
-    // Use correct USD formatter for raiseAmount (assumed to be in cents or USDC, not Wei)
-    const formattedRaiseAmount: string = useMemo(() => formatUSDCToSimpleDollars(BigInt(Math.round(raiseAmount * 100))), [raiseAmount]);
+    const formattedRaiseAmount: string = useMemo(() => formatWeiToDollars(BigInt(Math.round(raiseAmount * 100))), [raiseAmount]);
 
     // const formattedMinBetAmount: string = useMemo(() => formatWeiToDollars(minBet), [minBet]);
     const formattedMaxBetAmount: string = useMemo(
