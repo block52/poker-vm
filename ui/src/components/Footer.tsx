@@ -54,7 +54,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const [privateKey, setPrivateKey] = useState<string>();
 
     // Use useMemo for localStorage access
-    const userAddress = useMemo(() => localStorage.getItem("user_eth_public_key")?.toLowerCase(), []);
+    const userAddress = useMemo(() => localStorage.getItem("user_cosmos_address")?.toLowerCase(), []);
 
     // Determine if user is in the table using our hooks instead of accountUtils
     const isUserInTable = useMemo(() => !!players?.some((player: PlayerDTO) => player.address?.toLowerCase() === userAddress), [players, userAddress]);

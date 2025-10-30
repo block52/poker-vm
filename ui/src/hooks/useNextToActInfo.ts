@@ -46,7 +46,7 @@ export const useNextToActInfo = (_tableId?: string): NextToActInfoReturn => {
             }
 
             // Check if it's the current user's turn
-            const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+            const userAddress = localStorage.getItem("user_cosmos_address")?.toLowerCase();
             const isCurrentUserTurn = player.address?.toLowerCase() === userAddress;
 
             // Get available actions - ensure it's an array
