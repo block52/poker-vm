@@ -963,6 +963,201 @@ This is confusing UX but **not a bug** - tokens are correctly held in the game p
 
 ---
 
+## 🔢 BigInt Number Handling Standards (Oct 30, 2025)
+
+### Architecture Decision: Hooks Use BigInt, Components Format
+
+**PRINCIPLE:** All numeric values (balances, amounts, stakes, pots, chips) must flow through the system as BigInt (string representation) until the final display moment in UI components.
+
+**Why This Matters:**
+- Prevents precision loss for large amounts
+- Consistent representation across blockchain/SDK/UI
+- Separation of concerns: hooks = data logic, components = presentation
+
+### The Rule
+
+```
+┌─────────────┐      ┌──────────────┐      ┌────────────────┐
+│  Blockchain │ ──>  │    Hooks     │ ──>  │   Components   │
+│   (BigInt)  │      │   (BigInt)   │      │  (formatted $) │
+└─────────────┘      └──────────────┘      └────────────────┘
+                            ▲                       │
+                            │                       │
+                            └───────────────────────┘
+                           ONLY convert here using utils
+```
+
+**✅ CORRECT Pattern:**
+```typescript
+// Hook returns raw string (BigInt representation)
+export const usePlayerStack = () => {
+  return {
+    stack: "1000000",  // microunits as string
+  };
+};
+
+// Component formats for display
+const Component = () => {
+  const { stack } = usePlayerStack();
+  return <div>{formatWeiToDollars(stack)}</div>;  // "$1.00"
+};
+```
+
+**❌ WRONG Pattern:**
+```typescript
+// Hook does formatting (DON'T DO THIS!)
+export const usePlayerStack = () => {
+  return {
+    stack: "1000000",
+    formattedStack: "$1.00",  // ❌ Formatting belongs in components!
+  };
+};
+```
+
+### Comprehensive Assessment Results (Oct 30, 2025)
+
+**Total Hooks Analyzed:** 56 files
+**Hooks with Numeric Values:** 28
+**Total Violations Found:** 15
+
+**Breakdown by Severity:**
+- **Critical Violations:** 8 (Hooks returning formatted values or doing conversions)
+- **Medium Violations:** 5 (Hooks with unclear type annotations)
+- **Low Violations:** 2 (Missing type annotations)
+
+### Critical Issues to Fix (Priority 1)
+
+#### 1. usePlayerData.ts (Line 53-56)
+**Issue:** Converting stack to number using ethers.formatUnits
+**Fix:** Return raw stack string without conversion
+```typescript
+// WRONG:
+const stackValue = Number(ethers.formatUnits(playerData.stack, 18));
+
+// CORRECT:
+const stack = playerData?.stack || "0";  // Return as string
+```
+
+#### 2. useMinAndMaxBuyIns.ts (Lines 57-93)
+**Issue:** Complex Wei → microunits conversion in hook
+**Fix:** Return raw values, move conversion to utility function
+
+#### 3. useTableData.ts (Lines 53-54)
+**Issue:** Formatting blinds in hook using formatWeiToSimpleDollars
+**Fix:** Return raw smallBlind and bigBlind strings
+
+#### 4. useWinnerInfo.ts (Line 24)
+**Issue:** Hook includes formattedAmount field
+**Fix:** Remove formattedAmount, let components format
+
+#### 5. useTableState.ts (Lines 43-51)
+**Issue:** Hook returns both totalPot and formattedTotalPot
+**Fix:** Remove formattedTotalPot from hook return
+
+#### 6. useSitAndGoPlayerResults.ts (Lines 71, 81)
+**Issue:** Hook includes formattedPayout field
+**Fix:** Remove formattedPayout, components handle formatting
+
+#### 7. useNewTable.ts (Lines 66-67, 76-77)
+**Issue:** Interface accepts number instead of string for buy-ins
+**Fix:** Change CreateTableOptions to accept string values
+
+#### 8. Type Interfaces
+**Issue:** Several interfaces use wrong types for amounts
+**Fix:** Update type definitions:
+```typescript
+// WRONG:
+export interface PlayerDataReturn {
+  stackValue: number;  // ❌
+}
+
+// CORRECT:
+export interface PlayerDataReturn {
+  stackValue: string;  // ✅ BigInt representation
+}
+```
+
+### Compliant Hooks (No Changes Needed) ✅
+
+The following hooks already follow BigInt standards:
+- useDepositUSDC.ts - Accepts bigint parameter ✅
+- useApprove.ts - Accepts bigint parameter ✅
+- useWithdraw.ts - Accepts bigint parameter ✅
+- betHand.ts - Converts string to BigInt before SDK call ✅
+- raiseHand.ts - Converts string to BigInt before SDK call ✅
+- callHand.ts - Converts string to BigInt before SDK call ✅
+- postBigBlind.ts - Uses BigInt correctly ✅
+- postSmallBlind.ts - Uses BigInt correctly ✅
+- joinTable.ts - Uses BigInt correctly ✅
+- usePlayerLegalActions.ts - Returns string min/max ✅
+
+### Number Formatting Utilities (Correct Usage)
+
+**Location:** `ui/src/utils/numberUtils.ts`
+
+These utilities should ONLY be called from UI components:
+- `formatWeiToDollars(value: string | bigint): string` - Full precision (e.g., "$1.234567")
+- `formatWeiToSimpleDollars(value: string | bigint): string` - Rounded (e.g., "$1.23")
+- `convertMicrounitsToDollars(microunits: number): string` - For Cosmos USDC
+
+**Usage Example:**
+```typescript
+// Component.tsx
+import { formatWeiToDollars } from "../utils/numberUtils";
+
+const PlayerChips = () => {
+  const { stack } = usePlayerData();  // Returns "1000000" (string)
+
+  return (
+    <div className="chips">
+      {formatWeiToDollars(stack)}  {/* Displays "$1.00" */}
+    </div>
+  );
+};
+```
+
+### Migration Plan
+
+**Phase 1 (Immediate):**
+1. Fix critical hooks (8 files listed above)
+2. Update type interfaces to use string for amounts
+3. Remove all `formatted*` fields from hook return types
+4. Run full type check: `tsc --noEmit`
+
+**Phase 2 (Short-term):**
+1. Add JSDoc comments to all hooks documenting BigInt usage
+2. Create HOOK_STANDARDS.md with examples
+3. Add ESLint rule to prevent formatting in hooks (if possible)
+
+**Phase 3 (Long-term):**
+1. Audit all components to ensure proper usage of formatting utilities
+2. Performance optimization for BigInt operations
+3. Consider creating custom React hooks for common formatting patterns
+
+### Documentation Checklist
+
+When creating/updating hooks that handle numeric values:
+- [ ] All numeric values are string (BigInt representation)
+- [ ] No ethers.formatUnits() or similar formatting calls
+- [ ] No conversion to `number` type (loses precision)
+- [ ] Return type interface uses `string` for amounts
+- [ ] JSDoc comment explains units (e.g., "microunits", "wei")
+- [ ] Let components handle all display formatting
+
+### Testing Checklist
+
+Before merging hook changes:
+- [ ] TypeScript build succeeds (`yarn build`)
+- [ ] No runtime errors in browser console
+- [ ] Display values show correct amounts in UI
+- [ ] Large amounts don't lose precision
+- [ ] Negative amounts handled correctly
+
+**Status:** 📊 Assessment complete, fixes pending
+**Next Action:** Implement Priority 1 fixes to critical hooks
+
+---
+
 ## 🧹 Phase 7: Legacy Code Cleanup
 
 ### Ethereum Wallet References to Remove

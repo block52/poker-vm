@@ -18,7 +18,7 @@ export const usePlayerSeatInfo = (): PlayerSeatInfoReturn => {
 
     // Get user address from local storage
     const userWalletAddress = useMemo(() => {
-        const address = localStorage.getItem("user_eth_public_key");
+        const address = localStorage.getItem("user_cosmos_address");
         return address ? address.toLowerCase() : null;
     }, []);
 

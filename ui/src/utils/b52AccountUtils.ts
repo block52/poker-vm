@@ -16,11 +16,11 @@ export const getPrivateKey = (): string | null => {
 };
 
 /**
- * Get the user's public key from browser storage
- * @returns The public key string or null if not found
+ * Get the user's Cosmos address from browser storage
+ * @returns The Cosmos address string or null if not found
  */
 export const getPublicKey = (): string | null => {
-    return localStorage.getItem("user_eth_public_key");
+    return localStorage.getItem("user_cosmos_address");
 };
 
 /**

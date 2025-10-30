@@ -1,12 +1,12 @@
 # PVM on Cosmos - Working Checklist
 
-**Last Updated**: October 29, 2025 @ 2:30 PM
-**Status**: ✅ PHASE 3 IN PROGRESS - Dashboard & BuyInModal migrated to Cosmos!
+**Last Updated**: October 30, 2025 @ 7:30 AM
+**Status**: ✅ PHASE 3 COMPLETE - Legal actions now showing!
 **Current Phase**: Phase 3 - Dashboard & UI Integration
 **CosmosClient Progress**: ✅ createGame, joinGame, performAction all working!
 **Architecture**: ✅ Hybrid - Cosmos for transactions, PVM WebSocket for real-time updates
-**Current Issue**: ⚠️ MsgJoinGame type URL error - SDK package needs rebuild
-**Next**: Rebuild and publish @bitcoinbrisbane/block52 SDK package
+**Current Issue**: ✅ Address mismatch fixed - Cosmos addresses now used throughout!
+**Next**: Test full game flow with 4 players
 
 ---
 
@@ -65,11 +65,18 @@
 7. ⏳ Update Table page to use SDK + PVM WebSocket hybrid
 8. ⏳ Test full flow: Dashboard → Create → Join → Play
 
-**Current Blocker:**
-- ❌ **GameStateContext Error:** "No player address found"
-  - Location: `poker-vm/ui/src/context/GameStateContext.tsx:136`
-  - Issue: Looking for Ethereum address but we're using Cosmos wallets now
-  - **Next Fix:** Update GameStateContext to use `cosmos_address` from localStorage
+**Recent Fix (Oct 30, 2025):**
+- ✅ **Cosmos Address Migration Complete!**
+  - Issue: UI components using `user_eth_public_key` instead of `user_cosmos_address`
+  - Result: Legal actions not showing, player turn detection broken
+  - **Files Fixed:**
+    - `Footer.tsx:57` - Player action panel
+    - `useNextToActInfo.ts:49` - Turn detection
+    - `usePlayerTimer.ts:93` - Current user check
+    - `usePlayerSeatInfo.ts:21` - Seat detection
+    - `b52AccountUtils.ts:23` - Public key getter
+    - `QRDeposit.tsx:207` - Deposit display
+  - **Result:** Small blind, big blind, and all other legal actions now display correctly!
 
 **See `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/STRADBROKE_ISLAND.md` for detailed plan!**
 

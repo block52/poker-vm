@@ -90,7 +90,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
 
     // Check if this player is the current user
     const isCurrentUser = useMemo((): boolean => {
-        const userAddress = localStorage.getItem("user_eth_public_key")?.toLowerCase();
+        const userAddress = localStorage.getItem("user_cosmos_address")?.toLowerCase();
         return player?.address?.toLowerCase() === userAddress;
     }, [player]);
 

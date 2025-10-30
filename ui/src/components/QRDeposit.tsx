@@ -202,9 +202,9 @@ const QRDeposit: React.FC = () => {
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
 
-    // Get the stored public key on component mount
+    // Get the stored Cosmos address on component mount
     useEffect(() => {
-        const storedKey = localStorage.getItem("user_eth_public_key");
+        const storedKey = localStorage.getItem("user_cosmos_address");
         if (storedKey) {
             setLoggedInAccount(storedKey);
         }
