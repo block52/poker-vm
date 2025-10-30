@@ -357,12 +357,6 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // Removed: Ethereum wallet generation - now using Cosmos wallet only
-
-    // Removed: handleGameVariant and handleSeat - game options now in Create Game modal
-
-    // Removed: Ethereum private key import handler - now using Cosmos seed phrase
-
     // Cosmos wallet handlers
     const handleImportCosmosSeed = async () => {
         try {
@@ -747,8 +741,6 @@ const Dashboard: React.FC = () => {
             {/* Main Dashboard Content - Only show when authenticated */}
             {isAuthenticated && (
                 <>
-                    {/* Removed: Import Private Key Modal - now using Cosmos seed phrase import */}
-
                     {/* Cosmos Import Seed Phrase Modal */}
                     {showCosmosImportModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
@@ -1072,6 +1064,150 @@ const Dashboard: React.FC = () => {
                             <CosmosStatus />
                         </div>
 
+                        {/* Web3 Wallet Section */}
+                        <div
+                            className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300"
+                            style={{
+                                backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
+                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
+                            }}
+                        >
+                            <div className="flex items-center gap-2 mb-4">
+                                <h2 className="text-xl font-bold text-white">
+                                    Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                                </h2>
+                                <div className="relative group">
+                                    <svg
+                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
+                                        style={{
+                                            backgroundColor: colors.ui.bgDark,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
+                                    >
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
+                                            External Web3 Wallet
+                                        </h3>
+                                        <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
+                                        <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
+                                        <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
+                                        <div
+                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
+                                            style={{ borderTopColor: colors.ui.bgDark }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {!isConnected ? (
+                                <button
+                                    onClick={open}
+                                    className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md hover:opacity-90"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(
+                                            colors.brand.primary,
+                                            0.8
+                                        )} 100%)`
+                                    }}
+                                >
+                                    <div className="flex items-center justify-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        <span className="text-white">Connect Wallet</span>
+                                    </div>
+                                </button>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center" style={{ color: "white" }}>
+                                        <span>
+                                            Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                                        </span>
+                                        <button
+                                            onClick={disconnect}
+                                            className="text-xs px-3 py-1 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
+                                        >
+                                            Disconnect
+                                        </button>
+                                    </div>
+
+                                    <div
+                                        className="p-3 rounded-lg"
+                                        style={{
+                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                        }}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                                                    style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
+                                                >
+                                                    <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>
+                                                        $
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold" style={{ color: "white" }}>
+                                                        Web3 Wallet USDC Balance
+                                                    </p>
+                                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
+                                                        Available on Base Chain
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-right">
+                                                    <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
+                                                        ${web3Balance}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => fetchWeb3Balance()}
+                                                    className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                                    title="Refresh balance"
+                                                >
+                                                    <svg
+                                                        className="w-4 h-4"
+                                                        style={{ color: colors.brand.primary }}
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth="2"
+                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Block52 Wallet Section */}
                         <div
                             className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300"
@@ -1121,10 +1257,6 @@ const Dashboard: React.FC = () => {
                             {cosmosWallet.address && (
                                 <div className="space-y-3">
                                     <div className="flex flex-col gap-1">
-                                        <div className="flex items-center">
-                                            <span className="text-gray-400 text-xs mr-2">Address</span>
-                                            <div className="flex-1"></div>
-                                        </div>
                                         <div
                                             className="flex items-center justify-between p-2 rounded-lg"
                                             style={{
@@ -1303,150 +1435,6 @@ const Dashboard: React.FC = () => {
                                             </svg>
                                             Block Explorer
                                         </a>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Web3 Wallet Section */}
-                        <div
-                            className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300"
-                            style={{
-                                backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
-                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                            }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
-                            }}
-                        >
-                            <div className="flex items-center gap-2 mb-4">
-                                <h2 className="text-xl font-bold text-white">
-                                    Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
-                                </h2>
-                                <div className="relative group">
-                                    <svg
-                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
-                                    <div
-                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
-                                        style={{
-                                            backgroundColor: colors.ui.bgDark,
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                        }}
-                                    >
-                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
-                                            External Web3 Wallet
-                                        </h3>
-                                        <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
-                                        <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
-                                        <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
-                                        <div
-                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
-                                            style={{ borderTopColor: colors.ui.bgDark }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {!isConnected ? (
-                                <button
-                                    onClick={open}
-                                    className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                    style={{
-                                        background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(
-                                            colors.brand.primary,
-                                            0.8
-                                        )} 100%)`
-                                    }}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                        </svg>
-                                        <span className="text-white">Connect Wallet</span>
-                                    </div>
-                                </button>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center" style={{ color: "white" }}>
-                                        <span>
-                                            Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-                                        </span>
-                                        <button
-                                            onClick={disconnect}
-                                            className="text-xs px-3 py-1 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
-                                        >
-                                            Disconnect
-                                        </button>
-                                    </div>
-
-                                    <div
-                                        className="p-3 rounded-lg"
-                                        style={{
-                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                        }}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div
-                                                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                                                    style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
-                                                >
-                                                    <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>
-                                                        $
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold" style={{ color: "white" }}>
-                                                        Web3 Wallet USDC Balance
-                                                    </p>
-                                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
-                                                        Available on Base Chain
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="text-right">
-                                                    <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
-                                                        ${web3Balance}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    onClick={() => fetchWeb3Balance()}
-                                                    className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                                    title="Refresh balance"
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        style={{ color: colors.brand.primary }}
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -1712,6 +1700,7 @@ const Dashboard: React.FC = () => {
                             <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                         </div>
                     </div>
+                    
                     {showBuyInModal && (
                         <BuyInModal
                             tableId={buyInTableId}
