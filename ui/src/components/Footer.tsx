@@ -17,6 +17,7 @@ import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
 import { castToBigInt, convertAmountToBigInt, formatWeiToDollars, formatWeiToDollarsAmount, formatUSDCToSimpleDollars } from "../utils/numberUtils";
+import { ethers } from "ethers";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -102,18 +103,9 @@ const PokerActionPanel: React.FC = React.memo(() => {
         return formatWeiToDollarsAmount(step);
     };
 
-    // const getStep = (): bigint => {
-    //     return hasBetAction ? bigintMinBet : hasRaiseAction ? bigintMinRaise : 0n;
-    // };
-
     // These are the default amounts - initialize with proper minimum
     const initialAmount: bigint = hasBetAction ? (minBet > 0n ? minBet : 0n) : minRaise > 0n ? minRaise : 0n;
     const [raiseAmount, setRaiseAmount] = useState<number>(Number(initialAmount));
-    // const [, setRaiseInputRaw] = useState<string>(Number(initialAmount).toFixed(2));
-    // const [, setLastAmountSource] = useState<"slider" | "input" | "button">("slider");
-
-    // Handle raise amount changes from slider or input
-    // const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], gameState?.round ?? TexasHoldemRound.ANTE, userAddress || "");
 
     const isRaiseAmountInvalid: boolean = hasRaiseAction
         ? raiseAmount < formatWeiToDollarsAmount(minRaise) || raiseAmount > formatWeiToDollarsAmount(maxRaise)
@@ -133,10 +125,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const formattedBigBlindAmount: string = useMemo(() => formatWeiToDollars(bigBlindAction?.min), [bigBlindAction?.min]);
     const formattedCallAmount: string = useMemo(() => formatWeiToDollars(callAmount), [callAmount]);
     // Use correct USD formatter for raiseAmount (assumed to be in cents or USDC, not Wei)
-    const formattedRaiseAmount: string = useMemo(
-        () => formatUSDCToSimpleDollars(BigInt(Math.round(raiseAmount * 100))),
-        [raiseAmount]
-    );
+    const formattedRaiseAmount: string = useMemo(() => formatUSDCToSimpleDollars(BigInt(Math.round(raiseAmount * 100))), [raiseAmount]);
 
     // const formattedMinBetAmount: string = useMemo(() => formatWeiToDollars(minBet), [minBet]);
     const formattedMaxBetAmount: string = useMemo(
@@ -174,9 +163,12 @@ const PokerActionPanel: React.FC = React.memo(() => {
         setRaiseAmountBN(newRaiseAmount);
     };
 
-    // Todo: refactor to use bigint throughout
-    const setRaiseAmountAbsolute = (amount: number): void => {
-        setRaiseAmount(amount);
+    // Refactored: always convert Wei to USD before updating state
+    const setRaiseAmountAbsolute = (amountWei: bigint | number): void => {
+        // Accepts Wei as bigint or number, converts to USD
+        const amountBigInt = typeof amountWei === "bigint" ? amountWei : BigInt(amountWei);
+        const usdValue = formatWeiToDollarsAmount(amountBigInt);
+        setRaiseAmount(usdValue);
     };
 
     const setRaiseAmountBN = (amountWei: bigint): void => {
@@ -493,7 +485,25 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                 step={getStep()}
                                                 value={raiseAmount}
                                                 onChange={e => {
-                                                    setRaiseAmountAbsolute(Number(e.target.value));
+                                                    // Slider value is in USD, so convert back to Wei for state update
+                                                    // Find the closest Wei value for the given USD
+                                                    // We'll use minRaise or minBet as base, and step as step size
+                                                    // This is a lossy conversion, but keeps UI in sync
+                                                    // For now, just set USD directly (legacy), but should be improved
+                                                    // Convert USD slider value back to Wei for state update
+                                                    // Find the closest Wei value for the given USD
+                                                    // We'll use minRaise or minBet as base, and step as step size
+                                                    // This is a lossy conversion, but keeps UI in sync
+                                                    // For now, just set USD directly (legacy), but should be improved
+                                                    // setRaiseAmount(Number(e.target.value));
+                                                    // Instead, use setRaiseAmountAbsolute with Wei
+                                                    // Find the Wei value for the given USD (reverse of formatWeiToDollarsAmount)
+                                                    // Use ethers.js parseUnits
+                                                    // Use imported ethers
+                                                    const usdValue = Number(e.target.value);
+                                                    // Convert USD to Wei (18 decimals)
+                                                    const weiValue = ethers.parseUnits(usdValue.toFixed(2), 18);
+                                                    setRaiseAmountAbsolute(weiValue);
                                                 }}
                                                 className={
                                                     isMobileLandscape
@@ -536,12 +546,17 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                         value={raiseAmount.toFixed(2)}
                                                         onChange={e => {
                                                             const raw = e.target.value;
-
                                                             // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
                                                             if (/^\d*\.?\d{0,2}$/.test(raw)) {
                                                                 // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
                                                                 if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
-                                                                    setRaiseAmount(parseFloat(raw));
+                                                                    // Convert USD input to Wei and use setRaiseAmountAbsolute
+                                                                    // Use imported ethers
+                                                                    const usdValue = parseFloat(raw);
+                                                                    if (!isNaN(usdValue)) {
+                                                                        const weiValue = ethers.parseUnits(usdValue.toFixed(2), 18);
+                                                                        setRaiseAmountAbsolute(weiValue);
+                                                                    }
                                                                 }
                                                             }
                                                         }}
@@ -562,12 +577,17 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     value={raiseAmount.toFixed(2)}
                                                     onChange={e => {
                                                         const raw = e.target.value;
-
                                                         // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
                                                         if (/^\d*\.?\d{0,2}$/.test(raw)) {
                                                             // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
                                                             if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
-                                                                setRaiseAmount(parseFloat(raw));
+                                                                // Convert USD input to Wei and use setRaiseAmountAbsolute
+                                                                // Use imported ethers
+                                                                const usdValue = parseFloat(raw);
+                                                                if (!isNaN(usdValue)) {
+                                                                    const weiValue = ethers.parseUnits(usdValue.toFixed(2), 18);
+                                                                    setRaiseAmountAbsolute(weiValue);
+                                                                }
                                                             }
                                                         }
                                                     }}
@@ -585,7 +605,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const amount = (totalPot * 25n) / 100n;
-                                                        setRaiseAmountAbsolute(Number(amount));
+                                                        setRaiseAmountAbsolute(amount);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -596,7 +616,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const amount = (totalPot * 50n) / 100n;
-                                                        setRaiseAmountAbsolute(Number(amount));
+                                                        setRaiseAmountAbsolute(amount);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -607,7 +627,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
                                                         const amount = (totalPot * 75n) / 100n;
-                                                        setRaiseAmountAbsolute(Number(amount));
+                                                        setRaiseAmountAbsolute(amount);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -623,8 +643,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                             callAmount: BigInt(callAmount || 0),
                                                             pot: BigInt(totalPot || 0)
                                                         });
-
-                                                        setRaiseAmountAbsolute(Number(potBet));
+                                                        setRaiseAmountAbsolute(potBet);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -635,7 +654,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     transition-all duration-200 font-medium transform active:scale-105"
                                                     onClick={() => {
                                                         const amount = hasBetAction ? maxBet : maxRaise;
-                                                        setRaiseAmountAbsolute(Number(amount));
+                                                        setRaiseAmountAbsolute(amount);
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
