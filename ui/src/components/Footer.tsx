@@ -16,7 +16,7 @@ import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
-import { castToBigInt, convertAmountToBigInt, formatWeiToDollars, formatWeiToDollarsAmount } from "../utils/numberUtils";
+import { castToBigInt, convertAmountToBigInt, formatWeiToDollars, formatWeiToDollarsAmount, formatUSDCToSimpleDollars } from "../utils/numberUtils";
 
 const PokerActionPanel: React.FC = React.memo(() => {
     const { id: tableId } = useParams<{ id: string }>();
@@ -116,28 +116,27 @@ const PokerActionPanel: React.FC = React.memo(() => {
     // const raiseActionAmount = getRaiseToAmount(minRaise, gameState?.previousActions || [], gameState?.round ?? TexasHoldemRound.ANTE, userAddress || "");
 
     const isRaiseAmountInvalid: boolean = hasRaiseAction
-        ? raiseAmount < minRaise || raiseAmount > maxRaise
+        ? raiseAmount < formatWeiToDollarsAmount(minRaise) || raiseAmount > formatWeiToDollarsAmount(maxRaise)
         : hasBetAction
-        ? raiseAmount < minBet || raiseAmount > maxBet
+        ? raiseAmount < formatWeiToDollarsAmount(minBet) || raiseAmount > formatWeiToDollarsAmount(maxBet)
         : false;
 
     // Get total pot for percentage calculations
-    const totalPot = Number(pot) || 0;
+    const totalPot: bigint = castToBigInt(pot);
 
     // Dynamic class names based on validation state
     const inputFieldClassName = useMemo(() => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
     const minMaxTextClassName = useMemo(() => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
     // Memoize expensive computations
-    // const formattedSmallBlindAmount: string = useMemo(() => Number(ethers.formatUnits(smallBlindAction?.min || "0", 18)).toFixed(2), [smallBlindAction?.min]);
-    // const formattedBigBlindAmount: string = useMemo(() => Number(ethers.formatUnits(bigBlindAction?.min || "0", 18)).toFixed(2), [bigBlindAction?.min]);
-    // const formattedCallAmount: string = useMemo(() => callAmount.toFixed(2), [callAmount]);
-    // const formattedMaxBetAmount: string = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
-
     const formattedSmallBlindAmount: string = useMemo(() => formatWeiToDollars(smallBlindAction?.min), [smallBlindAction?.min]);
     const formattedBigBlindAmount: string = useMemo(() => formatWeiToDollars(bigBlindAction?.min), [bigBlindAction?.min]);
     const formattedCallAmount: string = useMemo(() => formatWeiToDollars(callAmount), [callAmount]);
-    const formattedRaiseAmount: string = useMemo(() => formatWeiToDollars(raiseAmount.toString()), [raiseAmount]);
+    // Use correct USD formatter for raiseAmount (assumed to be in cents or USDC, not Wei)
+    const formattedRaiseAmount: string = useMemo(
+        () => formatUSDCToSimpleDollars(BigInt(Math.round(raiseAmount * 100))),
+        [raiseAmount]
+    );
 
     // const formattedMinBetAmount: string = useMemo(() => formatWeiToDollars(minBet), [minBet]);
     const formattedMaxBetAmount: string = useMemo(
@@ -180,8 +179,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         setRaiseAmount(amount);
     };
 
-    const setRaiseAmountBN = (amount: bigint): void => {
-        setRaiseAmount(Number(amount));
+    const setRaiseAmountBN = (amountWei: bigint): void => {
+        // Convert Wei to USD (decimal), then store as Number (rounded to 2 decimals)
+        const usdValue = formatWeiToDollarsAmount(amountWei); // returns number, already rounded
+        setRaiseAmount(usdValue);
     };
 
     // Min Raise Text Prefill - Always set to minimum when actions become available
@@ -583,8 +584,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const amount = 0.25 * totalPot;
-                                                        setRaiseAmountAbsolute(amount);
+                                                        const amount = (totalPot * 25n) / 100n;
+                                                        setRaiseAmountAbsolute(Number(amount));
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -594,8 +595,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const amount = 0.5 * totalPot;
-                                                        setRaiseAmountAbsolute(amount);
+                                                        const amount = (totalPot * 50n) / 100n;
+                                                        setRaiseAmountAbsolute(Number(amount));
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
@@ -605,8 +606,8 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const amount = 0.75 * totalPot;
-                                                        setRaiseAmountAbsolute(amount);
+                                                        const amount = (totalPot * 75n) / 100n;
+                                                        setRaiseAmountAbsolute(Number(amount));
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >
