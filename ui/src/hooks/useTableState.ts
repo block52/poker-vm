@@ -3,6 +3,9 @@ import { useGameStateContext } from "../context/GameStateContext";
 import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
 import { TableStateReturn } from "../types/index";
 
+
+const DEFAULT_TABLE_SIZE = 9;
+
 /**
  * Custom hook to fetch and provide table state information
  * 
@@ -17,11 +20,11 @@ export const useTableState = (): TableStateReturn => {
     const { gameState, isLoading, error } = useGameStateContext();
 
     // Default values in case of error or loading
-    const defaultState = {
+    const defaultState: TableStateReturn = {
         currentRound: TexasHoldemRound.PREFLOP,
         totalPot: "0",
         formattedTotalPot: "0.00",
-        tableSize: 9,
+        tableSize: DEFAULT_TABLE_SIZE,
         tableType: GameType.CASH,
         roundType: TexasHoldemRound.PREFLOP,
         isLoading,
@@ -51,13 +54,10 @@ export const useTableState = (): TableStateReturn => {
         const currentRound = gameState.round || TexasHoldemRound.PREFLOP;
 
         // Extract table size (maximum players)
-        const tableSize = gameState.gameOptions?.maxPlayers || gameState.gameOptions?.minPlayers || 9;
+        const tableSize = gameState.gameOptions?.maxPlayers || gameState.gameOptions?.minPlayers || DEFAULT_TABLE_SIZE;
 
         // Extract table type
         const tableType = gameState.type || GameType.CASH;
-
-        // Round type is the same as current round in this context
-        const roundType = currentRound;
 
         const result: TableStateReturn = {
             currentRound,
@@ -65,7 +65,7 @@ export const useTableState = (): TableStateReturn => {
             formattedTotalPot,
             tableSize,
             tableType: tableType as GameType,
-            roundType,
+            roundType: currentRound,
             isLoading: false,
             error: null
         };

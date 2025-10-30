@@ -6,7 +6,7 @@ set -e  # Exit on any error
 PWD_DIR=$(pwd)
 SERVICE_NAME="api.service"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
-WORKING_DIR="/opt/gin-api"
+WORKING_DIR="/opt/bot-api"
 REPO_DIR="~/poker-vm"
 USER="apiuser"
 GROUP="apiuser"
@@ -42,7 +42,7 @@ cd "$PWD_DIR/bot/api"
 echo "Building application..."
 go mod tidy
 go mod download
-go build -o gin-api .
+go build -o api .
 
 # Stop the service if it's running
 if systemctl is-active --quiet "$SERVICE_NAME"; then
@@ -57,8 +57,8 @@ mkdir -p "$WORKING_DIR/data"
 
 # Copy the built binary
 echo "Copying binary to $WORKING_DIR..."
-cp gin-api "$WORKING_DIR/"
-chmod +x "$WORKING_DIR/gin-api"
+cp api "$WORKING_DIR/"
+chmod +x "$WORKING_DIR/api"
 
 # Set proper ownership
 chown -R "$USER:$GROUP" "$WORKING_DIR"

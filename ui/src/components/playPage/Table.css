@@ -316,10 +316,10 @@
 .zoom-wrapper-desktop {
     position: absolute;
     left: 50%;
-    top: 50%;
+    top: 40%;
     transform-origin: center center;
-    width: 1600px;
-    height: 850px;
+    /* width: 1600px;
+    height: 850px; */
     max-width: 100vw;
     max-height: calc(100vh - 180px);
     overflow: visible;

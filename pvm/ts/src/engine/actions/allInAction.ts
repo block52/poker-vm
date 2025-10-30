@@ -8,6 +8,8 @@ class AllInAction extends BaseAction implements IAction {
 
     verify(player: Player): Range {
         super.verify(player);
+        this.validateNotInAnteRound();
+        
         if (player.chips === 0n) // !! check this as what happens if run out of chips in middle of game.  Answer, you sit out.
             throw new Error("Player has no chips so can't go all-in.");
         return { minAmount: player.chips, maxAmount: player.chips };

@@ -9,6 +9,8 @@ export interface CreateTableOptions {
     maxBuyIn: number;
     minPlayers: number;
     maxPlayers: number;
+    smallBlind: number;
+    bigBlind: number;
 }
 
 // Type for useNewTable hook return

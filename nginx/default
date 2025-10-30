@@ -19,39 +19,24 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
     }
-
-    listen [::]:443 ssl ipv6only=on; # managed by Certbot
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/node1.block52.xyz/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/node1.block52.xyz/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }
 
 server {
-    # Add index.php to the list if you are using PHP
-    index index.html;
-
-    server_name node.p2p.poker;
+    listen 80;
+    server_name rest.block52.xyz;
 
     location / {
-        # First attempt to serve request as file, then
-        # as directory, then fall back to displaying a 404.
-        proxy_pass         http://127.0.0.1:8545/;
-        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass http://127.0.0.1:1317;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-        # WebSocket support
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 
 # Bot API server configuration
 server {
-    index index.html;
+    # index index.html;
     server_name botapi.block52.xyz;
 
     location / {
@@ -65,30 +50,25 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        
+
         # CORS headers for API
-        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Origin' 'https://bots.block52.xyz' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, PATCH, PUT, DELETE, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
-        
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, x-api-key' always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
         # Handle preflight requests
         if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' '*';
+            add_header 'Access-Control-Allow-Origin' 'https://bots.block52.xyz';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, PATCH, PUT, DELETE, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization';
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, x-api-key';
+            add_header 'Access-Control-Allow-Credentials' 'true';
             add_header 'Access-Control-Max-Age' 1728000;
             add_header 'Content-Type' 'text/plain; charset=utf-8';
             add_header 'Content-Length' 0;
             return 204;
         }
     }
-
-    # listen [::]:443 ssl; # managed by Certbot
-    # listen 443 ssl; # managed by Certbot
-    # ssl_certificate /etc/letsencrypt/live/botapi.block52.xyz/fullchain.pem; # managed by Certbot
-    # ssl_certificate_key /etc/letsencrypt/live/botapi.block52.xyz/privkey.pem; # managed by Certbot
-    # include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }
 
 server {
@@ -112,36 +92,4 @@ server {
 
     server_name node1.block52.xyz;
     return 404; # managed by Certbot
-}
-
-server {
-    if ($host = node1.block52.xyz) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-    server_name chat.block52.xyz; # managed by Certbot
-    return 404; # managed by Certbot
-
-    listen [::]:443 ssl; # managed by Certbot
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/chat.block52.xyz/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/chat.block52.xyz/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-}
-
-server {
-    server_name chat.block52.xyz;
-
-    client_max_body_size 10M;
-    location /static/ {
-        autoindex off;
-        root /usr/lib/python3/dist-packages/sogs;
-    }
-    location / {
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_pass http://127.3.2.1:4242/;
-    }
-
-    listen 80;
-    listen [::]:80;
 }

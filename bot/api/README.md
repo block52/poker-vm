@@ -25,7 +25,7 @@ A simple REST API for managing poker bots using Go, Gin, and MongoDB.
 ### With Go
 
 ```sh
-go run main.go
+go run .
 ```
 
 ### With Makefile
@@ -36,18 +36,30 @@ If you prefer, use the provided Makefile:
 make run
 ```
 
+Or build the binary (includes all Go files):
+
+```sh
+make build
+```
+
+Or directly with Go:
+
+```sh
+go build -o api .
+```
+
 The API will be available at [http://localhost:8080/bots](http://localhost:8080/bots)
 
 ## Install API
 
-```sh
+````sh
 sudo useradd -r -s /bin/false apiuser
-sudo mkdir -p /opt/gin-api/{logs,data}
-sudo chown -R apiuser:apiuser /opt/gin-api
+sudo mkdir -p /opt/bot-api/{logs,data}
+sudo chown -R apiuser:apiuser /opt/bot-api
 make build
-sudo cp api /opt/gin-api/api
-sudo chown apiuser:apiuser /opt/gin-api/gin-api
-sudo chmod +x /opt/gin-api/gin-api
+sudo cp api /opt/bot-api/api
+sudo chown apiuser:apiuser /opt/bot-api/api
+sudo chmod +x /opt/bot-api/api
 
 sudo cp api.service /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -56,6 +68,6 @@ sudo systemctl daemon-reload
 ## Starting service
 
 ```sh
-sudo systemctl enable gin-api
-sudo systemctl start gin-api
-```
+sudo systemctl enable api
+sudo systemctl start api
+````

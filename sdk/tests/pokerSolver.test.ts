@@ -212,4 +212,84 @@ describe("Custom PokerSolver", () => {
             console.log("Winner: Player", winners[0] + 1);
         });
     });
+
+    describe("Win Percentage Calculation", () => {
+        test("should calculate win percentages for pocket aces vs pocket kings", () => {
+            // AA vs KK preflop - classic scenario
+            const handA = createCards(["AS", "AH"]);
+            const handB = createCards(["KS", "KH"]);
+
+            const [aWin, bWin, tie] = PokerSolver.calculateWinPercentages(handA, handB, [], 1000);
+
+            // AA should win ~80-85% of the time against KK
+            expect(aWin).toBeGreaterThan(75);
+            expect(aWin).toBeLessThan(90);
+            expect(bWin).toBeGreaterThan(10);
+            expect(bWin).toBeLessThan(25);
+            expect(tie).toBeGreaterThanOrEqual(0);
+
+            // Total should be approximately 100%
+            expect(Math.abs((aWin + bWin + tie) - 100)).toBeLessThan(1);
+        });
+
+        test("should calculate win percentages with community cards", () => {
+            // AA vs KK with ace on flop
+            const handA = createCards(["AS", "AH"]);
+            const handB = createCards(["KS", "KH"]);
+            const community = createCards(["AC", "8D", "2S"]);
+
+            const [aWin, bWin, tie] = PokerSolver.calculateWinPercentages(handA, handB, community, 1000);
+
+            // AA should win almost 100% with set of aces
+            expect(aWin).toBeGreaterThan(95);
+            expect(bWin).toBeLessThan(5);
+        });
+
+        test("should handle flush draw vs pocket pair scenario", () => {
+            // Flush draw vs pocket pair
+            const handA = createCards(["TH", "9H"]); // Hearts flush draw
+            const handB = createCards(["8S", "8C"]); // Pocket 8s
+            const community = createCards(["2H", "5H", "KD"]); // Two hearts on board
+
+            const [aWin, bWin, tie] = PokerSolver.calculateWinPercentages(handA, handB, community, 1000);
+
+            // Should be relatively close, flush draw has decent equity
+            expect(aWin).toBeGreaterThan(35);
+            expect(aWin).toBeLessThan(70);
+            expect(bWin).toBeGreaterThan(30);
+            expect(bWin).toBeLessThan(65);
+        });
+
+        test("should throw error for invalid input", () => {
+            const handA = createCards(["AS"]); // Only 1 card
+            const handB = createCards(["KS", "KH"]);
+
+            expect(() => {
+                PokerSolver.calculateWinPercentages(handA, handB);
+            }).toThrow("Hand A must have exactly 2 cards");
+        });
+
+        test("should throw error for duplicate cards", () => {
+            const handA = createCards(["AS", "AH"]);
+            const handB = createCards(["AS", "KH"]); // Duplicate AS
+
+            expect(() => {
+                PokerSolver.calculateWinPercentages(handA, handB);
+            }).toThrow("Duplicate cards detected in input");
+        });
+
+        test("should handle board with 5 community cards", () => {
+            // Complete board scenario
+            const handA = createCards(["AS", "AH"]);
+            const handB = createCards(["KS", "KH"]);
+            const community = createCards(["AC", "AD", "2S", "3H", "4C"]); // Quads for A
+
+            const [aWin, bWin, tie] = PokerSolver.calculateWinPercentages(handA, handB, community, 100);
+
+            // Should be 100% win for AA (quads)
+            expect(aWin).toBe(100);
+            expect(bWin).toBe(0);
+            expect(tie).toBe(0);
+        });
+    });
 });

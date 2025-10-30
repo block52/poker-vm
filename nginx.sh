@@ -11,6 +11,17 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+
+# Require main domain as argument (no prompt)
+if [ -z "$1" ]; then
+    echo -e "${RED}[ERROR] Main domain must be provided as an argument (e.g., bash nginx.sh example.com)${NC}"
+    exit 1
+fi
+MAIN_DOMAIN="$1"
+
+APP_DOMAIN="app.$MAIN_DOMAIN"
+NODE_DOMAIN="node1.$MAIN_DOMAIN"
+
 # Get pwd
 PWD_DIR=$(pwd)
 echo -e "${GREEN}Current working directory: $PWD_DIR${NC}"
@@ -71,9 +82,22 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+
+# Remove any config files in /etc/nginx/sites-enabled/ and /etc/nginx/conf.d/ with SSL/certbot/letsencrypt/443 lines
+for f in /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*; do
+    if [ -f "$f" ] && grep -qE 'ssl_|letsencrypt|certbot|443' "$f"; then
+        log "Removing old nginx config with SSL/certbot: $f"
+        rm -f "$f"
+    fi
+done
+
 # Copy new configuration
 log "Copying new configuration..."
 cp "$SOURCE_CONF" "$DEFAULT_CONF"
+
+# Create new symlink to our config
+log "Linking $DEFAULT_CONF to /etc/nginx/sites-enabled/default..."
+ln -s "$DEFAULT_CONF" /etc/nginx/sites-enabled/default
 
 # Set correct permissions and ownership
 log "Setting correct permissions..."
@@ -128,8 +152,28 @@ else
     exit 1
 fi
 
+
+# Setup SSL certificates with certbot for app and node subdomains
+log "Setting up SSL certificates with certbot..."
+certbot --nginx --expand -d "$NODE_DOMAIN" -d "$APP_DOMAIN" --non-interactive --agree-tos -m admin@$MAIN_DOMAIN || warning "Certbot may require manual intervention. Check certbot output."
+
+# Final nginx config test and restart
+log "Final nginx configuration test..."
+nginx -t
+if [[ $? -ne 0 ]]; then
+    error "Nginx configuration failed after certbot. Please check manually."
+    exit 1
+fi
+
+log "Restarting nginx service..."
+systemctl restart nginx
+if systemctl is-active --quiet nginx; then
+    log "✅ Nginx is running and configuration update completed successfully"
+    log "Configuration backup saved as: $BACKUP_DIR/default_$TIMESTAMP.bak"
+else
+    error "❌ Nginx failed to start properly after configuration update"
+    exit 1
+fi
+
 log "🎉 Nginx configuration update completed successfully!"
-log "Remember to:"
-log "  - Update DNS records for new domains"
-log "  - Generate SSL certificates with: sudo certbot --nginx -d botapi.block52.xyz"
-log "  - Monitor nginx logs: sudo tail -f /var/log/nginx/error.log"
+log "Monitor nginx logs: sudo tail -f /var/log/nginx/error.log"

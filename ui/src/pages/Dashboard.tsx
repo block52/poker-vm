@@ -181,6 +181,12 @@ const Dashboard: React.FC = () => {
     const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
     const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
     const [modalPlayerCount, setModalPlayerCount] = useState(4);
+    // For Cash Game: min/max players
+    const [modalMinPlayers, setModalMinPlayers] = useState(2);
+    const [modalMaxPlayers, setModalMaxPlayers] = useState(9);
+    // Small/Big Blind fields
+    const [modalSmallBlind, setModalSmallBlind] = useState(1);
+    const [modalBigBlind, setModalBigBlind] = useState(2);
 
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -322,8 +328,10 @@ const Dashboard: React.FC = () => {
                 type: modalGameType,
                 minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
                 maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
-                minPlayers: modalPlayerCount,
-                maxPlayers: modalPlayerCount
+                minPlayers: modalGameType === GameType.CASH ? modalMinPlayers : modalPlayerCount,
+                maxPlayers: modalGameType === GameType.CASH ? modalMaxPlayers : modalPlayerCount,
+                smallBlind: modalSmallBlind,
+                bigBlind: modalBigBlind
             };
 
             console.log("📦 Final CreateTableOptions being sent to Cosmos:");
@@ -871,17 +879,44 @@ const Dashboard: React.FC = () => {
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-white text-sm mb-1">Number of Players</label>
-                                        <select
-                                            value={modalPlayerCount}
-                                            onChange={e => setModalPlayerCount(Number(e.target.value))}
-                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                        >
-                                            <option value={4}>4 Players (Sit & Go)</option>
-                                            <option value={9}>9 Players (Full Ring)</option>
-                                        </select>
-                                    </div>
+                                    {modalGameType === GameType.CASH ? (
+                                        <div className="flex gap-4">
+                                            <div className="flex-1">
+                                                <label className="block text-white text-sm mb-1">Min Players</label>
+                                                <input
+                                                    type="number"
+                                                    min={2}
+                                                    max={9}
+                                                    value={modalMinPlayers ?? 2}
+                                                    onChange={e => setModalMinPlayers(Number(e.target.value))}
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="block text-white text-sm mb-1">Max Players</label>
+                                                <input
+                                                    type="number"
+                                                    min={2}
+                                                    max={9}
+                                                    value={modalMaxPlayers ?? 9}
+                                                    onChange={e => setModalMaxPlayers(Number(e.target.value))}
+                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <label className="block text-white text-sm mb-1">Number of Players</label>
+                                            <select
+                                                value={modalPlayerCount}
+                                                onChange={e => setModalPlayerCount(Number(e.target.value))}
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            >
+                                                <option value={4}>4 Players (Sit & Go)</option>
+                                                <option value={9}>9 Players (Full Ring)</option>
+                                            </select>
+                                        </div>
+                                    )}
 
                                     {/* Show different fields based on game type */}
                                     {modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT ? (
@@ -926,6 +961,32 @@ const Dashboard: React.FC = () => {
                                             </div>
                                         </>
                                     )}
+
+                                    {/* Small Blind and Big Blind fields (always shown) */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="block text-white text-sm mb-1">Small Blind ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalSmallBlind}
+                                                onChange={e => setModalSmallBlind(Number(e.target.value))}
+                                                min="1"
+                                                max="10000"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-white text-sm mb-1">Big Blind ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalBigBlind}
+                                                onChange={e => setModalBigBlind(Number(e.target.value))}
+                                                min="1"
+                                                max="10000"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                        </div>
+                                    </div>
 
                                     <div>
                                         <label className="block text-white text-sm mb-1">Variant</label>

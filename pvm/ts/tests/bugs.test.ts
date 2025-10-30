@@ -31,7 +31,8 @@ import {
     test_1158,
     test_1173,
     test_1176,
-    test_1178
+    test_1178,
+    test_1197
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -602,7 +603,7 @@ describe("Texas Holdem - Data driven", () => {
             // Verify that seat 3 (next to act) has call/fold options, not show
             const seat3Player = game.getSeatedPlayers().find((p: any) => p.address === SEAT_3);
             expect(seat3Player).toBeDefined();
-            expect(seat3Player?.status).toBe('active');
+            expect(seat3Player?.status).toBe("active");
 
             const seat3Actions = game.getLegalActions(SEAT_3);
             const actionTypes = seat3Actions.map((a: any) => a.action);
@@ -619,9 +620,9 @@ describe("Texas Holdem - Data driven", () => {
             console.log("Can Seat 3 call? Chips:", seat3Player?.chips, "vs All-in:", allInAction.amount);
 
             // After the fix, seat 3 should have fold option at minimum
-            expect(actionTypes).toContain('fold');
+            expect(actionTypes).toContain("fold");
             // Should NOT have show action (that indicates showdown)
-            expect(actionTypes).not.toContain('show');
+            expect(actionTypes).not.toContain("show");
 
             // Verify hasRoundEnded is now false (this is the key fix)
             expect(game.hasRoundEnded(game.currentRound)).toBe(false);
@@ -641,9 +642,7 @@ describe("Texas Holdem - Data driven", () => {
             const previousActions = game.getPreviousActions();
 
             // Find the all-in action
-            const allInAction = previousActions.find(
-                (action: any) => action.action === PlayerActionType.ALL_IN
-            );
+            const allInAction = previousActions.find((action: any) => action.action === PlayerActionType.ALL_IN);
             expect(allInAction).toBeDefined();
             expect(allInAction?.seat).toBe(2); // Player 2 went all-in
 
@@ -665,9 +664,7 @@ describe("Texas Holdem - Data driven", () => {
             // 3. Player 4 should get call/fold options
             // 4. Only then proceed to showdown
 
-            console.log(
-                "Bug demonstrated: All-in immediately triggers showdown instead of call/fold actions"
-            );
+            console.log("Bug demonstrated: All-in immediately triggers showdown instead of call/fold actions");
         });
 
         test("Debug: Recreate game state just before all-in to understand the bug", () => {
@@ -720,10 +717,22 @@ describe("Texas Holdem - Data driven", () => {
             const SEAT_4 = "0x4260E88e81E60113146092Fb9474b61C59f7552e";
 
             console.log("Legal actions just before all-in:");
-            console.log("Seat 1:", modifiedGame.getLegalActions(SEAT_1).map((a: any) => a.action));
-            console.log("Seat 2:", modifiedGame.getLegalActions(SEAT_2).map((a: any) => a.action));
-            console.log("Seat 3:", modifiedGame.getLegalActions(SEAT_3).map((a: any) => a.action));
-            console.log("Seat 4:", modifiedGame.getLegalActions(SEAT_4).map((a: any) => a.action));
+            console.log(
+                "Seat 1:",
+                modifiedGame.getLegalActions(SEAT_1).map((a: any) => a.action)
+            );
+            console.log(
+                "Seat 2:",
+                modifiedGame.getLegalActions(SEAT_2).map((a: any) => a.action)
+            );
+            console.log(
+                "Seat 3:",
+                modifiedGame.getLegalActions(SEAT_3).map((a: any) => a.action)
+            );
+            console.log(
+                "Seat 4:",
+                modifiedGame.getLegalActions(SEAT_4).map((a: any) => a.action)
+            );
 
             expect(modifiedGame.currentRound).toBe(TexasHoldemRound.RIVER);
         });
@@ -782,7 +791,9 @@ describe("Texas Holdem - Data driven", () => {
             players.forEach(p => {
                 const player = gameAfterAllIn.getPlayer(p.address);
                 const status = gameAfterAllIn.getPlayerStatus(p.address);
-                console.log(`Seat ${p.seat}: status=${status}, chips=${player.chips}, actions=${gameAfterAllIn.getLegalActions(p.address).map((a: any) => a.action)}`);
+                console.log(
+                    `Seat ${p.seat}: status=${status}, chips=${player.chips}, actions=${gameAfterAllIn.getLegalActions(p.address).map((a: any) => a.action)}`
+                );
             });
 
             // Check if round has ended
@@ -797,14 +808,17 @@ describe("Texas Holdem - Data driven", () => {
 
             console.log("Live players count:", livePlayers.length);
             console.log("Active players count:", activePlayers.length);
-            console.log("Active players:", activePlayers.map((p: any) => `${p.address.slice(-4)}: seat ${p.seat}`));
+            console.log(
+                "Active players:",
+                activePlayers.map((p: any) => `${p.address.slice(-4)}: seat ${p.seat}`)
+            );
 
             // Debug the bet equality logic that's likely causing the issue
             console.log("\nDebugging bet equality logic:");
             const playerBets: bigint[] = [];
 
             for (const player of livePlayers) {
-                const totalBet = (gameAfterAllIn as any).getPlayerTotalBets(player.address, 'river');
+                const totalBet = (gameAfterAllIn as any).getPlayerTotalBets(player.address, "river");
                 playerBets.push(totalBet);
                 console.log(`Player ${player.address.slice(-4)}: bet=${totalBet}, status=${player.status}, chips=${player.chips}`);
             }
@@ -815,16 +829,17 @@ describe("Texas Holdem - Data driven", () => {
             console.log(`First bet amount: ${playerBets[0]}`);
 
             // Let's also check what actions happened in this river round
-            const riverActions = (gameAfterAllIn as any)._rounds.get('river') || [];
+            const riverActions = (gameAfterAllIn as any)._rounds.get("river") || [];
             console.log(`\nRiver round actions:`);
             riverActions.forEach((action: any, index: number) => {
-                console.log(`  ${index}: ${action.playerId.slice(-4)} - ${action.action} ${action.amount || ''}`);
+                console.log(`  ${index}: ${action.playerId.slice(-4)} - ${action.action} ${action.amount || ""}`);
             });
 
             // Check if there's a bet/raise that players need to respond to
-            const lastBetOrRaise = riverActions.slice().reverse().find((a: any) =>
-                a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE || a.action === PlayerActionType.ALL_IN
-            );
+            const lastBetOrRaise = riverActions
+                .slice()
+                .reverse()
+                .find((a: any) => a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE || a.action === PlayerActionType.ALL_IN);
 
             if (lastBetOrRaise) {
                 console.log(`\nLast bet/raise/all-in: ${lastBetOrRaise.playerId.slice(-4)} - ${lastBetOrRaise.action} ${lastBetOrRaise.amount}`);
@@ -834,7 +849,7 @@ describe("Texas Holdem - Data driven", () => {
                 actionsAfterBet.forEach((action: any) => {
                     console.log(`  ${action.playerId.slice(-4)} - ${action.action}`);
                 });
-            };
+            }
 
             // This should show us why the game immediately goes to showdown
         });
@@ -863,7 +878,9 @@ describe("Texas Holdem - Data driven", () => {
             // Log all players and their hands before winner calculation
             Array.from(game.players.entries()).forEach(([seat, player]: [number, Player | null]) => {
                 if (player) {
-                    console.log(`Player ${player.address.slice(-4)} (seat ${seat}): ${player.holeCards?.join(', ')} - status: ${player.status}, stack: ${player.chips}`);
+                    console.log(
+                        `Player ${player.address.slice(-4)} (seat ${seat}): ${player.holeCards?.join(", ")} - status: ${player.status}, stack: ${player.chips}`
+                    );
                 }
             });
 
@@ -875,12 +892,15 @@ describe("Texas Holdem - Data driven", () => {
             const winnerAddresses = winnersMap ? Array.from(winnersMap.keys()) : [];
             const winnerEntries = winnersMap ? Array.from(winnersMap.entries()) : [];
 
-            console.log("Winners after recalculation:", winnerEntries.map(([address, winner]: [string, Winner]) => ({
-                address: address.slice(-4),
-                amount: winner.amount,
-                hand: winner.name,
-                cards: winner.cards
-            })));
+            console.log(
+                "Winners after recalculation:",
+                winnerEntries.map(([address, winner]: [string, Winner]) => ({
+                    address: address.slice(-4),
+                    amount: winner.amount,
+                    hand: winner.name,
+                    cards: winner.cards
+                }))
+            );
 
             // Player 2 with KK should win over Player 1 with QQ
             const player2Address = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8";
@@ -902,15 +922,18 @@ describe("Texas Holdem - Data driven", () => {
             const game = fromTestJson(test_1178);
 
             // Addresses from test_1178 data:
-            const SEAT_1 = "0x2B6be678D732346c364c98905A285C938056b0A8"; // Player 1 - bet on turn  
-            const SEAT_2 = "0xC84737526E425D7549eF20998Fa992f88EAC2484"; // Player 2 - needs to respond to bet 
+            const SEAT_1 = "0x2B6be678D732346c364c98905A285C938056b0A8"; // Player 1 - bet on turn
+            const SEAT_2 = "0xC84737526E425D7549eF20998Fa992f88EAC2484"; // Player 2 - needs to respond to bet
             const SEAT_3 = "0xf20d09D3ef43315C392d4879e253142557363A2C"; // Player 3 - folded
             const SEAT_4 = "0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8"; // Player 4 - all-in
 
             console.log("Test 1178 - Players Stuck Analysis:");
             console.log("Current round:", game.currentRound);
             console.log("Last acted seat:", game.lastActedSeat);
-            console.log("Community cards:", game.communityCards.map((c: any) => c.mnemonic));
+            console.log(
+                "Community cards:",
+                game.communityCards.map((c: any) => c.mnemonic)
+            );
 
             // Check the round-ending logic in detail
             console.log("Has round ended?", (game as any).hasRoundEnded(game.currentRound));
@@ -926,7 +949,10 @@ describe("Texas Holdem - Data driven", () => {
             expect(nextToAct?.address).toBe(SEAT_2);
 
             const seat2Actions = game.getLegalActions(SEAT_2);
-            console.log("Seat 2 legal actions:", seat2Actions.map((a: any) => a.action));
+            console.log(
+                "Seat 2 legal actions:",
+                seat2Actions.map((a: any) => a.action)
+            );
 
             // Seat 2 should have call option after seat 1's bet
             const canSeat2Call = seat2Actions.some((a: any) => a.action === PlayerActionType.CALL);
@@ -934,7 +960,7 @@ describe("Texas Holdem - Data driven", () => {
 
             // Verify the scenario:
             // 1. Seat 4 is all-in (can't act further)
-            // 2. Seat 3 is folded (can't act further) 
+            // 2. Seat 3 is folded (can't act further)
             // 3. Seat 1 just bet on the turn
             // 4. Seat 2 must respond to the bet (fold/call/raise)
 
@@ -945,7 +971,9 @@ describe("Texas Holdem - Data driven", () => {
                 if (player) {
                     const legalActions = game.getLegalActions(player.address);
                     const isNextToAct = nextToAct?.address === player.address;
-                    console.log(`Seat ${seat}: ${player.address.slice(-4)} - status: ${player.status}, chips: ${player.chips}, next: ${isNextToAct}, actions: [${legalActions.map(a => a.action).join(', ')}]`);
+                    console.log(
+                        `Seat ${seat}: ${player.address.slice(-4)} - status: ${player.status}, chips: ${player.chips}, next: ${isNextToAct}, actions: [${legalActions.map(a => a.action).join(", ")}]`
+                    );
                 }
             });
 
@@ -953,7 +981,7 @@ describe("Texas Holdem - Data driven", () => {
             const turnActions = (game as any)._rounds.get(game.currentRound) || [];
             console.log(`\nTurn round actions (${turnActions.length}):`);
             turnActions.forEach((action: any, index: number) => {
-                console.log(`  ${index}: Seat ${action.seat} (${action.playerId.slice(-4)}) - ${action.action} ${action.amount || ''}`);
+                console.log(`  ${index}: Seat ${action.seat} (${action.playerId.slice(-4)}) - ${action.action} ${action.amount || ""}`);
             });
 
             // This demonstrates the bug was in the inconsistent test data
@@ -991,7 +1019,7 @@ describe("Texas Holdem - Data driven", () => {
             const turnActionsAfterCall = (game as any)._rounds.get(TexasHoldemRound.TURN) || [];
             console.log(`Turn round actions after call (${turnActionsAfterCall.length}):`);
             turnActionsAfterCall.forEach((action: any, index: number) => {
-                console.log(`  ${index}: Seat ${action.seat} (${action.playerId.slice(-4)}) - ${action.action} ${action.amount || ''}`);
+                console.log(`  ${index}: Seat ${action.seat} (${action.playerId.slice(-4)}) - ${action.action} ${action.amount || ""}`);
             });
 
             // Check live and active players
@@ -999,11 +1027,17 @@ describe("Texas Holdem - Data driven", () => {
             const activePlayersForRound = livePlayers.filter((p: any) => p.status === PlayerStatus.ACTIVE);
             console.log("Live players:", livePlayers.length);
             console.log("Active players:", activePlayersForRound.length);
-            console.log("Active player addresses:", activePlayersForRound.map((p: any) => `${p.address.slice(-4)} (seat ${(game as any).getPlayerSeatNumber(p.address)})`));
+            console.log(
+                "Active player addresses:",
+                activePlayersForRound.map((p: any) => `${p.address.slice(-4)} (seat ${(game as any).getPlayerSeatNumber(p.address)})`)
+            );
 
             // Check if all active players have acted in this round
             const turnActingPlayers = new Set(turnActionsAfterCall.map((a: any) => a.playerId));
-            console.log("Players who acted in turn:", Array.from(turnActingPlayers).map((p: any) => p.slice(-4)));
+            console.log(
+                "Players who acted in turn:",
+                Array.from(turnActingPlayers).map((p: any) => p.slice(-4))
+            );
 
             // Check betting amounts for each active player
             console.log("Player total bets in turn round:");
@@ -1039,26 +1073,33 @@ describe("Texas Holdem - Data driven", () => {
             console.log("Next player to act from engine:", game.getNextPlayerToAct()?.address?.slice(-4) || "None");
 
             // Check if there's a pending bet/raise that needs responses
-            const lastBetOrRaise = turnActionsAfterCall.slice().reverse().find((a: any) =>
-                a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE || a.action === PlayerActionType.ALL_IN
-            );
+            const lastBetOrRaise = turnActionsAfterCall
+                .slice()
+                .reverse()
+                .find((a: any) => a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE || a.action === PlayerActionType.ALL_IN);
             if (lastBetOrRaise) {
                 console.log(`Last bet/raise/all-in: ${lastBetOrRaise.playerId.slice(-4)} - ${lastBetOrRaise.action} ${lastBetOrRaise.amount}`);
 
                 // Check who acted after this bet
                 const lastBetIndex = turnActionsAfterCall.indexOf(lastBetOrRaise);
                 const actionsAfterBet = turnActionsAfterCall.slice(lastBetIndex + 1);
-                console.log("Actions after last bet:", actionsAfterBet.map((a: any) => `${a.playerId.slice(-4)}-${a.action}`));
+                console.log(
+                    "Actions after last bet:",
+                    actionsAfterBet.map((a: any) => `${a.playerId.slice(-4)}-${a.action}`)
+                );
 
                 // Check the engine's logic for Step 8
                 console.log("\n=== DEBUGGING STEP 8 LOGIC ===");
-                console.log("Active players:", activePlayersForRound.map((p: any) => p.address.slice(-4)));
+                console.log(
+                    "Active players:",
+                    activePlayersForRound.map((p: any) => p.address.slice(-4))
+                );
                 console.log("Last bet player:", lastBetOrRaise.playerId.slice(-4));
 
                 for (const player of activePlayersForRound) {
                     const isOriginalBettor = player.address === lastBetOrRaise.playerId;
-                    const playerActionsAfterBet = turnActionsAfterCall.filter((a: any) =>
-                        a.playerId === player.address && turnActionsAfterCall.indexOf(a) > lastBetIndex
+                    const playerActionsAfterBet = turnActionsAfterCall.filter(
+                        (a: any) => a.playerId === player.address && turnActionsAfterCall.indexOf(a) > lastBetIndex
                     );
 
                     console.log(`Player ${player.address.slice(-4)}: isOriginalBettor=${isOriginalBettor}, actionsAfterBet=${playerActionsAfterBet.length}`);
@@ -1068,7 +1109,7 @@ describe("Texas Holdem - Data driven", () => {
                     } else if (playerActionsAfterBet.length === 0) {
                         console.log("  -> This player hasn't acted after bet - round should NOT end");
                     } else {
-                        console.log(`  -> This player acted after bet: ${playerActionsAfterBet.map((a: any) => a.action).join(', ')}`);
+                        console.log(`  -> This player acted after bet: ${playerActionsAfterBet.map((a: any) => a.action).join(", ")}`);
                     }
                 }
 
@@ -1079,6 +1120,54 @@ describe("Texas Holdem - Data driven", () => {
             }
 
             expect(game.currentRound).toBe(TexasHoldemRound.RIVER);
+        });
+    });
+
+    describe("Bug 1197 - Game stops after player is eliminated", () => {
+        let game: TexasHoldemGame;
+
+        beforeEach(() => {
+            game = fromTestJson(test_1197);
+        });
+
+        it("should end the game after player is eliminated", () => {
+            // The game should be in END state
+            expect(game.currentRound).toBe(TexasHoldemRound.END);
+
+            // Player 1 should be busted
+            const player1 = game.getSeatedPlayers().find(p => p.address === "0xf20d09D3ef43315C392d4879e253142557363A2C");
+            expect(player1).toBeDefined();
+            expect(player1!.status).toBe("busted");
+            expect(player1!.chips).toBe(0n);
+
+            // Get winners
+            const winners = game.winners;
+            expect(winners).toBeDefined();
+            expect(winners?.size).toBe(1);
+
+            // Get next to act
+            const nextToAct = game.getNextPlayerToAct();
+            expect(nextToAct).toBeDefined();
+            expect(nextToAct!.address).toBe("0x6D54C322262ad910F11321fE56D60f2C73D9f4A3");
+
+            const remainingPlayers = game.getSeatedPlayers().filter(p => p.status === PlayerStatus.ACTIVE);
+
+            // No further actions should be available except new-hand for remaining players
+            for (const player of remainingPlayers) {
+                const legalActions = game.getLegalActions(player.address);
+                console.log(`Player ${player.address.slice(-4)} legal actions:`, legalActions.map(a => a.action));
+                expect(legalActions.length).toBeGreaterThanOrEqual(1);
+                expect(legalActions.some(a => a.action === "new-hand")).toBe(true);
+            }
+
+            // Continue to next hand should be possible by calling new-hand
+            const seed = "seed=" + Array.from({ length: 52 }, (_, i) => i + 1).join("-");
+            game.performAction(nextToAct!.address, NonPlayerActionType.NEW_HAND, 226, 0n, seed);
+
+            // Verify new hand started
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+            expect(game.getActivePlayerCount()).toBe(3); // Only 3 players remain
+            console.log("✅ Bug fixed: Game correctly ends after player elimination and allows new-hand actions.");
         });
     });
 });

@@ -8,21 +8,21 @@ Wants=network.target
 Type=simple
 User=apiuser
 Group=apiuser
-WorkingDirectory=/opt/gin-api
-ExecStart=/opt/gin-api/gin-api
+WorkingDirectory=/opt/bot-api
+ExecStart=/opt/bot-api/api
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=gin-api
+SyslogIdentifier=api
 
 # Security settings
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/gin-api/logs /opt/gin-api/data
+ReadWritePaths=/opt/bot-api/logs /opt/bot-api/data
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 
@@ -30,7 +30,7 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 Environment=GIN_MODE=release
 Environment=PORT=8080
 Environment=LOG_LEVEL=info
-# Environment=DATABASE_URL=your_database_connection_string
+Environment=DATABASE_URL=mongodb://node1:Passw0rd123@localhost:27017/pvm?authSource=admin
 # Environment=JWT_SECRET=your_jwt_secret
 
 # Resource limits
