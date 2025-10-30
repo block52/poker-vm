@@ -17,10 +17,10 @@ import USDCDepositModal from "../components/USDCDepositModal";
 import CosmosStatus from "../components/cosmos/CosmosStatus";
 
 // Game wallet and SDK imports
-import { Variant } from "../components/types";
+// ...existing code...
 import { formatAddress } from "../components/common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatBalance, formatUSDCToSimpleDollars } from "../utils/numberUtils"; // Import formatBalance and USDC utility functions
+import { formatUSDCToSimpleDollars } from "../utils/numberUtils"; // Import USDC utility function
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
@@ -1176,17 +1176,13 @@ const Dashboard: React.FC = () => {
                                         ) : !cosmosWallet.address ? (
                                             <div className="text-gray-400 text-sm text-center py-2">No wallet connected</div>
                                         ) : cosmosWallet.balance.length === 0 ? (
-                                            <div className="text-yellow-400 text-sm text-center py-2">
-                                                ⚠️ No tokens found - You need tokens to play!
-                                            </div>
+                                            <div className="text-yellow-400 text-sm text-center py-2">⚠️ No tokens found - You need tokens to play!</div>
                                         ) : (
                                             <div className="space-y-2">
                                                 {cosmosWallet.balance.map((balance, idx) => {
                                                     // Format balance with proper decimals (6 for micro-denominated tokens)
                                                     const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
-                                                    const numericAmount = isMicroDenom
-                                                        ? Number(balance.amount) / 1_000_000
-                                                        : Number(balance.amount);
+                                                    const numericAmount = isMicroDenom ? Number(balance.amount) / 1_000_000 : Number(balance.amount);
 
                                                     const displayAmount = numericAmount.toLocaleString("en-US", {
                                                         minimumFractionDigits: 2,
@@ -1222,9 +1218,7 @@ const Dashboard: React.FC = () => {
                                                                     <span className="text-white font-bold text-lg">{displayAmount}</span>
                                                                     <span className="text-gray-400 text-xs">{balance.denom}</span>
                                                                 </div>
-                                                                {usdValue && (
-                                                                    <div className="text-gray-400 text-xs">≈ {usdValue}</div>
-                                                                )}
+                                                                {usdValue && <div className="text-gray-400 text-xs">≈ {usdValue}</div>}
                                                                 <div className="text-xs text-gray-500">
                                                                     {Number(balance.amount).toLocaleString("en-US")} micro-units
                                                                 </div>
@@ -1718,7 +1712,15 @@ const Dashboard: React.FC = () => {
                             <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                         </div>
                     </div>
-                    {showBuyInModal && <BuyInModal tableId={buyInTableId} minBuyIn={selectedGameForBuyIn?.minBuyIn} maxBuyIn={selectedGameForBuyIn?.maxBuyIn} onClose={handleBuyInModalClose} onJoin={handleBuyInModalJoin} />}
+                    {showBuyInModal && (
+                        <BuyInModal
+                            tableId={buyInTableId}
+                            minBuyIn={selectedGameForBuyIn?.minBuyIn}
+                            maxBuyIn={selectedGameForBuyIn?.maxBuyIn}
+                            onClose={handleBuyInModalClose}
+                            onJoin={handleBuyInModalJoin}
+                        />
+                    )}
                     {showWithdrawalModal && (
                         <WithdrawalModal
                             isOpen={showWithdrawalModal}
