@@ -51,7 +51,7 @@ describe("Deck", () => {
 
         it("should shuffle cards with a random seed", () => {
             const originalCards = [...deck.toJson().cards];
-            const seed = NodeRpcClient.generateRandomNumber();
+            const seed = Array.from({ length: 52 }, () => Math.floor(Math.random() * 256));
             deck.shuffle(seed);
 
             const shuffledCards = deck.toJson().cards;            

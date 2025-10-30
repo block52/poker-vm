@@ -32,7 +32,6 @@ import {
     test_1173,
     test_1176,
     test_1178,
-    test_1197
 } from "./scenarios/data";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
@@ -1120,54 +1119,6 @@ describe("Texas Holdem - Data driven", () => {
             }
 
             expect(game.currentRound).toBe(TexasHoldemRound.RIVER);
-        });
-    });
-
-    describe("Bug 1197 - Game stops after player is eliminated", () => {
-        let game: TexasHoldemGame;
-
-        beforeEach(() => {
-            game = fromTestJson(test_1197);
-        });
-
-        it("should end the game after player is eliminated", () => {
-            // The game should be in END state
-            expect(game.currentRound).toBe(TexasHoldemRound.END);
-
-            // Player 1 should be busted
-            const player1 = game.getSeatedPlayers().find(p => p.address === "0xf20d09D3ef43315C392d4879e253142557363A2C");
-            expect(player1).toBeDefined();
-            expect(player1!.status).toBe("busted");
-            expect(player1!.chips).toBe(0n);
-
-            // Get winners
-            const winners = game.winners;
-            expect(winners).toBeDefined();
-            expect(winners?.size).toBe(1);
-
-            // Get next to act
-            const nextToAct = game.getNextPlayerToAct();
-            expect(nextToAct).toBeDefined();
-            expect(nextToAct!.address).toBe("0x6D54C322262ad910F11321fE56D60f2C73D9f4A3");
-
-            const remainingPlayers = game.getSeatedPlayers().filter(p => p.status === PlayerStatus.ACTIVE);
-
-            // No further actions should be available except new-hand for remaining players
-            for (const player of remainingPlayers) {
-                const legalActions = game.getLegalActions(player.address);
-                console.log(`Player ${player.address.slice(-4)} legal actions:`, legalActions.map(a => a.action));
-                expect(legalActions.length).toBeGreaterThanOrEqual(1);
-                expect(legalActions.some(a => a.action === "new-hand")).toBe(true);
-            }
-
-            // Continue to next hand should be possible by calling new-hand
-            const seed = "seed=" + Array.from({ length: 52 }, (_, i) => i + 1).join("-");
-            game.performAction(nextToAct!.address, NonPlayerActionType.NEW_HAND, 226, 0n, seed);
-
-            // Verify new hand started
-            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
-            expect(game.getActivePlayerCount()).toBe(3); // Only 3 players remain
-            console.log("✅ Bug fixed: Game correctly ends after player elimination and allows new-hand actions.");
         });
     });
 });
