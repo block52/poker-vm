@@ -276,7 +276,7 @@ const CosmosWalletPage = () => {
                             disabled={isGenerating}
                             className="w-full text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             style={{
-                                background: `linear-gradient(to right, var(--brand-primary), var(--anim-color-2))`
+                                background: "linear-gradient(to right, var(--brand-primary), var(--anim-color-2))"
                             }}
                             onMouseOver={e => !isGenerating && (e.currentTarget.style.opacity = "0.9")}
                             onMouseOut={e => (e.currentTarget.style.opacity = "1")}
@@ -380,7 +380,7 @@ const CosmosWalletPage = () => {
                                 disabled={isGenerating || !importMnemonic.trim()}
                                 className="w-full text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                 style={{
-                                    background: `linear-gradient(to right, var(--accent-success), #14b8a6)`
+                                    background: "linear-gradient(to right, var(--accent-success), #14b8a6)"
                                 }}
                                 onMouseOver={e => (!isGenerating && !importMnemonic.trim()) || (e.currentTarget.style.opacity = "0.9")}
                                 onMouseOut={e => (e.currentTarget.style.opacity = "1")}

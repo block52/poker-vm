@@ -126,7 +126,7 @@ export default function TestSigningPage() {
             addResult({
                 functionName: "Initialize SigningCosmosClient",
                 status: "success",
-                message: `Client initialized successfully!`,
+                message: "Client initialized successfully!",
                 data: {
                     address: account.address,
                     balances: userBalances,
@@ -209,7 +209,7 @@ export default function TestSigningPage() {
 
         try {
             // Strip any decimals and validate the amount
-            const cleanAmount = sendAmount.split('.')[0]; // Remove decimal part
+            const cleanAmount = sendAmount.split(".")[0]; // Remove decimal part
             if (!cleanAmount || isNaN(Number(cleanAmount)) || Number(cleanAmount) <= 0) {
                 throw new Error("Amount must be a positive integer (micro-units, no decimals)");
             }
@@ -235,7 +235,7 @@ export default function TestSigningPage() {
             addResult({
                 functionName: "sendTokens()",
                 status: "success",
-                message: `Tokens sent successfully!`,
+                message: "Tokens sent successfully!",
                 txHash,
                 data: {
                     from: walletAddress,
@@ -275,10 +275,10 @@ export default function TestSigningPage() {
             const isTournament = gameType === "SIT_AND_GO" || gameType === "TOURNAMENT";
 
             // Validate and clean all BigInt inputs
-            const cleanMinBuyIn = isTournament ? sitAndGoBuyIn.split('.')[0] : minBuyIn.split('.')[0];
-            const cleanMaxBuyIn = isTournament ? sitAndGoBuyIn.split('.')[0] : maxBuyIn.split('.')[0];
-            const cleanSmallBlind = smallBlind.split('.')[0];
-            const cleanBigBlind = bigBlind.split('.')[0];
+            const cleanMinBuyIn = isTournament ? sitAndGoBuyIn.split(".")[0] : minBuyIn.split(".")[0];
+            const cleanMaxBuyIn = isTournament ? sitAndGoBuyIn.split(".")[0] : maxBuyIn.split(".")[0];
+            const cleanSmallBlind = smallBlind.split(".")[0];
+            const cleanBigBlind = bigBlind.split(".")[0];
 
             if (!cleanMinBuyIn || isNaN(Number(cleanMinBuyIn)) || Number(cleanMinBuyIn) <= 0) {
                 throw new Error("Min buy-in must be a positive integer (micro-units)");
@@ -320,7 +320,7 @@ export default function TestSigningPage() {
             addResult({
                 functionName: "createGame()",
                 status: "success",
-                message: `Game created successfully!`,
+                message: "Game created successfully!",
                 txHash,
                 data: {
                     gameType,
@@ -370,7 +370,7 @@ export default function TestSigningPage() {
 
         try {
             // Validate and clean buy-in amount
-            const cleanBuyInAmount = buyInAmount.split('.')[0];
+            const cleanBuyInAmount = buyInAmount.split(".")[0];
             if (!cleanBuyInAmount || isNaN(Number(cleanBuyInAmount)) || Number(cleanBuyInAmount) <= 0) {
                 throw new Error("Buy-in amount must be a positive integer (micro-units)");
             }
@@ -393,7 +393,7 @@ export default function TestSigningPage() {
             addResult({
                 functionName: "joinGame()",
                 status: "success",
-                message: `Joined game successfully!`,
+                message: "Joined game successfully!",
                 txHash,
                 data: { gameId, seat, buyInAmount }
             });
@@ -434,7 +434,7 @@ export default function TestSigningPage() {
 
         try {
             // Validate and clean action amount
-            const cleanActionAmount = actionAmount.split('.')[0];
+            const cleanActionAmount = actionAmount.split(".")[0];
             if (!cleanActionAmount || isNaN(Number(cleanActionAmount)) || Number(cleanActionAmount) < 0) {
                 throw new Error("Action amount must be a non-negative integer (micro-units)");
             }
@@ -457,7 +457,7 @@ export default function TestSigningPage() {
             addResult({
                 functionName: "performAction()",
                 status: "success",
-                message: `Action performed successfully!`,
+                message: "Action performed successfully!",
                 txHash,
                 data: { gameId, action, amount: actionAmount }
             });
@@ -541,7 +541,7 @@ export default function TestSigningPage() {
             addResult({
                 functionName: "queryGameState()",
                 status: "success",
-                message: `Game state retrieved!`,
+                message: "Game state retrieved!",
                 data: {
                     gameId,
                     players: gameState.players?.length || 0,
@@ -771,16 +771,16 @@ export default function TestSigningPage() {
                                                 ? Number(balance.amount) / 1_000_000
                                                 : Number(balance.amount);
 
-                                            const displayAmount = numericAmount.toLocaleString('en-US', {
+                                            const displayAmount = numericAmount.toLocaleString("en-US", {
                                                 minimumFractionDigits: 2,
                                                 maximumFractionDigits: 6
                                             });
 
                                             // For usdc, show USD equivalent
                                             const isUSDC = balance.denom === "usdc";
-                                            const usdValue = isUSDC ? numericAmount.toLocaleString('en-US', {
-                                                style: 'currency',
-                                                currency: 'USD',
+                                            const usdValue = isUSDC ? numericAmount.toLocaleString("en-US", {
+                                                style: "currency",
+                                                currency: "USD",
                                                 minimumFractionDigits: 2,
                                                 maximumFractionDigits: 2
                                             }) : null;
@@ -801,7 +801,7 @@ export default function TestSigningPage() {
                                                         )}
                                                     </div>
                                                     <div className="text-xs text-gray-500 ml-1">
-                                                        {Number(balance.amount).toLocaleString('en-US')} micro-units
+                                                        {Number(balance.amount).toLocaleString("en-US")} micro-units
                                                     </div>
                                                 </div>
                                             );

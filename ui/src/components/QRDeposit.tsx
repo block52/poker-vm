@@ -292,7 +292,7 @@ const QRDeposit: React.FC = () => {
         }
 
         if (BITCOIN_PAYMENTS) {
-            const basic_auth = process.env.VITE_BTCPAY_BASIC_AUTH;
+            const basic_auth = import.meta.env.VITE_BTCPAY_BASIC_AUTH;
 
             const config = {
                 headers: {
@@ -305,7 +305,7 @@ const QRDeposit: React.FC = () => {
                 orderId: "test",
                 itemDesc: "Bitcoin Buy In",
                 metadata: {
-                    itemCode: `${process.env.VITE_CLUB_NAME} BuyIn`,
+                    itemCode: `${import.meta.env.VITE_CLUB_NAME} BuyIn`,
                     orderUrl: "https://payments.texashodl.net",
                     itemDesc: loggedInAccount
                 },

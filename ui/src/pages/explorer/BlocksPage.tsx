@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 
@@ -22,7 +21,6 @@ interface CosmosBlock {
 }
 
 export default function BlocksPage() {
-  const navigate = useNavigate();
   const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,15 +78,6 @@ export default function BlocksPage() {
     if (diffMins < 60) return `${diffMins} minutes ago`;
     const diffHours = Math.floor(diffMins / 60);
     return `${diffHours} hours ago`;
-  };
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      alert("Copied to clipboard!");
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
   };
 
   // Memoized styles
@@ -155,7 +144,7 @@ export default function BlocksPage() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-4">Error: {error}</h2>
-          <p className="text-gray-300">Make sure your Cosmos blockchain is running at http://localhost:1317</p>
+          <p className="text-gray-300">Make sure your Cosmos blockchain is running</p>
         </div>
       </div>
     );
