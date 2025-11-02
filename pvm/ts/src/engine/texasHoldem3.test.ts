@@ -42,7 +42,7 @@ describe("Texas Holdem Game - Comprehensive Tests", () => {
                 game.deal();
             });
 
-            it.skip("should follow correct round order", () => {
+            it("should follow correct round order", () => {
                 expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
                 // Simulate betting actions to progress rounds
