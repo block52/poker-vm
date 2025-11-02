@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 
@@ -22,7 +21,6 @@ interface CosmosBlock {
 }
 
 export default function BlocksPage() {
-  const navigate = useNavigate();
   const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
