@@ -16,11 +16,16 @@ import WithdrawalModal from "../components/WithdrawalModal";
 import USDCDepositModal from "../components/USDCDepositModal";
 import CosmosStatus from "../components/cosmos/CosmosStatus";
 
+// Tab components
+import Tabs, { Tab } from "../components/common/Tabs";
+import WalletTab from "../components/dashboard/WalletTab";
+import GamesTab from "../components/dashboard/GamesTab";
+import NodesTab from "../components/dashboard/NodesTab";
+import BlocksTab from "../components/dashboard/BlocksTab";
+
 // Game wallet and SDK imports
 // ...existing code...
-import { formatAddress } from "../components/common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatUSDCToSimpleDollars } from "../utils/numberUtils"; // Import USDC utility function
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
@@ -475,26 +480,9 @@ const Dashboard: React.FC = () => {
         []
     );
 
-    const walletSectionStyle = useMemo(
-        () => ({
-            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
-            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-        }),
-        []
-    );
-
     // Removed: useEffect for limit type - no longer using these state variables
 
     // Removed: handleGameType - game type selection now in Create Game modal
-
-    // Memoized hover handlers
-    const handleWalletMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
-    }, []);
-
-    const handleWalletMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
-    }, []);
 
     // Memoized BuyInModal callbacks
     const handleBuyInModalClose = useCallback(() => {
@@ -1051,642 +1039,118 @@ const Dashboard: React.FC = () => {
                     )}
 
                     <div
-                        className="bg-gray-800/80 backdrop-blur-md p-10 rounded-xl shadow-2xl w-full max-w-xl border z-10 transition-all duration-300 hover:shadow-blue-500/10"
+                        className="bg-gray-800/80 backdrop-blur-md p-8 rounded-xl shadow-2xl w-full max-w-6xl border z-10 transition-all duration-300 hover:shadow-blue-500/10"
                         style={mainCardStyle}
                     >
                         {/* Club Logo */}
                         <div className="flex flex-col items-center mb-6">
-                            <img src={import.meta.env.VITE_CLUB_LOGO || defaultLogo} alt="Club Logo" className="w-32 h-32 object-contain" />
+                            <img src={import.meta.env.VITE_CLUB_LOGO || defaultLogo} alt="Club Logo" className="w-24 h-24 object-contain" />
                         </div>
 
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
+                        <div className="flex justify-between items-center mb-8">
+                            <h1 className="text-3xl font-extrabold text-white text-shadow">Block52 Gaming Dashboard</h1>
                             <CosmosStatus />
                         </div>
 
-                        {/* Web3 Wallet Section */}
-                        <div
-                            className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300"
-                            style={{
-                                backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
-                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                            }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
-                            }}
-                        >
-                            <div className="flex items-center gap-2 mb-4">
-                                <h2 className="text-xl font-bold text-white">
-                                    Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
-                                </h2>
-                                <div className="relative group">
-                                    <svg
-                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
-                                    <div
-                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
-                                        style={{
-                                            backgroundColor: colors.ui.bgDark,
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                        }}
-                                    >
-                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
-                                            External Web3 Wallet
-                                        </h3>
-                                        <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
-                                        <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
-                                        <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
-                                        <div
-                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
-                                            style={{ borderTopColor: colors.ui.bgDark }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {!isConnected ? (
-                                <button
-                                    onClick={open}
-                                    className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                    style={{
-                                        background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(
-                                            colors.brand.primary,
-                                            0.8
-                                        )} 100%)`
-                                    }}
-                                >
-                                    <div className="flex items-center justify-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        {/* Tabbed Interface */}
+                        <Tabs
+                            defaultTab="wallet"
+                            tabs={[
+                                {
+                                    id: "wallet",
+                                    label: "Wallet",
+                                    icon: (
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                            />
                                         </svg>
-                                        <span className="text-white">Connect Wallet</span>
-                                    </div>
-                                </button>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center" style={{ color: "white" }}>
-                                        <span>
-                                            Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
-                                        </span>
-                                        <button
-                                            onClick={disconnect}
-                                            className="text-xs px-3 py-1 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
-                                        >
-                                            Disconnect
-                                        </button>
-                                    </div>
-
-                                    <div
-                                        className="p-3 rounded-lg"
-                                        style={{
-                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                        }}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div
-                                                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                                                    style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
-                                                >
-                                                    <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>
-                                                        $
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold" style={{ color: "white" }}>
-                                                        Web3 Wallet USDC Balance
-                                                    </p>
-                                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
-                                                        Available on Base Chain
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="text-right">
-                                                    <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
-                                                        ${web3Balance}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    onClick={() => fetchWeb3Balance()}
-                                                    className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                                    title="Refresh balance"
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        style={{ color: colors.brand.primary }}
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Block52 Wallet Section */}
-                        <div
-                            className="backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg transition-all duration-300"
-                            style={walletSectionStyle}
-                            onMouseEnter={handleWalletMouseEnter}
-                            onMouseLeave={handleWalletMouseLeave}
-                        >
-                            <div className="flex items-center gap-2 mb-2">
-                                <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
-                                <div className="relative group">
-                                    <svg
-                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    ),
+                                    content: (
+                                        <WalletTab
+                                            isConnected={!!isConnected}
+                                            address={address}
+                                            open={open}
+                                            disconnect={disconnect}
+                                            web3Balance={web3Balance}
+                                            fetchWeb3Balance={fetchWeb3Balance}
+                                            cosmosWallet={cosmosWallet}
+                                            setShowCosmosImportModal={setShowCosmosImportModal}
+                                            setShowCosmosTransferModal={setShowCosmosTransferModal}
+                                            handleDepositClick={handleDepositClick}
+                                            handleWithdrawClick={handleWithdrawClick}
+                                            DepositButton={DepositButton}
+                                            WithdrawButton={WithdrawButton}
                                         />
-                                    </svg>
-                                    <div
-                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
-                                        style={{
-                                            backgroundColor: colors.ui.bgDark,
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                        }}
-                                    >
-                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
-                                            Layer 2 Gaming Wallet
-                                        </h3>
-                                        <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you with no Web3 wallet required!</p>
-                                        <p className="mb-2">
-                                            You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.
-                                        </p>
-                                        <p>All your in-game funds are secured on the blockchain and can be withdrawn at any time.</p>
-                                        <div
-                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
-                                            style={{ borderTopColor: colors.ui.bgDark }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {cosmosWallet.address && (
-                                <div className="space-y-3">
-                                    <div className="flex flex-col gap-1">
-                                        <div
-                                            className="flex items-center justify-between p-2 rounded-lg"
-                                            style={{
-                                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                            }}
-                                        >
-                                            <p className="font-mono text-xs tracking-wider break-all hidden md:block" style={{ color: colors.brand.primary }}>
-                                                {cosmosWallet.address || "No Cosmos wallet connected"}
-                                            </p>
-                                            <p className="font-mono text-xs tracking-wider md:hidden" style={{ color: colors.brand.primary }}>
-                                                {cosmosWallet.address ? formatAddress(cosmosWallet.address) : "No wallet"}
-                                            </p>
-                                            <div className="flex items-center">
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(cosmosWallet.address || "");
-                                                    }}
-                                                    className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                                    title="Copy address"
-                                                    disabled={!cosmosWallet.address}
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        style={{ color: colors.brand.primary }}
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Cosmos Wallet Balances Section */}
-                                    <div className="space-y-2 mt-3">
-                                        <p className="text-white text-xs font-semibold mb-2">Cosmos Balances:</p>
-                                        {cosmosWallet.isLoading ? (
-                                            <div className="text-gray-400 text-sm text-center py-2">Loading balances...</div>
-                                        ) : cosmosWallet.error ? (
-                                            <div className="text-red-400 text-sm text-center py-2">Error loading balances</div>
-                                        ) : !cosmosWallet.address ? (
-                                            <div className="text-gray-400 text-sm text-center py-2">No wallet connected</div>
-                                        ) : cosmosWallet.balance.length === 0 ? (
-                                            <div className="text-yellow-400 text-sm text-center py-2">⚠️ No tokens found - You need tokens to play!</div>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {cosmosWallet.balance.map((balance, idx) => {
-                                                    // Format balance with proper decimals (6 for micro-denominated tokens)
-                                                    const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
-                                                    const numericAmount = isMicroDenom ? Number(balance.amount) / 1_000_000 : Number(balance.amount);
-
-                                                    const displayAmount = numericAmount.toLocaleString("en-US", {
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 6
-                                                    });
-
-                                                    // For usdc, show USD equivalent
-                                                    const isUSDC = balance.denom === "usdc";
-                                                    const usdValue = isUSDC
-                                                        ? numericAmount.toLocaleString("en-US", {
-                                                              style: "currency",
-                                                              currency: "USD",
-                                                              minimumFractionDigits: 2,
-                                                              maximumFractionDigits: 2
-                                                          })
-                                                        : null;
-
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            className="flex items-center justify-between p-3 rounded-lg"
-                                                            style={{
-                                                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                                            }}
-                                                        >
-                                                            <div>
-                                                                <p className="text-white text-sm font-bold">{balance.denom}</p>
-                                                                <p className="text-gray-400 text-xs">Cosmos Chain</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <div className="flex items-baseline gap-2">
-                                                                    <span className="text-white font-bold text-lg">{displayAmount}</span>
-                                                                    <span className="text-gray-400 text-xs">{balance.denom}</span>
-                                                                </div>
-                                                                {usdValue && <div className="text-gray-400 text-xs">≈ {usdValue}</div>}
-                                                                <div className="text-xs text-gray-500">
-                                                                    {Number(balance.amount).toLocaleString("en-US")} micro-units
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {cosmosWallet.address && (
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => setShowCosmosTransferModal(true)}
-                                                    className="flex-1 px-3 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                                    style={{ backgroundColor: colors.brand.primary }}
-                                                >
-                                                    Send b52USD
-                                                </button>
-                                                <button
-                                                    onClick={() => cosmosWallet.refreshBalance()}
-                                                    className="px-3 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
-                                                >
-                                                    Refresh
-                                                </button>
-                                            </div>
-                                            {/* Removed: Update Seed and Clear Wallet buttons - now handled on /wallet page */}
-                                        </div>
-                                    )}
-
-                                    {!cosmosWallet.address && (
-                                        <div className="mt-2 flex justify-center">
-                                            <button
-                                                onClick={() => setShowCosmosImportModal(true)}
-                                                className="text-sm underline transition duration-300 hover:opacity-80"
-                                                style={{ color: colors.brand.primary }}
-                                            >
-                                                Import Cosmos Seed Phrase
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    <div className="flex items-center gap-2 pt-2">
-                                        <DepositButton onClick={handleDepositClick} disabled={false} />
-                                        <WithdrawButton onClick={handleWithdrawClick} />
-                                        <CreateTableButton onClick={handleCreateTableClick} />
-                                    </div>
-                                    <div className="mt-2 flex justify-center gap-4">
-                                        <a
-                                            href="/wallet"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-sm underline transition duration-300 hover:opacity-80 flex items-center gap-1"
-                                            style={{ color: colors.brand.primary }}
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                                                />
-                                            </svg>
-                                            Cosmos Wallet
-                                        </a>
-                                        <a
-                                            href="/explorer"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-sm underline transition duration-300 hover:opacity-80 flex items-center gap-1"
-                                            style={{ color: colors.brand.primary }}
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                                />
-                                            </svg>
-                                            Block Explorer
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Available Games Section */}
-                        {games && games.length > 0 && (
-                            <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-blue-500/10 hover:hexToRgba(colors.brand.primary, 0.2) transition-all duration-300">
-                                <h3 className="text-lg font-bold text-white mb-2">Available Tables</h3>
-                                <div className="space-y-3">
-                                    {games.slice(0, showAllTables ? undefined : 3).map((game, index) => (
-                                        <div key={index} className="p-3 bg-gray-800/60 rounded-lg border border-blue-500/10 flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div
-                                                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                                                    style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        style={{ color: colors.brand.primary }}
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-300 text-xs">
-                                                        Texas Hold'em
-                                                        {game.gameOptions?.maxPlayers && (
-                                                            <span className="ml-1">
-                                                                ({playerCounts.get(game.address)?.currentPlayers || 0}/{game.gameOptions.maxPlayers} Players)
-                                                            </span>
-                                                        )}
-                                                    </p>
-                                                    <p className="text-gray-500 text-xs font-mono mb-1">{formatAddress(game.address)}</p>
-                                                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-                                                        {/* Check if it's a Sit & Go (minBuyIn equals maxBuyIn) */}
-                                                        {game.gameOptions?.type === GameType.SIT_AND_GO ||
-                                                        (game.gameOptions?.minBuyIn === game.gameOptions?.maxBuyIn &&
-                                                            game.gameOptions?.smallBlind === "100000000000000000000" &&
-                                                            game.gameOptions?.bigBlind === "200000000000000000000") ? (
-                                                            <>
-                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Buy-in: $
-                                                                    {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
-                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.maxBuyIn)
-                                                                        : "1.00"}
-                                                                </span>
-                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Blinds: 100/200
-                                                                </span>
-                                                                <span className="text-xs" style={{ color: colors.accent.success }}>
-                                                                    10,000 tokens
-                                                                </span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Min: $
-                                                                    {game.gameOptions?.minBuyIn && game.gameOptions.minBuyIn !== "0"
-                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.minBuyIn)
-                                                                        : "1.00"}
-                                                                </span>
-                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Max: $
-                                                                    {game.gameOptions?.maxBuyIn && game.gameOptions.maxBuyIn !== "0"
-                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.maxBuyIn)
-                                                                        : "100.00"}
-                                                                </span>
-                                                                <span className="text-xs" style={{ color: colors.brand.primary }}>
-                                                                    Blinds: $
-                                                                    {game.gameOptions?.smallBlind && game.gameOptions.smallBlind !== "0"
-                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.smallBlind)
-                                                                        : "0.50"}
-                                                                    /$
-                                                                    {game.gameOptions?.bigBlind && game.gameOptions.bigBlind !== "0"
-                                                                        ? formatUSDCToSimpleDollars(game.gameOptions.bigBlind)
-                                                                        : "1.00"}
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="relative">
-                                                    <button
-                                                        onClick={() => {
-                                                            const tableUrl = `${window.location.origin}/table/${game.address}`;
-                                                            navigator.clipboard.writeText(tableUrl);
-                                                            setCopiedTableId(game.address);
-                                                            setTimeout(() => setCopiedTableId(null), 2000);
-                                                        }}
-                                                        title="Copy table URL"
-                                                        className="p-2 text-gray-400 hover:text-white transition-colors"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth="2"
-                                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                    {copiedTableId === game.address && (
-                                                        <div
-                                                            className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white rounded shadow-lg whitespace-nowrap z-10"
-                                                            style={{ backgroundColor: colors.accent.success }}
-                                                        >
-                                                            Table link copied!
-                                                            <div
-                                                                className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent"
-                                                                style={{ borderTopColor: colors.accent.success }}
-                                                            ></div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        setShowBuyInModal(true);
-                                                        setBuyInTableId(game.address);
-                                                        setSelectedGameForBuyIn(game); // Pass entire game object
-                                                    }}
-                                                    title="Join this table"
-                                                    className="px-3 py-1 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                                    style={{ backgroundColor: colors.brand.primary }}
-                                                >
-                                                    Join Table
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                {gamesLoading && (
-                                    <div className="flex justify-center items-center py-3">
-                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderBottomColor: colors.brand.primary }}></div>
-                                    </div>
-                                )}
-                                {gamesError && <div className="text-red-400 text-sm text-center py-2">Failed to load games. Please try again.</div>}
-                                {games.length > 3 && (
-                                    <div className="mt-2 flex justify-center">
-                                        <button
-                                            onClick={() => setShowAllTables(!showAllTables)}
-                                            className="text-sm transition duration-300 hover:opacity-80"
-                                            style={{ color: colors.brand.primary }}
-                                        >
-                                            {showAllTables ? "Show less" : `View more tables (${games.length - 3} more)`}
-                                        </button>
-                                    </div>
-                                )}
-                                {games.length === 0 && !gamesLoading && !gamesError && (
-                                    <div className="text-gray-300 text-sm text-center py-2">No tables found. Create your own table below!</div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Display new table address if available */}
-                        {/* {newTableAddress && (
-                            <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-green-500/20 hover:border-green-500/30 transition-all duration-300">
-                                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    New Table Created Successfully!
-                                </h3>
-                                <div className="p-3 bg-gray-800/60 rounded-lg border border-green-500/10 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center animate-pulse">
-                                            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p className="text-gray-300 text-xs">Table Address (Game Hash)</p>
-                                            <p className="font-mono text-green-400 text-sm break-all">{newTableAddress}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <button
-                                            onClick={() => navigator.clipboard.writeText(newTableAddress)}
-                                            className="p-2 text-green-400 hover:text-green-300 transition-colors"
-                                            title="Copy table address"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setShowBuyInModal(true);
-                                                setBuyInTableId(newTableAddress);
-                                            }}
-                                            className="p-2 text-blue-400 hover:text-blue-300 transition-colors ml-1"
-                                            title="Join this table"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="mt-3 flex justify-center">
-                                    <button
-                                        onClick={() => {
-                                            setShowBuyInModal(true);
-                                            setBuyInTableId(newTableAddress);
-                                        }}
-                                        className="w-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md"
-                                    >
-                                        Join Your New Table
-                                    </button>
-                                </div>
-                            </div>
-                        )} */}
-
-                        <div className="space-y-6">
-                            {/* Removed: Game type selection buttons (Cash/Tournament, Texas Holdem/Omaha, etc.)
-                               These options are now configured in the Create Game modal */}
-                            {games && games.length > 0 && (
-                                <div className="flex justify-between gap-6">
-                                    <button
-                                        onClick={handleChooseTableClick}
-                                        title="Join this table"
-                                        className="w-full block text-center text-white rounded-xl py-3 px-6 text-lg transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
-                                        style={{
-                                            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`,
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                        }}
-                                    >
-                                        Choose Table
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                                    )
+                                },
+                                {
+                                    id: "games",
+                                    label: "Games",
+                                    icon: (
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+                                            />
+                                        </svg>
+                                    ),
+                                    content: (
+                                        <GamesTab
+                                            games={games}
+                                            gamesLoading={gamesLoading}
+                                            gamesError={gamesError}
+                                            playerCounts={playerCounts}
+                                            showAllTables={showAllTables}
+                                            setShowAllTables={setShowAllTables}
+                                            copiedTableId={copiedTableId}
+                                            setCopiedTableId={setCopiedTableId}
+                                            handleCreateTableClick={handleCreateTableClick}
+                                            handleChooseTableClick={handleChooseTableClick}
+                                            setShowBuyInModal={setShowBuyInModal}
+                                            setBuyInTableId={setBuyInTableId}
+                                            setSelectedGameForBuyIn={setSelectedGameForBuyIn}
+                                            CreateTableButton={CreateTableButton}
+                                        />
+                                    )
+                                },
+                                {
+                                    id: "nodes",
+                                    label: "Nodes",
+                                    icon: (
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+                                            />
+                                        </svg>
+                                    ),
+                                    content: <NodesTab />
+                                },
+                                {
+                                    id: "blocks",
+                                    label: "Blocks",
+                                    icon: (
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                            />
+                                        </svg>
+                                    ),
+                                    content: <BlocksTab />
+                                }
+                            ]}
+                        />
                     </div>
 
                     {/* Reset blockchain button was here, now commented out by user */}
@@ -1700,7 +1164,7 @@ const Dashboard: React.FC = () => {
                             <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                         </div>
                     </div>
-                    
+
                     {showBuyInModal && (
                         <BuyInModal
                             tableId={buyInTableId}
