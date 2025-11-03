@@ -54,8 +54,8 @@ export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
     const WEI_TO_MICROUNITS_DIVISOR = 1_000_000_000_000; // 10^12
     const SUSPICIOUSLY_LARGE = 100_000_000; // 10^8 (100 million micro-units = $100, anything above is likely Wei)
 
-    const minBuyInNumber = typeof minBuyInWei === 'string' ? parseInt(minBuyInWei, 10) : Number(minBuyInWei);
-    const maxBuyInNumber = typeof maxBuyInWei === 'string' ? parseInt(maxBuyInWei, 10) : Number(maxBuyInWei);
+    const minBuyInNumber = typeof minBuyInWei === "string" ? parseInt(minBuyInWei, 10) : Number(minBuyInWei);
+    const maxBuyInNumber = typeof maxBuyInWei === "string" ? parseInt(maxBuyInWei, 10) : Number(maxBuyInWei);
 
     console.log("🔍 Checking if values need Wei conversion:");
     console.log("  minBuyInNumber:", minBuyInNumber);
@@ -76,8 +76,8 @@ export const useMinAndMaxBuyIns = (): MinAndMaxBuyInsReturn => {
 
     // ADDITIONAL CHECK: If values are still wrong after Wei conversion, try dividing by 1000
     // This handles the case where PVM multiplies by 1000 for some reason
-    const finalMinNumber = typeof minBuyInWei === 'string' ? parseInt(minBuyInWei, 10) : Number(minBuyInWei);
-    const finalMaxNumber = typeof maxBuyInWei === 'string' ? parseInt(maxBuyInWei, 10) : Number(maxBuyInWei);
+    const finalMinNumber = typeof minBuyInWei === "string" ? parseInt(minBuyInWei, 10) : Number(minBuyInWei);
+    const finalMaxNumber = typeof maxBuyInWei === "string" ? parseInt(maxBuyInWei, 10) : Number(maxBuyInWei);
 
     // If still above 100M after Wei conversion, try /1000
     if (finalMinNumber > SUSPICIOUSLY_LARGE) {

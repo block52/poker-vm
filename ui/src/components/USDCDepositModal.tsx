@@ -224,7 +224,7 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
 
         // Check if on correct network
         if (needsNetworkSwitch) {
-            setError(`Please click "Switch to Base Chain" button above`);
+            setError("Please click \"Switch to Base Chain\" button above");
             return;
         }
 

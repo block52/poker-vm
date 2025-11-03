@@ -142,7 +142,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                 return;
             }
 
-            console.log(`[GameStateContext] Using player address: ${playerAddress} (type: ${cosmosAddress ? 'Cosmos' : 'Ethereum'})`);
+            console.log(`[GameStateContext] Using player address: ${playerAddress} (type: ${cosmosAddress ? "Cosmos" : "Ethereum"})`);
 
 
             // Create WebSocket connection with URL parameters for auto-subscription

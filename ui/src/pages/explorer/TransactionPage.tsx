@@ -447,7 +447,7 @@ export default function TransactionPage() {
                   const attrs = event.attributes || [];
 
                   switch (type) {
-                    case "coin_spent":
+                    case "coin_spent": {
                       const spender = attrs.find((a: any) => a.key === "spender")?.value;
                       const spentAmount = attrs.find((a: any) => a.key === "amount")?.value;
                       const isFee = index < 3; // First coin_spent is usually fee
@@ -458,8 +458,9 @@ export default function TransactionPage() {
                           ? `${spender?.substring(0, 20)}... paid ${spentAmount} in transaction fees to process this transaction on the blockchain.`
                           : `${spender?.substring(0, 20)}... paid ${spentAmount} for the game creation.`
                       };
+                    }
 
-                    case "coin_received":
+                    case "coin_received": {
                       const receiver = attrs.find((a: any) => a.key === "receiver")?.value;
                       const receivedAmount = attrs.find((a: any) => a.key === "amount")?.value;
                       const isFeeCollector = index < 3;
@@ -470,8 +471,9 @@ export default function TransactionPage() {
                           ? `Fee collector (${receiver?.substring(0, 20)}...) received ${receivedAmount} in transaction fees.`
                           : `Poker module account (${receiver?.substring(0, 20)}...) received ${receivedAmount} as game creation payment.`
                       };
+                    }
 
-                    case "transfer":
+                    case "transfer": {
                       const recipient = attrs.find((a: any) => a.key === "recipient")?.value;
                       const sender = attrs.find((a: any) => a.key === "sender")?.value;
                       const amount = attrs.find((a: any) => a.key === "amount")?.value;
@@ -480,8 +482,9 @@ export default function TransactionPage() {
                         title: "Transfer Recorded",
                         description: `Transfer of ${amount} from ${sender?.substring(0, 15)}... to ${recipient?.substring(0, 15)}... was recorded in the blockchain state.`
                       };
+                    }
 
-                    case "message":
+                    case "message": {
                       const action = attrs.find((a: any) => a.key === "action")?.value;
                       const module = attrs.find((a: any) => a.key === "module")?.value;
                       if (action) {
@@ -496,8 +499,9 @@ export default function TransactionPage() {
                         title: "Message Metadata",
                         description: "General message information recorded by the blockchain."
                       };
+                    }
 
-                    case "tx":
+                    case "tx": {
                       const fee = attrs.find((a: any) => a.key === "fee")?.value;
                       const signature = attrs.find((a: any) => a.key === "signature")?.value;
                       const accSeq = attrs.find((a: any) => a.key === "acc_seq")?.value;
@@ -524,8 +528,9 @@ export default function TransactionPage() {
                         };
                       }
                       break;
+                    }
 
-                    case "game_created":
+                    case "game_created": {
                       const gameId = attrs.find((a: any) => a.key === "game_id")?.value;
                       const gameType = attrs.find((a: any) => a.key === "game_type")?.value;
                       return {
@@ -533,8 +538,9 @@ export default function TransactionPage() {
                         title: "Poker Game Created",
                         description: `A new ${gameType} poker game was created with ID ${gameId?.substring(0, 20)}... This is a custom event emitted by the poker module.`
                       };
+                    }
 
-                    case "player_joined_game":
+                    case "player_joined_game": {
                       const joinedGameId = attrs.find((a: any) => a.key === "game_id")?.value;
                       const player = attrs.find((a: any) => a.key === "player")?.value;
                       return {
@@ -542,6 +548,7 @@ export default function TransactionPage() {
                         title: "Player Joined Game",
                         description: `Player ${player?.substring(0, 20)}... joined game ${joinedGameId?.substring(0, 20)}... This is a custom event emitted by the poker module.`
                       };
+                    }
 
                     default:
                       return {
