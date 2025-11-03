@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { Profiler } from "react";
+import { NetworkProvider } from "./context/NetworkContext";
 
 const projectId = import.meta.env.VITE_PROJECT_ID;
 if (!projectId) {
@@ -41,8 +42,10 @@ root.render(
     // double-execution pattern is too aggressive for real-time connections.
     // TODO: Re-enable StrictMode and improve WebSocket resilience for production
     // <React.StrictMode>
-    <Profiler id="AppRoot" onRender={onRenderCallback}>
-        <App />
-    </Profiler>
+    <NetworkProvider>
+        <Profiler id="AppRoot" onRender={onRenderCallback}>
+            <App />
+        </Profiler>
+    </NetworkProvider>
     // </React.StrictMode>
 );

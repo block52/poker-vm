@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { getCosmosClient } from "../../utils/cosmos/client";
+import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
+import { useNetwork } from "../../context/NetworkContext";
+import { NetworkSelector } from "../../components/NetworkSelector";
 
 // Types from CosmosClient
 interface CosmosBlock {
@@ -24,15 +26,22 @@ export default function BlocksPage() {
   const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { currentNetwork } = useNetwork();
 
   useEffect(() => {
     // Set page title
     document.title = "Block Explorer - Block52 Chain";
 
+    // Clear client when network changes to force re-initialization
+    clearCosmosClient();
+
     const fetchBlocks = async () => {
       try {
         setLoading(true);
-        const cosmosClient = getCosmosClient();
+        const cosmosClient = getCosmosClient({
+          rpc: currentNetwork.rpc,
+          rest: currentNetwork.rest,
+        });
 
         if (!cosmosClient) {
           throw new Error("Cosmos client not initialized.");
@@ -42,7 +51,18 @@ export default function BlocksPage() {
         setBlocks(recentBlocks);
         setError(null);
       } catch (err: any) {
-        setError(err.message || "Failed to fetch blocks");
+        // Provide more detailed error messages
+        let errorMessage = "Failed to fetch blocks";
+
+        if (err.code === "ERR_NETWORK") {
+          errorMessage = `Network error: Cannot connect to ${currentNetwork.name} (${currentNetwork.rest})`;
+        } else if (err.response) {
+          errorMessage = `Server error: ${err.response.status} - ${err.response.statusText}`;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+
+        setError(errorMessage);
         console.error("Error fetching blocks:", err);
       } finally {
         setLoading(false);
@@ -52,15 +72,15 @@ export default function BlocksPage() {
     // Initial fetch
     fetchBlocks();
 
-    // Auto-refresh every 2 seconds
-    const interval = setInterval(fetchBlocks, 2000);
+    // Auto-refresh every 10 seconds (reduced frequency to minimize re-renders)
+    const interval = setInterval(fetchBlocks, 10000);
 
     return () => {
       clearInterval(interval);
       // Reset title when component unmounts
       document.title = "Block52 Chain";
     };
-  }, []);
+  }, [currentNetwork]);
 
   const truncateHash = (hash: string) => {
     if (!hash) return "N/A";
@@ -122,29 +142,53 @@ export default function BlocksPage() {
 
   if (error && blocks.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden bg-[#2c3245]">
-        <div
-          className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center max-w-lg"
-          style={containerStyle}
-        >
-          <div className="flex justify-center mb-4">
-            <svg
-              className="h-16 w-16"
-              style={{ color: colors.accent.danger }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+      <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
+        <div className="w-full max-w-7xl">
+          {/* Header with Network Selector */}
+          <div
+            className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
+            style={containerStyle}
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-4xl font-extrabold text-white mb-2">Block Explorer</h1>
+                <p className="text-gray-300">
+                  Latest blocks on Pokerchain
+                </p>
+              </div>
+              <NetworkSelector />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Error: {error}</h2>
-          <p className="text-gray-300">Make sure your Cosmos blockchain is running</p>
+
+          {/* Error Card */}
+          <div className="flex justify-center">
+            <div
+              className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center max-w-lg"
+              style={containerStyle}
+            >
+              <div className="flex justify-center mb-4">
+                <svg
+                  className="h-16 w-16"
+                  style={{ color: colors.accent.danger }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-4">Error: {error}</h2>
+              <p className="text-gray-300 mb-4">Make sure your Cosmos blockchain is running</p>
+              <p className="text-sm text-gray-400">
+                Try selecting a different network from the dropdown above
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -165,9 +209,12 @@ export default function BlocksPage() {
                 Latest blocks on Pokerchain
               </p>
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}>
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.accent.success }}></div>
-              <span className="text-sm text-gray-300">Auto-refreshing ({blocks.length} blocks)</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.accent.success }}></div>
+                <span className="text-sm text-gray-300">{blocks.length} blocks</span>
+              </div>
+              <NetworkSelector />
             </div>
           </div>
         </div>
