@@ -15,7 +15,7 @@ if (typeof window !== "undefined") {
         browser: true,
         version: "",
         versions: { node: "16.0.0" },
-    nextTick: (callback: () => void) => setTimeout(callback, 0)
+        nextTick: (callback: () => void) => setTimeout(callback, 0)
     };
 
     // Fix for hash-base/readable-stream slice issue
