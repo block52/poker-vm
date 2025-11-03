@@ -1,7 +1,8 @@
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { SigningStargateClient, GasPrice, calculateFee } from "@cosmjs/stargate";
 import { Registry, EncodeObject } from "@cosmjs/proto-signing";
-import { CosmosClient, CosmosConfig, COSMOS_CONSTANTS } from "./cosmosClient";
+import { CosmosClient, COSMOS_CONSTANTS } from "./cosmosClient";
+import { CosmosConfig } from "./types/index";
 import { msgTypes } from "./pokerchain.poker.v1/registry";
 import Long from "long";
 

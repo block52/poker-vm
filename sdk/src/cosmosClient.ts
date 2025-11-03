@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from "axios";
-import { Coin, COSMOS_CONSTANTS, CosmosConfig, AccountResponse, TxResponse, BlockResponse, GameState, Game, LegalAction } from "./types";
+import { Coin, AccountResponse, TxResponse, BlockResponse } from "./types/chain";
+import { CosmosConfig, COSMOS_CONSTANTS, GameState, LegalAction } from "./types/index";
+import { GameStateApiResponse, GameApiResponse, ListGamesApiResponse } from "./types/api";
 import { IClient } from "./IClient";
 
 export class CosmosClient implements IClient {
@@ -162,14 +164,14 @@ export class CosmosClient implements IClient {
     /**
      * Get game info via REST API
      */
-    async getGame(gameId: string): Promise<Game> {
+    async getGame(gameId: string): Promise<any> {
         try {
-            const response = await this.restClient.get<Game>(`/block52/pokerchain/poker/v1/game/${gameId}`);
+            const response = await this.restClient.get<any>(`/block52/pokerchain/poker/v1/game/${gameId}`);
 
             if (response.data) {
                 return response.data;
             }
-            return {} as Game;
+            return {};
         } catch (error) {
             console.error("Error fetching game:", error);
             throw error;
@@ -199,7 +201,7 @@ export class CosmosClient implements IClient {
     /**
      * List all games via REST API
      */
-    async listGames(): Promise<Game[]> {
+    async listGames(): Promise<any[]> {
         try {
             console.log("📡 [CosmosClient] Making REST API call to list_games...");
             console.log("   URL:", `${this.config.restEndpoint}/block52/pokerchain/poker/v1/list_games`);
@@ -213,7 +215,7 @@ export class CosmosClient implements IClient {
             if (response.data.games) {
                 const parsed = JSON.parse(response.data.games);
                 console.log("✅ [CosmosClient] Parsed games:", parsed);
-                return parsed as Game[];
+                return parsed;
             }
 
             console.log("⚠️ [CosmosClient] No games field in response, returning empty array");
@@ -233,7 +235,7 @@ export class CosmosClient implements IClient {
      * @param min Optional minimum players filter
      * @param max Optional maximum players filter
      */
-    async findGames(min?: number, max?: number): Promise<Game[]> {
+    async findGames(min?: number, max?: number): Promise<any[]> {
         try {
             console.log("🔍 [CosmosClient] findGames called with filters:", { min, max });
             const allGames = await this.listGames();
@@ -263,10 +265,10 @@ export class CosmosClient implements IClient {
     /**
      * Get player's games via REST API
      */
-    async getPlayerGames(player: string): Promise<Game[]> {
+    async getPlayerGames(player: string): Promise<any[]> {
         try {
             // Use axios generic for type safety, but still need to parse the games string
-            const response = await this.restClient.get<Game[]>(`/block52/pokerchain/poker/v1/player_games/${player}`);
+            const response = await this.restClient.get<any[]>(`/block52/pokerchain/poker/v1/player_games/${player}`);
 
             if (response.data) {
                 return response.data;
@@ -374,3 +376,7 @@ export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConf
     denom: "usdc", // Use usdc as the denomination (lowercase, as stored on blockchain)
     gasPrice: "0.001usdc" // Gas price in usdc (not used in REST-only mode)
 });
+
+// Re-export types so they can be used by consumers
+export { COSMOS_CONSTANTS, CosmosConfig } from "./types/index";
+export type { GameStateApiResponse, GameApiResponse, ListGamesApiResponse } from "./types/api";

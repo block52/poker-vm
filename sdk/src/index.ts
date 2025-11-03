@@ -74,17 +74,12 @@ const registry = new Registry([
   
 ])
 
-// Export custom SDK classes and types
+// Export custom SDK classes and functions
 export {
     CosmosClient,
     getCosmosClient,
     initializeCosmosClient,
-    getDefaultCosmosConfig,
-    COSMOS_CONSTANTS,
-    type CosmosConfig,
-    type GameStateResponse,
-    type GameResponse,
-    type ListGamesResponse
+    getDefaultCosmosConfig
 } from './cosmosClient';
 export {
     SigningCosmosClient,
@@ -144,6 +139,10 @@ export { RPCMethods } from './types/rpc';
 
 // Export chain types
 export type {
+    Coin,
+    AccountResponse,
+    TxResponse,
+    BlockResponse,
     AccountDTO,
     BlockHeaderDTO,
     BlockDTO,
@@ -153,13 +152,25 @@ export type {
 } from './types/chain';
 
 // Export Cosmos types from types/index
-export type {
-    GameState,
-    GameInfo,
-    Player,
-    LegalAction,
-    PlayerAction
+export {
+    COSMOS_CONSTANTS,
+    type CosmosConfig,
+    type CreateGameParams,
+    type GameState,
+    type GameInfo,
+    type Player,
+    type LegalAction,
+    type PlayerAction
 } from './types/index';
+
+// Export API types
+export type {
+    GameStateApiResponse,
+    GameApiResponse,
+    LegalActionsApiResponse,
+    ListGamesApiResponse,
+    PlayerGamesApiResponse
+} from './types/api';
 
 // Export poker game integration and solver
 export { PokerGameIntegration } from './pokerGameIntegration';

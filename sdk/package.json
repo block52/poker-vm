@@ -3,17 +3,23 @@
     "version": "3.0.3",
     "description": "TypeScript SDK for Block52 Poker VM",
     "main": "dist/index.js",
-    "module": "dist/index.esm.js",
+    "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
     "files": [
         "dist",
         "README.md",
         "LICENSE"
     ],
     "scripts": {
-        "build": "yarn rollup -c",
-        "build:types": "tsc --emitDeclarationOnly",
-        "dev": "rollup -c -w",
+        "build": "tsup",
+        "dev": "tsup --watch",
         "clean": "rimraf dist",
         "prepublishOnly": "yarn clean && yarn build",
         "test": "jest",
@@ -42,8 +48,10 @@
     "devDependencies": {
         "@types/jest": "^30.0.0",
         "@types/node": "^22.7.6",
+        "rimraf": "^6.0.1",
         "ts-jest": "^29.4.4",
         "ts-node": "^10.9.2",
+        "tsup": "^8.3.5",
         "typescript": "^5.9.2"
     },
     "dependencies": {
@@ -52,6 +60,7 @@
         "@cosmjs/encoding": "^0.36.1",
         "@cosmjs/proto-signing": "^0.36.1",
         "@cosmjs/stargate": "^0.36.1",
+        "@keplr-wallet/types": "^0.12.138",
         "axios": "^1.12.2",
         "ethers": "^6.15.0",
         "long": "^5.3.2",
