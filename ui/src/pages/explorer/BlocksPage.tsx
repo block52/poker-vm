@@ -35,7 +35,7 @@ export default function BlocksPage() {
         const cosmosClient = getCosmosClient();
 
         if (!cosmosClient) {
-          throw new Error("Cosmos client not initialized. Please check your wallet connection.");
+          throw new Error("Cosmos client not initialized.");
         }
 
         const recentBlocks = await cosmosClient.getLatestBlocks(500);

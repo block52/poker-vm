@@ -21,8 +21,8 @@ export const getDefaultCosmosConfig = () => {
 
     return {
         ...sdkConfig,
-        rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || sdkConfig.rpcEndpoint,
-        restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || sdkConfig.restEndpoint,
+        rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://node1.block52.xyz:26657",
+        restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://node1.block52.xyz:1317",
     };
 };
 
