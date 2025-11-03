@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
@@ -31,50 +31,53 @@ export default function TransactionPage() {
     const [error, setError] = useState<string | null>(null);
     const [showEventExplanation, setShowEventExplanation] = useState(false);
 
-    const handleSearch = async (hashToSearch?: string) => {
-        const searchHash = hashToSearch || txHash;
+    const handleSearch = useCallback(
+        async (hashToSearch?: string) => {
+            const searchHash = hashToSearch || txHash;
 
-        if (!searchHash.trim()) {
-            setError("Please enter a transaction hash");
-            return;
-        }
-
-        try {
-            setLoading(true);
-            setError(null);
-            const cosmosClient = getCosmosClient();
-
-            if (!cosmosClient) {
-                throw new Error("Cosmos client not initialized. Please check your wallet connection.");
+            if (!searchHash.trim()) {
+                setError("Please enter a transaction hash");
+                return;
             }
 
-            const tx = await cosmosClient.getTx(searchHash.trim());
+            try {
+                setLoading(true);
+                setError(null);
+                const cosmosClient = getCosmosClient();
 
-            console.log("Raw transaction response:", tx);
+                if (!cosmosClient) {
+                    throw new Error("Cosmos client not initialized. Please check your wallet connection.");
+                }
 
-            // Validate transaction structure
-            if (!tx) {
-                throw new Error("Transaction not found");
+                const tx = await cosmosClient.getTx(searchHash.trim());
+
+                console.log("Raw transaction response:", tx);
+
+                // Validate transaction structure
+                if (!tx) {
+                    throw new Error("Transaction not found");
+                }
+
+                // CosmosClient returns the transaction directly, not wrapped in tx_response
+                // Transform to expected format if needed
+                const formattedTx = tx.tx_response
+                    ? tx
+                    : {
+                          tx_response: tx,
+                          tx: tx.tx || { body: { messages: [] } }
+                      };
+
+                setTransaction(formattedTx as any);
+            } catch (err: any) {
+                setError(err.response?.data?.message || err.message || "Transaction not found");
+                setTransaction(null);
+                console.error("Error fetching transaction:", err);
+            } finally {
+                setLoading(false);
             }
-
-            // CosmosClient returns the transaction directly, not wrapped in tx_response
-            // Transform to expected format if needed
-            const formattedTx = tx.tx_response
-                ? tx
-                : {
-                      tx_response: tx,
-                      tx: tx.tx || { body: { messages: [] } }
-                  };
-
-            setTransaction(formattedTx as any);
-        } catch (err: any) {
-            setError(err.response?.data?.message || err.message || "Transaction not found");
-            setTransaction(null);
-            console.error("Error fetching transaction:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+        [txHash]
+    );
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") {
@@ -87,7 +90,7 @@ export default function TransactionPage() {
         if (urlHash) {
             handleSearch(urlHash);
         }
-    }, [urlHash]);
+    }, [urlHash, handleSearch]);
 
     // Set page title based on transaction hash
     useEffect(() => {
