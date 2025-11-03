@@ -41,7 +41,8 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
   {
     name: "Texas Hodl",
     rpc: "https://texashodl.net/rpc",
-    rest: "https://texashodl.net",
+    // Using node.texashodl.net subdomain for REST API endpoint
+    rest: "https://node.texashodl.net",
     grpc: "grpcs://texashodl.net:9443",
   },
   {
