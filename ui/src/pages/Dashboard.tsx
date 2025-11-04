@@ -38,7 +38,6 @@ import {
 } from "../utils/passwordProtectionUtils";
 
 // Club branding imports
-import defaultLogo from "../assets/YOUR_CLUB.png";
 import { colors, getAnimationGradient, getHexagonStroke, hexToRgba } from "../utils/colorConfig";
 
 // Memoized Deposit button component
@@ -1055,9 +1054,11 @@ const Dashboard: React.FC = () => {
                         style={mainCardStyle}
                     >
                         {/* Club Logo */}
-                        <div className="flex flex-col items-center mb-6">
-                            <img src={import.meta.env.VITE_CLUB_LOGO || defaultLogo} alt="Club Logo" className="w-32 h-32 object-contain" />
-                        </div>
+                        { import.meta.env.VITE_CLUB_LOGO && (
+                            <div className="flex flex-col items-center mb-6">
+                                <img src={import.meta.env.VITE_CLUB_LOGO} alt="Club Logo" className="w-32 h-32 object-contain" />
+                            </div>
+                        )}
 
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
