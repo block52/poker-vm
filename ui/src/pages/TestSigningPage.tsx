@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { SigningCosmosClient, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { colors, hexToRgba } from "../utils/colorConfig";
-import { getCosmosMnemonic, getCosmosAddress } from "../utils/cosmos/storage";
+import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import defaultLogo from "../assets/YOUR_CLUB.png";
 import { useNavigate } from "react-router-dom";
 
@@ -17,7 +17,7 @@ interface TestResult {
 export default function TestSigningPage() {
     const navigate = useNavigate();
     const [signingClient, setSigningClient] = useState<SigningCosmosClient | null>(null);
-    const [wallet, setWallet] = useState<DirectSecp256k1HdWallet | null>(null);
+    const [, setWallet] = useState<DirectSecp256k1HdWallet | null>(null);
     const [walletAddress, setWalletAddress] = useState<string>("");
     const [balances, setBalances] = useState<{ denom: string; amount: string }[]>([]);
     const [testResults, setTestResults] = useState<TestResult[]>([]);
@@ -52,8 +52,6 @@ export default function TestSigningPage() {
         { name: "charlie", address: "b521xkh7eznh50km2lxh783sqqyml8fjwl0tqjsc0c", mnemonic: "video short denial minimum vague arm dose parrot poverty saddle kingdom life buyer globe fashion topic vicious theme voice keep try jacket fresh potato" },
         { name: "diana", address: "b521n25h4eg6uhtdvs26988k9ye497sylum8lz5vns", mnemonic: "twice bacon whale space improve galaxy liberty trumpet outside sunny action reflect doll hill ugly torch ride gossip snack fork talk market proud nothing" },
     ];
-
-    const [testAccountBalances, setTestAccountBalances] = useState<Record<string, { denom: string; amount: string }[]>>({});
 
     const copyCommand = (account: string, denom: string, amount: string) => {
         const command = `pokerchaind tx bank send ${account} ${walletAddress} ${amount}${denom} --chain-id pokerchain --keyring-backend test -y`;

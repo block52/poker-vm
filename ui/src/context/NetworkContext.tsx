@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export interface NetworkEndpoints {
-  name: string;
-  rpc: string;
-  rest: string;
-  grpc: string;
+    name: string;
+    rpc: string;
+    rest: string;
+    grpc: string;
 }
 
 // TODO: Dynamic endpoint discovery from validators API
@@ -32,76 +32,76 @@ export interface NetworkEndpoints {
 //
 // Same pattern applies to all validator domains (block52.xyz, texashodl.net, etc.)
 export const NETWORK_PRESETS: NetworkEndpoints[] = [
-  {
-    name: "Block52",
-    rpc: "https://block52.xyz/rpc",
-    rest: "https://block52.xyz",
-    grpc: "grpcs://block52.xyz:9443",
-  },
-  {
-    name: "Texas Hodl",
-    rpc: "https://texashodl.net/rpc",
-    // Using node.texashodl.net subdomain for REST API endpoint
-    rest: "https://node.texashodl.net",
-    grpc: "grpcs://texashodl.net:9443",
-  },
-  {
-    name: "Localhost",
-    rpc: "http://localhost:26657",
-    rest: "http://localhost:1317",
-    grpc: "http://localhost:9090",
-  },
+    {
+        name: "Block52",
+        rpc: "https://node1.block52.xyz/rpc",
+        rest: "https://node1.block52.xyz",
+        grpc: "grpcs://node1.block52.xyz:9443"
+    },
+    {
+        name: "Texas Hodl",
+        rpc: "https://texashodl.net/rpc",
+        // Using node.texashodl.net subdomain for REST API endpoint
+        rest: "https://node.texashodl.net",
+        grpc: "grpcs://texashodl.net:9443"
+    },
+    {
+        name: "Localhost",
+        rpc: "http://localhost:26657",
+        rest: "http://localhost:1317",
+        grpc: "http://localhost:9090"
+    }
 ];
 
 interface NetworkContextType {
-  currentNetwork: NetworkEndpoints;
-  setNetwork: (network: NetworkEndpoints) => void;
-  availableNetworks: NetworkEndpoints[];
+    currentNetwork: NetworkEndpoints;
+    setNetwork: (network: NetworkEndpoints) => void;
+    availableNetworks: NetworkEndpoints[];
 }
 
 const NetworkContext = createContext<NetworkContextType | undefined>(undefined);
 
 export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with the first network (Node 1 Remote)
-  const [currentNetwork, setCurrentNetwork] = useState<NetworkEndpoints>(() => {
-    // Try to load from localStorage
-    const saved = localStorage.getItem("selectedNetwork");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
+    // Initialize with the first network (Node 1 Remote)
+    const [currentNetwork, setCurrentNetwork] = useState<NetworkEndpoints>(() => {
+        // Try to load from localStorage
+        const saved = localStorage.getItem("selectedNetwork");
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch {
+                return NETWORK_PRESETS[0];
+            }
+        }
         return NETWORK_PRESETS[0];
-      }
-    }
-    return NETWORK_PRESETS[0];
-  });
+    });
 
-  // Save to localStorage whenever network changes
-  useEffect(() => {
-    localStorage.setItem("selectedNetwork", JSON.stringify(currentNetwork));
-  }, [currentNetwork]);
+    // Save to localStorage whenever network changes
+    useEffect(() => {
+        localStorage.setItem("selectedNetwork", JSON.stringify(currentNetwork));
+    }, [currentNetwork]);
 
-  const setNetwork = (network: NetworkEndpoints) => {
-    setCurrentNetwork(network);
-  };
+    const setNetwork = (network: NetworkEndpoints) => {
+        setCurrentNetwork(network);
+    };
 
-  return (
-    <NetworkContext.Provider
-      value={{
-        currentNetwork,
-        setNetwork,
-        availableNetworks: NETWORK_PRESETS,
-      }}
-    >
-      {children}
-    </NetworkContext.Provider>
-  );
+    return (
+        <NetworkContext.Provider
+            value={{
+                currentNetwork,
+                setNetwork,
+                availableNetworks: NETWORK_PRESETS
+            }}
+        >
+            {children}
+        </NetworkContext.Provider>
+    );
 };
 
 export const useNetwork = (): NetworkContextType => {
-  const context = useContext(NetworkContext);
-  if (!context) {
-    throw new Error("useNetwork must be used within a NetworkProvider");
-  }
-  return context;
+    const context = useContext(NetworkContext);
+    if (!context) {
+        throw new Error("useNetwork must be used within a NetworkProvider");
+    }
+    return context;
 };
