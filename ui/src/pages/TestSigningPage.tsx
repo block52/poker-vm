@@ -5,6 +5,8 @@ import { colors, hexToRgba } from "../utils/colorConfig";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import defaultLogo from "../assets/YOUR_CLUB.png";
 import { useNavigate } from "react-router-dom";
+import { useNetwork } from "../context/NetworkContext";
+import { NetworkSelector } from "../components/NetworkSelector";
 
 interface TestResult {
     functionName: string;
@@ -16,6 +18,7 @@ interface TestResult {
 
 export default function TestSigningPage() {
     const navigate = useNavigate();
+    const { currentNetwork } = useNetwork(); // Get current network from context
     const [signingClient, setSigningClient] = useState<SigningCosmosClient | null>(null);
     const [, setWallet] = useState<DirectSecp256k1HdWallet | null>(null);
     const [walletAddress, setWalletAddress] = useState<string>("");
@@ -92,6 +95,17 @@ export default function TestSigningPage() {
             console.log("🔐 Initializing SigningCosmosClient...");
             console.log("Mnemonic:", mnemonic.substring(0, 20) + "...");
 
+            // Log configuration for debugging (using NetworkContext)
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("📡 Cosmos SDK Configuration:");
+            console.log("   Network:", currentNetwork.name);
+            console.log("   RPC:    ", currentNetwork.rpc);
+            console.log("   REST:   ", currentNetwork.rest);
+            console.log("   Chain:  ", "pokerchain");
+            console.log("   Prefix: ", "b52");
+            console.log("   Denom:  ", "b52Token");
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
             // Create wallet from mnemonic
             const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
                 prefix: "b52"
@@ -100,10 +114,10 @@ export default function TestSigningPage() {
             const [account] = await hdWallet.getAccounts();
             console.log("✅ Wallet address:", account.address);
 
-            // Create SigningCosmosClient
+            // Create SigningCosmosClient using NetworkContext
             const client = new SigningCosmosClient({
-                rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657",
-                restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317",
+                rpcEndpoint: currentNetwork.rpc,
+                restEndpoint: currentNetwork.rest,
                 chainId: "pokerchain",
                 prefix: "b52",
                 denom: "b52Token", // Native gas token (changed from 'stake' Oct 18, 2025)
@@ -126,10 +140,11 @@ export default function TestSigningPage() {
                 status: "success",
                 message: "Client initialized successfully!",
                 data: {
+                    network: currentNetwork.name,
                     address: account.address,
                     balances: userBalances,
-                    rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657",
-                    restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317"
+                    rpcEndpoint: currentNetwork.rpc,
+                    restEndpoint: currentNetwork.rest
                 }
             });
         } catch (error: any) {
@@ -573,7 +588,10 @@ export default function TestSigningPage() {
                             </svg>
                             <span>Back to Dashboard</span>
                         </button>
-                        <img src={clubLogo} alt={clubName} className="h-12" />
+                        <div className="flex items-center gap-4">
+                            <NetworkSelector />
+                            <img src={clubLogo} alt={clubName} className="h-12" />
+                        </div>
                     </div>
                     <h1 className="text-4xl font-extrabold text-white mb-2">SigningCosmosClient Test Page</h1>
                     <p className="text-gray-300">Test all SDK functions from Lucas's SigningCosmosClient</p>
@@ -746,6 +764,43 @@ export default function TestSigningPage() {
                             <div className="text-green-400 font-semibold mb-4">
                                 ✅ Client Initialized
                             </div>
+
+                            {/* Configuration Display */}
+                            <div className="mb-4 p-4 rounded-lg" style={{
+                                backgroundColor: hexToRgba(colors.brand.primary, 0.1),
+                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
+                            }}>
+                                <div className="text-sm font-semibold mb-2" style={{ color: colors.brand.primary }}>
+                                    📡 Connected to: {currentNetwork.name}
+                                </div>
+                                <div className="space-y-1 text-xs font-mono">
+                                    <div className="flex justify-between text-gray-300">
+                                        <span className="text-gray-400">RPC:</span>
+                                        <span style={{ color: colors.accent.success }}>
+                                            {currentNetwork.rpc}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-300">
+                                        <span className="text-gray-400">REST:</span>
+                                        <span style={{ color: colors.accent.success }}>
+                                            {currentNetwork.rest}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-300">
+                                        <span className="text-gray-400">Chain:</span>
+                                        <span className="text-white">pokerchain</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-300">
+                                        <span className="text-gray-400">Prefix:</span>
+                                        <span className="text-white">b52</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-300">
+                                        <span className="text-gray-400">Gas Denom:</span>
+                                        <span className="text-white">b52Token</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
                                 <div className="text-gray-300">
                                     <span className="font-semibold">Address:</span>{" "}

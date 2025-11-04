@@ -47,7 +47,7 @@ export default function BlocksPage() {
           throw new Error("Cosmos client not initialized.");
         }
 
-        const recentBlocks = await cosmosClient.getLatestBlocks(500);
+        const recentBlocks = await cosmosClient.getLatestBlocks(200);
         setBlocks(recentBlocks);
         setError(null);
       } catch (err: any) {

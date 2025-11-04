@@ -33,23 +33,22 @@ export interface NetworkEndpoints {
 // Same pattern applies to all validator domains (block52.xyz, texashodl.net, etc.)
 export const NETWORK_PRESETS: NetworkEndpoints[] = [
     {
-        name: "Block52",
-        rpc: "https://node1.block52.xyz/rpc",
-        rest: "https://node1.block52.xyz",
-        grpc: "grpcs://node1.block52.xyz:9443"
-    },
-    {
-        name: "Texas Hodl",
-        rpc: "https://texashodl.net/rpc",
-        // Using node.texashodl.net subdomain for REST API endpoint
-        rest: "https://node.texashodl.net",
-        grpc: "grpcs://texashodl.net:9443"
-    },
-    {
         name: "Localhost",
         rpc: "http://localhost:26657",
         rest: "http://localhost:1317",
         grpc: "http://localhost:9090"
+    },
+    {
+        name: "Block52 (Production)",
+        rpc: "https://block52.xyz/rpc",
+        rest: "https://block52.xyz",
+        grpc: "grpcs://block52.xyz:9443"
+    },
+    {
+        name: "Texas Hodl",
+        rpc: "https://texashodl.net/rpc",
+        rest: "https://node.texashodl.net",
+        grpc: "grpcs://texashodl.net:9443"
     }
 ];
 

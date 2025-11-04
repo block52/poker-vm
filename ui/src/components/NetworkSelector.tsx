@@ -25,7 +25,7 @@ export const NetworkSelector: React.FC = () => {
   }, [isOpen]);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-500" ref={dropdownRef}>
       {/* Dropdown Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -83,7 +83,7 @@ export const NetworkSelector: React.FC = () => {
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute top-full mt-2 right-0 min-w-[280px] rounded-lg shadow-2xl overflow-hidden z-50"
+          className="absolute top-full mt-2 right-0 min-w-[280px] rounded-lg shadow-2xl overflow-hidden z-[9999]"
           style={{
             backgroundColor: hexToRgba(colors.ui.bgDark, 0.95),
             border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`,
