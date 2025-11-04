@@ -199,16 +199,17 @@
     viem "^2.31.7"
     zustand "5.0.3"
 
-"@bitcoinbrisbane/block52@3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.0.3.tgz#6e1c9299d5338b6e85a9cb8d0f1d196cddadbc9b"
-  integrity sha512-yvXZm64cxX7SMPCYhnZbjETN+aMeU0SOKA6cgWTpLybeiomUPdOXV3d9IqPS5I4WS42zNpOfvr1I/q6/xsefig==
+"@bitcoinbrisbane/block52@3.0.4":
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.0.4.tgz#3ed722b662bf16614111dd0d3d9ccc79ca08df38"
+  integrity sha512-/QlNcbERdE9bYuCTH9iQiMjCQd1SSgL9QQkbaf3fuz6+rG2/YX0ZcNxv45FFSOFhDFKwbSlz8Zilk8T1gSvOtA==
   dependencies:
     "@bufbuild/protobuf" "^2.10.0"
     "@cosmjs/crypto" "^0.36.1"
     "@cosmjs/encoding" "^0.36.1"
     "@cosmjs/proto-signing" "^0.36.1"
     "@cosmjs/stargate" "^0.36.1"
+    "@keplr-wallet/types" "^0.12.138"
     axios "^1.12.2"
     ethers "^6.15.0"
     long "^5.3.2"
@@ -811,6 +812,13 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
+
+"@keplr-wallet/types@^0.12.138":
+  version "0.12.285"
+  resolved "https://registry.yarnpkg.com/@keplr-wallet/types/-/types-0.12.285.tgz#5376cf74e001eab323ff3a97f25fb0b5551a2ec6"
+  integrity sha512-MouTT/zgrs7Hta2tgms8OZdgJnsKnCKyRLFBcjwrpgMtuP2km5+lXzxc6qfEsbl4MRVhqt0zUXFwamPhwEi9Jw==
+  dependencies:
+    long "^4.0.0"
 
 "@lit-labs/ssr-dom-shim@^1.4.0":
   version "1.4.0"
@@ -4946,6 +4954,11 @@ lodash@4.17.21, lodash@^4.17.15, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
+
+long@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/long/-/long-4.0.0.tgz#9a7b71cfb7d361a194ea555241c92f7468d5bf28"
+  integrity sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
 
 long@^5.3.2:
   version "5.3.2"
