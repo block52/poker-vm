@@ -1,5 +1,5 @@
 import { DEFAULT_COSMOS_CONFIG } from "../../state/cosmos/config";
-import { getCosmosClient } from "@bitcoinbrisbane/block52";
+import { getCosmosClient, type AccountResponse } from "@bitcoinbrisbane/block52";
 import { signResult } from "../abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "../interfaces";
 import { Coin } from "@cosmjs/amino";
@@ -10,8 +10,8 @@ export interface CosmosAccountInfo {
         denom: string;
         amount: string;
     }>;
-    sequence: number;
-    accountNumber: number;
+    sequence: string;  // SDK returns strings from REST API
+    accountNumber: string;  // SDK returns strings from REST API
     pubKey?: string;
     type: string;
 }
@@ -48,8 +48,8 @@ export class CosmosAccountCommand implements ISignedCommand<CosmosAccountInfo> {
                     denom: coin.denom,
                     amount: coin.amount
                 })),
-                sequence: account?.sequence || 0,
-                accountNumber: account?.accountNumber || 0,
+                sequence: account?.sequence || "0",
+                accountNumber: account?.account_number || "0",
                 pubKey: account?.pubkey?.value || undefined,
                 type: (account as any)?.["@type"] || "cosmos-sdk/BaseAccount"
             };

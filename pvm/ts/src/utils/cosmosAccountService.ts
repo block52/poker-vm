@@ -45,7 +45,7 @@ export class CosmosAccountService {
     async accountExists(address: string): Promise<boolean> {
         try {
             const accountInfo = await this.getAccountInfo(address);
-            return accountInfo.accountNumber > 0 || accountInfo.balances.length > 0;
+            return Number(accountInfo.accountNumber) > 0 || accountInfo.balances.length > 0;
         } catch (error) {
             return false;
         }
@@ -56,7 +56,7 @@ export class CosmosAccountService {
      */
     async getNextSequence(address: string): Promise<number> {
         const accountInfo = await this.getAccountInfo(address);
-        return accountInfo.sequence;
+        return Number(accountInfo.sequence);
     }
 }
 
