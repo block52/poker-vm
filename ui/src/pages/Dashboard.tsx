@@ -41,6 +41,12 @@ import {
 // Club branding imports
 import { colors, getAnimationGradient, getHexagonStroke, hexToRgba } from "../utils/colorConfig";
 
+// Copy to clipboard
+const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    alert(`${label} copied to clipboard!`);
+};
+
 // Memoized Deposit button component
 const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) => {
     const buttonStyle = useMemo(
@@ -1055,7 +1061,7 @@ const Dashboard: React.FC = () => {
                         style={mainCardStyle}
                     >
                         {/* Club Logo */}
-                        { import.meta.env.VITE_CLUB_LOGO && (
+                        {import.meta.env.VITE_CLUB_LOGO && (
                             <div className="flex flex-col items-center mb-6">
                                 <img src={import.meta.env.VITE_CLUB_LOGO} alt="Club Logo" className="w-32 h-32 object-contain" />
                             </div>
@@ -1262,42 +1268,25 @@ const Dashboard: React.FC = () => {
                             {cosmosWallet.address && (
                                 <div className="space-y-3">
                                     <div className="flex flex-col gap-1">
-                                        <div
-                                            className="flex items-center justify-between p-2 rounded-lg"
-                                            style={{
-                                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                            }}
-                                        >
-                                            <p className="font-mono text-xs tracking-wider break-all hidden md:block" style={{ color: colors.brand.primary }}>
-                                                {cosmosWallet.address || "No Cosmos wallet connected"}
-                                            </p>
-                                            <p className="font-mono text-xs tracking-wider md:hidden" style={{ color: colors.brand.primary }}>
-                                                {cosmosWallet.address ? formatAddress(cosmosWallet.address) : "No wallet"}
-                                            </p>
-                                            <div className="flex items-center">
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(cosmosWallet.address || "");
+                                        <div>
+                                            <label className="text-gray-300 text-sm">Address</label>
+                                            <div className="flex gap-2 items-center mt-1">
+                                                <input
+                                                    type="text"
+                                                    value={cosmosWallet.address}
+                                                    readOnly
+                                                    className="flex-1 text-white px-4 py-2 rounded border font-mono text-sm"
+                                                    style={{
+                                                        backgroundColor: hexToRgba(colors.table.bgBase, 0.6),
+                                                        borderColor: hexToRgba(colors.brand.primary, 0.2)
                                                     }}
-                                                    className="ml-2 p-1 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                                    title="Copy address"
-                                                    disabled={!cosmosWallet.address}
+                                                />
+                                                <button
+                                                    onClick={() => copyToClipboard(cosmosWallet.address || "", "Address")}
+                                                    className="text-white px-4 py-2 rounded transition-all hover:opacity-80"
+                                                    style={{ backgroundColor: colors.brand.primary }}
                                                 >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        style={{ color: colors.brand.primary }}
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth="2"
-                                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                                        />
-                                                    </svg>
+                                                    Copy
                                                 </button>
                                             </div>
                                         </div>
@@ -1305,15 +1294,13 @@ const Dashboard: React.FC = () => {
 
                                     {/* Cosmos Wallet Balances Section */}
                                     <div className="space-y-2 mt-3">
-                                        <p className="text-white text-xs font-semibold mb-2">Cosmos Balances:</p>
+                                        <p className="text-gray-300 text-sm">Balances</p>
                                         {cosmosWallet.isLoading ? (
                                             <div className="text-gray-400 text-sm text-center py-2">Loading balances...</div>
                                         ) : cosmosWallet.error ? (
                                             <div className="text-red-400 text-sm text-center py-2">Error loading balances</div>
                                         ) : !cosmosWallet.address ? (
                                             <div className="text-gray-400 text-sm text-center py-2">No wallet connected</div>
-                                        ) : cosmosWallet.balance.length === 0 ? (
-                                            <div className="text-yellow-400 text-sm text-center py-2">⚠️ No tokens found - You need tokens to play!</div>
                                         ) : (
                                             <div className="space-y-2">
                                                 {cosmosWallet.balance.map((balance, idx) => {
@@ -1705,7 +1692,7 @@ const Dashboard: React.FC = () => {
                             <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                         </div>
                     </div>
-                    
+
                     {showBuyInModal && (
                         <BuyInModal
                             tableId={buyInTableId}
