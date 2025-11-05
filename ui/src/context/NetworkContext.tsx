@@ -31,24 +31,46 @@ export interface NetworkEndpoints {
 //   - Easy to add new endpoints as paths
 //
 // Same pattern applies to all validator domains (block52.xyz, texashodl.net, etc.)
+//
+// NETWORK STATUS (Last tested: 2025-11-05):
+// ✅ Localhost - Works with `ignite chain serve`
+// ❌ Block52 (node1.block52.xyz) - Currently not responding/down
+// ✅ Texas Hodl (node.texashodl.net) - Working, use for production testing
+//
+// CLI TEST COMMANDS (run in terminal to verify endpoints):
+//
+// Test Localhost (when ignite chain serve is running):
+//   curl -s http://localhost:26657/status | jq '.result.sync_info.latest_block_height'
+//
+// Test Block52:
+//   curl -s --max-time 10 https://node1.block52.xyz/cosmos/base/tendermint/v1beta1/node_info | jq '.default_node_info.moniker'
+//
+// Test Texas Hodl:
+//   curl -s https://node.texashodl.net/cosmos/base/tendermint/v1beta1/node_info | jq '.default_node_info.moniker'
+//   curl -s https://node.texashodl.net/cosmos/base/tendermint/v1beta1/blocks/latest | jq '.block.header.height'
+//
 export const NETWORK_PRESETS: NetworkEndpoints[] = [
+    // ✅ WORKING - Default for local development with `ignite chain serve`
     {
         name: "Localhost",
         rpc: "http://localhost:26657",
         rest: "http://localhost:1317",
         grpc: "http://localhost:9090"
     },
+    // ✅ WORKING - Recommended for production testing
     {
-        name: "Block52 (Production)",
-        rpc: "https://block52.xyz/rpc",
-        rest: "https://block52.xyz",
-        grpc: "grpcs://block52.xyz:9443"
-    },
-    {
-        name: "Texas Hodl",
+        name: "Texas Hodl (Production)",
         rpc: "https://texashodl.net/rpc",
         rest: "https://node.texashodl.net",
         grpc: "grpcs://texashodl.net:9443"
+    },
+    // ⚠️ Block52 - Tested Nov 5th, 2025 @ 9:50 AM - was not responding
+    // May come back online - test with CLI command above before using
+    {
+        name: "Block52 (Production)",
+        rpc: "https://node1.block52.xyz/rpc",
+        rest: "https://node1.block52.xyz",
+        grpc: "grpcs://node1.block52.xyz:9443"
     }
 ];
 

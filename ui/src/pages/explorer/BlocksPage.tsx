@@ -28,46 +28,69 @@ export default function BlocksPage() {
   const [error, setError] = useState<string | null>(null);
   const { currentNetwork } = useNetwork();
 
+  const fetchBlocks = async () => {
+    try {
+      setLoading(true);
+      const cosmosClient = getCosmosClient({
+        rpc: currentNetwork.rpc,
+        rest: currentNetwork.rest,
+      });
+
+      if (!cosmosClient) {
+        throw new Error("Cosmos client not initialized.");
+      }
+
+      const recentBlocks = await cosmosClient.getLatestBlocks(50);
+      setBlocks(recentBlocks);
+      setError(null);
+    } catch (err: any) {
+      // Provide detailed, network-specific error messages
+      let errorMessage = "Failed to fetch blocks";
+      let suggestion = "";
+
+      // Determine error type and provide helpful guidance
+      if (err.message?.includes("timeout")) {
+        errorMessage = `Request timeout after 10 seconds`;
+        if (currentNetwork.name === "Localhost") {
+          suggestion = " - Check if 'ignite chain serve' is running";
+        } else {
+          suggestion = " - Production network may be slow. Try localhost for development or retry in a moment";
+        }
+      } else if (err.code === "ERR_NETWORK" || err.message?.includes("ECONNREFUSED")) {
+        errorMessage = `Cannot connect to ${currentNetwork.name}`;
+        if (currentNetwork.name === "Localhost") {
+          suggestion = " - Run 'ignite chain serve' in the pokerchain directory";
+        } else {
+          suggestion = " - Network may be down. Try selecting a different network";
+        }
+      } else if (err.response) {
+        errorMessage = `Server error: ${err.response.status} - ${err.response.statusText}`;
+        suggestion = " - The node may be restarting or under maintenance";
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      const fullMessage = errorMessage + suggestion;
+
+      // Graceful degradation: Keep old blocks if we have cached data
+      if (blocks.length > 0) {
+        setError(`⚠️ Network unavailable - showing cached data. ${fullMessage}`);
+        console.warn("Using cached block data due to fetch error:", err);
+      } else {
+        setError(fullMessage);
+        console.error("Error fetching blocks:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Set page title
     document.title = "Block Explorer - Block52 Chain";
 
     // Clear client when network changes to force re-initialization
     clearCosmosClient();
-
-    const fetchBlocks = async () => {
-      try {
-        setLoading(true);
-        const cosmosClient = getCosmosClient({
-          rpc: currentNetwork.rpc,
-          rest: currentNetwork.rest,
-        });
-
-        if (!cosmosClient) {
-          throw new Error("Cosmos client not initialized.");
-        }
-
-        const recentBlocks = await cosmosClient.getLatestBlocks(200);
-        setBlocks(recentBlocks);
-        setError(null);
-      } catch (err: any) {
-        // Provide more detailed error messages
-        let errorMessage = "Failed to fetch blocks";
-
-        if (err.code === "ERR_NETWORK") {
-          errorMessage = `Network error: Cannot connect to ${currentNetwork.name} (${currentNetwork.rest})`;
-        } else if (err.response) {
-          errorMessage = `Server error: ${err.response.status} - ${err.response.statusText}`;
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-
-        setError(errorMessage);
-        console.error("Error fetching blocks:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
 
     // Initial fetch
     fetchBlocks();
@@ -146,7 +169,7 @@ export default function BlocksPage() {
         <div className="w-full max-w-7xl">
           {/* Header with Network Selector */}
           <div
-            className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
+            className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6 relative z-40"
             style={containerStyle}
           >
             <div className="flex justify-between items-center">
@@ -184,9 +207,31 @@ export default function BlocksPage() {
               </div>
               <h2 className="text-2xl font-bold text-white mb-4">Error: {error}</h2>
               <p className="text-gray-300 mb-4">Make sure your Cosmos blockchain is running</p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 mb-6">
                 Try selecting a different network from the dropdown above
               </p>
+
+              {/* Retry Button */}
+              <button
+                onClick={() => fetchBlocks()}
+                disabled={loading}
+                className="px-6 py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: hexToRgba(colors.brand.primary, 0.2),
+                  border: `1px solid ${colors.brand.primary}`,
+                  color: colors.brand.primary
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.3);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.2);
+                }}
+              >
+                {loading ? "Retrying..." : "🔄 Retry Connection"}
+              </button>
             </div>
           </div>
         </div>
@@ -199,7 +244,7 @@ export default function BlocksPage() {
       <div className="w-full max-w-7xl">
         {/* Header Card */}
         <div
-          className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
+          className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6 relative z-40"
           style={containerStyle}
         >
           <div className="flex justify-between items-center">
@@ -298,22 +343,46 @@ export default function BlocksPage() {
               border: `1px solid ${hexToRgba(colors.accent.danger, 0.5)}`
             }}
           >
-            <div className="flex items-center gap-3">
-              <svg
-                className="h-6 w-6 flex-shrink-0"
-                style={{ color: colors.accent.danger }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <svg
+                  className="h-6 w-6 flex-shrink-0"
+                  style={{ color: colors.accent.danger }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-white font-semibold">Error: {error}</span>
+              </div>
+
+              {/* Retry Button */}
+              <button
+                onClick={() => fetchBlocks()}
+                disabled={loading}
+                className="px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                style={{
+                  backgroundColor: hexToRgba(colors.brand.primary, 0.2),
+                  border: `1px solid ${colors.brand.primary}`,
+                  color: colors.brand.primary
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.3);
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.2);
+                }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="text-white font-semibold">Error: {error}</span>
+                {loading ? "⏳" : "🔄 Retry"}
+              </button>
             </div>
           </div>
         )}

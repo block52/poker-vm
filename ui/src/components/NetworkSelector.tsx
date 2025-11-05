@@ -25,7 +25,7 @@ export const NetworkSelector: React.FC = () => {
   }, [isOpen]);
 
   return (
-    <div className="relative z-500" ref={dropdownRef}>
+    <div className="relative z-50" ref={dropdownRef}>
       {/* Dropdown Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
