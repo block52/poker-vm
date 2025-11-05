@@ -130,6 +130,30 @@ const CreateTableButton = React.memo(({ onClick }: { onClick: () => void }) => {
     );
 });
 
+const CreateTransferButton = React.memo(({ onClick }: { onClick: () => void }) => {
+    const buttonStyle = useMemo(
+        () => ({
+            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+        }),
+        []
+    );
+
+    const handleClick = useCallback(() => {
+        onClick();
+    }, [onClick]);
+
+    return (
+        <button
+            type="button"
+            onClick={handleClick}
+            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
+            style={buttonStyle}
+        >
+            Transfer b52USDC
+        </button>
+    );
+});
+
 // Add hexagon pattern SVG background
 const HexagonPattern = React.memo(() => {
     return (
@@ -562,6 +586,7 @@ const Dashboard: React.FC = () => {
         setShowWithdrawalModal(true);
     }, []);
 
+
     // Removed: handleImportModalClick - no longer needed (using Cosmos wallet)
 
     // Memoized game selection callbacks
@@ -801,7 +826,7 @@ const Dashboard: React.FC = () => {
                                 className="p-6 rounded-xl w-96 shadow-2xl border"
                                 style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}
                             >
-                                <h3 className="text-xl font-bold text-white mb-4">Send b52USD</h3>
+                                <h3 className="text-xl font-bold text-white mb-4">Transfer b52USD</h3>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-white text-sm mb-1">Recipient Address</label>
@@ -1090,9 +1115,7 @@ const Dashboard: React.FC = () => {
                             }}
                         >
                             <div className="flex items-center gap-2 mb-4">
-                                <h2 className="text-xl font-bold text-white">
-                                    Wallet
-                                </h2>
+                                <h2 className="text-xl font-bold text-white">Wallet</h2>
                                 <div className="relative group">
                                     <svg
                                         className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
@@ -1159,7 +1182,7 @@ const Dashboard: React.FC = () => {
                                             Disconnect
                                         </button>
                                     </div> */}
-                                                                    
+
                                     <div className="flex flex-col gap-1">
                                         <div>
                                             <label className="text-gray-300 text-sm">Address</label>
@@ -1316,7 +1339,90 @@ const Dashboard: React.FC = () => {
 
                                     {/* Cosmos Wallet Balances Section */}
                                     <div className="space-y-2 mt-3">
-                                        <p className="text-gray-300 text-sm">Balances</p>
+                                        <div
+                                            className="p-3 rounded-lg"
+                                            style={{
+                                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                            }}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                                                        style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
+                                                    >
+                                                        <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>
+                                                            $
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold" style={{ color: "white" }}>
+                                                            b52USDC Balance
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-right">
+                                                        <p className="text-lg font-bold" style={{ color: colors.brand.secondary }}>
+                                                            $$
+                                                            {cosmosWallet.balance.map((balance, idx) => {
+
+                                                                console.log("Balance Denom:", balance.denom);
+
+                                                                // Format balance with proper decimals (6 for micro-denominated tokens)
+                                                                const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
+                                                                
+                                                                const numericAmount = isMicroDenom
+                                                                    ? Number(balance.amount) / 1_000_000
+                                                                    : Number(balance.amount);
+
+                                                                // const displayAmount = numericAmount.toLocaleString("en-US", {
+                                                                //     minimumFractionDigits: 2,
+                                                                //     maximumFractionDigits: 6
+                                                                // });
+
+                                                                // For usdc, show USD equivalent
+                                                                const isUSDC = balance.denom === "usdc";
+                                                                const usdValue = isUSDC
+                                                                    ? numericAmount.toLocaleString("en-US", {
+                                                                          style: "currency",
+                                                                          currency: "USD",
+                                                                          minimumFractionDigits: 2,
+                                                                          maximumFractionDigits: 2
+                                                                      })
+                                                                    : null;
+
+                                                                // return <span key={idx}>${usdValue}</span>;
+                                                                return isUSDC ? <span key={idx}>${usdValue}</span> : "$0.00";
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => fetchWeb3Balance()}
+                                                        className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
+                                                        title="Refresh balance"
+                                                    >
+                                                        <svg
+                                                            className="w-4 h-4"
+                                                            style={{ color: colors.brand.primary }}
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth="2"
+                                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* <p className="text-gray-300 text-sm">Balances</p>
                                         {cosmosWallet.isLoading ? (
                                             <div className="text-gray-400 text-sm text-center py-2">Loading balances...</div>
                                         ) : cosmosWallet.error ? (
@@ -1373,29 +1479,8 @@ const Dashboard: React.FC = () => {
                                                     );
                                                 })}
                                             </div>
-                                        )}
+                                        )} */}
                                     </div>
-
-                                    {cosmosWallet.address && (
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => setShowCosmosTransferModal(true)}
-                                                    className="flex-1 px-3 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                                    style={{ backgroundColor: colors.brand.primary }}
-                                                >
-                                                    Send b52USD
-                                                </button>
-                                                <button
-                                                    onClick={() => cosmosWallet.refreshBalance()}
-                                                    className="px-3 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
-                                                >
-                                                    Refresh
-                                                </button>
-                                            </div>
-                                            {/* Removed: Update Seed and Clear Wallet buttons - now handled on /wallet page */}
-                                        </div>
-                                    )}
 
                                     {!cosmosWallet.address && (
                                         <div className="mt-2 flex justify-center">
@@ -1412,7 +1497,7 @@ const Dashboard: React.FC = () => {
                                     <div className="flex items-center gap-2 pt-2">
                                         <DepositButton onClick={handleDepositClick} disabled={false} />
                                         <WithdrawButton onClick={handleWithdrawClick} />
-                                        <CreateTableButton onClick={handleCreateTableClick} />
+                                        <CreateTransferButton onClick={() => setShowCosmosTransferModal(true)} />
                                     </div>
                                     <div className="mt-2 flex justify-center gap-4">
                                         <a
