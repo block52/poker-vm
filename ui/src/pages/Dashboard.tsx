@@ -1148,7 +1148,7 @@ const Dashboard: React.FC = () => {
                                 </button>
                             ) : (
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center" style={{ color: "white" }}>
+                                    {/* <div className="flex justify-between items-center" style={{ color: "white" }}>
                                         <span>
                                             Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
                                         </span>
@@ -1158,6 +1158,31 @@ const Dashboard: React.FC = () => {
                                         >
                                             Disconnect
                                         </button>
+                                    </div> */}
+                                                                    
+                                    <div className="flex flex-col gap-1">
+                                        <div>
+                                            <label className="text-gray-300 text-sm">Address</label>
+                                            <div className="flex gap-2 items-center mt-1">
+                                                <input
+                                                    type="text"
+                                                    value={address}
+                                                    readOnly
+                                                    className="flex-1 text-white px-4 py-2 rounded border font-mono text-sm"
+                                                    style={{
+                                                        backgroundColor: hexToRgba(colors.table.bgBase, 0.6),
+                                                        borderColor: hexToRgba(colors.brand.primary, 0.2)
+                                                    }}
+                                                />
+                                                <button
+                                                    onClick={() => copyToClipboard(address || "", "Address")}
+                                                    className="text-white px-4 py-2 rounded transition-all hover:opacity-80"
+                                                    style={{ backgroundColor: colors.brand.primary }}
+                                                >
+                                                    Copy
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div
@@ -1179,10 +1204,7 @@ const Dashboard: React.FC = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold" style={{ color: "white" }}>
-                                                        Web3 Wallet USDC Balance
-                                                    </p>
-                                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
-                                                        Available on Base Chain
+                                                        Base USDC Balance
                                                     </p>
                                                 </div>
                                             </div>
