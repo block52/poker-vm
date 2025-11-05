@@ -1071,7 +1071,7 @@ const Dashboard: React.FC = () => {
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
                             <div className="flex items-center gap-4">
                                 <NetworkSelector />
-                                <CosmosStatus />
+                                {/* <CosmosStatus /> */}
                             </div>
                         </div>
 
@@ -1091,7 +1091,7 @@ const Dashboard: React.FC = () => {
                         >
                             <div className="flex items-center gap-2 mb-4">
                                 <h2 className="text-xl font-bold text-white">
-                                    Web3 Wallet <span className="text-xs font-normal text-gray-400">(Optional)</span>
+                                    Wallet
                                 </h2>
                                 <div className="relative group">
                                     <svg
@@ -1335,7 +1335,7 @@ const Dashboard: React.FC = () => {
                                                         >
                                                             <div>
                                                                 <p className="text-white text-sm font-bold">{balance.denom}</p>
-                                                                <p className="text-gray-400 text-xs">Cosmos Chain</p>
+                                                                <p className="text-gray-400 text-xs">Block 52 Chain</p>
                                                             </div>
                                                             <div className="text-right">
                                                                 <div className="flex items-baseline gap-2">
