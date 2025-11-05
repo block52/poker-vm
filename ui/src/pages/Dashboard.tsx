@@ -1364,8 +1364,10 @@ const Dashboard: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <div className="text-right">
-                                                        <p className="text-lg font-bold" style={{ color: colors.brand.secondary }}>
-                                                            $$
+                                                        <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
+                                                            $ {cosmosWallet.balance.length > 0 ? (parseInt(cosmosWallet.balance[0].amount) / 1000000).toFixed(6) : "0.00"}
+                                                            
+                                                            {/* Remove or fix */}
                                                             {cosmosWallet.balance.map((balance, idx) => {
 
                                                                 console.log("Balance Denom:", balance.denom);
