@@ -13,8 +13,10 @@ import CosmosWalletPage from "./components/CosmosWalletPage";
 import BlocksPage from "./pages/explorer/BlocksPage";
 import BlockDetailPage from "./pages/explorer/BlockDetailPage";
 import TransactionPage from "./pages/explorer/TransactionPage";
+import AddressPage from "./pages/explorer/AddressPage";
 import TestSigningPage from "./pages/TestSigningPage";
 import { GameStateProvider } from "./context/GameStateContext";
+import { NetworkProvider } from "./context/NetworkContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
 import FaviconSetter from "./components/FaviconSetter";
@@ -62,6 +64,7 @@ function AppContent() {
                 <Route path="/explorer" element={<BlocksPage />} />
                 <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
+                <Route path="/explorer/address/:address" element={<AddressPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer
@@ -87,9 +90,11 @@ function App() {
         <Router>
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-                    <GameStateProvider>
-                        <AppContent />
-                    </GameStateProvider>
+                    <NetworkProvider>
+                        <GameStateProvider>
+                            <AppContent />
+                        </GameStateProvider>
+                    </NetworkProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </Router>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
+import { ClickableAddress } from "../../components/explorer/ClickableAddress";
 
 // Types from CosmosClient
 interface CosmosBlock {
@@ -385,15 +386,8 @@ export default function BlockDetailPage() {
 
             <div>
               <p className="text-gray-400 text-sm mb-1">Proposer Address</p>
-              <p
-                className="font-mono text-sm cursor-pointer transition-colors duration-200"
-                style={{ color: colors.brand.primary }}
-                onClick={() => copyToClipboard(block.block.header.proposer_address)}
-                onMouseEnter={(e) => e.currentTarget.style.color = colors.accent.glow}
-                onMouseLeave={(e) => e.currentTarget.style.color = colors.brand.primary}
-                title="Click to copy"
-              >
-                {truncateHash(block.block.header.proposer_address, 20)}
+              <p className="font-mono text-sm">
+                <ClickableAddress address={block.block.header.proposer_address} />
               </p>
             </div>
 
@@ -487,15 +481,8 @@ export default function BlockDetailPage() {
                         {txDetails.from && (
                           <div>
                             <p className="text-gray-400 text-xs mb-1">From</p>
-                            <p
-                              className="font-mono text-sm cursor-pointer transition-colors duration-200"
-                              style={{ color: colors.brand.primary }}
-                              onClick={() => copyToClipboard(txDetails.from!)}
-                              onMouseEnter={(e) => e.currentTarget.style.color = colors.accent.glow}
-                              onMouseLeave={(e) => e.currentTarget.style.color = colors.brand.primary}
-                              title="Click to copy address"
-                            >
-                              {txDetails.from}
+                            <p className="font-mono text-sm">
+                              <ClickableAddress address={txDetails.from} showFull={true} />
                             </p>
                           </div>
                         )}
@@ -503,15 +490,8 @@ export default function BlockDetailPage() {
                         {txDetails.to && (
                           <div>
                             <p className="text-gray-400 text-xs mb-1">To</p>
-                            <p
-                              className="font-mono text-sm cursor-pointer transition-colors duration-200"
-                              style={{ color: colors.brand.primary }}
-                              onClick={() => copyToClipboard(txDetails.to!)}
-                              onMouseEnter={(e) => e.currentTarget.style.color = colors.accent.glow}
-                              onMouseLeave={(e) => e.currentTarget.style.color = colors.brand.primary}
-                              title="Click to copy address"
-                            >
-                              {txDetails.to}
+                            <p className="font-mono text-sm">
+                              <ClickableAddress address={txDetails.to} showFull={true} />
                             </p>
                           </div>
                         )}
