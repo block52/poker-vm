@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
+import { renderJSONWithClickableAddresses } from "../../components/explorer/ClickableAddress";
 
 // Types for Cosmos transaction
 interface CosmosTransaction {
@@ -307,7 +308,7 @@ export default function TransactionPage() {
                                                 </div>
                                                 <div>
                                                     <label className="block text-gray-400 text-xs font-semibold mb-1">Data</label>
-                                                    <pre
+                                                    <div
                                                         className="p-3 rounded text-xs overflow-auto font-mono text-gray-300"
                                                         style={{
                                                             backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
@@ -315,8 +316,8 @@ export default function TransactionPage() {
                                                             maxHeight: "300px"
                                                         }}
                                                     >
-                                                        {JSON.stringify(msg, null, 2)}
-                                                    </pre>
+                                                        {renderJSONWithClickableAddresses(msg)}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
