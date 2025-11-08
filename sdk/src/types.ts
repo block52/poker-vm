@@ -73,10 +73,11 @@ declare global {
 export const COSMOS_CONSTANTS = {
   CHAIN_ID: "pokerchain",
   ADDRESS_PREFIX: "b52",
-  TOKEN_DENOM: "b52usdc",
-  USDC_DECIMALS: 6, // 1 USDC = 1,000,000 b52usdc
-  GAME_CREATION_COST: 1, // 1 b52usdc = 0.000001 USDC
-  DEFAULT_GAS_PRICE: "0.025b52usdc"
+  GAS_DENOM: "stake", // Gas token (price = 0, free transactions)
+  TOKEN_DENOM: "usdc", // Bridged USDC from Base Chain (playing token)
+  USDC_DECIMALS: 6, // 1 USDC = 1,000,000 usdc
+  GAME_CREATION_COST: 1, // 1 usdc = 0.000001 USDC
+  DEFAULT_GAS_PRICE: "0stake" // Gas is free (price = 0)
 } as const;
 
 // Define the game creation parameters interface
@@ -103,8 +104,8 @@ export interface CosmosConfig {
   restEndpoint: string;
   chainId: string;
   prefix: string;
-  denom: string; // This will be "b52USDC"
-  gasPrice: string;
+  denom: string; // Playing token denomination (e.g., "usdc" - bridged from Base Chain)
+  gasPrice: string; // Gas price with denom (e.g., "0stake" for free gas, or "0.025stake")
   mnemonic?: string;
 }
 

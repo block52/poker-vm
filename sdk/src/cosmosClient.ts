@@ -374,3 +374,20 @@ export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConf
     denom: "usdc", // Use usdc as the denomination (lowercase, as stored on blockchain)
     gasPrice: "0.001usdc" // Gas price in usdc (not used in REST-only mode)
 });
+
+// Re-export types and constants for convenience
+export {
+    COSMOS_CONSTANTS,
+    type CosmosConfig,
+    type Coin,
+    type AccountResponse,
+    type TxResponse,
+    type BlockResponse,
+    type GameState,
+    type Game,
+    type LegalAction,
+    type GameStateResponse,
+    type GameResponse,
+    type ListGamesResponse,
+    type PlayerGamesResponse
+} from "./types";

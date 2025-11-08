@@ -18,7 +18,10 @@
         "prepublishOnly": "yarn clean && yarn build",
         "test": "jest",
         "lint": "eslint src --ext .ts,.tsx",
-        "lint:fix": "eslint src --ext .ts,.tsx --fix"
+        "lint:fix": "eslint src --ext .ts,.tsx --fix",
+        "proto:generate": "./regenerate-proto-types.sh",
+        "proto:update-deps": "./update-dependencies.sh",
+        "proto:full": "./regenerate-proto-types.sh && ./update-dependencies.sh"
     },
     "keywords": [
         "poker",
@@ -40,8 +43,14 @@
     },
     "homepage": "https://github.com/block52/poker-vm#readme",
     "devDependencies": {
+        "@rollup/plugin-commonjs": "^28.0.1",
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-node-resolve": "^15.3.0",
+        "@rollup/plugin-typescript": "^12.1.1",
         "@types/jest": "^30.0.0",
         "@types/node": "^22.7.6",
+        "rimraf": "^6.0.1",
+        "rollup": "^4.28.1",
         "ts-jest": "^29.4.4",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.2"

@@ -8,8 +8,8 @@ export const DEFAULT_COSMOS_CONFIG: CosmosConfig = {
     rpcEndpoint: "http://localhost:26657",
     restEndpoint: "http://localhost:1317",
     chainId: "pokerchain",
-    denom: "b52USD",
-    gasPrice: "0.025",
+    denom: "usdc", // Bridged USDC from Base Chain (playing token)
+    gasPrice: "0stake", // Gas is free (stake token, price = 0)
 };
 
 /**
@@ -20,20 +20,8 @@ export const TEST_COSMOS_CONFIG: CosmosConfig = {
     rpcEndpoint: "http://localhost:36657",
     restEndpoint: "http://localhost:1318",
     chainId: "pokerchain-test",
-    denom: "b52USD",
-    gasPrice: "0.01",
-};
-
-/**
- * Development configuration
- */
-export const DEV_COSMOS_CONFIG: CosmosConfig = {
-    rpcEndpoint: "http://localhost:26657",
-    restEndpoint: "http://localhost:1317",
-    chainId: "poker-vm-dev",
-    prefix: "poker",
-    denom: "upvm",
-    gasPrice: "0.025upvm"
+    denom: "usdc", // Bridged USDC from Base Chain (playing token)
+    gasPrice: "0stake", // Gas is free (stake token, price = 0)
 };
 
 /**
@@ -64,41 +52,4 @@ export const getCosmosConfig = (): CosmosConfig => {
         default:
             return DEFAULT_COSMOS_CONFIG;
     }
-};
-
-/**
- * Validate Cosmos configuration
- */
-export const validateCosmosConfig = (config: CosmosConfig): void => {
-    if (!config.rpcEndpoint) {
-        throw new Error("Cosmos RPC endpoint is required");
-    }
-
-    if (!config.chainId) {
-        throw new Error("Cosmos chain ID is required");
-    }
-
-    if (!config.prefix) {
-        throw new Error("Cosmos address prefix is required");
-    }
-
-    if (!config.denom) {
-        throw new Error("Cosmos denomination is required");
-    }
-
-    if (!config.gasPrice) {
-        throw new Error("Cosmos gas price is required");
-    }
-};
-
-/**
- * Environment variables documentation
- */
-export const COSMOS_ENV_VARS = {
-    COSMOS_RPC_ENDPOINT: "Cosmos SDK RPC endpoint (e.g., http://localhost:26657)",
-    COSMOS_CHAIN_ID: "Cosmos chain ID (e.g., poker-vm-1)",
-    COSMOS_PREFIX: "Address prefix (e.g., poker)",
-    COSMOS_DENOM: "Token denomination (e.g., upvm)",
-    COSMOS_GAS_PRICE: "Gas price (e.g., 0.025upvm)",
-    COSMOS_MNEMONIC: "Mnemonic for signing transactions (optional, for development only)"
 };
