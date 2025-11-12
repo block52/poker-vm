@@ -39,14 +39,16 @@ export async function joinTable(tableId: string, options: JoinTableOptions): Pro
             restEndpoint,
             chainId: COSMOS_CONSTANTS.CHAIN_ID,
             prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-            denom: "stake", // Gas token (changed from "stake")
+            denom: "stake", // Gas token (use "stake" for testnet)
             gasPrice: "0.025stake"
         },
         mnemonic
     );
 
-    // Convert buy-in amount from string to bigint
-    const buyInAmount = BigInt(options.amount);
+    // Convert buy-in amount from USDC to micro-USDC (b52usdc)
+    // options.amount is in USDC (e.g., "5.00"), need to convert to micro-units (e.g., 5000000)
+    const amountInUsdc = parseFloat(options.amount);
+    const buyInAmount = BigInt(Math.floor(amountInUsdc * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
 
     // If seatNumber is not provided, default to 0
     const seat = options.seatNumber !== undefined && options.seatNumber !== null
