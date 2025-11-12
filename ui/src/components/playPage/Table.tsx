@@ -817,13 +817,21 @@ const Table = React.memo(() => {
                                     style={{ backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5), border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}` }}
                                 >
                                     <span className="text-sm font-semibold" style={{ color: colors.brand.primary }}>
-                                        {gameState?.type === "cash"
-                                            ? "Cash • "
-                                            : gameState?.type === "tournament"
-                                            ? "Tournament • "
-                                            : gameState?.type === "sit-and-go"
-                                            ? "Sit & Go • "
-                                            : ""}
+                                        {(() => {
+                                            console.log("🎮 Table Header - Game Type Debug:", {
+                                                rawType: gameState?.type,
+                                                typeOf: typeof gameState?.type,
+                                                isCash: gameState?.type === "cash",
+                                                isSitAndGo: gameState?.type === "sit-and-go",
+                                                isTournament: gameState?.type === "tournament",
+                                                gameOptions: gameState?.gameOptions
+                                            });
+
+                                            if (gameState?.type === "cash") return "Cash • ";
+                                            if (gameState?.type === "tournament") return "Tournament • ";
+                                            if (gameState?.type === "sit-and-go") return "Sit & Go • ";
+                                            return "";
+                                        })()}
                                         Texas Hold'em
                                         {gameOptions.minPlayers && gameOptions.maxPlayers && (
                                             <span className="ml-1" style={{ color: colors.ui.textSecondary }}>
