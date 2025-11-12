@@ -18,7 +18,11 @@ import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
 
-const PokerActionPanel: React.FC = React.memo(() => {
+interface PokerActionPanelProps {
+    onTransactionSubmitted?: (txHash: string | null) => void;
+}
+
+const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransactionSubmitted }) => {
     const { id: tableId } = useParams<{ id: string }>();
 
     // Detect mobile landscape orientation
@@ -95,6 +99,14 @@ const PokerActionPanel: React.FC = React.memo(() => {
     const minRaise = useMemo(() => (raiseAction ? Number(raiseAction.min || "0") / 1_000_000 : 0), [raiseAction]);
     const maxRaise = useMemo(() => (raiseAction ? Number(raiseAction.max || "0") / 1_000_000 : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(callAction.min || "0") / 1_000_000 : 0), [callAction]);
+
+    // Helper function to wrap action handlers and capture transaction hashes
+    const handleActionWithTransaction = async (actionFn: () => Promise<string | null>) => {
+        const txHash = await actionFn();
+        if (txHash && onTransactionSubmitted) {
+            onTransactionSubmitted(txHash);
+        }
+    };
 
     // // Do as bigint
     // const bigintMinBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.min || "0", 18)) : 0n), [betAction]);
@@ -195,8 +207,11 @@ const PokerActionPanel: React.FC = React.memo(() => {
 
         try {
             console.log("🎰 Attempting to post small blind:", smallBlindAmount);
-            await postSmallBlind(tableId, smallBlindAmount);
+            const result = await postSmallBlind(tableId, smallBlindAmount);
             console.log("✅ Small blind posted successfully");
+            if (result?.hash && onTransactionSubmitted) {
+                onTransactionSubmitted(result.hash);
+            }
         } catch (error: any) {
             console.error("❌ Failed to post small blind:", error);
             alert(`Failed to post small blind: ${error.message}`);
@@ -209,7 +224,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
         if (!bigBlindAmount) return;
 
-        await postBigBlind(tableId, bigBlindAmount);
+        const result = await postBigBlind(tableId, bigBlindAmount);
+        if (result?.hash && onTransactionSubmitted) {
+            onTransactionSubmitted(result.hash);
+        }
     };
 
     const handleBet = async () => {
@@ -219,7 +237,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const amountMicrounits = (raiseAmount * 1_000_000).toString();
 
         try {
-            await betHand(tableId, amountMicrounits);
+            const result = await betHand(tableId, amountMicrounits);
+            if (result?.hash && onTransactionSubmitted) {
+                onTransactionSubmitted(result.hash);
+            }
         } catch (error: any) {
             console.error("Failed to bet:", error);
         }
@@ -232,7 +253,10 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const amountMicrounits = (raiseAmount * 1_000_000).toString();
 
         try {
-            await raiseHand(tableId, amountMicrounits);
+            const result = await raiseHand(tableId, amountMicrounits);
+            if (result?.hash && onTransactionSubmitted) {
+                onTransactionSubmitted(result.hash);
+            }
         } catch (error: any) {
             console.error("Failed to raise:", error);
         }
@@ -271,7 +295,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleDeal(tableId)}
+                            onClick={() => handleActionWithTransaction(() => handleDeal(tableId))}
                             className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -292,7 +316,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {gameState?.round === TexasHoldemRound.END && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleStartNewHand(tableId)}
+                            onClick={() => handleActionWithTransaction(() => handleStartNewHand(tableId))}
                             className="btn-new-hand text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -312,7 +336,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {hasMuckAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleMuck(tableId)}
+                            onClick={() => handleActionWithTransaction(() => handleMuck(tableId))}
                             className="btn-muck text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -332,7 +356,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                 {hasShowAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleShow(tableId)}
+                            onClick={() => handleActionWithTransaction(() => handleShow(tableId))}
                             className="btn-show text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -382,7 +406,7 @@ const PokerActionPanel: React.FC = React.memo(() => {
                                     className="btn-fold cursor-pointer active:scale-105
 px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm
 transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
-                                    onClick={() => handleFold(tableId)}
+                                    onClick={() => handleActionWithTransaction(() => handleFold(tableId))}
                                 >
                                     FOLD
                                 </button>
@@ -406,7 +430,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                                     ? "px-2 py-0.5 text-[10px] min-w-[50px]"
                                                     : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]"
                                             }`}
-                                            onClick={() => handleFold(tableId)}
+                                            onClick={() => handleActionWithTransaction(() => handleFold(tableId))}
                                         >
                                             FOLD
                                         </button>
@@ -425,7 +449,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)] ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
-                                            onClick={() => handleCheck(tableId)}
+                                            onClick={() => handleActionWithTransaction(() => handleCheck(tableId))}
                                         >
                                             CHECK
                                         </button>
@@ -436,7 +460,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                             transition-all duration-200 font-medium transform active:scale-105 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
-                                            onClick={() => handleCall(callAction, callAmount, tableId)}
+                                            onClick={() => handleActionWithTransaction(() => handleCall(callAction, callAmount, tableId))}
                                         >
                                             CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span>
                                         </button>

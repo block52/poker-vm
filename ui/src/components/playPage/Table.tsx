@@ -55,6 +55,7 @@ import OppositePlayerCards from "./Card/OppositePlayerCards";
 import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
+import TransactionPopup from "./common/TransactionPopup";
 
 import Chip from "./common/Chip";
 import TurnAnimation from "./Animations/TurnAnimation";
@@ -230,6 +231,23 @@ const Table = React.memo(() => {
     // Zoom is now managed by useTableLayout hook
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+
+    // Transaction popup state
+    const [recentTxHash, setRecentTxHash] = useState<string | null>(null);
+
+    // Callback to show transaction popup
+    const handleTransactionSubmitted = useCallback((txHash: string | null) => {
+        if (txHash) {
+            setRecentTxHash(txHash);
+            // Auto-refresh balance after transaction
+            fetchAccountBalance();
+        }
+    }, [fetchAccountBalance]);
+
+    // Callback to close transaction popup
+    const handleCloseTransactionPopup = useCallback(() => {
+        setRecentTxHash(null);
+    }, []);
 
     // Use the hook directly instead of getting it from context
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
@@ -1142,7 +1160,7 @@ const Table = React.memo(() => {
                         }`}
                     >
                         <div className={`w-full flex justify-center items-center h-full ${isMobileLandscape ? "max-w-[500px] px-2" : "max-w-[700px]"}`}>
-                            <PokerActionPanel />
+                            <PokerActionPanel onTransactionSubmitted={handleTransactionSubmitted} />
                         </div>
                         {/* <div className="w-full h-[400px] flex justify-center overflow-y-auto">
                             <Footer2 tableId={id} />
@@ -1387,6 +1405,12 @@ const Table = React.memo(() => {
             <div className="fixed bottom-2 left-2 z-40 opacity-60">
                 <CosmosStatus />
             </div>
+
+            {/* Transaction Popup - Bottom Right */}
+            <TransactionPopup
+                txHash={recentTxHash}
+                onClose={handleCloseTransactionPopup}
+            />
         </div>
     );
 });

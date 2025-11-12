@@ -24,7 +24,8 @@ module.exports = {
                 fall: "fall 1s ease-out forwards", // Custom animation for falling
                 progress: "progress 1s ease-out forwards", // Custom animation for falling
                 "slide-left-to-right": "leftToRight 1s ease-out forwards",
-                "slide-top-to-bottom": "topToBottom 1s ease-out forwards"
+                "slide-top-to-bottom": "topToBottom 1s ease-out forwards",
+                "slide-in-bottom-right": "slideInBottomRight 0.3s ease-out forwards"
             },
             keyframes: {
                 fall: {
@@ -64,6 +65,16 @@ module.exports = {
                     },
                     "100%": {
                         transform: "translateY(0)", // End at original position
+                        opacity: "1" // Fully visible
+                    }
+                },
+                slideInBottomRight: {
+                    "0%": {
+                        transform: "translate(100%, 100%)", // Start from bottom-right off-screen
+                        opacity: "0" // Fully transparent
+                    },
+                    "100%": {
+                        transform: "translate(0, 0)", // End at original position
                         opacity: "1" // Fully visible
                     }
                 }
