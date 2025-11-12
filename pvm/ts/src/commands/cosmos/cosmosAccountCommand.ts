@@ -1,5 +1,5 @@
 import { DEFAULT_COSMOS_CONFIG } from "../../state/cosmos/config";
-import { getCosmosClient, type AccountResponse } from "@bitcoinbrisbane/block52";
+import { getCosmosClient } from "@bitcoinbrisbane/block52";
 import { signResult } from "../abstractSignedCommand";
 import { ISignedCommand, ISignedResponse } from "../interfaces";
 import { Coin } from "@cosmjs/amino";
