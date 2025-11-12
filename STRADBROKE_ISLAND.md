@@ -1147,7 +1147,59 @@ validActions := []PlayerActionType{
 cd pokerchain && make install
 ```
 
-**Status:** ✅ **FIXED** - "deal" action now recognized as valid. Ready for testing!
+**Test Results:**
+After rebuilding pokerchain and restarting node 1:
+
+1. **Deal Action - SUCCESS** ✅
+   - Transaction: `42158B209A94D0AF0D88D5C1540E495859F55942785C32AEA0690882DC0CA992`
+   - Status: SUCCESS
+   - Gas Used: 133,835 / 200,000
+   - Cards dealt to both players
+   - Round advanced from "ante" to "preflop"
+   - PVM logs confirm: `Executing deal command...` and `Broadcasted game state update`
+
+2. **Call Action After Deal - SUCCESS** ✅
+   - Transaction: `F8CE4B0A2E442C80D8A27584D77778C8CCD13BBDF32C6A1073F3599C73B73A16`
+   - Status: SUCCESS
+   - Gas Used: 141,137 / 200,000
+   - Seat 2 called 10,000 (matching big blind)
+   - Pot increased from 30,000 → 40,000
+   - Game state updated: both players now have 20,000 in sumOfBets
+   - Next to act: Seat 1 (big blind)
+
+**Status:** ✅ **FULLY WORKING!** Deal action fixed and tested end-to-end!
+
+### Bug #7: WebSocket State Updates Not Reflecting in UI - INVESTIGATING
+
+**Symptom:**
+- Transactions succeed on blockchain (deal, call)
+- PVM processes actions and broadcasts WebSocket updates
+- BUT UI doesn't update automatically - requires manual page refresh
+- Cards show as "??" instead of actual card values
+
+**PVM Logs Show Broadcasting:**
+```
+Broadcasting game state update for table 0xda417ea874dc087e22aadacd4f905fd9bd952a0150c4e18196da06929a9a904a to 2 players
+📝 Logged OUTGOING GAME_STATE_UPDATE for b521y2gg... (2053 bytes)
+📝 Logged OUTGOING BROADCAST_SENT_SUCCESS for b521y2gg... (122 bytes)
+Broadcasted game state update after performing action: deal
+```
+
+**Error in PVM Logs:**
+```
+Failed to parse hole cards: ??,?? Error: Invalid card mnemonic: ??
+    at Function.fromString (/poker-vm/pvm/ts/src/models/deck.ts:140:19)
+```
+
+**Observations:**
+- PVM IS sending WebSocket broadcasts after each action
+- GameStateContext in React should receive and update
+- Problem might be:
+  1. WebSocket connection issue (not receiving messages)
+  2. React state not updating from WebSocket messages
+  3. Card values being sent as "??" (hidden) breaking PVM parsing
+
+**Status:** Investigating WebSocket message flow and card display logic
 
 ---
 
