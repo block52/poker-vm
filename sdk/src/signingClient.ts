@@ -331,6 +331,56 @@ export class SigningCosmosClient extends CosmosClient {
     }
 
     /**
+     * Process a bridge deposit by querying the Ethereum contract for the deposit index
+     * This replaces auto-sync with manual index-based processing
+     */
+    async processDeposit(depositIndex: number): Promise<string> {
+        await this.initializeSigningClient();
+
+        if (!this.signingClient || !this.wallet) {
+            throw new Error("Signing client not initialized");
+        }
+
+        const [account] = await this.wallet.getAccounts();
+        const creator = account.address;
+
+        // Create the message object
+        const msgProcessDeposit = {
+            creator,
+            depositIndex: Long.fromNumber(depositIndex, true)
+        };
+
+        // Create the transaction message
+        const msg: EncodeObject = {
+            typeUrl: "/pokerchain.poker.v1.MsgProcessDeposit",
+            value: msgProcessDeposit
+        };
+
+        const fee = calculateFee(300_000, this.gasPrice); // Higher gas for Ethereum RPC call
+        const memo = `Process bridge deposit index ${depositIndex}`;
+
+        console.log("🌉 Processing deposit:", {
+            depositIndex,
+            creator
+        });
+
+        try {
+            const result = await this.signingClient.signAndBroadcast(
+                creator,
+                [msg],
+                fee,
+                memo
+            );
+
+            console.log("✅ Process deposit transaction successful:", result.transactionHash);
+            return result.transactionHash;
+        } catch (error) {
+            console.error("❌ Process deposit failed:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Get next action index for a game - matches original client pattern
      * Checks previousActions array first, falls back to actionCount + 1
      */

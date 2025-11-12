@@ -1365,39 +1365,21 @@ const Dashboard: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <div className="text-right">
                                                         <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
-                                                            $ {cosmosWallet.balance.length > 0 ? (parseInt(cosmosWallet.balance[0].amount) / 1000000).toFixed(6) : "0.00"}
-                                                            
-                                                            {/* Remove or fix */}
-                                                            {cosmosWallet.balance.map((balance, idx) => {
+                                                            {(() => {
+                                                                // Find USDC balance specifically
+                                                                const usdcBalance = cosmosWallet.balance.find(b => b.denom === "usdc");
 
-                                                                console.log("Balance Denom:", balance.denom);
-
-                                                                // Format balance with proper decimals (6 for micro-denominated tokens)
-                                                                const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
-                                                                
-                                                                const numericAmount = isMicroDenom
-                                                                    ? Number(balance.amount) / 1_000_000
-                                                                    : Number(balance.amount);
-
-                                                                // const displayAmount = numericAmount.toLocaleString("en-US", {
-                                                                //     minimumFractionDigits: 2,
-                                                                //     maximumFractionDigits: 6
-                                                                // });
-
-                                                                // For usdc, show USD equivalent
-                                                                const isUSDC = balance.denom === "usdc";
-                                                                const usdValue = isUSDC
-                                                                    ? numericAmount.toLocaleString("en-US", {
-                                                                          style: "currency",
-                                                                          currency: "USD",
-                                                                          minimumFractionDigits: 2,
-                                                                          maximumFractionDigits: 2
-                                                                      })
-                                                                    : null;
-
-                                                                // return <span key={idx}>${usdValue}</span>;
-                                                                return isUSDC ? <span key={idx}>${usdValue}</span> : "$0.00";
-                                                            })}
+                                                                if (usdcBalance) {
+                                                                    const amount = Number(usdcBalance.amount) / 1_000_000;
+                                                                    return amount.toLocaleString("en-US", {
+                                                                        style: "currency",
+                                                                        currency: "USD",
+                                                                        minimumFractionDigits: 2,
+                                                                        maximumFractionDigits: 6
+                                                                    });
+                                                                }
+                                                                return "$0.00";
+                                                            })()}
                                                         </p>
                                                     </div>
                                                     <button
@@ -1535,6 +1517,57 @@ const Dashboard: React.FC = () => {
                                                 />
                                             </svg>
                                             Block Explorer
+                                        </a>
+                                        <a
+                                            href="/bridge/manual"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm underline transition duration-300 hover:opacity-80 flex items-center gap-1"
+                                            style={{ color: colors.brand.primary }}
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                                                />
+                                            </svg>
+                                            Manual Bridge Trigger
+                                        </a>
+                                        <a
+                                            href="/test-signing"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm underline transition duration-300 hover:opacity-80 flex items-center gap-1"
+                                            style={{ color: colors.brand.primary }}
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                />
+                                            </svg>
+                                            Test Signing Page
+                                        </a>
+                                        <a
+                                            href="/bridge/admin"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm underline transition duration-300 hover:opacity-80 flex items-center gap-1"
+                                            style={{ color: colors.brand.primary }}
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                                                />
+                                            </svg>
+                                            Bridge Admin Dashboard
                                         </a>
                                     </div>
                                 </div>

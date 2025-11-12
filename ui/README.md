@@ -40,9 +40,50 @@ The following environment variables can be configured in your `.env` file:
     -   Example: `https://mainnet.infura.io/v3/YOUR_API_KEY`
     -   Used in: QR deposit functionality
 
+-   **`VITE_ALCHEMY_URL`** (required for bridge admin)
+
+    -   Alchemy API endpoint for Base Chain (Layer 2)
+    -   Example: `https://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY`
+    -   **How to get your API key:**
+        1. Go to [https://www.alchemy.com/](https://www.alchemy.com/)
+        2. Sign up for a free account
+        3. Create a new app on "Base Mainnet"
+        4. Copy the HTTPS endpoint URL
+    -   Used in: Bridge Admin Dashboard (`/admin/bridge-dashboard`) to query deposit events from Base Chain bridge contract
+    -   **Best practices:**
+        -   Use the free tier for development (300M compute units/month)
+        -   Never commit your API key to version control
+        -   Use different API keys for development and production
+        -   Enable "Base Mainnet" network when creating your Alchemy app
+        -   Monitor usage in Alchemy dashboard to avoid rate limits
+    -   **Error handling:** The Bridge Admin Dashboard will display a warning banner if this variable is not configured
+    -   **Fallback:** Falls back to `VITE_MAINNET_RPC_URL` if not set, but this is not recommended for production
+
 -   **`VITE_ETHERSCAN_API_KEY`** (optional)
     -   Etherscan API key for blockchain queries
     -   Used in: QR deposit functionality for transaction verification
+
+### Cosmos/Pokerchain Integration
+
+-   **`VITE_COSMOS_REST_URL`** (required for bridge)
+
+    -   Cosmos SDK REST API endpoint (LCD endpoint)
+    -   Development: `http://localhost:1317`
+    -   Production: `https://block52.xyz`
+    -   Used in: Bridge Admin Dashboard to query processed deposit status
+
+-   **`VITE_COSMOS_RPC_URL`** (required for bridge)
+
+    -   Cosmos Tendermint RPC endpoint
+    -   Development: `http://localhost:26657`
+    -   Production: `https://block52.xyz/rpc`
+    -   Used in: Signing transactions on Pokerchain
+
+-   **`VITE_COSMOS_GRPC_URL`** (optional)
+    -   Cosmos gRPC endpoint
+    -   Development: `http://localhost:9090`
+    -   Production: `grpcs://block52.xyz:9443`
+    -   Used in: Advanced blockchain queries
 
 ### Payment Integration
 

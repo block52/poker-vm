@@ -15,6 +15,8 @@ import BlockDetailPage from "./pages/explorer/BlockDetailPage";
 import TransactionPage from "./pages/explorer/TransactionPage";
 import AddressPage from "./pages/explorer/AddressPage";
 import TestSigningPage from "./pages/TestSigningPage";
+import ManualBridgeTrigger from "./pages/ManualBridgeTrigger";
+import BridgeAdminDashboard from "./pages/BridgeAdminDashboard";
 import { GameStateProvider } from "./context/GameStateContext";
 import { NetworkProvider } from "./context/NetworkContext";
 import { generateCSSVariables } from "./utils/colorConfig";
@@ -61,6 +63,8 @@ function AppContent() {
                 <Route path="/qr-deposit" element={<QRDeposit />} />
                 <Route path="/wallet" element={<CosmosWalletPage />} />
                 <Route path="/test-signing" element={<TestSigningPage />} />
+                <Route path="/bridge/manual" element={<ManualBridgeTrigger />} />
+                <Route path="/bridge/admin" element={<BridgeAdminDashboard />} />
                 <Route path="/explorer" element={<BlocksPage />} />
                 <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />

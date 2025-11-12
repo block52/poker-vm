@@ -103,7 +103,7 @@ export default function TestSigningPage() {
             console.log("   REST:   ", currentNetwork.rest);
             console.log("   Chain:  ", "pokerchain");
             console.log("   Prefix: ", "b52");
-            console.log("   Denom:  ", "b52Token");
+            console.log("   Denom:  ", "stake");
             console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
             // Create wallet from mnemonic
@@ -120,8 +120,8 @@ export default function TestSigningPage() {
                 restEndpoint: currentNetwork.rest,
                 chainId: "pokerchain",
                 prefix: "b52",
-                denom: "b52Token", // Native gas token (changed from 'stake' Oct 18, 2025)
-                gasPrice: "0.01b52Token", // Must match validator minimum-gas-prices
+                denom: "stake", // Native gas token for local testnet
+                gasPrice: "0.01stake", // Must match validator minimum-gas-prices
                 wallet: hdWallet
             });
 
@@ -611,7 +611,7 @@ export default function TestSigningPage() {
                         </div>
                         <div className="ml-4 space-y-2">
                             <div>
-                                <span className="font-semibold" style={{ color: colors.brand.primary }}>1. b52Token</span> - For gas fees
+                                <span className="font-semibold" style={{ color: colors.brand.primary }}>1. stake</span> - For gas fees
                                 <div className="text-xs text-gray-400 ml-4 mt-1">
                                     • Used to pay for ALL blockchain transactions
                                     <br />
@@ -619,7 +619,7 @@ export default function TestSigningPage() {
                                     <br />
                                     • Get from: Faucet or genesis account
                                     <br />
-                                    • Note: Changed from 'stake' to 'b52Token' on Oct 18, 2025
+                                    • Note: Local testnet uses 'stake' denomination
                                 </div>
                             </div>
                             <div>
@@ -639,13 +639,75 @@ export default function TestSigningPage() {
                                 <div># Option 1: Use genesis account (has tokens by default)</div>
                                 <div className="text-gray-500">pokerchaind keys list</div>
                                 <div className="mt-2"># Option 2: Send from another account</div>
-                                <div className="text-gray-500">pokerchaind tx bank send [from] {walletAddress || "[your-address]"} 1000000b52Token</div>
+                                <div className="text-gray-500">pokerchaind tx bank send [from] {walletAddress || "[your-address]"} 1000000stake</div>
                                 <div className="mt-2"># Option 3: Bridge USDC from Base Chain</div>
                                 <div className="text-gray-500">Use the bridge at /deposit page</div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Validator Funding Section - Primary Method for Fresh Testnet */}
+                {walletAddress && (
+                    <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={{
+                        backgroundColor: hexToRgba(colors.accent.warning, 0.1),
+                        border: `2px solid ${hexToRgba(colors.accent.warning, 0.4)}`
+                    }}>
+                        <h2 className="text-2xl font-bold mb-4" style={{ color: colors.accent.warning }}>
+                            ⚡ Fund from Validator (Recommended for Fresh Testnet)
+                        </h2>
+                        <div className="space-y-4">
+                            <div className="text-sm text-gray-300">
+                                <p className="mb-2">
+                                    <strong className="text-white">Why use the validator account instead of alice/bob/charlie/diana?</strong>
+                                </p>
+                                <ul className="list-disc ml-5 space-y-1 text-gray-400">
+                                    <li>The <span className="font-mono text-white">validator</span> account is created during testnet initialization and gets funded with tokens automatically</li>
+                                    <li>Genesis accounts (alice, bob, etc.) are only created if you run <span className="font-mono">ignite chain serve</span></li>
+                                    <li>When running <span className="font-mono">run-local-testnet.sh</span>, only the validator exists in the keyring</li>
+                                    <li>The validator keyring is stored at <span className="font-mono">~/.pokerchain-testnet/node1</span> (not the default location)</li>
+                                </ul>
+                            </div>
+
+                            <div className="p-4 rounded-lg" style={{
+                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                border: `1px solid ${hexToRgba(colors.accent.warning, 0.3)}`
+                            }}>
+                                <div className="font-semibold text-white mb-2">📋 Copy this command:</div>
+                                <div className="text-xs font-mono text-gray-400 mb-3 break-all">
+                                    pokerchaind tx bank send validator {walletAddress} 100000000stake --chain-id pokerchain --keyring-backend test --home ~/.pokerchain-testnet/node1 --fees 2000stake -y
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        const command = `pokerchaind tx bank send validator ${walletAddress} 100000000stake --chain-id pokerchain --keyring-backend test --home ~/.pokerchain-testnet/node1 --fees 2000stake -y`;
+                                        navigator.clipboard.writeText(command);
+                                        alert(`Validator funding command copied!\n\nThis will send 100 stake to your wallet for gas fees.\n\n${command}`);
+                                    }}
+                                    className="w-full py-3 px-4 text-sm font-semibold rounded-lg transition duration-200 hover:opacity-90 active:scale-95"
+                                    style={{
+                                        backgroundColor: colors.accent.warning,
+                                        color: colors.ui.bgDark
+                                    }}
+                                >
+                                    📋 Copy Validator Funding Command (100 stake for gas)
+                                </button>
+                            </div>
+
+                            <div className="p-3 rounded text-xs" style={{
+                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                            }}>
+                                <div className="font-semibold text-white mb-2">🔑 Key Differences from Test Accounts Below:</div>
+                                <div className="space-y-1 text-gray-400">
+                                    <div>• <span className="text-white font-mono">validator</span> instead of <span className="font-mono">alice/bob/etc.</span></div>
+                                    <div>• Requires <span className="text-white font-mono">--home ~/.pokerchain-testnet/node1</span> flag</div>
+                                    <div>• Only exists when using <span className="font-mono">run-local-testnet.sh</span></div>
+                                    <div>• Has unlimited tokens (can fund as much as needed)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Test Accounts Section */}
                 {walletAddress && (
@@ -654,7 +716,7 @@ export default function TestSigningPage() {
                         border: `1px solid ${hexToRgba(colors.accent.success, 0.3)}`
                     }}>
                         <h2 className="text-xl font-bold mb-4" style={{ color: colors.accent.success }}>
-                            🏦 Test Accounts - Send Tokens to Your Wallet
+                            🏦 Test Accounts - Send Tokens (Only for Ignite Serve)
                         </h2>
                         <div className="text-sm text-gray-300 mb-4">
                             Click "Copy Command" to copy the CLI command, then run it in your terminal where pokerchaind is running.
@@ -670,7 +732,7 @@ export default function TestSigningPage() {
                                 <div><span className="text-gray-300">pokerchaind tx bank send</span> - Send tokens command</div>
                                 <div><span className="text-gray-300">[from]</span> - Source account name (alice, bob, etc.)</div>
                                 <div><span className="text-gray-300">[to]</span> - Your wallet address (destination)</div>
-                                <div><span className="text-gray-300">[amount][denom]</span> - Amount + token type (10000000b52Token or 50000000usdc)</div>
+                                <div><span className="text-gray-300">[amount][denom]</span> - Amount + token type (10000000stake or 50000000usdc)</div>
                                 <div><span className="text-gray-300">--chain-id pokerchain</span> - Blockchain network ID</div>
                                 <div><span className="text-gray-300">--keyring-backend test</span> - Use test keyring (for development)</div>
                                 <div><span className="text-gray-300">-y</span> - Auto-confirm transaction (skip prompt)</div>
@@ -693,13 +755,13 @@ export default function TestSigningPage() {
                                         </span>
                                     </div>
                                     <div className="space-y-3">
-                                        {/* b52Token command */}
+                                        {/* stake command */}
                                         <div>
                                             <div className="text-xs text-gray-400 mb-1 font-mono">
-                                                pokerchaind tx bank send {account.name} {walletAddress.substring(0, 10)}... 10000000b52Token
+                                                pokerchaind tx bank send {account.name} {walletAddress.substring(0, 10)}... 10000000stake
                                             </div>
                                             <button
-                                                onClick={() => copyCommand(account.name, "b52Token", "10000000")}
+                                                onClick={() => copyCommand(account.name, "stake", "10000000")}
                                                 className="w-full py-2 px-3 text-xs font-medium rounded transition duration-200 hover:opacity-80"
                                                 style={{
                                                     backgroundColor: hexToRgba(colors.brand.primary, 0.2),
@@ -707,7 +769,7 @@ export default function TestSigningPage() {
                                                     color: colors.brand.primary
                                                 }}
                                             >
-                                                📋 Copy: Send 10 b52Token (gas)
+                                                📋 Copy: Send 10 stake (gas)
                                             </button>
                                         </div>
                                         {/* usdc command */}
@@ -796,7 +858,7 @@ export default function TestSigningPage() {
                                     </div>
                                     <div className="flex justify-between text-gray-300">
                                         <span className="text-gray-400">Gas Denom:</span>
-                                        <span className="text-white">b52Token</span>
+                                        <span className="text-white">stake</span>
                                     </div>
                                 </div>
                             </div>
@@ -819,7 +881,7 @@ export default function TestSigningPage() {
                                     <div className="ml-4 space-y-2">
                                         {balances.map((balance, idx) => {
                                             // Format balance with proper decimals (6 for micro-denominated tokens)
-                                            const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
+                                            const isMicroDenom = balance.denom === "usdc";
                                             const numericAmount = isMicroDenom
                                                 ? Number(balance.amount) / 1_000_000
                                                 : Number(balance.amount);
@@ -927,7 +989,7 @@ export default function TestSigningPage() {
                                             style={inputStyle}
                                         >
                                             <option value="usdc">usdc (poker tokens)</option>
-                                            <option value="b52Token">b52Token (gas tokens)</option>
+                                            <option value="stake">stake (gas tokens)</option>
                                         </select>
                                     </div>
                                 </div>
