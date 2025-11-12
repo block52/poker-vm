@@ -537,8 +537,8 @@ const Table = React.memo(() => {
         setOpenSidebar(!openSidebar);
     }, [openSidebar]);
 
-    // Memoize formatted balance
-    const balanceFormatted = useMemo(() => (accountBalance ? formatWeiToUSD(accountBalance) : "0.00"), [accountBalance]);
+    // Memoize formatted balance - Cosmos returns microunits (6 decimals)
+    const balanceFormatted = useMemo(() => (accountBalance ? formatUSDCToSimpleDollars(accountBalance) : "0.00"), [accountBalance]);
 
     const potDisplayValues = useMemo(() => {
         const pots = Array.isArray(gameState?.pots) ? (gameState?.pots as string[]) : [];

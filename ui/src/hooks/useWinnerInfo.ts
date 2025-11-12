@@ -1,6 +1,6 @@
 import { useGameStateContext } from "../context/GameStateContext";
 import { PlayerDTO, TexasHoldemStateDTO, WinnerDTO } from "@bitcoinbrisbane/block52";
-import { formatWeiToDollars } from "../utils/numberUtils";
+import { formatUSDCToSimpleDollars } from "../utils/numberUtils";
 import { WinnerInfoReturn } from "../types/index";
 
 /**
@@ -21,7 +21,7 @@ function getWinnerInfo(gameData: TexasHoldemStateDTO) {
                 seat: player?.seat || 0,
                 address: winner.address,
                 amount: winner.amount.toString(),
-                formattedAmount: formatWeiToDollars(winner.amount.toString()),
+                formattedAmount: formatUSDCToSimpleDollars(winner.amount.toString()),
                 winType: "showdown"
             };
         });
