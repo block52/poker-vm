@@ -48,8 +48,6 @@ export const ClickableAddress: React.FC<ClickableAddressProps> = ({ address, cla
  * Detects any string that looks like a Cosmos address and makes it clickable
  */
 export const renderJSONWithClickableAddresses = (obj: any, depth = 0): JSX.Element => {
-    const navigate = useNavigate();
-
     if (obj === null || obj === undefined) {
         return <span className="text-gray-500">null</span>;
     }

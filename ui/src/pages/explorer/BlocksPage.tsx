@@ -50,7 +50,7 @@ export default function BlocksPage() {
 
       // Determine error type and provide helpful guidance
       if (err.message?.includes("timeout")) {
-        errorMessage = `Request timeout after 10 seconds`;
+        errorMessage = "Request timeout after 10 seconds";
         if (currentNetwork.name === "Localhost") {
           suggestion = " - Check if 'ignite chain serve' is running";
         } else {

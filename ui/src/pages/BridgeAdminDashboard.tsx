@@ -122,9 +122,9 @@ export default function BridgeAdminDashboard() {
                         const txHashInput = `${bridgeContractAddress}-${deposit.index}`;
                         const encoder = new TextEncoder();
                         const data = encoder.encode(txHashInput);
-                        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
                         const hashArray = Array.from(new Uint8Array(hashBuffer));
-                        const txHash = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                        const txHash = "0x" + hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
                         // Query Cosmos to see if this txHash has been processed
                         const response = await fetch(

@@ -105,7 +105,7 @@ export default function AddressPage() {
                 let errorMessage = "Failed to fetch address data";
 
                 if (err.message?.includes("timeout")) {
-                    errorMessage = `Request timeout - network may be slow`;
+                    errorMessage = "Request timeout - network may be slow";
                 } else if (err.code === "ERR_NETWORK" || err.message?.includes("ECONNREFUSED")) {
                     errorMessage = `Cannot connect to ${currentNetwork.name}`;
                 } else if (err.message) {
