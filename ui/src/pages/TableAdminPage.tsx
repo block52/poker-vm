@@ -26,6 +26,7 @@ interface TableData {
     timeout: number;
     status: string;
     creator: string;
+    createdAt?: string;
 }
 
 // Helper function to format USDC amounts (6 decimals)
@@ -48,20 +49,31 @@ export default function TableAdminPage() {
     const [smallBlind, setSmallBlind] = useState("0.01");
     const [bigBlind, setBigBlind] = useState("0.02");
 
+    // Success modal state
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
+
     // Transform fetched games to TableData format
-    const tables: TableData[] = fetchedGames.map((game: any) => ({
-        gameId: game.address || game.gameId || game.game_id,
-        gameType: game.gameType || game.game_type || "texas-holdem",
-        minPlayers: game.minPlayers || game.min_players || 2,
-        maxPlayers: game.maxPlayers || game.max_players || 6,
-        minBuyIn: game.minBuyIn || game.min_buy_in || "0",
-        maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
-        smallBlind: game.smallBlind || game.small_blind || "0",
-        bigBlind: game.bigBlind || game.big_blind || "0",
-        timeout: game.timeout || 60,
-        status: game.status || "waiting",
-        creator: game.creator || "unknown"
-    }));
+    const tables: TableData[] = fetchedGames
+        .map((game: any) => ({
+            gameId: game.address || game.gameId || game.game_id,
+            gameType: game.gameType || game.game_type || "texas-holdem",
+            minPlayers: game.minPlayers || game.min_players || 2,
+            maxPlayers: game.maxPlayers || game.max_players || 6,
+            minBuyIn: game.minBuyIn || game.min_buy_in || "0",
+            maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
+            smallBlind: game.smallBlind || game.small_blind || "0",
+            bigBlind: game.bigBlind || game.big_blind || "0",
+            timeout: game.timeout || 60,
+            status: game.status || "waiting",
+            creator: game.creator || "unknown",
+            createdAt: game.createdAt || game.created_at
+        }))
+        // Sort by creation date (newest first)
+        .sort((a, b) => {
+            if (!a.createdAt || !b.createdAt) return 0;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
 
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
@@ -82,7 +94,9 @@ export default function TableAdminPage() {
             });
 
             if (txHash) {
-                toast.success(`Table created successfully! TX: ${txHash.substring(0, 10)}...`);
+                // Show success modal with transaction link
+                setSuccessTxHash(txHash);
+                setShowSuccessModal(true);
 
                 // Wait a moment then reload tables
                 setTimeout(() => {
@@ -259,6 +273,9 @@ export default function TableAdminPage() {
                                         Table ID
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                        Created
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                         Game Type
                                     </th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -281,7 +298,7 @@ export default function TableAdminPage() {
                             <tbody className="divide-y divide-gray-700">
                                 {tables.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                                        <td colSpan={8} className="px-6 py-8 text-center text-gray-400">
                                             {isLoading ? "Loading tables..." : "No tables found. Create your first table!"}
                                         </td>
                                     </tr>
@@ -305,6 +322,20 @@ export default function TableAdminPage() {
                                                         </svg>
                                                     </button>
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {table.createdAt ? (
+                                                    <div className="text-xs">
+                                                        <div className="text-white font-medium">
+                                                            {new Date(table.createdAt).toLocaleDateString()}
+                                                        </div>
+                                                        <div className="text-gray-400">
+                                                            {new Date(table.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-500 text-xs">-</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="text-white capitalize">{table.gameType.replace("-", " ")}</span>
@@ -373,6 +404,70 @@ export default function TableAdminPage() {
                     </a>
                 </div>
             </div>
+
+            {/* Success Modal */}
+            {showSuccessModal && successTxHash && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                    <div className="bg-gray-800 border border-green-500 rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
+                        <div className="flex items-center justify-center mb-6">
+                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+                                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <h2 className="text-2xl font-bold text-white text-center mb-4">
+                            Table Created Successfully!
+                        </h2>
+
+                        <p className="text-gray-300 text-center mb-6">
+                            Your poker table has been created on the blockchain.
+                        </p>
+
+                        <div className="bg-gray-900 rounded-lg p-4 mb-6">
+                            <p className="text-gray-400 text-sm mb-2">Transaction Hash:</p>
+                            <div className="flex items-center justify-between gap-2">
+                                <code className="text-green-400 text-xs font-mono break-all">
+                                    {successTxHash}
+                                </code>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(successTxHash);
+                                        toast.success("Transaction hash copied!");
+                                    }}
+                                    className="p-2 text-gray-400 hover:text-white transition-colors flex-shrink-0"
+                                    title="Copy transaction hash"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <a
+                                href={`/explorer/tx/${successTxHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
+                            >
+                                View on Explorer
+                            </a>
+                            <button
+                                onClick={() => {
+                                    setShowSuccessModal(false);
+                                    setSuccessTxHash(null);
+                                }}
+                                className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -66,24 +66,15 @@ export const useNewTable = (): UseNewTableReturn => {
             const minBuyInB52USDC = BigInt(Math.floor(gameOptions.minBuyIn * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
             const maxBuyInB52USDC = BigInt(Math.floor(gameOptions.maxBuyIn * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
 
-            // Calculate blind values based on game type
-            let smallBlindB52USDC: bigint;
-            let bigBlindB52USDC: bigint;
+            // Convert blind values from dollars to micro-units
+            const smallBlindB52USDC = BigInt(Math.floor(gameOptions.smallBlind * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
+            const bigBlindB52USDC = BigInt(Math.floor(gameOptions.bigBlind * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
 
-            if (gameOptions.type === GameType.SIT_AND_GO || gameOptions.type === GameType.TOURNAMENT) {
-                // For Sit & Go and Tournament: Fixed starting blinds
-                // 0.01 USDC small blind, 0.02 USDC big blind
-                smallBlindB52USDC = BigInt(10000); // 0.01 USDC in micro-units
-                bigBlindB52USDC = BigInt(20000);   // 0.02 USDC in micro-units
-
-                console.log("🎮 Sit & Go Tournament Settings:");
-                console.log(`  Entry Fee: $${gameOptions.minBuyIn}`);
-                console.log(`  Starting Blinds: ${smallBlindB52USDC}/${bigBlindB52USDC} uusdc`);
-            } else {
-                // For cash games: 1% of min/max buy-in
-                smallBlindB52USDC = minBuyInB52USDC / 100n;
-                bigBlindB52USDC = maxBuyInB52USDC / 100n;
-            }
+            console.log("🎮 Game Settings:");
+            console.log(`  Game Type: ${gameOptions.type}`);
+            console.log(`  Entry Fee: $${gameOptions.minBuyIn} - $${gameOptions.maxBuyIn}`);
+            console.log(`  Blinds: $${gameOptions.smallBlind}/$${gameOptions.bigBlind} (input)`);
+            console.log(`  Blinds: ${smallBlindB52USDC}/${bigBlindB52USDC} uusdc (converted)`);
 
             console.log("📊 Final game parameters:");
             console.log(`  Game Type: ${gameOptions.type}`);

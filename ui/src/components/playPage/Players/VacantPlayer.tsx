@@ -59,14 +59,18 @@ import { joinTable } from "../../../hooks/playerActions/joinTable";
 import { useGameOptions } from "../../../hooks/useGameOptions";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
+import { formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
+import { useCosmosWallet } from "../../../hooks";
 
 const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo(
     ({ left, top, index, onJoin, uiPosition }) => {
         const { isUserAlreadyPlaying, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
+        const cosmosWallet = useCosmosWallet();
 
         const [showConfirmModal, setShowConfirmModal] = useState(false);
+        const [showBuyInModal, setShowBuyInModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
         const [joinSuccess, setJoinSuccess] = useState(false);
@@ -98,39 +102,51 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             }
         }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
 
-        const handleConfirmSeat = useCallback(async () => {
+        // Step 1: Confirm seat selection
+        const handleConfirmSeatYes = useCallback(() => {
+            // Close confirmation modal and open buy-in modal
+            setShowConfirmModal(false);
+            setShowBuyInModal(true);
+        }, []);
+
+        // Step 2: Handle buy-in confirmation and join
+        const handleBuyInConfirm = useCallback(async () => {
             if (!tableId) {
                 setJoinError("Missing table ID");
                 return;
             }
 
-            // Get buy-in amount from localStorage or use max buy-in from game options
-            let buyInAmount = localStorage.getItem("buy_in_amount");
-            if (!buyInAmount) {
-                // No saved amount, use max buy-in from game options (already in microunits)
-                const maxBuyInMicro = gameOptions?.maxBuyIn;
-                if (!maxBuyInMicro) {
-                    setJoinError("Unable to determine buy-in amount");
-                    return;
-                }
-                buyInAmount = maxBuyInMicro;
-                localStorage.setItem("buy_in_amount", buyInAmount);
+            // Get buy-in amount from game options (for Sit & Go it's fixed)
+            const buyInMicrounits = gameOptions?.maxBuyIn;
+            if (!buyInMicrounits) {
+                setJoinError("Unable to determine buy-in amount");
+                return;
             }
+
+            // Convert microunits to dollar amount
+            const buyInDollars = formatUSDCToSimpleDollars(buyInMicrounits);
 
             setIsJoining(true);
             setJoinError(null);
             setJoinSuccess(false);
 
             try {
-                // joinTable expects amount in microunits (string)
+                console.log("🪑 VacantPlayer - Joining seat:", {
+                    seat: index,
+                    buyInDollars: buyInDollars,
+                    buyInMicrounits: buyInMicrounits
+                });
+
+                // joinTable expects amount in USDC dollar format (e.g., "5.00")
+                // The hook will convert it to microunits internally
                 const response = await joinTable(tableId, {
-                    amount: buyInAmount,
+                    amount: buyInDollars,
                     seatNumber: index
                 });
 
                 setJoinResponse(response);
                 setJoinSuccess(true);
-                setShowConfirmModal(false);
+                setShowBuyInModal(false);
                 setIsJoining(false);
 
                 // Call onJoin after successful join
@@ -225,6 +241,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                     </div>
                 )}
 
+                {/* Step 1: Simple confirmation modal */}
                 {showConfirmModal && (
                     <div
                         className="fixed inset-0 flex items-center justify-center z-50"
@@ -239,20 +256,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             onClick={e => e.stopPropagation()}
                         >
                             <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>Join Seat {index}</h3>
-                            
-                            {joinError && (
-                                <div 
-                                    className="mb-4 p-3 rounded-lg text-sm"
-                                    style={{
-                                        backgroundColor: colors.accent.danger + "30",
-                                        color: colors.accent.danger + "aa",
-                                        border: `1px solid ${colors.accent.danger}20`
-                                    }}
-                                >
-                                    {joinError}
-                                </div>
-                            )}
-                            
+
                             <p className="mb-6 text-center" style={{ color: colors.ui.textSecondary + "dd" }}>
                                 Ready to join at seat {index}?
                             </p>
@@ -265,14 +269,111 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                         backgroundColor: colors.ui.textSecondary,
                                         color: "white"
                                     }}
-                                    disabled={isJoining}
                                 >
                                     No
                                 </button>
                                 <button
-                                    onClick={handleConfirmSeat}
+                                    onClick={handleConfirmSeatYes}
+                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 transform shadow-md"
+                                    style={{
+                                        background: colors.brand.primary,
+                                        color: "white",
+                                    }}
+                                >
+                                    Yes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 2: Sit & Go Buy-in modal */}
+                {showBuyInModal && gameOptions && (
+                    <div
+                        className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+                        onClick={() => !isJoining && setShowBuyInModal(false)}
+                    >
+                        <div
+                            className="p-8 rounded-xl w-96 shadow-2xl"
+                            style={{
+                                backgroundColor: colors.ui.bgDark,
+                                border: `1px solid ${colors.ui.borderColor}`
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <h3 className="text-2xl font-bold mb-4 text-white text-center">
+                                Sit & Go Buy-In
+                            </h3>
+
+                            {/* Fixed Buy-In Amount */}
+                            <div className="mb-6 p-4 rounded-lg border-2" style={{
+                                backgroundColor: colors.ui.bgMedium,
+                                borderColor: colors.brand.primary
+                            }}>
+                                <div className="text-center">
+                                    <div className="text-xs text-gray-400 mb-1">Required Buy-In</div>
+                                    <div className="text-3xl font-bold text-white">
+                                        ${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-1">Fixed amount for this tournament</div>
+                                </div>
+                            </div>
+
+                            {/* User Balance */}
+                            <div className="mb-6">
+                                <div className="text-xs text-gray-400 mb-2">Your USDC Balance:</div>
+                                {cosmosWallet.balance.map((balance, idx) => {
+                                    if (balance.denom === "usdc") {
+                                        const usdcAmount = Number(balance.amount) / 1_000_000;
+                                        return (
+                                            <div key={idx} className="p-3 rounded-lg" style={{
+                                                backgroundColor: colors.ui.bgMedium + "80",
+                                                border: `1px solid ${colors.ui.borderColor}`
+                                            }}>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-white font-semibold">USDC</span>
+                                                    <span className={`text-lg font-bold ${usdcAmount >= parseFloat(formatUSDCToSimpleDollars(gameOptions.maxBuyIn)) ? "text-green-400" : "text-red-400"}`}>
+                                                        ${usdcAmount.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </div>
+
+                            {/* Error Message */}
+                            {joinError && (
+                                <div
+                                    className="mb-4 p-3 rounded-lg text-sm"
+                                    style={{
+                                        backgroundColor: colors.accent.danger + "30",
+                                        color: colors.accent.danger,
+                                        border: `1px solid ${colors.accent.danger}40`
+                                    }}
+                                >
+                                    ⚠️ {joinError}
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex justify-center space-x-3">
+                                <button
+                                    onClick={() => setShowBuyInModal(false)}
+                                    className="px-6 py-3 text-sm rounded-lg transition duration-300"
+                                    style={{
+                                        backgroundColor: colors.ui.textSecondary,
+                                        color: "white"
+                                    }}
                                     disabled={isJoining}
-                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 transform shadow-md flex items-center"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleBuyInConfirm}
+                                    disabled={isJoining}
+                                    className="px-6 py-3 text-sm rounded-lg transition duration-300 flex items-center"
                                     style={{
                                         background: colors.brand.primary,
                                         color: "white",
@@ -296,7 +397,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             Joining...
                                         </>
                                     ) : (
-                                        "Yes"
+                                        "Confirm & Join"
                                     )}
                                 </button>
                             </div>

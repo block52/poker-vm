@@ -83,6 +83,11 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     const { emptySeatIndexes, isUserAlreadyPlaying } = useVacantSeatData();
     const navigate = useNavigate();
 
+    // Detect if this is a Sit & Go game (fixed buy-in where min = max)
+    const isSitAndGo = useMemo(() => {
+        return minBuyInWei === maxBuyInWei;
+    }, [minBuyInWei, maxBuyInWei]);
+
     // Memoize formatted values and calculations
     const {
         minBuyInFormatted,
@@ -95,7 +100,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         console.log("🎰 BuyInModal - Using buy-in values:", {
             fromProps: { minBuyIn, maxBuyIn },
             fromHook: { min: hookBuyIns.minBuyInWei, max: hookBuyIns.maxBuyInWei },
-            finalUsed: { minBuyInWei, maxBuyInWei }
+            finalUsed: { minBuyInWei, maxBuyInWei },
+            isSitAndGo
         });
 
         // Format USDC microunits (6 decimals) from Cosmos
@@ -113,6 +119,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         console.log("  maxFormatted:", maxFormatted);
         console.log("  USDC balance from wallet:", usdcBalance?.amount);
         console.log("  balanceFormatted (dollars):", balance);
+        console.log("  isSitAndGo:", isSitAndGo);
 
         // Calculate stake label from max buy-in
         const bigBlind = parseFloat(maxFormatted) / 100;
@@ -127,7 +134,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             minBuyInNumber: parseFloat(minFormatted),
             maxBuyInNumber: parseFloat(maxFormatted)
         };
-    }, [minBuyInWei, maxBuyInWei, cosmosWallet.balance, minBuyIn, maxBuyIn, hookBuyIns.minBuyInWei, hookBuyIns.maxBuyInWei]);
+    }, [minBuyInWei, maxBuyInWei, cosmosWallet.balance, minBuyIn, maxBuyIn, hookBuyIns.minBuyInWei, hookBuyIns.maxBuyInWei, isSitAndGo]);
 
     // Initialize buyInAmount with maxBuyInFormatted
     const [buyInAmount, setBuyInAmount] = useState(() => maxBuyInFormatted);
@@ -379,46 +386,63 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
                 {/* Buy-In Amount Selection */}
                 <div className="mb-6">
-                    <label className="block text-gray-300 mb-2 font-medium text-sm">Select Buy-In Amount</label>
-                    <div className="flex justify-between gap-2 mb-2">
-                        <button
-                            onClick={handleMaxClick}
-                            className="flex-1 py-2 text-sm text-white rounded transition duration-200"
-                            style={STATIC_STYLES.button}
-                            onMouseEnter={handleButtonMouseEnter}
-                            onMouseLeave={handleButtonMouseLeave}
-                        >
-                            MAX
-                            <br />
-                            {maxBuyInFormatted}
-                        </button>
-                        <button
-                            onClick={handleMinClick}
-                            className="flex-1 py-2 text-sm text-white rounded transition duration-200"
-                            style={STATIC_STYLES.button}
-                            onMouseEnter={handleButtonMouseEnter}
-                            onMouseLeave={handleButtonMouseLeave}
-                        >
-                            MIN
-                            <br />
-                            {minBuyInFormatted}
-                        </button>
-                        <div className="flex-1">
-                            <label style={{ color: colors.ui.textSecondary }} className="text-xs block mb-1 text-center">
-                                OTHER
-                            </label>
-                            <input
-                                type="number"
-                                value={buyInAmount}
-                                onChange={e => handleBuyInChange(e.target.value)}
-                                className="w-full p-2 text-white rounded-lg text-sm text-center focus:outline-none"
-                                style={STATIC_STYLES.input}
-                                onFocus={handleInputFocus}
-                                onBlur={handleInputBlur}
-                                placeholder="0.00"
-                            />
+                    <label className="block text-gray-300 mb-2 font-medium text-sm">
+                        {isSitAndGo ? "Fixed Buy-In (Sit & Go)" : "Select Buy-In Amount"}
+                    </label>
+                    {isSitAndGo ? (
+                        // Sit & Go: Show fixed buy-in amount (non-editable)
+                        <div className="p-4 rounded-lg border-2" style={{
+                            backgroundColor: colors.ui.bgMedium,
+                            borderColor: colors.brand.primary
+                        }}>
+                            <div className="text-center">
+                                <div className="text-xs text-gray-400 mb-1">Required Buy-In</div>
+                                <div className="text-3xl font-bold text-white">${maxBuyInFormatted}</div>
+                                <div className="text-xs text-gray-400 mt-1">This is a fixed buy-in tournament</div>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        // Cash Game: Allow user to choose buy-in amount
+                        <div className="flex justify-between gap-2 mb-2">
+                            <button
+                                onClick={handleMaxClick}
+                                className="flex-1 py-2 text-sm text-white rounded transition duration-200"
+                                style={STATIC_STYLES.button}
+                                onMouseEnter={handleButtonMouseEnter}
+                                onMouseLeave={handleButtonMouseLeave}
+                            >
+                                MAX
+                                <br />
+                                {maxBuyInFormatted}
+                            </button>
+                            <button
+                                onClick={handleMinClick}
+                                className="flex-1 py-2 text-sm text-white rounded transition duration-200"
+                                style={STATIC_STYLES.button}
+                                onMouseEnter={handleButtonMouseEnter}
+                                onMouseLeave={handleButtonMouseLeave}
+                            >
+                                MIN
+                                <br />
+                                {minBuyInFormatted}
+                            </button>
+                            <div className="flex-1">
+                                <label style={{ color: colors.ui.textSecondary }} className="text-xs block mb-1 text-center">
+                                    OTHER
+                                </label>
+                                <input
+                                    type="number"
+                                    value={buyInAmount}
+                                    onChange={e => handleBuyInChange(e.target.value)}
+                                    className="w-full p-2 text-white rounded-lg text-sm text-center focus:outline-none"
+                                    style={STATIC_STYLES.input}
+                                    onFocus={handleInputFocus}
+                                    onBlur={handleInputBlur}
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+                    )}
                     {buyInError && (
                         <p style={{ color: colors.accent.danger }} className="mt-2">
                             ⚠️ {buyInError}
