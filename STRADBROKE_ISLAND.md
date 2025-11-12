@@ -879,6 +879,216 @@ If you have 0 b52Token, you need to fund your wallet. Options:
 
 ---
 
+## ✅ Phase 8: Game Type & Action Fixes (Nov 12, 2025)
+
+### Bug #3: Cash Games Showing as "Sit & Go" (FIXED ✅)
+
+**Symptom:**
+- Created Cash game but UI displayed "Sit & Go • Texas Hold'em"
+- Transaction showed correct `"game_type": "cash"`
+- But game state had `"type": "sit-and-go"`
+
+**Root Cause:**
+Two places were hardcoding the game type:
+1. **msg_server_create_game.go:94** - Hardcoded `GameTypeTexasHoldem` when creating game
+2. **msg_server_perform_action.go:134** - Hardcoded `GameTypeSitAndGo` when calling PVM
+
+**The Fix:**
+1. Added missing constants to `types.go`:
+   ```go
+   GameTypeCash        GameType = "cash"
+   GameTypeTournament  GameType = "tournament"
+   ```
+
+2. Fixed `msg_server_create_game.go` (lines 94-105):
+   ```go
+   // Convert string game type to GameType enum
+   var gameType types.GameType
+   switch msg.GameType {
+   case "cash":
+       gameType = types.GameTypeCash
+   case "sit-and-go":
+       gameType = types.GameTypeSitAndGo
+   case "tournament":
+       gameType = types.GameTypeTournament
+   default:
+       gameType = types.GameTypeCash
+   }
+   ```
+
+3. Fixed `msg_server_perform_action.go` (lines 125-147):
+   - Same conversion logic before passing to PVM
+   - Now uses actual game type from database
+
+**Files Changed:**
+- `pokerchain/x/poker/types/types.go` - Added constants
+- `pokerchain/x/poker/keeper/msg_server_create_game.go` - Fixed game creation
+- `pokerchain/x/poker/keeper/msg_server_perform_action.go` - Fixed PVM calls
+
+**Test Results:**
+- ✅ Created Cash game shows "Cash • Texas Hold'em"
+- ✅ Game state has `"type": "cash"` correctly
+- ✅ PVM logs show `'type': 'cash'` throughout
+- ✅ WebSocket broadcasts correct game type
+
+---
+
+### Bug #4: Post Small Blind Fails with 501 Error (FIXED ✅)
+
+**Symptom:**
+- Clicking "Post Small Blind" button failed
+- Error: `Failed to query game state: Not Implemented (501)`
+- PVM actually executed the action successfully!
+- But Cosmos transaction failed due to SDK error
+
+**Root Cause:**
+SDK's `performAction()` method was trying to query game state from REST API to calculate action index:
+```typescript
+// OLD CODE - Causing 501 error:
+const nextActionIndex = await this.getNextActionIndex(gameId);
+// This queried: /pokerchain/poker/v1/game_state?game_id=...
+// But correct URL is: /block52/pokerchain/poker/v1/game_state/{id}
+```
+
+**The Problem:**
+1. SDK was querying REST API unnecessarily
+2. URL was wrong (missing `/block52` prefix, using query param instead of path)
+3. Action index isn't even needed - keeper calculates it automatically!
+4. `MsgPerformAction` proto only has: player, game_id, action, amount (no index field)
+
+**The Fix:**
+Removed unnecessary game state query from SDK:
+```typescript
+// NEW CODE - No query needed:
+async performAction(gameId: string, action: string, amount: bigint = 0n) {
+    // Create the message (keeper calculates action index)
+    const msgPerformAction = {
+        player,
+        gameId,
+        action,
+        amount: Long.fromString(amount.toString(), true)
+    };
+    // ... sign and broadcast
+}
+```
+
+**Files Changed:**
+- `poker-vm/sdk/src/signingClient.ts:279-327` - Removed getNextActionIndex() call
+- `poker-vm/ui/src/components/Footer.tsx:190-204` - Added error handling
+
+**Why This Works:**
+- The keeper's `msg_server_perform_action.go` calculates action index itself
+- It uses: `actionIndex = gameState.ActionCount + len(gameState.PreviousActions) + 1`
+- The PVM already has the current game state
+- No need to query from REST API!
+
+---
+
+### Bug #5: Post Small Blind Out of Gas (FIXED ✅)
+
+**Symptom:**
+- Post small blind transaction failed with code 11 (out of gas)
+- Gas Used: 133,995
+- Gas Limit: 100,000 ❌
+- But PVM successfully executed the action!
+
+**Transaction Details:**
+```json
+{
+  "hash": "482139A90D5E67C13A864DD29322851508B3B47E97E1AA1173AB79B8D1347C7D",
+  "status": "FAILED (code 11)",
+  "gas_used": 133995,
+  "gas_wanted": 100000
+}
+```
+
+**PVM Logs Showed Success:**
+```javascript
+Updated Game State: {
+  players: [{
+    seat: 2,
+    stack: '990000',  // Reduced from 1,000,000
+    sumOfBets: '20000',
+    lastAction: {
+      action: 'post-small-blind',
+      amount: '10000'
+    }
+  }],
+  pots: [ '10000' ]  // Pot has the blind!
+}
+```
+
+**The Fix:**
+Increased gas limit in SDK from 100,000 to 200,000:
+```typescript
+// poker-vm/sdk/src/signingClient.ts
+const fee = calculateFee(200_000, this.gasPrice);  // Was 100_000
+```
+
+**Files Changed:**
+- `poker-vm/sdk/src/signingClient.ts` - Increased all gas limits to 200,000
+
+**Why Higher Gas:**
+- Poker actions call PVM via HTTP
+- Keeper does token transfers
+- More complex than simple send transaction
+- 200,000 gas provides safe buffer
+
+**Next Steps:**
+1. Restart UI (yarn dev --force) ✅ DONE
+2. Restart PVM (yarn dev) ✅ DONE
+3. Refresh browser and test "Post Small Blind" ✅ DONE
+4. Should now succeed on blockchain AND in PVM! ✅ SUCCESS!
+
+**Test Results (Nov 12, 2025 - 6:35 PM):**
+
+✅ **Post Small Blind** - WORKING PERFECTLY!
+- Transaction: `FF72CC05F5C95FCD49F3FDBEF9DF4AE56904C418C26FDC41D9E522A4F39C85F2`
+- Status: SUCCESS
+- Gas Used: 133,995 / 200,000 (within limit!)
+- Player 2 stack: 1,000,000 → 990,000 ✅
+- Pot: 0 → 10,000 ✅
+- PVM executed action successfully ✅
+
+✅ **Post Big Blind** - WORKING PERFECTLY!
+- Transaction: `5B0E104A8A2B8E13917E99970A95B6A7949FA8E16052838BCC2CFF1158DEBF9A`
+- Status: SUCCESS
+- Gas Used: 140,592 / 200,000
+- Player 1 stack: 1,000,000 → 980,000 ✅
+- Pot: 10,000 → 30,000 ✅
+- Game state updated via WebSocket ✅
+
+**UI Logs Confirmed:**
+```javascript
+✅ Small blind posted successfully
+✅ Post small blind transaction submitted: FF72CC05...
+
+✅ Post big blind transaction submitted: 5B0E104A...
+✅ Action transaction successful
+
+// Game state shows correct values:
+players: [
+  { seat: 1, stack: "980000", sumOfBets: "40000" },  // Big blind
+  { seat: 2, stack: "990000", sumOfBets: "20000" }   // Small blind
+],
+pots: ["30000"],
+type: "cash"  // ✅ Game type correct!
+```
+
+**Status:** ✅ **FULLY WORKING!** All three bugs fixed and verified working end-to-end!
+
+### Bug #6: Deal Action Failed (Code 1105) - INVESTIGATING
+
+**Symptom:**
+- After posting both blinds, clicking "Deal" fails
+- Transaction: `DE269575065E8FDED8935109C3C2F1D85CAA66275F0831809F2576A867913A7E`
+- Error Code: 1105 (ErrUnknownRequest or keeper handler error)
+- Gas Used: 49,197 / 200,000 (NOT out of gas)
+
+**Status:** Investigating keeper handler for deal action
+
+---
+
 ## 🐛 Bug Fixes & Investigations
 
 ### Bug #1: Invalid Action Index on Second Player Join (Oct 28, 2025)

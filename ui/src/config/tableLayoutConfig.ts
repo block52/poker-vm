@@ -1074,7 +1074,7 @@ export const calculateTableZoom = (): number => {
     
     // Final bounds check
     const result = Math.max(MIN_SCALE, Math.min(finalScale, MAX_SCALE));
-    console.log("Desktop final scale:", result);
+    // console.log("Desktop final scale:", result);
     return result;
   }
   

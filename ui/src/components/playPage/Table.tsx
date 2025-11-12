@@ -614,27 +614,27 @@ const Table = React.memo(() => {
             const isCurrentUser = playerAtThisSeat && playerAtThisSeat.address?.toLowerCase() === userWalletAddress?.toLowerCase();
 
             // Debug logging for seat assignment
-            console.log(
-                `🪑 SEAT ASSIGNMENT - Position ${positionIndex} → Seat ${seatNumber}: ` +
-                    JSON.stringify(
-                        {
-                            positionIndex: positionIndex,
-                            startIndex: startIndex,
-                            calculatedSeat: seatNumber,
-                            playerFound: playerAtThisSeat
-                                ? {
-                                      address: playerAtThisSeat.address?.substring(0, 10) + "...",
-                                      stack: playerAtThisSeat.stack,
-                                      sumOfBets: playerAtThisSeat.sumOfBets
-                                  }
-                                : null,
-                            isCurrentUser: isCurrentUser,
-                            uiPosition: { left: position.left, top: position.top }
-                        },
-                        null,
-                        2
-                    )
-            );
+            // console.log(
+            //     `🪑 SEAT ASSIGNMENT - Position ${positionIndex} → Seat ${seatNumber}: ` +
+            //         JSON.stringify(
+            //             {
+            //                 positionIndex: positionIndex,
+            //                 startIndex: startIndex,
+            //                 calculatedSeat: seatNumber,
+            //                 playerFound: playerAtThisSeat
+            //                     ? {
+            //                           address: playerAtThisSeat.address?.substring(0, 10) + "...",
+            //                           stack: playerAtThisSeat.stack,
+            //                           sumOfBets: playerAtThisSeat.sumOfBets
+            //                       }
+            //                     : null,
+            //                 isCurrentUser: isCurrentUser,
+            //                 uiPosition: { left: position.left, top: position.top }
+            //             },
+            //             null,
+            //             2
+            //         )
+            // );
 
             // Build common props shared by all player components
             const playerProps = {

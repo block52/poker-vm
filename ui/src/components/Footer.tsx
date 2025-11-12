@@ -193,7 +193,14 @@ const PokerActionPanel: React.FC = React.memo(() => {
         const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
         if (!smallBlindAmount) return;
 
-        await postSmallBlind(tableId, smallBlindAmount);
+        try {
+            console.log("🎰 Attempting to post small blind:", smallBlindAmount);
+            await postSmallBlind(tableId, smallBlindAmount);
+            console.log("✅ Small blind posted successfully");
+        } catch (error: any) {
+            console.error("❌ Failed to post small blind:", error);
+            alert(`Failed to post small blind: ${error.message}`);
+        }
     };
 
     const handlePostBigBlind = async () => {

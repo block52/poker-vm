@@ -124,7 +124,7 @@ export class SigningCosmosClient extends CosmosClient {
         }
 
         const coins = [{ denom, amount: amount.toString() }];
-        const fee = calculateFee(100_000, this.gasPrice); // Estimate gas
+        const fee = calculateFee(200_000, this.gasPrice); // Estimate gas
 
         const result = await this.signingClient.sendTokens(
             fromAddress,
@@ -274,7 +274,7 @@ export class SigningCosmosClient extends CosmosClient {
 
     /**
      * Perform a game action (fold, call, raise, etc.)
-     * Automatically tracks action index like the original client
+     * The keeper calculates the action index automatically
      */
     async performAction(gameId: string, action: string, amount: bigint = 0n): Promise<string> {
         await this.initializeSigningClient();
@@ -286,11 +286,7 @@ export class SigningCosmosClient extends CosmosClient {
         const [account] = await this.wallet.getAccounts();
         const player = account.address;
 
-        // Get next action index - follows original client pattern
-        // Check previousActions array first, fallback to actionCount
-        const nextActionIndex = await this.getNextActionIndex(gameId);
-
-        // Create the message object
+        // Create the message object (action index is calculated by the keeper)
         const msgPerformAction = {
             player,
             gameId,
@@ -304,14 +300,13 @@ export class SigningCosmosClient extends CosmosClient {
             value: msgPerformAction
         };
 
-        const fee = calculateFee(100_000, this.gasPrice);
+        const fee = calculateFee(200_000, this.gasPrice);
         const memo = `Poker action: ${action}`;
 
         console.log("🃏 Performing action:", {
             gameId,
             action,
-            amount: amount.toString(),
-            actionIndex: nextActionIndex
+            amount: amount.toString()
         });
 
         try {
@@ -459,7 +454,7 @@ export class SigningCosmosClient extends CosmosClient {
     async queryGameState(gameId: string): Promise<any> {
         try {
             const response = await fetch(
-                `${this.config.restEndpoint}/pokerchain/poker/v1/game_state?game_id=${encodeURIComponent(gameId)}`
+                `${this.config.restEndpoint}/block52/pokerchain/poker/v1/game_state/${encodeURIComponent(gameId)}`
             );
 
             if (!response.ok) {
