@@ -1,9 +1,6 @@
 import { Turn } from "../engine/types";
 
-export interface ICardDeck {
-    shuffleDeck(): void;
-    drawCard(): string;
-}
+// ICardDeck interface removed - deck logic now handled by Cosmos blockchain
 
 export interface IBetManager {
     add(action: Turn): void;

@@ -1,5 +1,5 @@
 import { Deck } from "./deck";
-import { Card, NodeRpcClient, SUIT } from "@bitcoinbrisbane/block52";
+import { Card, SUIT } from "@bitcoinbrisbane/block52";
 
 describe("Deck", () => {
     let deck: Deck;
@@ -11,7 +11,6 @@ describe("Deck", () => {
     describe("constructor", () => {
         it("should initialize with default values", () => {
             expect(deck.hash).toBeDefined();
-            expect(deck.seedHash).toBeDefined();
         });
 
         it("should initialize with standard 52-card deck", () => {
@@ -34,44 +33,32 @@ describe("Deck", () => {
             const deck = new Deck(mnemonic);
             expect(deck.toString()).toEqual(mnemonic);
         });
-    });
 
-    describe("shuffle", () => {
-        it("should shuffle cards with provided seed", () => {
-            // Create a seed array matching deck length (52 cards)
-            const seed = Array.from({ length: 52 }, (_, i) => i);
-            deck.shuffle(seed);
-
-            // Shuffling with same seed should produce same order
-            const deck2 = new Deck();
-            deck2.shuffle(seed);
-
-            expect(deck.toJson()).toEqual(deck2.toJson());
+        it("should treat empty string as undefined (create standard deck)", () => {
+            const emptyDeck = new Deck("");
+            expect(emptyDeck.toJson().cards).toHaveLength(52);
         });
 
-        it("should shuffle cards with a random seed", () => {
-            const originalCards = [...deck.toJson().cards];
-            const seed = Array.from({ length: 52 }, () => Math.floor(Math.random() * 256));
-            deck.shuffle(seed);
-
-            const shuffledCards = deck.toJson().cards;            
-            const hasChanged = shuffledCards.some((card: Card, index: number) => card.mnemonic !== originalCards[index].mnemonic);
-            expect(hasChanged).toBeTruthy();
+        it("should treat whitespace-only string as undefined (create standard deck)", () => {
+            const whitespaceDeck = new Deck("   ");
+            expect(whitespaceDeck.toJson().cards).toHaveLength(52);
         });
 
-        it("should shuffle cards with a known seed", () => {
-            const seedString = "204,183,236,54,143,190,47,3,93,174,243,141,181,3,129,168,216,114,100,96,100,35,13,88,114,64,124,160,34,245,84,174,104,68,151,167,4,9,144,151,166,197,41,5,218,195,242,115,221,146,93,85";
-            const seed = seedString.split(",").map(Number);
-            deck.shuffle(seed);
+        it("should initialize standard deck if no parameter provided", () => {
+            const standardDeck = new Deck();
+            const json = standardDeck.toJson();
+            expect(json.cards).toHaveLength(52);
+        });
 
-            const shuffledCards = deck.toJson().cards;            
-            expect(shuffledCards).toHaveLength(52);
-            expect(deck.hash).toBeDefined();
-            expect(deck.hash).toEqual("9d1ea8d620b6e6b29d44d884c3c789ebdbfcd2c8e88d50465c10a0c7d5c6ff0f")
-            expect(deck.seedHash).toBeDefined();
-            expect(deck.seedHash).toEqual("e0c15743a12c6a792080510757ff0103714f36700d44bd0fe0d28405aaff1c35");
+        it("should initialize standard deck if undefined parameter provided", () => {
+            const standardDeck = new Deck(undefined);
+            const json = standardDeck.toJson();
+            expect(json.cards).toHaveLength(52);
         });
     });
+
+    // NOTE: Shuffle tests removed - shuffling is now handled by Cosmos blockchain
+    // The Deck class is now a DTO (Data Transfer Object) for deck state only
 
     describe("getCardMnemonic", () => {
         it("should convert number cards correctly", () => {
@@ -140,25 +127,20 @@ describe("Deck", () => {
 
     describe("hash generation", () => {
         it("should create different hashes for different card orders", () => {
-            const originalHash = deck.hash;
-            const originalOrder = deck
-                .toJson()
-                .cards.map((c: Card) => c.mnemonic)
-                .join(",");
+            const standardDeck = new Deck();
+            const standardHash = standardDeck.hash;
 
-            // Use a seed that will definitely change the order
-            deck.shuffle([
-                52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,
-                16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-            ]);
+            // Create a deck with a different order (reversed)
+            const reversedDeckStr = "KS-QS-JS-TS-9S-8S-7S-6S-5S-4S-3S-2S-AS-" +
+                "KH-QH-JH-TH-9H-8H-7H-6H-5H-4H-3H-2H-AH-" +
+                "KD-QD-JD-TD-9D-8D-7D-6D-5D-4D-3D-2D-AD-" +
+                "KC-QC-JC-TC-9C-8C-7C-6C-5C-4C-3C-2C-AC";
 
-            const newOrder = deck
-                .toJson()
-                .cards.map((c: Card) => c.mnemonic)
-                .join(",");
+            const reversedDeck = new Deck(reversedDeckStr);
+            const reversedHash = reversedDeck.hash;
 
-            expect(newOrder).not.toEqual(originalOrder); // First verify cards actually changed
-            expect(deck.hash).not.toEqual(originalHash); // Then verify hash changed
+            // Different card orders should produce different hashes
+            expect(reversedHash).not.toEqual(standardHash);
         });
     });
 });

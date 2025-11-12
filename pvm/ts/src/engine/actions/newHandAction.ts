@@ -22,35 +22,34 @@ class NewHandAction extends BaseAction implements IAction {
     }
 
     // Create new hand
+    // NOTE: Deck shuffling is now handled by Cosmos blockchain
+    // This action expects a pre-shuffled deck string from Cosmos
     execute(player: Player, index: number): void {
         // First verify the action
         this.verify(player);
-        const deck = new Deck();
+
         if (!this.data || this.data.trim() === "") {
-            throw new Error("Seed data is required to create a new hand.");
+            throw new Error("Deck data is required to create a new hand.");
         }
 
         const urlSearchParams = new URLSearchParams(this.data);
-        if (!urlSearchParams.has(KEYS.SEED)) {
-            throw new Error("Seed parameter is required in the data.");
+
+        // Check if we have a pre-shuffled deck from Cosmos
+        if (urlSearchParams.has("deck")) {
+            const deckStr = urlSearchParams.get("deck") || "";
+            console.log(`New hand action with pre-shuffled deck from Cosmos`);
+            this.game.reInit(deckStr);
         }
-
-        const seedStr = urlSearchParams.get(KEYS.SEED) || "";
-        const _seed: string[] = seedStr.split("-");
-
-        console.log(`New hand action with seed: ${_seed}`);
-        
-        const seed: number[] = _seed.map(num => {
-            const parsedNum = parseInt(num, 10);
-            return isNaN(parsedNum) ? 0 : parsedNum;
-        });
-
-        if (seed.length !== 52) {
-            throw new Error("Seed must contain exactly 52 numbers separated by dashes");
+        // Legacy support: Generate deck from seed (for backwards compatibility during migration)
+        else if (urlSearchParams.has(KEYS.SEED)) {
+            console.warn("DEPRECATED: Using seed-based shuffling. Cosmos should provide pre-shuffled deck.");
+            const deckStr = urlSearchParams.get(KEYS.SEED) || "";
+            // Assume the seed parameter now contains the full shuffled deck string
+            this.game.reInit(deckStr);
         }
-
-        deck.shuffle(seed);
-        this.game.reInit(deck.toString());
+        else {
+            throw new Error("Either 'deck' or 'seed' parameter is required in the data.");
+        }
     }
 }
 

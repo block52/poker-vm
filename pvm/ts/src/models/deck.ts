@@ -3,20 +3,27 @@ import { ethers } from "ethers";
 import { IJSONModel } from "./interfaces";
 import { Card, SUIT } from "@bitcoinbrisbane/block52";
 
+/**
+ * Deck DTO - Data Transfer Object for deck state
+ * Shuffling is now handled by Cosmos blockchain
+ * This class only handles parsing and serializing deck state
+ */
 export interface IDeck {
-    shuffle(seed?: number[]): void;
     getNext(): Card;
 }
 
 export class Deck implements IDeck, IJSONModel {
-    private cards: Card[] = []; // todo: make stake
+    private cards: Card[] = [];
     public hash: string = "";
-    public seedHash: string;
     private top: number = 0;
 
     constructor(deck?: string) {
-        if (deck) {
-            const mnemonics = deck.split("-");
+        // For backwards compatibility: treat empty strings as undefined (create standard deck)
+        // In production, Cosmos will always provide a valid shuffled deck string
+        const deckStr = (deck && deck.trim() !== "") ? deck : undefined;
+
+        if (deckStr) {
+            const mnemonics = deckStr.split("-");
             if (mnemonics.length !== 52) {
                 throw new Error("Deck must contain 52 cards.");
             }
@@ -40,20 +47,6 @@ export class Deck implements IDeck, IJSONModel {
         }
 
         this.hash = ethers.ZeroHash;
-        this.createHash();
-        this.seedHash = ethers.ZeroHash;
-    }
-
-    public shuffle(seed: number[]): void {
-        this.seedHash = createHash("sha256").update(seed.toString()).digest("hex");
-
-        // Fisher-Yates shuffle
-        for (let i = this.cards.length - 1; i > 0; i--) {
-            const j = seed[i] % (i + 1);
-            [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
-        }
-
-        // Explicitly update hash after shuffling
         this.createHash();
     }
 
