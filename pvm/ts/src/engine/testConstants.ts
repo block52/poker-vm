@@ -46,6 +46,21 @@ export const baseGameConfig = {
 
 export const seed: string = "seed=29-34-15-41-5-21-9-23-37-5-17-13-11-1-40-44-16-21-42-46-41-23-34-30-48-36-32-33-40-7-9-3-30-42-2-19-24-34-24-46-2-31-10-43-49-11-29-49-49-23-14-2";
 
+// Deterministic timestamp for testing (equivalent to Cosmos block time)
+// Use this in tests to ensure reproducible results
+export const DETERMINISTIC_TIMESTAMP = 1700000000000; // Nov 15, 2023 00:00:00 GMT
+
+// Helper to get incrementing timestamps for test sequences
+let testTimestampCounter = 0;
+export const getNextTestTimestamp = (): number => {
+    return DETERMINISTIC_TIMESTAMP + (testTimestampCounter++ * 1000); // Increment by 1 second
+};
+
+// Reset timestamp counter between tests
+export const resetTestTimestamp = (): void => {
+    testTimestampCounter = 0;
+};
+
 export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasHoldemGame => {
     const previousActions: ActionDTO[] = [];
     const game = new TexasHoldemGame(

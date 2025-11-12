@@ -146,13 +146,15 @@ export class RPC {
             switch (method) {
                 // This readonly now too
                 case RPCMethods.PERFORM_ACTION: {
-                    // [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string, string, string];
-                    // params: [from, to, action, value, index, gameStateJson, gameOptionsJson, data]
-                    const [from, to, action, value, index, gameStateJson, gameOptionsJson, data] = request.params as RPCRequestParams[RPCMethods.PERFORM_ACTION];
+                    // [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string, string, string, number?];
+                    // params: [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp?]
+                    // timestamp (9th param) should be Cosmos block timestamp for deterministic gameplay
+                    const [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp] = request.params as any;
                     const gameState: TexasHoldemStateDTO = gameStateJson ? JSON.parse(gameStateJson) : null;
                     const gameOptions: GameOptions = gameOptionsJson ? JSON.parse(gameOptionsJson) : null;
                     const _action = action as PlayerActionType | NonPlayerActionType;
-                    const command = new PerformActionCommand(from, to, Number(index), BigInt(value || "0"), _action, gameState, gameOptions, data);
+                    const _timestamp = timestamp ? Number(timestamp) : undefined;
+                    const command = new PerformActionCommand(from, to, Number(index), BigInt(value || "0"), _action, gameState, gameOptions, data, _timestamp);
                     const _result = await command.execute();
 
                     return {

@@ -2306,6 +2306,74 @@ The `[8D]` marker shows the current top position for dealing.
 
 ---
 
+## ✅ Phase 9: Deterministic Timestamp Implementation (Nov 13, 2025)
+
+### Bug #5: Non-Deterministic `Date.now()` Breaking Consensus (FIXED ✅)
+
+**Symptom:**
+- PVM game logic was using `Date.now()` at `texasHoldem.ts:1137`
+- This causes non-deterministic results across validators
+- Different validators would get different timestamps
+- Breaks blockchain consensus and reproducibility
+- Tests would be flaky with random timestamps
+
+**Root Cause:**
+In blockchain game logic, all inputs MUST be deterministic. Using `Date.now()` violates this rule:
+```typescript
+// OLD CODE - NON-DETERMINISTIC ❌
+const timestamp = Date.now(); // Different on each validator!
+player.addAction({ playerId: address, action, amount, index }, timestamp);
+```
+
+**The Fix:**
+Made timestamp an explicit parameter passed from Cosmos block time through the entire call chain:
+
+1. **PVM Changes:**
+   - `texasHoldem.ts:1048` - Added optional `timestamp?: number` parameter to `performAction()`
+   - `texasHoldem.ts:1136-1140` - Use provided timestamp or fall back to Date.now() for legacy
+   - `performActionCommand.ts:21` - Added timestamp to constructor
+   - `performActionCommand.ts:44` - Pass timestamp to game engine
+   - `rpc.ts:152` - Extract timestamp from 9th RPC parameter
+   - `testConstants.ts:49-62` - Added deterministic test helpers
+
+2. **Cosmos Keeper Changes:**
+   - `msg_server_perform_action.go:166-168` - Get block timestamp with `sdkCtx.BlockTime().UnixMilli()`
+   - `msg_server_perform_action.go:181` - Add timestamp as 9th parameter in RPC call to PVM
+
+3. **Test Updates:**
+   - Created `getNextTestTimestamp()` and `resetTestTimestamp()` helpers
+   - Updated example test to use deterministic timestamps
+   - All tests pass with reproducible results
+
+**Architecture Flow:**
+```
+Cosmos Block Time → Keeper (UnixMilli) → RPC (9th param) →
+Command → Game Engine → Action Recording
+```
+
+**Files Changed:**
+- `poker-vm/pvm/ts/src/engine/texasHoldem.ts` - Added timestamp parameter
+- `poker-vm/pvm/ts/src/commands/cosmos/performActionCommand.ts` - Pass timestamp through
+- `poker-vm/pvm/ts/src/rpc.ts` - Extract timestamp from RPC params
+- `poker-vm/pvm/ts/src/engine/testConstants.ts` - Deterministic test helpers
+- `poker-vm/pvm/ts/src/engine/texasHoldem-round-has-eneded.test.ts` - Example test update
+- `pokerchain/x/poker/keeper/msg_server_perform_action.go` - Pass block timestamp to PVM
+
+**Test Results:**
+- ✅ Cosmos block timestamp flows to PVM (e.g., `timestamp: 1762989840398`)
+- ✅ All validators use same timestamp for consensus
+- ✅ Game replays produce identical results
+- ✅ Tests are deterministic and reproducible
+- ✅ Backwards compatible (timestamp optional with fallback)
+
+**Why This Matters:**
+- **Consensus Safety**: All validators get identical results
+- **Reproducibility**: Can replay any game with same outcome
+- **Test Reliability**: No more flaky tests from random timestamps
+- **Blockchain Best Practice**: All inputs must be deterministic
+
+---
+
 ## 📊 Migration Progress Tracker
 
 ### Completed ✅
@@ -2317,6 +2385,8 @@ The `[8D]` marker shows the current top position for dealing.
 - [x] Bet chip display on table
 - [x] **Deck shuffling migrated to Cosmos blockchain**
 - [x] **Shuffle logic completely removed from PVM**
+- [x] **Deterministic timestamps from Cosmos block time**
+- [x] **Non-deterministic Date.now() eliminated from game logic**
 
 ### In Progress 🚧
 - [ ] Card dealing via Cosmos transactions (Phase 2)
@@ -2339,6 +2409,6 @@ The `[8D]` marker shows the current top position for dealing.
 
 ---
 
-**Last Updated:** November 12, 2025  
+**Last Updated:** November 13, 2025
 **Next Review:** After Phase 2 (Card Dealing) completion
 

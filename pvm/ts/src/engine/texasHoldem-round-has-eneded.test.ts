@@ -1,7 +1,7 @@
 import TexasHoldemGame from "../engine/texasHoldem";
 import { PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
-import { baseGameConfig, gameOptions, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp, resetTestTimestamp } from "./testConstants";
 import { ethers } from "ethers";
 
 describe("hasRoundEnded", () => {
@@ -11,6 +11,8 @@ describe("hasRoundEnded", () => {
     const PLAYER_2 = "0x980b8D8A16f5891F41871d878a479d81Da52334c";
 
     beforeEach(() => {
+        // Reset timestamp counter for deterministic tests
+        resetTestTimestamp();
         // Custom mnemonic where Player 1 has AA and Player 2 has KK
         // This ensures Player 1 wins and Player 2 can muck after Player 1 shows
         const customMnemonic =
@@ -57,20 +59,20 @@ describe("hasRoundEnded", () => {
         });
 
         it("should not end with only small blind", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.ANTE)).toBe(false);
         });
 
         it("should not end with both blinds but no deal", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.ANTE)).toBe(false);
         });
 
         it("should end with both blinds and deal", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.ANTE)).toBe(true);
         });
     });

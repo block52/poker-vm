@@ -1045,7 +1045,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     /**
      * Performs a poker action for a specific player
      */
-    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any): void {
+    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any, timestamp?: number): void {
         // Check action index for replay protection
         // const actionIndex = this.getActionIndex();
         // if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
@@ -1134,8 +1134,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Record the action in the player's history
-        const timestamp = Date.now();
-        player.addAction({ playerId: address, action, amount, index }, timestamp);
+        // Use provided timestamp (from Cosmos block time) or fall back to Date.now() for legacy support
+        // In production with Cosmos, timestamp should ALWAYS be provided for determinism
+        const actionTimestamp = timestamp ?? Date.now();
+        player.addAction({ playerId: address, action, amount, index }, actionTimestamp);
 
         // Check if the round has ended and advance if needed
         if (this.hasRoundEnded(this.currentRound)) {

@@ -18,6 +18,7 @@ export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
         gameState: any,
         gameOptions: GameOptions,
         protected readonly data?: string,
+        protected readonly timestamp?: number, // Cosmos block timestamp for determinism
     ) {
         // Reconstruct game from passed-in state (now includes all hole cards since toJson was modified)
         this.texasHoldemGame = TexasHoldemGame.fromJson(gameState, gameOptions);
@@ -39,7 +40,8 @@ export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
             }
         }
 
-        this.texasHoldemGame.performAction(this.from, this.action, this.index, this.value, this.data);
+        // Pass timestamp from Cosmos block time for deterministic gameplay
+        this.texasHoldemGame.performAction(this.from, this.action, this.index, this.value, this.data, this.timestamp);
 
         const updatedGameState: TexasHoldemStateDTO = this.texasHoldemGame.toJson();
         console.log("Updated Game State:", updatedGameState);
