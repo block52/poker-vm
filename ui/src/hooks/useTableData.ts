@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useGameStateContext } from "../context/GameStateContext";
-import { formatWeiToSimpleDollars } from "../utils/numberUtils";
 import { PlayerDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { TableDataReturn } from "../types/index";
 
@@ -44,14 +43,15 @@ export const useTableData = (): TableDataReturn => {
 
     try {
       // Extract data directly from the SDK DTO structure
+      // Return raw BigInt strings - components will format for display
       const smallBlind = gameState.gameOptions?.smallBlind || "0";
       const bigBlind = gameState.gameOptions?.bigBlind || "0";
 
       return {
         tableDataType: defaultData.tableDataType,
         tableDataAddress: gameState.address || defaultData.tableDataAddress,
-        tableDataSmallBlind: formatWeiToSimpleDollars(smallBlind),
-        tableDataBigBlind: formatWeiToSimpleDollars(bigBlind),
+        tableDataSmallBlind: smallBlind,
+        tableDataBigBlind: bigBlind,
         tableDataSmallBlindPosition: gameState.smallBlindPosition ?? defaultData.tableDataSmallBlindPosition,
         tableDataBigBlindPosition: gameState.bigBlindPosition ?? defaultData.tableDataBigBlindPosition,
         tableDataDealer: gameState.dealer ?? defaultData.tableDataDealer,

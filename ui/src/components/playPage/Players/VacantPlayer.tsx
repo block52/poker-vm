@@ -76,6 +76,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const [joinSuccess, setJoinSuccess] = useState(false);
         const [, setJoinResponse] = useState<any>(null);
         const [isCardVisible, setIsCardVisible] = useState(false);
+        const [buyInAmount, setBuyInAmount] = useState<string>("");
 
         const { dealerSeat } = useDealerPosition();
     
@@ -104,10 +105,19 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
 
         // Step 1: Confirm seat selection
         const handleConfirmSeatYes = useCallback(() => {
+            // Initialize buy-in amount with minBuyIn for Cash games
+            const minBuyInDollars = formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0");
+            setBuyInAmount(minBuyInDollars);
+
             // Close confirmation modal and open buy-in modal
             setShowConfirmModal(false);
             setShowBuyInModal(true);
-        }, []);
+        }, [gameOptions?.minBuyIn]);
+
+        // Detect if this is Sit & Go (fixed buy-in) or Cash game (variable buy-in)
+        const isSitAndGo = useMemo(() => {
+            return gameOptions?.minBuyIn === gameOptions?.maxBuyIn;
+        }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
 
         // Step 2: Handle buy-in confirmation and join
         const handleBuyInConfirm = useCallback(async () => {
@@ -116,15 +126,43 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 return;
             }
 
-            // Get buy-in amount from game options (for Sit & Go it's fixed)
-            const buyInMicrounits = gameOptions?.maxBuyIn;
-            if (!buyInMicrounits) {
-                setJoinError("Unable to determine buy-in amount");
-                return;
+            // For Sit & Go: use minBuyIn (fixed amount)
+            // For Cash Game: use user-selected buyInAmount
+            let buyInDollars: string;
+
+            if (isSitAndGo) {
+                // Sit & Go: Fixed buy-in
+                const buyInMicrounits = gameOptions?.minBuyIn || gameOptions?.maxBuyIn;
+                if (!buyInMicrounits) {
+                    setJoinError("Unable to determine buy-in amount");
+                    return;
+                }
+                buyInDollars = formatUSDCToSimpleDollars(buyInMicrounits);
+            } else {
+                // Cash Game: User-selected amount
+                buyInDollars = buyInAmount;
+
+                // Validate buy-in range
+                const minBuyInDollars = parseFloat(formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0"));
+                const maxBuyInDollars = parseFloat(formatUSDCToSimpleDollars(gameOptions?.maxBuyIn || "0"));
+                const buyInValue = parseFloat(buyInDollars);
+
+                if (buyInValue < minBuyInDollars) {
+                    setJoinError(`Buy-in must be at least $${minBuyInDollars.toFixed(2)}`);
+                    return;
+                }
+                if (buyInValue > maxBuyInDollars) {
+                    setJoinError(`Buy-in cannot exceed $${maxBuyInDollars.toFixed(2)}`);
+                    return;
+                }
             }
 
-            // Convert microunits to dollar amount
-            const buyInDollars = formatUSDCToSimpleDollars(buyInMicrounits);
+            console.log("💰 VacantPlayer - Buy-in values:", {
+                isSitAndGo,
+                minBuyIn: gameOptions?.minBuyIn,
+                maxBuyIn: gameOptions?.maxBuyIn,
+                userAmount: buyInDollars
+            });
 
             setIsJoining(true);
             setJoinError(null);
@@ -133,8 +171,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             try {
                 console.log("🪑 VacantPlayer - Joining seat:", {
                     seat: index,
-                    buyInDollars: buyInDollars,
-                    buyInMicrounits: buyInMicrounits
+                    buyInDollars: buyInDollars
                 });
 
                 // joinTable expects amount in USDC dollar format (e.g., "5.00")
@@ -158,7 +195,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [tableId, index, onJoin, gameOptions?.maxBuyIn]);
+        }, [tableId, index, onJoin, gameOptions?.minBuyIn, gameOptions?.maxBuyIn, buyInAmount, isSitAndGo]);
 
 
         // Memoize container styles
@@ -302,22 +339,72 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             onClick={e => e.stopPropagation()}
                         >
                             <h3 className="text-2xl font-bold mb-4 text-white text-center">
-                                Sit & Go Buy-In
+                                {isSitAndGo ? "Sit & Go Buy-In" : "Cash Game Buy-In"}
                             </h3>
 
-                            {/* Fixed Buy-In Amount */}
-                            <div className="mb-6 p-4 rounded-lg border-2" style={{
-                                backgroundColor: colors.ui.bgMedium,
-                                borderColor: colors.brand.primary
-                            }}>
-                                <div className="text-center">
-                                    <div className="text-xs text-gray-400 mb-1">Required Buy-In</div>
-                                    <div className="text-3xl font-bold text-white">
-                                        ${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                            {/* Buy-In Amount - Fixed for Sit & Go, Input for Cash Game */}
+                            {isSitAndGo ? (
+                                // Sit & Go: Fixed buy-in amount
+                                <div className="mb-6 p-4 rounded-lg border-2" style={{
+                                    backgroundColor: colors.ui.bgMedium,
+                                    borderColor: colors.brand.primary
+                                }}>
+                                    <div className="text-center">
+                                        <div className="text-xs text-gray-400 mb-1">Required Buy-In</div>
+                                        <div className="text-3xl font-bold text-white">
+                                            ${formatUSDCToSimpleDollars(gameOptions.minBuyIn || gameOptions.maxBuyIn)}
+                                        </div>
+                                        <div className="text-xs text-gray-400 mt-1">
+                                            Fixed amount for this tournament
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-gray-400 mt-1">Fixed amount for this tournament</div>
                                 </div>
-                            </div>
+                            ) : (
+                                // Cash Game: Editable buy-in amount
+                                <div className="mb-6">
+                                    <label className="block text-xs text-gray-400 mb-2">
+                                        Buy-In Amount (between ${formatUSDCToSimpleDollars(gameOptions.minBuyIn)} - ${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)})
+                                    </label>
+                                    <div className="flex gap-2 mb-3">
+                                        <button
+                                            onClick={() => setBuyInAmount(formatUSDCToSimpleDollars(gameOptions.minBuyIn || "0"))}
+                                            className="px-4 py-2 rounded-lg text-sm transition"
+                                            style={{
+                                                backgroundColor: colors.ui.bgMedium,
+                                                color: "white",
+                                                border: `1px solid ${colors.ui.borderColor}`
+                                            }}
+                                        >
+                                            MIN<br/>${formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
+                                        </button>
+                                        <button
+                                            onClick={() => setBuyInAmount(formatUSDCToSimpleDollars(gameOptions.maxBuyIn || "0"))}
+                                            className="px-4 py-2 rounded-lg text-sm transition"
+                                            style={{
+                                                backgroundColor: colors.ui.bgMedium,
+                                                color: "white",
+                                                border: `1px solid ${colors.ui.borderColor}`
+                                            }}
+                                        >
+                                            MAX<br/>${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                        </button>
+                                        <input
+                                            type="number"
+                                            value={buyInAmount}
+                                            onChange={(e) => setBuyInAmount(e.target.value)}
+                                            placeholder="Enter amount"
+                                            className="flex-1 px-4 py-2 rounded-lg text-white text-center text-lg"
+                                            style={{
+                                                backgroundColor: colors.ui.bgMedium,
+                                                border: `1px solid ${colors.ui.borderColor}`
+                                            }}
+                                            step="0.01"
+                                            min={formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
+                                            max={formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {/* User Balance */}
                             <div className="mb-6">

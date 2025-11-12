@@ -216,7 +216,7 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                             value={stackValue}
                             color={color}
                             tournamentPlace={tournamentResult?.place}
-                            tournamentPayout={tournamentResult?.formattedPayout}
+                            tournamentPayout={tournamentResult?.payout}
                         />
                     </div>
 

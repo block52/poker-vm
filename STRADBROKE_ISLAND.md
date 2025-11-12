@@ -218,6 +218,134 @@ were still using Ethereum Wei conversion (18 decimals), causing incorrect amount
 
 ---
 
+## ✅ Phase 3.5: Sit & Go Buy-In Implementation (Nov 12, 2025)
+
+**Goal:** Fix Sit & Go games to show fixed buy-in amounts instead of allowing user to choose
+
+### Changes Implemented
+
+**1. BuyInModal.tsx** - Fixed buy-in display for Sit & Go
+   - Added `isSitAndGo` detection (checks if minBuyIn === maxBuyIn)
+   - Shows fixed buy-in amount for Sit & Go (non-editable)
+   - Shows MIN/MAX/INPUT for Cash games
+   - **File**: `poker-vm/ui/src/components/playPage/BuyInModal.tsx:87-89, 392-404`
+
+**2. VacantPlayer.tsx** - Two-step join flow with custom modal
+   - Step 1: Confirm seat selection
+   - Step 2: Show buy-in modal with fixed amount
+   - Fixed bug: Now uses `minBuyIn` instead of `maxBuyIn` for display
+   - Created custom Sit & Go buy-in modal
+   - **Files**:
+     - `poker-vm/ui/src/components/playPage/Players/VacantPlayer.tsx:70-73, 106-110, 113-169, 291-406`
+
+**3. useNewTable.ts** - Fixed blind value hardcoding
+   - Removed hardcoded blinds for Sit & Go ($0.01/$0.02)
+   - Now uses user input values from form
+   - Conversion: `BigInt(Math.floor(gameOptions.smallBlind * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)))`
+   - **File**: `poker-vm/ui/src/hooks/useNewTable.ts:69-77`
+
+**4. TableAdminPage.tsx** - Fixed buy-in form for Sit & Go
+   - Shows single "Buy-In" field for Sit & Go/Tournament (sets both min=max)
+   - Shows separate min/max fields for Cash games
+   - Added success modal with transaction link
+   - Added "Created" column showing date/time, sorted newest first
+   - **Files**:
+     - Form fix: `poker-vm/ui/src/pages/TableAdminPage.tsx:193-236`
+     - Success modal: `poker-vm/ui/src/pages/TableAdminPage.tsx:51-53, 89-91, 383-445`
+     - Created column: `poker-vm/ui/src/pages/TableAdminPage.tsx:29, 70, 275-277, 326-339`
+
+**5. Dashboard.tsx** - Cleanup
+   - Removed "Available Tables" section (game listing)
+   - Removed "Choose Table" button
+   - Made bottom links smaller (text-xs, w-3 h-3)
+   - **File**: `poker-vm/ui/src/pages/Dashboard.tsx`
+
+### Testing Results (Nov 12, 2025)
+
+**Test 1: Create Sit & Go Table** ✅
+- Game Type: Sit & Go
+- Players: 2-4
+- Buy-In: $1.00 (fixed)
+- Blinds: $0.02/$0.04
+- Transaction: `F94BBCDE8E53EBA3DAEEB52705BCE68ED23AA1E7C8E3DF6AB24BA7C6E47E696C`
+- **Result**: Table created successfully with correct fixed buy-in
+
+**Test 2: Join Table with $1.00 Buy-In** ✅
+- Seat: 1
+- Amount: $1.00 (1,000,000 microunits)
+- Transaction: `4F7AB2966141B244ABA79DD0012A70E18BD7BFD2CD7503A29C63B817BC4DB2BC`
+- Block: #1009
+- **Result**: Successfully joined with correct amount
+- **PVM Logs**: Confirmed game state updated with player at seat 1
+
+**Transaction Details (from Block #1009):**
+```json
+{
+  "creator": "b5219dj7nyvsj2aq8vrrhyuvlah05e6lx05r3ghqy3",
+  "game_id": "0xbc28eaef3c63b78b750a5e51ea05a79454c72e9d1de63cc6cded294c7a038f03",
+  "buy_in_amount": "1000000",  // ✅ Correct: $1.00 in microunits
+  "seat": "1"
+}
+```
+
+### Key Findings
+
+**USDC Conversion Pattern Confirmed:**
+```typescript
+// UI → Blockchain: Dollars to microunits
+const microunits = amount * 1_000_000;
+
+// Blockchain → UI: Microunits to dollars
+const dollars = Number(microunits) / 1_000_000;
+
+// Helper function for display
+formatUSDCToSimpleDollars(1000000) → "1.00"
+```
+
+**Location in Code:** `poker-vm/ui/src/utils/numberUtils.ts`
+
+### Known Issues Fixed
+
+**Issue 1: Modal showing wrong amount**
+- **Problem**: VacantPlayer was using `maxBuyIn` for Sit & Go display
+- **Root Cause**: Old table had min=$1, max=$10 (before fix)
+- **Fix**: Changed to use `minBuyIn || maxBuyIn` (prefer minBuyIn)
+- **File**: `VacantPlayer.tsx:121`
+
+**Issue 2: TableAdminPage allowing different min/max for Sit & Go**
+- **Problem**: Could create Sit & Go with min≠max
+- **Fix**: Single input field that sets both min=max
+- **File**: `TableAdminPage.tsx:193-236`
+
+**Issue 3: Blinds not saving correctly**
+- **Problem**: useNewTable hardcoded blinds for Sit & Go
+- **Fix**: Removed hardcoding, uses form input
+- **File**: `useNewTable.ts:69-77`
+
+### Success Criteria Met ✅
+
+- [x] Sit & Go shows fixed buy-in modal
+- [x] TableAdminPage enforces min=max for Sit & Go
+- [x] VacantPlayer displays correct amount
+- [x] Blinds save from user input
+- [x] Join transaction succeeds with correct microunits
+- [x] PVM confirms player joined successfully
+- [x] WebSocket broadcasts game state update
+
+### Next Steps
+
+**Immediate Testing:**
+- Test multi-player Sit & Go (2+ players joining)
+- Test complete hand flow with blinds
+- Verify all amounts display correctly throughout game
+
+**Future Improvements:**
+- Add balance refresh after buy-in
+- Add game history tracking
+- Add player statistics
+
+---
+
 ## 🎯 Phase 4: UI Component Migration (COMPLETE! ✅)
 
 ### Primary Components (ALL DONE! ✅)
@@ -1347,7 +1475,7 @@ const Chip: React.FC<{ amount: string | bigint }> = ({ amount }) => {
 
 ### FORMATTING UTILITIES REFERENCE
 
-**Available in `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/ui/src/utils/numberUtils.ts`:**
+**Available in `poker-vm/ui/src/utils/numberUtils.ts`:**
 
 ```typescript
 // Use these in components for display:

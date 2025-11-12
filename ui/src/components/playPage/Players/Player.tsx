@@ -220,7 +220,7 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
                             canExtend={shouldShowTimerExtension}
                             // onExtend={shouldShowTimerExtension ? handleExtendTime : undefined}
                             tournamentPlace={tournamentResult?.place}
-                            tournamentPayout={tournamentResult?.formattedPayout}
+                            tournamentPayout={tournamentResult?.payout}
                         />
                     </div>
 

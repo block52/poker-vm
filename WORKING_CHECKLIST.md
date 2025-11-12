@@ -1,12 +1,64 @@
 # PVM on Cosmos - Working Checklist
 
-**Last Updated**: October 30, 2025 @ 7:30 AM
-**Status**: ✅ PHASE 3 COMPLETE - Legal actions now showing!
-**Current Phase**: Phase 3 - Dashboard & UI Integration
+**Last Updated**: November 12, 2025
+**Status**: ✅ PHASE 3.5 COMPLETE - Sit & Go Buy-In Implementation Working!
+**Current Phase**: Phase 4 - Testing & Polish
 **CosmosClient Progress**: ✅ createGame, joinGame, performAction all working!
 **Architecture**: ✅ Hybrid - Cosmos for transactions, PVM WebSocket for real-time updates
-**Current Issue**: ✅ Address mismatch fixed - Cosmos addresses now used throughout!
-**Next**: Test full game flow with 4 players
+**Recent Work**: ✅ Fixed Sit & Go buy-in modals, table creation, and VacantPlayer join flow
+**Bridge Status**: ✅ Complete - Documented in BRIDGE_DEPOSIT_FLOW.md (archived)
+**Next**: Test multi-player Sit & Go gameplay
+
+---
+
+## 🎉 PHASE 3.5 COMPLETE - Sit & Go Buy-In Implementation! (Nov 12, 2025)
+
+### ✅ What We Achieved
+
+**Sit & Go Buy-In Fixes:**
+
+1. **BuyInModal.tsx** - Shows fixed buy-in for Sit & Go
+   - ✅ Detects Sit & Go games (min === max)
+   - ✅ Displays non-editable fixed amount
+   - ✅ Cash games still allow min/max/custom input
+
+2. **VacantPlayer.tsx** - Two-step join flow
+   - ✅ Step 1: Confirm seat selection
+   - ✅ Step 2: Custom Sit & Go buy-in modal
+   - ✅ Fixed: Now uses `minBuyIn` instead of `maxBuyIn`
+   - ✅ Displays correct USDC balance
+
+3. **TableAdminPage.tsx** - Enforces min=max for Sit & Go
+   - ✅ Single "Buy-In" field for Sit & Go/Tournament
+   - ✅ Sets both min=max from single input
+   - ✅ Separate min/max fields for Cash games
+   - ✅ Success modal with transaction link
+   - ✅ "Created" column with timestamps
+
+4. **useNewTable.ts** - Fixed blind value hardcoding
+   - ✅ Removed hardcoded $0.01/$0.02 blinds
+   - ✅ Now uses user input from form
+   - ✅ Proper BigInt conversion for microunits
+
+5. **Dashboard.tsx** - UI cleanup
+   - ✅ Removed "Available Tables" section
+   - ✅ Removed "Choose Table" button
+   - ✅ Made bottom links smaller
+
+**Test Results:**
+- ✅ Created Sit & Go table: TX `F94BBCDE8E53EBA3DAEEB52705BCE68ED23AA1E7C8E3DF6AB24BA7C6E47E696C`
+- ✅ Joined with $1.00 buy-in: TX `4F7AB2966141B244ABA79DD0012A70E18BD7BFD2CD7503A29C63B817BC4DB2BC` (Block #1009)
+- ✅ Confirmed in PVM: Player at seat 1 with 1,000,000 microunits
+- ✅ WebSocket state update working
+
+**USDC Conversion Pattern Verified:**
+```typescript
+// Send to blockchain: amount * 1_000_000
+// Display to user: Number(value) / 1_000_000
+// Location: poker-vm/ui/src/utils/numberUtils.ts
+```
+
+**See detailed documentation:** `poker-vm/STRADBROKE_ISLAND.md` (Phase 3.5)
 
 ---
 
@@ -78,7 +130,7 @@
     - `QRDeposit.tsx:207` - Deposit display
   - **Result:** Small blind, big blind, and all other legal actions now display correctly!
 
-**See `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/STRADBROKE_ISLAND.md` for detailed plan!**
+**See `poker-vm/STRADBROKE_ISLAND.md` for detailed plan!**
 
 ---
 
@@ -450,7 +502,7 @@ minimum-gas-prices = "0.01b52Token"
 
 5. **Restart the chain:**
    ```bash
-   cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/pokerchain
+   cd pokerchain
    ignite chain serve
    ```
 
@@ -566,7 +618,7 @@ minimum-gas-prices = "0stake,0.001uusdc"  # Multi-token
 # 5. Save and exit (Ctrl+O, Enter, Ctrl+X in nano)
 
 # 6. Restart the chain
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/pokerchain
+cd pokerchain
 ignite chain serve
 
 # 7. Verify the change
@@ -740,7 +792,7 @@ Estimated gas usage (to be measured):
 **This is the standard way to start the chain with logging:**
 
 ```bash
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/pokerchain
+cd pokerchain
 
 # Start chain with logging to home directory
 ignite chain serve --verbose 2>&1 | tee -a ~/pokerchain-node.log
@@ -776,7 +828,7 @@ grep "trackMint" ~/pokerchain-node.log
 
 **Or start in background (advanced):**
 ```bash
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/pokerchain
+cd pokerchain
 nohup ignite chain serve --verbose > ~/pokerchain-node.log 2>&1 &
 
 # View the background process
@@ -787,14 +839,14 @@ pkill -f "ignite chain serve"
 ```
 
 **Important Directories:**
-- **Data directory**: `/Users/alexmiller/.pokerchain`
-- **Config files**: `/Users/alexmiller/.pokerchain/config/`
+- **Data directory**: `~/.pokerchain`
+- **Config files**: `~/.pokerchain/config/`
   - `app.toml` - Application configuration (bridge settings, API ports)
   - `config.toml` - CometBFT configuration
   - `genesis.json` - Genesis state
-- **Blockchain data**: `/Users/alexmiller/.pokerchain/data/`
-- **Keyring (wallets)**: `/Users/alexmiller/.pokerchain/keyring-test/`
-- **Logs**: `~/pokerchain-node.log` (full path: `/Users/alexmiller/pokerchain-node.log`)
+- **Blockchain data**: `~/.pokerchain/data/`
+- **Keyring (wallets)**: `~/.pokerchain/keyring-test/`
+- **Logs**: `~/pokerchain-node.log` (full path: `~/pokerchain-node.log`)
 
 **Test Accounts** (generated with `--reset-once`):
 - **Alice**: `b5213awx5hajghvplycggzae4dlfd40d6skt5f8fgd`
@@ -845,7 +897,7 @@ grep "trackMint" ~/pokerchain-node.log
 **3. Check bridge configuration:**
 ```bash
 # View bridge settings
-grep -A 6 "\[bridge\]" /Users/alexmiller/.pokerchain/config/app.toml
+grep -A 6 "\[bridge\]" ~/.pokerchain/config/app.toml
 ```
 
 ### Troubleshooting Checklist
@@ -912,7 +964,7 @@ If you see errors, they'll be prefixed with `[Cosmos Balance] ❌`.
 ### 2. Bridge Service Implementation
 - [x] Add bridge service initialization to `app/app.go`
 - [x] Implement emoji logging in `bridge_service.go` (🌉, 📊, ✅, ❌)
-- [x] Configure bridge in `/Users/alexmiller/.pokerchain/config/app.toml`
+- [x] Configure bridge in `~/.pokerchain/config/app.toml`
 - [x] Verify bridge listener starts and polls Base Chain
 - [x] Confirm bridge connects to CosmosBridge contract on Base
 - [x] **Implement queue-based architecture with EndBlocker** (Oct 7, 2025)
@@ -1004,8 +1056,8 @@ todo:
 - [ ] Test both pages work correctly in main UI
 - [ ] Update styling to match main UI theme
 
-**Source**: `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/cosmosexplorer`
-**Destination**: `/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/ui/src/pages/explorer`
+**Source**: `poker-vm/cosmosexplorer`
+**Destination**: `poker-vm/ui/src/pages/explorer`
 
 ---
 
@@ -1071,7 +1123,7 @@ const publicKey = getCosmosAddressSync();
 **Files to Check**:
 ```bash
 # Search for remaining references
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/ui/src
+cd poker-vm/ui/src
 grep -r "user_eth_public_key" . --include="*.ts" --include="*.tsx"
 ```
 
@@ -1199,7 +1251,7 @@ grep -r "user_eth_public_key" . --include="*.ts" --include="*.tsx"
 
 **Test Command**:
 ```bash
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/contracts
+cd poker-vm/contracts
 yarn test:bridge:usdc
 ```
 
@@ -1257,7 +1309,7 @@ curl http://localhost:1317/cosmos/bank/v1beta1/balances/b52<your-address>
 
 **Test Command**:
 ```bash
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/contracts
+cd poker-vm/contracts
 yarn test:bridge:withdraw
 ```
 
@@ -1289,7 +1341,7 @@ yarn test:bridge:withdraw
 
 4. **Test Bridge Deposit Flow**
    ```bash
-   cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/contracts
+   cd poker-vm/contracts
    yarn test:bridge:usdc
    ```
    - Watch chain logs for deposit detection
@@ -1786,13 +1838,13 @@ useEffect(() => {
 
 **Terminal 1 - Pokerchain:**
 ```bash
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/pokerchain
+cd pokerchain
 ignite chain serve -v
 ```
 
 **Terminal 2 - UI:**
 ```bash
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/ui
+cd poker-vm/ui
 yarn dev
 ```
 
@@ -1812,7 +1864,7 @@ pokerchaind status
 ### Bridge Test Commands
 
 ```bash
-cd /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/contracts
+cd poker-vm/contracts
 
 # Check bridge balance
 yarn test:bridge:balance

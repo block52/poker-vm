@@ -1,5 +1,5 @@
 import React from "react";
-import { formatWeiToSimpleDollars } from "../../../utils/numberUtils";
+import { formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
 
 type ChipProps = {
     amount: string | bigint;
@@ -26,9 +26,9 @@ const Chip: React.FC<ChipProps> = React.memo(({ amount }) => {
     }, null, 2));
 
     // Always display chip, even with zero amount
-    // Format the chip amount properly from Wei-stored amounts to readable dollar amounts
-    // Since sumOfBets is already in Wei format representing dollar amounts, we use the simple conversion
-    const formattedAmount = formatWeiToSimpleDollars(amountStr);
+    // Format the chip amount properly from USDC microunits to readable dollar amounts
+    // Since sumOfBets is in USDC microunits (6 decimals), we use the USDC conversion
+    const formattedAmount = formatUSDCToSimpleDollars(amountStr);
     
     // Check if we're on mobile (portrait or landscape)
     const isMobile = window.innerWidth <= 768 || window.innerHeight <= 500;

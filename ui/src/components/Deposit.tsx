@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
 import { CONTRACT_ADDRESSES } from "../constants";
 import useUserWallet from "../hooks/useUserWallet";
-import { formatWeiToSimpleDollars, convertAmountToBigInt } from "../utils/numberUtils";
+import { formatUSDCToSimpleDollars, convertAmountToBigInt } from "../utils/numberUtils";
 
 const Deposit: React.FC = () => {
     const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
@@ -143,12 +143,12 @@ const Deposit: React.FC = () => {
                 {address && <h4 className="border-b border-gray-600 text-blue-400 mb-2 break-words">Address: {address}</h4>}
                 {balance && (
                     <h4 className="border-b border-gray-600 text-blue-400 mb-4">
-                        Crypto Wallet Balance: ${formatWeiToSimpleDollars(balance)} USDC
+                        Crypto Wallet Balance: ${formatUSDCToSimpleDollars(balance)} USDC
                     </h4>
                 )}
 
                 <h4 className="border-b border-gray-600 text-blue-400 mb-4">
-                    Layer 2 Block52 Balance (Poker Table): ${formatWeiToSimpleDollars(b52Balance || "0")} USDC
+                    Layer 2 Block52 Balance (Poker Table): ${formatUSDCToSimpleDollars(b52Balance || "0")} USDC
                 </h4>
 
                 {/* Show nonce if available */}
@@ -174,7 +174,7 @@ const Deposit: React.FC = () => {
                     <span
                         onClick={() => {
                             if (balance && decimals) {
-                                setAmount(formatWeiToSimpleDollars(balance));
+                                setAmount(formatUSDCToSimpleDollars(balance));
                             }
                         }}
                         className="cursor-pointer bg-gray-700 py-2 text-gray-400 text-sm flex align-center justify-center absolute right-[10px] bottom-[6px]"

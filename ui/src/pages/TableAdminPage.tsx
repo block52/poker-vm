@@ -40,10 +40,10 @@ export default function TableAdminPage() {
     const { createTable, isCreating, error: createError, newGameId } = useNewTable();
     const { games: fetchedGames, isLoading, error: gamesError, refetch } = useFindGames();
 
-    // Default table settings for Sit & Go, 4 players, Texas Hold'em
-    const [gameType, setGameType] = useState<GameType>(GameType.SIT_AND_GO);
+    // Default table settings for Cash Game, 9 players, Texas Hold'em
+    const [gameType, setGameType] = useState<GameType>(GameType.CASH);
     const [minPlayers] = useState(2);
-    const [maxPlayers, setMaxPlayers] = useState(4);
+    const [maxPlayers, setMaxPlayers] = useState(9);
     const [minBuyIn, setMinBuyIn] = useState("1");
     const [maxBuyIn, setMaxBuyIn] = useState("10");
     const [smallBlind, setSmallBlind] = useState("0.01");
@@ -191,26 +191,48 @@ export default function TableAdminPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="text-white text-sm mb-2 block">Min Buy-In (USDC)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={minBuyIn}
-                                onChange={(e) => setMinBuyIn(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-white text-sm mb-2 block">Max Buy-In (USDC)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                value={maxBuyIn}
-                                onChange={(e) => setMaxBuyIn(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
-                            />
-                        </div>
+                        {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
+                            // For Sit & Go and Tournament: Single buy-in field (fixed amount)
+                            <div className="md:col-span-2">
+                                <label className="text-white text-sm mb-2 block">Buy-In (USDC) - Fixed Amount</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={minBuyIn}
+                                    onChange={(e) => {
+                                        setMinBuyIn(e.target.value);
+                                        setMaxBuyIn(e.target.value); // Keep them equal
+                                    }}
+                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                    placeholder="e.g., 1.00"
+                                />
+                                <p className="text-gray-400 text-xs mt-1">All players must buy in for this exact amount</p>
+                            </div>
+                        ) : (
+                            // For Cash Game: Separate min/max fields
+                            <>
+                                <div>
+                                    <label className="text-white text-sm mb-2 block">Min Buy-In (USDC)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={minBuyIn}
+                                        onChange={(e) => setMinBuyIn(e.target.value)}
+                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-white text-sm mb-2 block">Max Buy-In (USDC)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={maxBuyIn}
+                                        onChange={(e) => setMaxBuyIn(e.target.value)}
+                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

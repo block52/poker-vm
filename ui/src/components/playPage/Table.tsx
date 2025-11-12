@@ -74,7 +74,7 @@ import { useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
-import { formatWeiToSimpleDollars, formatWeiToUSD } from "../../utils/numberUtils";
+import { formatWeiToSimpleDollars, formatWeiToUSD, formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 
 import { ethers } from "ethers";
 
@@ -269,8 +269,8 @@ const Table = React.memo(() => {
     // Memoize formatted values
     const formattedValues = useMemo(
         () => ({
-            smallBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.smallBlind) : "0.10",
-            bigBlindFormatted: gameOptions ? formatWeiToSimpleDollars(gameOptions.bigBlind) : "0.20"
+            smallBlindFormatted: gameOptions ? formatUSDCToSimpleDollars(gameOptions.smallBlind) : "0.01",
+            bigBlindFormatted: gameOptions ? formatUSDCToSimpleDollars(gameOptions.bigBlind) : "0.02"
         }),
         [gameOptions]
     );
@@ -543,8 +543,8 @@ const Table = React.memo(() => {
     const potDisplayValues = useMemo(() => {
         const pots = Array.isArray(gameState?.pots) ? (gameState?.pots as string[]) : [];
         const totalPotWei = pots.reduce<bigint>((sum, pot) => sum + BigInt(pot), 0n);
-        const totalPotCalculated = totalPotWei === 0n ? "0.00" : formatWeiToSimpleDollars(totalPotWei.toString());
-        const mainPotCalculated = pots.length === 0 ? "0.00" : formatWeiToSimpleDollars(pots[0]);
+        const totalPotCalculated = totalPotWei === 0n ? "0.00" : formatUSDCToSimpleDollars(totalPotWei.toString());
+        const mainPotCalculated = pots.length === 0 ? "0.00" : formatUSDCToSimpleDollars(pots[0]);
         return {
             totalPot: totalPotCalculated,
             mainPot: mainPotCalculated

@@ -2,7 +2,7 @@ import React from "react";
 import { usePlayerActionDropBox, PlayerActionDisplay } from "../../../hooks/usePlayerActionDropBox";
 import { useGameOptions } from "../../../hooks/useGameOptions";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatForSitAndGo, formatForCashGame } from "../../../utils/numberUtils";
+import { formatForSitAndGo, formatForCashGame, formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
 import "./Badge.css";
 
 // Action display component moved into Badge
@@ -104,7 +104,7 @@ const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend
                     </div>
                     {tournamentPayout && tournamentPayout !== "0" && (
                         <div className="tournament-payout" style={{ color: "#4ade80" }}>
-                            Won: ${tournamentPayout}
+                            Won: ${formatUSDCToSimpleDollars(tournamentPayout)}
                         </div>
                     )}
                 </div>

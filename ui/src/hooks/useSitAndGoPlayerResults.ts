@@ -1,13 +1,11 @@
 import { useMemo } from "react";
 import { ResultDTO } from "@bitcoinbrisbane/block52";
 import { useGameStateContext } from "../context/GameStateContext";
-import { formatWeiToSimpleDollars } from "../utils/numberUtils";
 
 // Hook return type for individual player result
 export interface PlayerResultData {
     place: number;
-    payout: string;
-    formattedPayout: string;
+    payout: string; // Raw BigInt string - components format for display
     isWinner: boolean;
 }
 
@@ -64,11 +62,10 @@ export const useSitAndGoPlayerResults = (): SitAndGoPlayerResultsReturn => {
                 );
 
                 if (winner) {
-                    // Winner gets 1st place
+                    // Winner gets 1st place - return raw BigInt string
                     return {
                         place: 1,
                         payout: winner.amount || "0",
-                        formattedPayout: formatWeiToSimpleDollars(winner.amount || "0"),
                         isWinner: true
                     };
                 }
@@ -77,8 +74,7 @@ export const useSitAndGoPlayerResults = (): SitAndGoPlayerResultsReturn => {
 
             return {
                 place: result.place,
-                payout: result.payout,
-                formattedPayout: formatWeiToSimpleDollars(result.payout),
+                payout: result.payout, // Raw BigInt string - components format for display
                 isWinner: result.place === 1
             };
         };
