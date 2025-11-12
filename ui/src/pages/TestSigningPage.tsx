@@ -28,7 +28,7 @@ export default function TestSigningPage() {
 
     // Test inputs
     const [recipientAddress, setRecipientAddress] = useState("");
-    const [sendAmount, setSendAmount] = useState("1000000"); // 1 usdc
+    const [sendAmount, setSendAmount] = useState("1"); // 1 usdc (in dollar units, will convert to micro-units)
     const [sendDenom, setSendDenom] = useState("usdc");
     const [gameType, setGameType] = useState("sit-and-go");
     const [minPlayers, setMinPlayers] = useState(2);
@@ -221,24 +221,27 @@ export default function TestSigningPage() {
         });
 
         try {
-            // Strip any decimals and validate the amount
-            const cleanAmount = sendAmount.split(".")[0]; // Remove decimal part
-            if (!cleanAmount || isNaN(Number(cleanAmount)) || Number(cleanAmount) <= 0) {
-                throw new Error("Amount must be a positive integer (micro-units, no decimals)");
+            // Validate the dollar amount
+            const dollarAmount = parseFloat(sendAmount);
+            if (isNaN(dollarAmount) || dollarAmount <= 0) {
+                throw new Error("Amount must be a positive number");
             }
+
+            // Convert dollars to micro-units (multiply by 1,000,000)
+            const microUnits = Math.floor(dollarAmount * 1_000_000);
 
             console.log("💸 sendTokens():", {
                 from: walletAddress,
                 to: recipientAddress,
-                amount: cleanAmount,
-                originalInput: sendAmount,
+                dollarAmount: dollarAmount,
+                microUnits: microUnits,
                 denom: sendDenom
             });
 
             const txHash = await signingClient.sendTokens(
                 walletAddress,
                 recipientAddress,
-                BigInt(cleanAmount),
+                BigInt(microUnits),
                 sendDenom,
                 "Test transfer via SDK"
             );
@@ -253,7 +256,8 @@ export default function TestSigningPage() {
                 data: {
                     from: walletAddress,
                     to: recipientAddress,
-                    amount: cleanAmount,
+                    amount: `${dollarAmount} ${sendDenom}`,
+                    microUnits: microUnits,
                     denom: sendDenom
                 }
             });
@@ -961,60 +965,59 @@ export default function TestSigningPage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm text-gray-400 mb-1">
-                                            Amount (micro-units)
+                                            Amount ({sendDenom.toUpperCase()})
                                             {sendAmount && (
-                                                <span className="ml-2 font-bold" style={{ color: colors.accent.success }}>
-                                                    = {(Number(sendAmount) / 1_000_000).toFixed(6)} {sendDenom}
+                                                <span className="ml-2 text-xs text-gray-500">
+                                                    = {Math.floor(parseFloat(sendAmount || "0") * 1_000_000).toLocaleString()} micro-units
                                                 </span>
                                             )}
                                         </label>
                                         <div className="flex gap-2">
                                             <input
                                                 type="number"
-                                                placeholder="1000000"
+                                                step="0.01"
+                                                placeholder="1.00"
                                                 value={sendAmount}
                                                 onChange={(e) => setSendAmount(e.target.value)}
                                                 className="flex-1 p-2 rounded-lg text-white"
                                                 style={inputStyle}
                                             />
                                             <button
-                                                onClick={() => setSendAmount("1000000")}
-                                                className="px-3 py-2 rounded-lg text-xs font-semibold"
+                                                onClick={() => setSendAmount("1")}
+                                                className="px-4 py-2 rounded-lg text-sm font-semibold"
                                                 style={{
                                                     backgroundColor: hexToRgba(colors.brand.primary, 0.2),
                                                     border: `1px solid ${hexToRgba(colors.brand.primary, 0.4)}`,
                                                     color: colors.brand.primary
                                                 }}
                                             >
-                                                1 {sendDenom}
+                                                $1
                                             </button>
                                             <button
-                                                onClick={() => setSendAmount("5000000")}
-                                                className="px-3 py-2 rounded-lg text-xs font-semibold"
+                                                onClick={() => setSendAmount("5")}
+                                                className="px-4 py-2 rounded-lg text-sm font-semibold"
                                                 style={{
                                                     backgroundColor: hexToRgba(colors.accent.success, 0.2),
                                                     border: `1px solid ${hexToRgba(colors.accent.success, 0.4)}`,
                                                     color: colors.accent.success
                                                 }}
                                             >
-                                                5 {sendDenom}
+                                                $5
                                             </button>
                                             <button
-                                                onClick={() => setSendAmount("10000000")}
-                                                className="px-3 py-2 rounded-lg text-xs font-semibold"
+                                                onClick={() => setSendAmount("10")}
+                                                className="px-4 py-2 rounded-lg text-sm font-semibold"
                                                 style={{
                                                     backgroundColor: hexToRgba(colors.accent.success, 0.2),
                                                     border: `1px solid ${hexToRgba(colors.accent.success, 0.4)}`,
                                                     color: colors.accent.success
                                                 }}
                                             >
-                                                10 {sendDenom}
+                                                $10
                                             </button>
                                         </div>
                                         <p className="text-xs text-gray-500 mt-2">
-                                            💡 Quick amounts: Click button above or enter micro-units manually
-                                            <br />
-                                            Examples: 1000000 = 1 {sendDenom}, 5000000 = 5 {sendDenom}, 10000 = 0.01 {sendDenom}
+                                            💡 Enter dollar amount (1, 5, 0.01, etc.) - Converts to micro-units automatically
                                         </p>
                                     </div>
                                     <div>
