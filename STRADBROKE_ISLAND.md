@@ -1077,7 +1077,7 @@ type: "cash"  // ✅ Game type correct!
 
 **Status:** ✅ **FULLY WORKING!** All three bugs fixed and verified working end-to-end!
 
-### Bug #6: Deal Action Failed (Code 1105) - INVESTIGATING
+### Bug #6: Deal Action Failed (Code 1105) - FIXED ✅
 
 **Symptom:**
 - After posting both blinds, clicking "Deal" fails
@@ -1085,7 +1085,69 @@ type: "cash"  // ✅ Game type correct!
 - Error Code: 1105 (ErrUnknownRequest or keeper handler error)
 - Gas Used: 49,197 / 200,000 (NOT out of gas)
 
-**Status:** Investigating keeper handler for deal action
+**Error Message:**
+```
+failed to execute message; message index: 0: invalid action: deal: invalid poker action
+```
+
+**Root Cause:**
+The keeper's valid actions list at `pokerchain/x/poker/keeper/msg_server_perform_action.go:19-33` was missing "deal":
+```go
+const (
+    SmallBlind PlayerActionType = "post-small-blind"
+    BigBlind   PlayerActionType = "post-big-blind"
+    Fold       PlayerActionType = "fold"
+    Check      PlayerActionType = "check"
+    Bet        PlayerActionType = "bet"
+    Call       PlayerActionType = "call"
+    Raise      PlayerActionType = "raise"
+    AllIn      PlayerActionType = "all-in"
+    Muck       PlayerActionType = "muck"
+    SitIn      PlayerActionType = "sit-in"
+    SitOut     PlayerActionType = "sit-out"
+    Show       PlayerActionType = "show"
+    Join       PlayerActionType = "join"
+    // Deal was MISSING!
+)
+```
+
+Even though "deal" is a `NonPlayerActionType` (system action), it still goes through the `performAction` flow, similar to "join".
+
+**Fix Applied:**
+Added "deal" to the valid actions in `msg_server_perform_action.go`:
+```go
+const (
+    SmallBlind PlayerActionType = "post-small-blind"
+    BigBlind   PlayerActionType = "post-big-blind"
+    Fold       PlayerActionType = "fold"
+    Check      PlayerActionType = "check"
+    Bet        PlayerActionType = "bet"
+    Call       PlayerActionType = "call"
+    Raise      PlayerActionType = "raise"
+    AllIn      PlayerActionType = "all-in"
+    Muck       PlayerActionType = "muck"
+    SitIn      PlayerActionType = "sit-in"
+    SitOut     PlayerActionType = "sit-out"
+    Show       PlayerActionType = "show"
+    Join       PlayerActionType = "join"
+    Deal       PlayerActionType = "deal"  // ✅ ADDED
+)
+
+// Also added to validActions array:
+validActions := []PlayerActionType{
+    SmallBlind, BigBlind, Fold, Check, Bet, Call, Raise, AllIn, Muck, SitIn, SitOut, Show, Join, Deal,
+}
+```
+
+**Files Modified:**
+- `pokerchain/x/poker/keeper/msg_server_perform_action.go` (lines 34, 40)
+
+**Rebuild Command:**
+```bash
+cd pokerchain && make install
+```
+
+**Status:** ✅ **FIXED** - "deal" action now recognized as valid. Ready for testing!
 
 ---
 
