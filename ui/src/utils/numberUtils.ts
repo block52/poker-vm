@@ -115,6 +115,15 @@ export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefine
 };
 
 /**
+ * Convert USDC microunits (6 decimals) to a number
+ * @param microunits The USDC amount in microunits (e.g., "1000000" = $1.00)
+ * @returns Number representation (e.g., 1.0)
+ */
+export const convertUSDCToNumber = (microunits: string | bigint): number => {
+    return Number(microunits) / 1_000_000;
+};
+
+/**
  * Format stack values for Sit & Go tournaments
  * Shows whole numbers with comma separators, no dollar sign
  * @param value The stack value as a number

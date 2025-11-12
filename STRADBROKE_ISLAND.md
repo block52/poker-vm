@@ -1278,6 +1278,99 @@ This is a temporary fix for testing. In production:
 
 **Status:** ✅ **FULLY WORKING!** Players see their own cards, opponents see card backs!
 
+### Bug #8: Player Stack and Bet Amounts Not Displaying (FIXED ✅ - Nov 12, 2025)
+
+**Symptom:**
+- Player badges showing "$0.00" instead of table stack
+- Player chips (bets) not appearing on table
+- sumOfBets value always "0"
+
+**Root Cause:**
+The `Player.toJson()` method in `poker-vm/pvm/ts/src/models/player.ts` was returning an empty object:
+```typescript
+public toJson(): PlayerDTO {
+    return {} as PlayerDTO;  // ❌ BUG: Lost all player data!
+}
+```
+
+This meant when the game state was serialized to send to the UI, ALL player data was being lost:
+- Stack (chips at table)
+- Hole cards
+- Last action
+- Sum of bets
+- Status
+
+**The Fix:**
+Implemented full serialization of player data in `player.ts:54-78`:
+```typescript
+public toJson(): PlayerDTO {
+    return {
+        address: this.address,
+        seat: 0, // Will be set by the game
+        stack: this.chips.toString(), // ✅ Convert bigint to string
+        isSmallBlind: false,
+        isBigBlind: false,
+        isDealer: false,
+        holeCards: this.holeCards?.map(card => card.mnemonic),
+        status: this.status,
+        lastAction: this.lastAction ? {
+            playerId: this.lastAction.playerId,
+            seat: this.lastAction.seat,
+            action: this.lastAction.action,
+            amount: this.lastAction.amount.toString(),
+            round: this.lastAction.round,
+            index: this.lastAction.index,
+            timestamp: this.lastAction.timestamp || 0
+        } : undefined,
+        legalActions: [],
+        sumOfBets: "0", // Calculated by game
+        timeout: 0,
+        signature: ""
+    } as PlayerDTO;
+}
+```
+
+**Also Fixed:**
+- Added debug logging to `usePlayerData.ts:54-70` to track stack value conversion
+- Transaction popup now auto-closes after 5 seconds (`TransactionPopup.tsx:15-24`)
+- Transaction popup size reduced by 50% (max-w-sm, smaller padding/fonts)
+
+**Files Changed:**
+- `poker-vm/pvm/ts/src/models/player.ts` - Implemented toJson() properly
+- `poker-vm/ui/src/hooks/usePlayerData.ts` - Added debug logging
+- `poker-vm/ui/src/components/playPage/common/TransactionPopup.tsx` - Size and auto-close fixes
+
+**Test Results (Nov 12, 2025 - 8:45 PM):**
+After UI refresh with decimal fix:
+- ✅ Player badges show correct stack amounts ($0.96, $0.94)
+- ✅ Bet chips display on table ($0.02, $0.04, $0.06, $0.08)
+- ✅ Stack values update correctly after each action
+- ✅ sumOfBets tracked accurately through betting rounds
+- ✅ Transaction popup improvements working (auto-close, smaller size)
+- ✅ Full preflop betting tested: SB, BB, Deal, Call, Raise (x3)
+
+**ACTUAL ROOT CAUSE - Wrong Decimal Conversion:**
+The bug was in `usePlayerData.ts:70` using **18 decimals (Wei/Ethereum)** instead of **6 decimals (Cosmos microunits)**:
+
+```typescript
+// BEFORE (WRONG):
+return Number(ethers.formatUnits(playerData.stack, 18));  // 18 decimals
+// "1000000" → 0.000000000001 → rounds to $0.00 ❌
+
+// AFTER (CORRECT):
+return Number(playerData.stack) / 1_000_000;  // 6 decimals
+// "1000000" → 1.0 → displays as $1.00 ✅
+```
+
+**Files Actually Fixed:**
+- `poker-vm/ui/src/hooks/usePlayerData.ts:64-72` - Changed from 18 to 6 decimals
+- `poker-vm/ui/src/components/playPage/common/TransactionPopup.tsx` - Size and auto-close
+
+**Note:** Changes to `player.toJson()` in `pvm/ts/src/models/player.ts` were NOT necessary. The game's `texasHoldem.ts` does serialization directly.
+
+**Key Takeaway:**
+When migrating from Ethereum to Cosmos, ALL decimal conversions must change from 18 (Wei) to 6 (microunits). This includes display hooks, not just action handlers!
+
 ---
 
 ## 🐛 Bug Fixes & Investigations

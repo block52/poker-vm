@@ -1,8 +1,8 @@
 import React from "react";
-import { ethers } from "ethers";
 import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
 import { PlayerDataReturn } from "../types/index";
 import { useGameStateContext } from "../context/GameStateContext";
+import { convertUSDCToNumber } from "../utils/numberUtils";
 
 /**
  * Custom hook to fetch player data for a specific seat
@@ -49,11 +49,28 @@ export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
     return player || null;
   }, [gameState, seatIndex]);
   
-  // Format stack value with ethers.js (more accurate for large numbers)
+  // Format stack value from Cosmos microunits (6 decimals, not 18!)
   const stackValue = React.useMemo((): number => {
-    if (!playerData?.stack) return 0;
-    return Number(ethers.formatUnits(playerData.stack, 18));
-  }, [playerData]);
+    if (!playerData?.stack) {
+      console.log(`⚠️ usePlayerData - No stack for seat ${seatIndex}:`, {
+        hasPlayerData: !!playerData,
+        stackValue: playerData?.stack,
+        stackType: typeof playerData?.stack
+      });
+      return 0;
+    }
+
+    // Convert USDC microunits to number using utility function
+    const converted = convertUSDCToNumber(playerData.stack);
+    console.log(`💰 usePlayerData - Stack conversion for seat ${seatIndex}:`, {
+      rawStack: playerData.stack,
+      stackType: typeof playerData.stack,
+      convertedValue: converted,
+      note: "Using convertUSDCToNumber utility (6 decimals)"
+    });
+
+    return converted;
+  }, [playerData, seatIndex]);
   
   // Calculate derived properties
   const isFolded = React.useMemo((): boolean => {
