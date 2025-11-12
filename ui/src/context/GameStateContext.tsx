@@ -94,20 +94,24 @@ if (typeof window !== "undefined") {
     };
 }
 
+// ✅ STABILITY FIX: Define wsUrl outside component to prevent recreating on every render
+// This prevents subscribeToTable from changing, which prevents WebSocket disconnect/reconnect cycles
+const WS_URL = import.meta.env.VITE_NODE_WS_URL || "wss://node1.block52.xyz";
+
 export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }) => {
     const [gameState, setGameState] = useState<TexasHoldemStateDTO | undefined>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
 
-    // WebSocket management - direct in Context (no Singleton needed)
-    const [currentTableId, setCurrentTableId] = useState<string | null>(null);
+    // ✅ STABILITY FIX: Use ref instead of state for currentTableId to prevent re-renders
+    // This ref is only used for duplicate checking, not for rendering
+    const currentTableIdRef = useRef<string | null>(null);
     const wsRef = useRef<WebSocket | null>(null);
-    const wsUrl = import.meta.env.VITE_NODE_WS_URL || "wss://node1.block52.xyz";
 
     const subscribeToTable = useCallback(
         (tableId: string) => {
             // Enhanced duplicate check to prevent re-subscription loops
-            if (currentTableId === tableId && wsRef.current?.readyState === WebSocket.OPEN) {
+            if (currentTableIdRef.current === tableId && wsRef.current?.readyState === WebSocket.OPEN) {
                 console.log(`[GameStateContext] Already subscribed to table: ${tableId}`);
                 return;
             }
@@ -126,7 +130,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
             setIsLoading(true);
             setError(null);
-            setCurrentTableId(tableId);
+            currentTableIdRef.current = tableId;
 
             console.log(`[GameStateContext] Subscribing to table: ${tableId}`);
 
@@ -146,7 +150,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
 
             // Create WebSocket connection with URL parameters for auto-subscription
-            const fullWsUrl = `${wsUrl}?tableAddress=${tableId}&playerId=${playerAddress}`;
+            const fullWsUrl = `${WS_URL}?tableAddress=${tableId}&playerId=${playerAddress}`;
             const ws = new WebSocket(fullWsUrl);
             wsRef.current = ws;
 
@@ -157,9 +161,38 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
             ws.onmessage = event => {
                 try {
+                    // 🔍 DEBUG: Log ALL WebSocket messages received
+                    console.log("📨 [WebSocket RAW MESSAGE]", {
+                        timestamp: new Date().toISOString(),
+                        rawData: event.data,
+                        dataLength: event.data?.length
+                    });
+
                     const message = JSON.parse(event.data);
 
+                    // 🔍 DEBUG: Log parsed message structure
+                    console.log("📨 [WebSocket PARSED MESSAGE]", {
+                        timestamp: new Date().toISOString(),
+                        messageType: message.type,
+                        tableAddress: message.tableAddress,
+                        hasGameState: !!message.gameState,
+                        expectedTableId: tableId,
+                        willProcess: message.type === "gameStateUpdate" && message.tableAddress === tableId
+                    });
+
                     if (message.type === "gameStateUpdate" && message.tableAddress === tableId) {
+                        // 🃏 DEBUG: Log hole cards received from WebSocket
+                        console.log("🃏 [HOLE CARDS DEBUG - UI RECEIVED]", {
+                            timestamp: new Date().toISOString(),
+                            currentPlayerAddress: playerAddress,
+                            players: message.gameState?.players?.map((p: any) => ({
+                                seat: p.seat,
+                                address: p.address?.substring(0, 12) + "...",
+                                holeCards: p.holeCards,
+                                isCurrentPlayer: p.address?.toLowerCase() === playerAddress?.toLowerCase()
+                            }))
+                        });
+
                         // 🔍 DEBUG: Log game state change timing for race condition debugging
                         debugLog("GAME STATE UPDATE", {
                             timestamp: new Date().toISOString(),
@@ -264,32 +297,56 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                         if (message.code === "GAME_NOT_FOUND") {
                             setGameState(undefined);
                         }
+                    } else {
+                        // 🔍 DEBUG: Log unhandled message types
+                        console.warn("⚠️ [WebSocket UNHANDLED MESSAGE]", {
+                            timestamp: new Date().toISOString(),
+                            messageType: message.type,
+                            tableAddress: message.tableAddress,
+                            expectedTableId: tableId,
+                            fullMessage: message
+                        });
                     }
                 } catch (err) {
-                    console.error("[GameStateContext] Error parsing WebSocket message:", err);
+                    console.error("❌ [WebSocket ERROR] Failed to parse message:", {
+                        error: err,
+                        errorMessage: (err as Error).message,
+                        rawData: event.data,
+                        timestamp: new Date().toISOString()
+                    });
                     setError(new Error("Error parsing WebSocket message"));
                 }
             };
 
-            ws.onclose = () => {
-                console.log(`[GameStateContext] WebSocket disconnected from table ${tableId}`);
+            ws.onclose = (event) => {
+                console.log("🔌 [WebSocket CLOSE]", {
+                    timestamp: new Date().toISOString(),
+                    tableId,
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean
+                });
                 if (wsRef.current === ws) {
                     wsRef.current = null;
                 }
             };
 
-            ws.onerror = error => {
-                console.error("[GameStateContext] WebSocket error:", error);
+            ws.onerror = (event) => {
+                console.error("❌ [WebSocket ERROR]", {
+                    timestamp: new Date().toISOString(),
+                    tableId,
+                    event
+                });
                 setError(new Error(`WebSocket connection error for table ${tableId}`));
                 setIsLoading(false);
             };
         },
-        [wsUrl]
-    ); // Remove currentTableId from dependencies to prevent infinite loops
+        [] // ✅ STABILITY FIX: Empty deps since WS_URL is constant - prevents reconnect loops
+    );
 
     const unsubscribeFromTable = useCallback(() => {
-        if (currentTableId) {
-            console.log(`[GameStateContext] Unsubscribing from table: ${currentTableId}`);
+        if (currentTableIdRef.current) {
+            console.log(`[GameStateContext] Unsubscribing from table: ${currentTableIdRef.current}`);
         }
 
         // Clean up WebSocket connection
@@ -298,11 +355,11 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
             wsRef.current = null;
         }
 
-        setCurrentTableId(null);
+        currentTableIdRef.current = null;
         setGameState(undefined);
         setIsLoading(false);
         setError(null);
-    }, []); // Remove currentTableId dependency to prevent recreation
+    }, []); // ✅ STABILITY FIX: Empty deps - all refs and setters are stable
 
     // Cleanup on unmount
     useEffect(() => {

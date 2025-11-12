@@ -169,10 +169,10 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                                 <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" width={60} height={80} className="mb-[11px]" />
                             </>
                         ) : (
-                            // Show card backs if not showing
+                            // Show card backs for opponents (they shouldn't see actual cards)
                             <>
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
-                                <img src="/cards/BackCustom.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src="/cards/Back.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src="/cards/Back.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
                             </>
                         )
                     ) : (

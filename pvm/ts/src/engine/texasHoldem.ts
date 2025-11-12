@@ -1583,20 +1583,27 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 const legalActions: LegalActionDTO[] = this.getLegalActions(_player.address);
 
                 // Handle hole cards visibility
+                // 🎴 TEMPORARY: Always send all hole cards to everyone (for testing)
+                // TODO: Restore privacy logic once game is working
                 let holeCardsDto: string[] | undefined = undefined;
-                if (
-                    (caller && _player.address.toLowerCase() === caller.toLowerCase()) ||
-                    caller === ethers.ZeroAddress ||
-                    _player.status === PlayerStatus.SHOWING
-                ) {
-                    if (_player.holeCards) {
-                        holeCardsDto = _player.holeCards.map(card => card.mnemonic);
-                    }
-                } else {
-                    if (_player.holeCards) {
-                        holeCardsDto = _player.holeCards.map(() => "??");
-                    }
+                if (_player.holeCards) {
+                    holeCardsDto = _player.holeCards.map(card => card.mnemonic);
                 }
+
+                // OLD PRIVACY LOGIC (commented out for now):
+                // if (
+                //     (caller && _player.address.toLowerCase() === caller.toLowerCase()) ||
+                //     caller === ethers.ZeroAddress ||
+                //     _player.status === PlayerStatus.SHOWING
+                // ) {
+                //     if (_player.holeCards) {
+                //         holeCardsDto = _player.holeCards.map(card => card.mnemonic);
+                //     }
+                // } else {
+                //     if (_player.holeCards) {
+                //         holeCardsDto = _player.holeCards.map(() => "??");
+                //     }
+                // }
 
                 // Handle timeout
                 if (this._autoExpire > 0 && _player.status === PlayerStatus.ACTIVE && this.expired(_player.address)) {
@@ -1702,12 +1709,16 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 let holeCards: [Card, Card] | undefined = undefined;
 
                 if (p.holeCards && Array.isArray(p.holeCards) && p.holeCards.length === 2) {
-                    try {
-                        const card1 = Deck.fromString(p.holeCards[0]);
-                        const card2 = Deck.fromString(p.holeCards[1]);
-                        holeCards = [card1, card2] as [Card, Card];
-                    } catch (e) {
-                        console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                    // Skip parsing if cards are obscured ("??") - this happens when UI sends back game state
+                    // with opponent cards hidden
+                    if (p.holeCards[0] !== "??" && p.holeCards[1] !== "??") {
+                        try {
+                            const card1 = Deck.fromString(p.holeCards[0]);
+                            const card2 = Deck.fromString(p.holeCards[1]);
+                            holeCards = [card1, card2] as [Card, Card];
+                        } catch (e) {
+                            console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                        }
                     }
                 }
 

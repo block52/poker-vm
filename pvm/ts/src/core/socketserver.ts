@@ -283,7 +283,8 @@ export class SocketService implements SocketServiceInterface {
 
                     // Get initial game state for this table from Cosmos
                     const cosmosConfig = getCosmosConfig();
-                    const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, cosmosConfig.restEndpoint);
+                    // ✅ FIX: Pass playerId as caller so player sees their own hole cards
+                    const gameStateCommand = new GameStateCommand(tableAddress, playerId, cosmosConfig.restEndpoint);
                     const state = await gameStateCommand.execute();
 
                     // Log detailed game state
@@ -687,6 +688,16 @@ export class SocketService implements SocketServiceInterface {
             method: "sendGameStateToPlayer"
         });
 
+        // 🃏 DEBUG: Log hole cards being sent to this player
+        console.log(`🃏 [HOLE CARDS DEBUG - PVM SENDING via sendGameStateToPlayer] Player: ${playerId.substring(0, 12)}...`, {
+            players: gameState.players.map((p: any) => ({
+                seat: p.seat,
+                address: p.address?.substring(0, 12) + "...",
+                holeCards: p.holeCards,
+                isCurrentPlayer: p.address?.toLowerCase() === playerId.toLowerCase()
+            }))
+        });
+
         const updateMessage: GameStateUpdateMessage = {
             type: "gameStateUpdate",
             tableAddress,
@@ -825,8 +836,19 @@ export class SocketService implements SocketServiceInterface {
 
                         // Get game state from this subscriber's perspective from Cosmos
                         const cosmosConfig = getCosmosConfig();
-                        const gameStateCommand = new GameStateCommand(tableAddress, this.validatorPrivateKey, cosmosConfig.restEndpoint);
+                        // ✅ FIX: Pass subscriberId as caller so each player sees their own hole cards
+                        const gameStateCommand = new GameStateCommand(tableAddress, subscriberId, cosmosConfig.restEndpoint);
                         const gameStateResponse = await gameStateCommand.execute();
+
+                        // 🃏 DEBUG: Log hole cards being sent to this subscriber
+                        console.log(`🃏 [HOLE CARDS DEBUG - PVM SENDING] Subscriber: ${subscriberId.substring(0, 12)}...`, {
+                            players: gameStateResponse.players.map((p: any) => ({
+                                seat: p.seat,
+                                address: p.address?.substring(0, 12) + "...",
+                                holeCards: p.holeCards,
+                                isCurrentPlayer: p.address?.toLowerCase() === subscriberId.toLowerCase()
+                            }))
+                        });
 
                         // 🔍 TIMING DEBUG: Log the game state being sent via WebSocket
                         console.log(`🔄 [TIMING DEBUG] Broadcasting to subscriber ${subscriberId}:`, {
