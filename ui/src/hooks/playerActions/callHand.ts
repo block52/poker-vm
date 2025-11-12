@@ -33,8 +33,8 @@ export async function callHand(tableId: string, amount: string): Promise<any> {
             restEndpoint,
             chainId: COSMOS_CONSTANTS.CHAIN_ID,
             prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-            denom: "b52Token", // Gas token
-            gasPrice: "0.025b52Token"
+            denom: "stake", // Gas token
+            gasPrice: "0.025stake"
         },
         mnemonic
     );
