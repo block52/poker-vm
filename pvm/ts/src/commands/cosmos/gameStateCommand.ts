@@ -2,6 +2,7 @@ import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "../../engine/texasHoldem";
 import axios from "axios";
 
+// Should never need this, should be pushed, not pulled
 export class GameStateCommand {
 
     // This will be shared secret later
