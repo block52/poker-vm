@@ -14,14 +14,11 @@ const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
 import BuyInModal from "../components/playPage/BuyInModal";
 import WithdrawalModal from "../components/WithdrawalModal";
 import USDCDepositModal from "../components/USDCDepositModal";
-import CosmosStatus from "../components/cosmos/CosmosStatus";
 import { NetworkSelector } from "../components/NetworkSelector";
 
 // Game wallet and SDK imports
 // ...existing code...
-import { formatAddress } from "../components/common/utils";
 import { GameType } from "@bitcoinbrisbane/block52";
-import { formatUSDCToSimpleDollars } from "../utils/numberUtils"; // Import USDC utility function
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
@@ -105,31 +102,6 @@ const WithdrawButton = React.memo(({ onClick }: { onClick: () => void }) => {
     );
 });
 
-// Memoized Create New Table button component
-const CreateTableButton = React.memo(({ onClick }: { onClick: () => void }) => {
-    const buttonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-        }),
-        []
-    );
-
-    const handleClick = useCallback(() => {
-        onClick();
-    }, [onClick]);
-
-    return (
-        <button
-            type="button"
-            onClick={handleClick}
-            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
-            style={buttonStyle}
-        >
-            Create New Table
-        </button>
-    );
-});
-
 const CreateTransferButton = React.memo(({ onClick }: { onClick: () => void }) => {
     const buttonStyle = useMemo(
         () => ({
@@ -181,18 +153,18 @@ const Dashboard: React.FC = () => {
     const [passwordError, setPasswordError] = useState<string>("");
     const [showPassword, setShowPassword] = useState<boolean>(false);
 
-    const { isConnected, open, disconnect, address } = useUserWalletConnect();
+    const { isConnected, open, address } = useUserWalletConnect();
 
     // Wagmi hooks for Base Chain (USDC deposit bridge only)
     const { chain } = useWagmiAccount();
     const { switchChain } = useSwitchChain();
 
     // Use the findGames hook
-    const { games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames }: FindGamesReturn = useFindGames();
+    const { games, refetch: refetchGames }: FindGamesReturn = useFindGames();
 
     // Get player counts for all games
     const gameAddresses = useMemo(() => games.map(g => g.address), [games]);
-    const { playerCounts } = useTablePlayerCounts(gameAddresses);
+    useTablePlayerCounts(gameAddresses);
 
     // Removed: Ethereum account hook - now using Cosmos wallet only
 
@@ -220,8 +192,8 @@ const Dashboard: React.FC = () => {
 
     // Buy In Modal
     const [showBuyInModal, setShowBuyInModal] = useState(false);
-    const [buyInTableId, setBuyInTableId] = useState(""); // Optional, if needed later
-    const [selectedGameForBuyIn, setSelectedGameForBuyIn] = useState<any>(null); // Store selected game for buy-in modal
+    const [buyInTableId] = useState(""); // Optional, if needed later
+    const [selectedGameForBuyIn] = useState<any>(null); // Store selected game for buy-in modal
 
     // Withdrawal Modal
     const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
@@ -231,12 +203,6 @@ const Dashboard: React.FC = () => {
 
     // Wallet connection warning
     const [showWalletWarning, setShowWalletWarning] = useState(false);
-
-    // State for showing all tables
-    const [showAllTables, setShowAllTables] = useState(false);
-
-    // State for copy notification
-    const [copiedTableId, setCopiedTableId] = useState<string | null>(null);
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -540,17 +506,6 @@ const Dashboard: React.FC = () => {
         [navigate, buyInTableId]
     );
 
-    // Memoized Create Table callback
-    const handleCreateTableClick = useCallback(() => {
-        // Reset modal values to defaults when opening
-        setModalGameType(GameType.SIT_AND_GO);
-        setModalMinBuyIn(10);
-        setModalMaxBuyIn(100);
-        setModalSitAndGoBuyIn(1);
-        setModalPlayerCount(4);
-        setShowCreateGameModal(true);
-    }, []);
-
     // Auto-switch to Base Chain when wallet connects
     useEffect(() => {
         const autoSwitchToBase = async () => {
@@ -586,19 +541,10 @@ const Dashboard: React.FC = () => {
         setShowWithdrawalModal(true);
     }, []);
 
-
     // Removed: handleImportModalClick - no longer needed (using Cosmos wallet)
 
     // Memoized game selection callbacks
     // Removed: Game selection button handlers - no longer needed
-
-    // Memoized Choose Table callback
-    const handleChooseTableClick = useCallback(() => {
-        if (games && games.length > 0) {
-            setShowBuyInModal(true);
-            setBuyInTableId(games[0].address);
-        }
-    }, [games]);
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
@@ -1591,7 +1537,6 @@ const Dashboard: React.FC = () => {
                             )}
                         </div>
 
-
                         {/* Display new table address if available */}
                         {/* {newTableAddress && (
                             <div className="bg-gray-700/90 backdrop-blur-sm p-5 rounded-xl mb-6 shadow-lg border border-green-500/20 hover:border-green-500/30 transition-all duration-300">
@@ -1660,7 +1605,6 @@ const Dashboard: React.FC = () => {
                                 </div>
                             </div>
                         )} */}
-
                     </div>
 
                     {/* Reset blockchain button was here, now commented out by user */}

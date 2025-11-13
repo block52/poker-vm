@@ -352,7 +352,7 @@ export default function TableAdminPage() {
                                                             {new Date(table.createdAt).toLocaleDateString()}
                                                         </div>
                                                         <div className="text-gray-400">
-                                                            {new Date(table.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            {new Date(table.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                                         </div>
                                                     </div>
                                                 ) : (

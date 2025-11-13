@@ -114,7 +114,7 @@ export default function DistributionPage() {
     // Parse deck string into array of card mnemonics
     function parseDeck(deckString: string): string[] {
         // Remove brackets if present (e.g., "AS-KD-[QH]-JC" -> "AS-KD-QH-JC")
-        const cleanDeck = deckString.replace(/[\[\]]/g, "");
+        const cleanDeck = deckString.replace(/[[\]]/g, "");
         return cleanDeck.split("-").filter(card => card.length === 2);
     }
 

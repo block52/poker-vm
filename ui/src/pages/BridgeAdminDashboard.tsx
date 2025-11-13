@@ -108,7 +108,6 @@ export default function BridgeAdminDashboard() {
     // Check if deposits have been processed on Cosmos
     const checkProcessingStatus = async (depositsToCheck: Deposit[]) => {
         try {
-            const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
             const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
 
             // We need to check the deterministic txHash for each deposit
