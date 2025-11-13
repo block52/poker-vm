@@ -200,21 +200,9 @@
     viem "^2.31.7"
     zustand "5.0.3"
 
-"@bitcoinbrisbane/block52@3.0.4":
-  version "3.0.4"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.0.4.tgz#3ed722b662bf16614111dd0d3d9ccc79ca08df38"
-  integrity sha512-/QlNcbERdE9bYuCTH9iQiMjCQd1SSgL9QQkbaf3fuz6+rG2/YX0ZcNxv45FFSOFhDFKwbSlz8Zilk8T1gSvOtA==
-  dependencies:
-    "@bufbuild/protobuf" "^2.10.0"
-    "@cosmjs/crypto" "^0.36.1"
-    "@cosmjs/encoding" "^0.36.1"
-    "@cosmjs/proto-signing" "^0.36.1"
-    "@cosmjs/stargate" "^0.36.1"
-    "@keplr-wallet/types" "^0.12.138"
-    axios "^1.12.2"
-    ethers "^6.15.0"
-    long "^5.3.2"
-    tslib "^2.6.0"
+"@bitcoinbrisbane/block52@link:../sdk":
+  version "0.0.0"
+  uid ""
 
 "@bufbuild/protobuf@^2.10.0":
   version "2.10.1"
@@ -832,7 +820,7 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@keplr-wallet/types@^0.12.138":
+"@keplr-wallet/types@^0.12.0":
   version "0.12.287"
   resolved "https://registry.yarnpkg.com/@keplr-wallet/types/-/types-0.12.287.tgz#91009695bdcf6bf6c850cdf7263551ca0ebebeb9"
   integrity sha512-f36Qa/Ns3LgPkuDc5D54UlcrV3osgq/B/ooEoNa67mPy9aFw1jA1Ve3Aiu1jcrPqwGY2ndvo/ncW6fiHXpVyaA==

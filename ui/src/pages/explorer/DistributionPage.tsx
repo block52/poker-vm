@@ -55,13 +55,11 @@ export default function DistributionPage() {
                     console.log(`🎮 Game ${game.gameId} raw response:`, gameStateResponse);
 
                     // Parse the game_state JSON string
-                    // @ts-expect-error - GameState type is generic, actual response may have game_state field
                     if (!gameStateResponse || !gameStateResponse.game_state) {
                         console.warn(`⚠️ No game_state found for game ${game.gameId}`);
                         continue;
                     }
 
-                    // @ts-expect-error - GameState type is generic, actual response may have game_state field
                     const gameState = JSON.parse(gameStateResponse.game_state);
                     console.log(`🎮 Game ${game.gameId} parsed state:`, gameState);
                     console.log("🃏 Deck field:", gameState?.deck);

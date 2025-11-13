@@ -194,8 +194,6 @@ export default function BridgeAdminDashboard() {
             console.log("🌉 Processing deposit index:", depositIndex);
 
             // Process the deposit
-            // TODO: Fix SDK types - processDeposit exists but needs proper type definition
-            // @ts-expect-error - Temporarily ignore type error until SDK types are updated
             const hash = await signingClient.processDeposit(depositIndex);
 
             // Wait for transaction confirmation

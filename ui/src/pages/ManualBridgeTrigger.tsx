@@ -71,8 +71,6 @@ export default function ManualBridgeTrigger() {
             console.log("🌉 Processing deposit index:", index);
 
             // Process the deposit
-            // TODO: Fix SDK types - processDeposit exists but needs proper type definition
-            // @ts-expect-error - Temporarily ignore type error until SDK types are updated
             const hash = await signingClient.processDeposit(index);
 
             // Wait a bit then query the transaction for details and check if it succeeded
