@@ -4,6 +4,6 @@
 //   protoc               unknown
 // source: amino/amino.proto
 
-/* eslint-disable */
+ 
 
 export const protobufPackage = "amino";

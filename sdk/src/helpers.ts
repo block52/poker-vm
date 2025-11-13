@@ -21,9 +21,9 @@ export type Return<T> =
 export const MissingWalletError = new Error("wallet is required");
 
 export function getStructure(template) {
-	let structure = { fields: []  as Array<unknown>}
+	const structure = { fields: []  as Array<unknown>}
 	for (const [key, value] of Object.entries(template)) {
-		let field: any = {}
+		const field: any = {}
 		field.name = key
 		field.type = typeof value
 		structure.fields.push(field)

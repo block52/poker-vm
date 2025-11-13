@@ -4,6 +4,6 @@
 //   protoc               unknown
 // source: cosmos/msg/v1/msg.proto
 
-/* eslint-disable */
+ 
 
 export const protobufPackage = "cosmos.msg.v1";

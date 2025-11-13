@@ -196,8 +196,8 @@ type Field = {
 }
 function getStructure(template) {
 	const structure: {fields: Field[]} = { fields: [] }
-	for (let [key, value] of Object.entries(template)) {
-		let field = { name: key, type: typeof value }
+	for (const [key, value] of Object.entries(template)) {
+		const field = { name: key, type: typeof value }
 		structure.fields.push(field)
 	}
 	return structure
@@ -224,7 +224,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgCreateGroup({ value: MsgCreateGroup.fromPartial(value) })
+				const msg = this.msgCreateGroup({ value: MsgCreateGroup.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgCreateGroup: Could not broadcast Tx: '+ e.message)
@@ -238,7 +238,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateGroupMembers({ value: MsgUpdateGroupMembers.fromPartial(value) })
+				const msg = this.msgUpdateGroupMembers({ value: MsgUpdateGroupMembers.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateGroupMembers: Could not broadcast Tx: '+ e.message)
@@ -252,7 +252,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateGroupAdmin({ value: MsgUpdateGroupAdmin.fromPartial(value) })
+				const msg = this.msgUpdateGroupAdmin({ value: MsgUpdateGroupAdmin.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateGroupAdmin: Could not broadcast Tx: '+ e.message)
@@ -266,7 +266,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateGroupMetadata({ value: MsgUpdateGroupMetadata.fromPartial(value) })
+				const msg = this.msgUpdateGroupMetadata({ value: MsgUpdateGroupMetadata.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateGroupMetadata: Could not broadcast Tx: '+ e.message)
@@ -280,7 +280,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgCreateGroupPolicy({ value: MsgCreateGroupPolicy.fromPartial(value) })
+				const msg = this.msgCreateGroupPolicy({ value: MsgCreateGroupPolicy.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgCreateGroupPolicy: Could not broadcast Tx: '+ e.message)
@@ -294,7 +294,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgCreateGroupWithPolicy({ value: MsgCreateGroupWithPolicy.fromPartial(value) })
+				const msg = this.msgCreateGroupWithPolicy({ value: MsgCreateGroupWithPolicy.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgCreateGroupWithPolicy: Could not broadcast Tx: '+ e.message)
@@ -308,7 +308,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateGroupPolicyAdmin({ value: MsgUpdateGroupPolicyAdmin.fromPartial(value) })
+				const msg = this.msgUpdateGroupPolicyAdmin({ value: MsgUpdateGroupPolicyAdmin.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateGroupPolicyAdmin: Could not broadcast Tx: '+ e.message)
@@ -322,7 +322,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateGroupPolicyDecisionPolicy({ value: MsgUpdateGroupPolicyDecisionPolicy.fromPartial(value) })
+				const msg = this.msgUpdateGroupPolicyDecisionPolicy({ value: MsgUpdateGroupPolicyDecisionPolicy.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateGroupPolicyDecisionPolicy: Could not broadcast Tx: '+ e.message)
@@ -336,7 +336,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateGroupPolicyMetadata({ value: MsgUpdateGroupPolicyMetadata.fromPartial(value) })
+				const msg = this.msgUpdateGroupPolicyMetadata({ value: MsgUpdateGroupPolicyMetadata.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateGroupPolicyMetadata: Could not broadcast Tx: '+ e.message)
@@ -350,7 +350,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgSubmitProposal({ value: MsgSubmitProposal.fromPartial(value) })
+				const msg = this.msgSubmitProposal({ value: MsgSubmitProposal.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgSubmitProposal: Could not broadcast Tx: '+ e.message)
@@ -364,7 +364,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgWithdrawProposal({ value: MsgWithdrawProposal.fromPartial(value) })
+				const msg = this.msgWithdrawProposal({ value: MsgWithdrawProposal.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgWithdrawProposal: Could not broadcast Tx: '+ e.message)
@@ -378,7 +378,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgVote({ value: MsgVote.fromPartial(value) })
+				const msg = this.msgVote({ value: MsgVote.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgVote: Could not broadcast Tx: '+ e.message)
@@ -392,7 +392,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgExec({ value: MsgExec.fromPartial(value) })
+				const msg = this.msgExec({ value: MsgExec.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgExec: Could not broadcast Tx: '+ e.message)
@@ -406,7 +406,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgLeaveGroup({ value: MsgLeaveGroup.fromPartial(value) })
+				const msg = this.msgLeaveGroup({ value: MsgLeaveGroup.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgLeaveGroup: Could not broadcast Tx: '+ e.message)
@@ -584,7 +584,7 @@ class SDKModule {
     })
 	
     this.tx = methods;
-    for (let m in methods) {
+    for (const m in methods) {
         this.tx[m] = methods[m].bind(this.tx);
     }
 	}

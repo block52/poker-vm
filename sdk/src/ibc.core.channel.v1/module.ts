@@ -139,8 +139,8 @@ type Field = {
 }
 function getStructure(template) {
 	const structure: {fields: Field[]} = { fields: [] }
-	for (let [key, value] of Object.entries(template)) {
-		let field = { name: key, type: typeof value }
+	for (const [key, value] of Object.entries(template)) {
+		const field = { name: key, type: typeof value }
 		structure.fields.push(field)
 	}
 	return structure
@@ -167,7 +167,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgChannelOpenInit({ value: MsgChannelOpenInit.fromPartial(value) })
+				const msg = this.msgChannelOpenInit({ value: MsgChannelOpenInit.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgChannelOpenInit: Could not broadcast Tx: '+ e.message)
@@ -181,7 +181,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgChannelOpenTry({ value: MsgChannelOpenTry.fromPartial(value) })
+				const msg = this.msgChannelOpenTry({ value: MsgChannelOpenTry.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgChannelOpenTry: Could not broadcast Tx: '+ e.message)
@@ -195,7 +195,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgChannelOpenAck({ value: MsgChannelOpenAck.fromPartial(value) })
+				const msg = this.msgChannelOpenAck({ value: MsgChannelOpenAck.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgChannelOpenAck: Could not broadcast Tx: '+ e.message)
@@ -209,7 +209,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgChannelOpenConfirm({ value: MsgChannelOpenConfirm.fromPartial(value) })
+				const msg = this.msgChannelOpenConfirm({ value: MsgChannelOpenConfirm.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgChannelOpenConfirm: Could not broadcast Tx: '+ e.message)
@@ -223,7 +223,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgChannelCloseInit({ value: MsgChannelCloseInit.fromPartial(value) })
+				const msg = this.msgChannelCloseInit({ value: MsgChannelCloseInit.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgChannelCloseInit: Could not broadcast Tx: '+ e.message)
@@ -237,7 +237,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgChannelCloseConfirm({ value: MsgChannelCloseConfirm.fromPartial(value) })
+				const msg = this.msgChannelCloseConfirm({ value: MsgChannelCloseConfirm.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgChannelCloseConfirm: Could not broadcast Tx: '+ e.message)
@@ -251,7 +251,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgRecvPacket({ value: MsgRecvPacket.fromPartial(value) })
+				const msg = this.msgRecvPacket({ value: MsgRecvPacket.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgRecvPacket: Could not broadcast Tx: '+ e.message)
@@ -265,7 +265,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgTimeout({ value: MsgTimeout.fromPartial(value) })
+				const msg = this.msgTimeout({ value: MsgTimeout.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgTimeout: Could not broadcast Tx: '+ e.message)
@@ -279,7 +279,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgTimeoutOnClose({ value: MsgTimeoutOnClose.fromPartial(value) })
+				const msg = this.msgTimeoutOnClose({ value: MsgTimeoutOnClose.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgTimeoutOnClose: Could not broadcast Tx: '+ e.message)
@@ -293,7 +293,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgAcknowledgement({ value: MsgAcknowledgement.fromPartial(value) })
+				const msg = this.msgAcknowledgement({ value: MsgAcknowledgement.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgAcknowledgement: Could not broadcast Tx: '+ e.message)
@@ -426,7 +426,7 @@ class SDKModule {
     })
 	
     this.tx = methods;
-    for (let m in methods) {
+    for (const m in methods) {
         this.tx[m] = methods[m].bind(this.tx);
     }
 	}

@@ -4,6 +4,6 @@
 //   protoc               unknown
 // source: google/api/annotations.proto
 
-/* eslint-disable */
+ 
 
 export const protobufPackage = "google.api";

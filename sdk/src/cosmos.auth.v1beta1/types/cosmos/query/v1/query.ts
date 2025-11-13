@@ -4,6 +4,6 @@
 //   protoc               unknown
 // source: cosmos/query/v1/query.proto
 
-/* eslint-disable */
+ 
 
 export const protobufPackage = "cosmos.query.v1";

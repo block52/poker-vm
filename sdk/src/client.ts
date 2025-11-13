@@ -1,4 +1,3 @@
-/// <reference path="./types.d.ts" />
 import {
   GeneratedType,
   OfflineSigner,
@@ -18,7 +17,7 @@ const defaultFee = {
 };
 
 export class IgniteClient extends EventEmitter {
-	static plugins: IgntModule[] = [];
+  static plugins: IgntModule[] = [];
   env: Env;
   signer?: OfflineSigner;
   registry: Array<[string, GeneratedType]> = [];
@@ -31,7 +30,7 @@ export class IgniteClient extends EventEmitter {
 
     if (Array.isArray(plugin)) {
       type Extension = UnionToIntersection<Return<T>['module']>
-      return AugmentedClient as typeof IgniteClient & Constructor<Extension>;  
+      return AugmentedClient as typeof IgniteClient & Constructor<Extension>;
     }
 
     type Extension = Return<T>['module']
@@ -60,15 +59,15 @@ export class IgniteClient extends EventEmitter {
       if (this.registry) {
         this.registry = this.registry.concat(pluginInstance.registry)
       }
-		});		
+    });
   }
-  useSigner(signer: OfflineSigner) {    
-      this.signer = signer;
-      this.emit("signer-changed", this.signer);
+  useSigner(signer: OfflineSigner) {
+    this.signer = signer;
+    this.emit("signer-changed", this.signer);
   }
-  removeSigner() {    
-      this.signer = undefined;
-      this.emit("signer-changed", this.signer);
+  removeSigner() {
+    this.signer = undefined;
+    this.emit("signer-changed", this.signer);
   }
   async useKeplr(keplrChainInfo: Partial<ChainInfo> = {}) {
     // Using queryClients directly because BaseClient has no knowledge of the modules at this stage
@@ -91,11 +90,11 @@ export class IgniteClient extends EventEmitter {
       const rpc = this.env.rpcURL;
       const rest = this.env.apiURL;
 
-      let bip44 = {
+      const bip44 = {
         coinType: 118,
       };
 
-      let bech32Config = {
+      const bech32Config = {
         bech32PrefixAccAddr: addrPrefix,
         bech32PrefixAccPub: addrPrefix + "pub",
         bech32PrefixValAddr: addrPrefix + "valoper",
@@ -104,7 +103,7 @@ export class IgniteClient extends EventEmitter {
         bech32PrefixConsPub: addrPrefix + "valconspub",
       };
 
-      let currencies =
+      const currencies =
         tokens.supply?.map((x) => {
           const y = {
             coinDenom: x.denom?.toUpperCase() ?? "",
@@ -114,13 +113,13 @@ export class IgniteClient extends EventEmitter {
           return y;
         }) ?? [];
 
-      let stakeCurrency = {
-              coinDenom: staking.params?.bond_denom?.toUpperCase() ?? "",
-              coinMinimalDenom: staking.params?.bond_denom ?? "",
-              coinDecimals: 0,
-            };
+      const stakeCurrency = {
+        coinDenom: staking.params?.bond_denom?.toUpperCase() ?? "",
+        coinMinimalDenom: staking.params?.bond_denom ?? "",
+        coinDecimals: 0,
+      };
 
-      let feeCurrencies =
+      const feeCurrencies =
         tokens.supply?.map((x) => {
           const y = {
             coinDenom: x.denom?.toUpperCase() ?? "",

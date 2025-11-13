@@ -31,8 +31,8 @@ type Field = {
 }
 function getStructure(template) {
 	const structure: {fields: Field[]} = { fields: [] }
-	for (let [key, value] of Object.entries(template)) {
-		let field = { name: key, type: typeof value }
+	for (const [key, value] of Object.entries(template)) {
+		const field = { name: key, type: typeof value }
 		structure.fields.push(field)
 	}
 	return structure
@@ -59,7 +59,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateParams({ value: MsgUpdateParams.fromPartial(value) })
+				const msg = this.msgUpdateParams({ value: MsgUpdateParams.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateParams: Could not broadcast Tx: '+ e.message)
@@ -111,7 +111,7 @@ class SDKModule {
     })
 	
     this.tx = methods;
-    for (let m in methods) {
+    for (const m in methods) {
         this.tx[m] = methods[m].bind(this.tx);
     }
 	}

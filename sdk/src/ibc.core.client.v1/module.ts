@@ -115,8 +115,8 @@ type Field = {
 }
 function getStructure(template) {
 	const structure: {fields: Field[]} = { fields: [] }
-	for (let [key, value] of Object.entries(template)) {
-		let field = { name: key, type: typeof value }
+	for (const [key, value] of Object.entries(template)) {
+		const field = { name: key, type: typeof value }
 		structure.fields.push(field)
 	}
 	return structure
@@ -143,7 +143,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgCreateClient({ value: MsgCreateClient.fromPartial(value) })
+				const msg = this.msgCreateClient({ value: MsgCreateClient.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgCreateClient: Could not broadcast Tx: '+ e.message)
@@ -157,7 +157,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateClient({ value: MsgUpdateClient.fromPartial(value) })
+				const msg = this.msgUpdateClient({ value: MsgUpdateClient.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateClient: Could not broadcast Tx: '+ e.message)
@@ -171,7 +171,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpgradeClient({ value: MsgUpgradeClient.fromPartial(value) })
+				const msg = this.msgUpgradeClient({ value: MsgUpgradeClient.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpgradeClient: Could not broadcast Tx: '+ e.message)
@@ -185,7 +185,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgSubmitMisbehaviour({ value: MsgSubmitMisbehaviour.fromPartial(value) })
+				const msg = this.msgSubmitMisbehaviour({ value: MsgSubmitMisbehaviour.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgSubmitMisbehaviour: Could not broadcast Tx: '+ e.message)
@@ -199,7 +199,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgRecoverClient({ value: MsgRecoverClient.fromPartial(value) })
+				const msg = this.msgRecoverClient({ value: MsgRecoverClient.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgRecoverClient: Could not broadcast Tx: '+ e.message)
@@ -213,7 +213,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgIbcsoftwareUpgrade({ value: MsgIBCSoftwareUpgrade.fromPartial(value) })
+				const msg = this.msgIbcsoftwareUpgrade({ value: MsgIBCSoftwareUpgrade.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgIBCSoftwareUpgrade: Could not broadcast Tx: '+ e.message)
@@ -227,7 +227,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateParams({ value: MsgUpdateParams.fromPartial(value) })
+				const msg = this.msgUpdateParams({ value: MsgUpdateParams.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateParams: Could not broadcast Tx: '+ e.message)
@@ -241,7 +241,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgDeleteClientCreator({ value: MsgDeleteClientCreator.fromPartial(value) })
+				const msg = this.msgDeleteClientCreator({ value: MsgDeleteClientCreator.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgDeleteClientCreator: Could not broadcast Tx: '+ e.message)
@@ -356,7 +356,7 @@ class SDKModule {
     })
 	
     this.tx = methods;
-    for (let m in methods) {
+    for (const m in methods) {
         this.tx[m] = methods[m].bind(this.tx);
     }
 	}

@@ -4,6 +4,6 @@
 //   protoc               unknown
 // source: gogoproto/gogo.proto
 
-/* eslint-disable */
+ 
 
 export const protobufPackage = "gogoproto";

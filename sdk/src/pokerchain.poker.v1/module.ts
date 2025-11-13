@@ -120,8 +120,8 @@ type Field = {
 }
 function getStructure(template) {
 	const structure: {fields: Field[]} = { fields: [] }
-	for (let [key, value] of Object.entries(template)) {
-		let field = { name: key, type: typeof value }
+	for (const [key, value] of Object.entries(template)) {
+		const field = { name: key, type: typeof value }
 		structure.fields.push(field)
 	}
 	return structure
@@ -148,7 +148,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgUpdateParams({ value: MsgUpdateParams.fromPartial(value) })
+				const msg = this.msgUpdateParams({ value: MsgUpdateParams.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgUpdateParams: Could not broadcast Tx: '+ e.message)
@@ -162,7 +162,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgCreateGame({ value: MsgCreateGame.fromPartial(value) })
+				const msg = this.msgCreateGame({ value: MsgCreateGame.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgCreateGame: Could not broadcast Tx: '+ e.message)
@@ -176,7 +176,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgJoinGame({ value: MsgJoinGame.fromPartial(value) })
+				const msg = this.msgJoinGame({ value: MsgJoinGame.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgJoinGame: Could not broadcast Tx: '+ e.message)
@@ -190,7 +190,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgLeaveGame({ value: MsgLeaveGame.fromPartial(value) })
+				const msg = this.msgLeaveGame({ value: MsgLeaveGame.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgLeaveGame: Could not broadcast Tx: '+ e.message)
@@ -204,7 +204,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgDealCards({ value: MsgDealCards.fromPartial(value) })
+				const msg = this.msgDealCards({ value: MsgDealCards.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgDealCards: Could not broadcast Tx: '+ e.message)
@@ -218,7 +218,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgPerformAction({ value: MsgPerformAction.fromPartial(value) })
+				const msg = this.msgPerformAction({ value: MsgPerformAction.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgPerformAction: Could not broadcast Tx: '+ e.message)
@@ -232,7 +232,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgMint({ value: MsgMint.fromPartial(value) })
+				const msg = this.msgMint({ value: MsgMint.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgMint: Could not broadcast Tx: '+ e.message)
@@ -246,7 +246,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgBurn({ value: MsgBurn.fromPartial(value) })
+				const msg = this.msgBurn({ value: MsgBurn.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgBurn: Could not broadcast Tx: '+ e.message)
@@ -260,7 +260,7 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			try {			
 				const { address } = (await signer.getAccounts())[0]; 
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
-				let msg = this.msgProcessDeposit({ value: MsgProcessDeposit.fromPartial(value) })
+				const msg = this.msgProcessDeposit({ value: MsgProcessDeposit.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
 			} catch (e: any) {
 				throw new Error('TxClient:sendMsgProcessDeposit: Could not broadcast Tx: '+ e.message)
@@ -377,7 +377,7 @@ class SDKModule {
     })
 	
     this.tx = methods;
-    for (let m in methods) {
+    for (const m in methods) {
         this.tx[m] = methods[m].bind(this.tx);
     }
 	}
