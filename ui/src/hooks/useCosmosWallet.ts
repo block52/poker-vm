@@ -10,7 +10,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient } from "../utils/cosmos/client";
 import { getCosmosMnemonic, setCosmosMnemonic } from "../utils/cosmos/storage";
-import { getAddressFromMnemonic } from "@bitcoinbrisbane/block52";
+import { getAddressFromMnemonic, SigningCosmosClient } from "@bitcoinbrisbane/block52";
+import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { useNetwork } from "../context/NetworkContext";
 
 interface Balance {
     denom: string;
@@ -28,6 +30,7 @@ interface UseCosmosWalletReturn {
 }
 
 export const useCosmosWallet = (): UseCosmosWalletReturn => {
+    const { currentNetwork } = useNetwork();
     const [address, setAddress] = useState<string | null>(null);
     const [balance, setBalance] = useState<Balance[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -107,15 +110,57 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
         }
     }, []);
 
-    // Send tokens (stub - will be implemented with SigningCosmosClient)
-    const sendTokens = useCallback(async (_recipient: string, _amount: bigint | string): Promise<string> => {
+    // Send tokens using SigningCosmosClient
+    const sendTokens = useCallback(async (recipient: string, amount: bigint | string): Promise<string> => {
         if (!address) {
             throw new Error("No wallet connected");
         }
 
-        // TODO: Implement with SigningCosmosClient
-        throw new Error("sendTokens not yet implemented - use /test-signing page");
-    }, [address]);
+        const mnemonic = getCosmosMnemonic();
+        if (!mnemonic) {
+            throw new Error("No mnemonic found. Please import a wallet first.");
+        }
+
+        try {
+            // Create wallet from mnemonic
+            const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
+                prefix: "b52"
+            });
+
+            // Create SigningCosmosClient
+            const signingClient = new SigningCosmosClient({
+                rpcEndpoint: currentNetwork.rpc,
+                restEndpoint: currentNetwork.rest,
+                chainId: "pokerchain",
+                prefix: "b52",
+                denom: "stake", // Native gas token
+                gasPrice: "0stake", // Testnet has zero gas fees (minimum-gas-prices = "")
+                wallet: hdWallet
+            });
+
+            // Convert amount to BigInt if it's a string
+            const amountBigInt = typeof amount === "string" ? BigInt(amount) : amount;
+
+            // Send tokens - using "usdc" as default denom for poker transfers
+            const txHash = await signingClient.sendTokens(
+                address,        // from address
+                recipient,      // to address
+                amountBigInt,   // amount in micro-units as BigInt
+                "usdc",         // denom
+                "Transfer via Dashboard"  // memo
+            );
+
+            console.log("✅ Tokens sent successfully:", txHash);
+
+            // Refresh balance after sending
+            await refreshBalance();
+
+            return txHash;
+        } catch (err: any) {
+            console.error("❌ Failed to send tokens:", err);
+            throw new Error(err.message || "Failed to send tokens");
+        }
+    }, [address, currentNetwork, refreshBalance]);
 
     return {
         address,
