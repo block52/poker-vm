@@ -95,14 +95,5 @@
   },
   "resolutions": {
     "rollup": "^4.34.9"
-  },
-  "overrides": {
-    "lit": "3.1.0",
-    "rollup": "^4.34.9"
-  },
-  "pnpm": {
-    "overrides": {
-      "rollup": "^4.34.9"
-    }
   }
 }
