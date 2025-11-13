@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { createCosmosClient, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
+import { useNetwork } from "../../context/NetworkContext";
 import { Bar } from "react-chartjs-2";
 import {
     Chart as ChartJS,
@@ -23,23 +24,27 @@ export default function DistributionPage() {
     const [loading, setLoading] = useState(true);
     const [totalGames, setTotalGames] = useState(0);
     const [totalCardsDealt, setTotalCardsDealt] = useState(0);
+    const { currentNetwork } = useNetwork();
 
     useEffect(() => {
+        // Clear client when network changes to force re-initialization
+        clearCosmosClient();
         fetchCardDistribution();
-    }, []);
+    }, [currentNetwork]);
 
     async function fetchCardDistribution() {
         try {
             setLoading(true);
 
             // Initialize Cosmos client
-            const cosmosClient = createCosmosClient({
-                rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657",
-                restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317",
-                chainId: COSMOS_CONSTANTS.CHAIN_ID,
-                prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-                denom: "stake"
+            const cosmosClient = getCosmosClient({
+                rpc: currentNetwork.rpc,
+                rest: currentNetwork.rest,
             });
+
+            if (!cosmosClient) {
+                throw new Error("Cosmos client not initialized.");
+            }
 
             // Fetch all games
             const games = await cosmosClient.listGames();
@@ -54,9 +59,21 @@ export default function DistributionPage() {
             for (const game of games) {
                 try {
                     // Fetch game state (contains deck)
-                    const gameState = await cosmosClient.getGameState(game.id);
+                    const gameStateResponse = await cosmosClient.getGameState(game.gameId);
+                    console.log(`🎮 Game ${game.gameId} raw response:`, gameStateResponse);
+
+                    // Parse the game_state JSON string
+                    if (!gameStateResponse || !gameStateResponse.game_state) {
+                        console.warn(`⚠️ No game_state found for game ${game.gameId}`);
+                        continue;
+                    }
+
+                    const gameState = JSON.parse(gameStateResponse.game_state);
+                    console.log(`🎮 Game ${game.gameId} parsed state:`, gameState);
+                    console.log(`🃏 Deck field:`, gameState?.deck);
 
                     if (gameState && gameState.deck) {
+                        console.log(`✅ Found deck for game ${game.gameId}: ${gameState.deck.substring(0, 50)}...`);
                         // Parse deck string
                         const cards = parseDeck(gameState.deck);
 
@@ -71,7 +88,7 @@ export default function DistributionPage() {
                         });
                     }
                 } catch (error) {
-                    console.warn(`Failed to fetch game state for ${game.id}:`, error);
+                    console.warn(`Failed to fetch game state for ${game.gameId}:`, error);
                 }
             }
 
