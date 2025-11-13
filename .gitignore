@@ -467,3 +467,4 @@ bot/dashboard/dist
 pvm/ts/.DS_Store
 
 *.tsbuildinfo
+ui/tsconfig.tsbuildinfo
