@@ -2374,6 +2374,87 @@ Command → Game Engine → Action Recording
 
 ---
 
+## ✅ Phase 10: New Hand Action Support (Nov 13, 2025)
+
+### Bug #6: "new-hand" Action Failing with Error 1105 (FIXED ✅)
+
+**Symptom:**
+- Clicking "Start New Hand" button after showdown failed
+- Transaction failed with error code 1105
+- Explorer showed: `FAILED (code 1105)`
+- Action was: `"action": "new-hand"`
+- PVM actually supports new-hand action but Cosmos was rejecting it
+
+**Root Cause:**
+The "new-hand" action was not in the Cosmos keeper's valid actions list:
+```go
+// OLD CODE - Missing new-hand ❌
+validActions := []PlayerActionType{
+    SmallBlind, BigBlind, Fold, Check, Bet, Call, Raise, AllIn, Muck, SitIn, SitOut, Show, Join, Deal,
+    // ❌ NewHand was missing!
+}
+```
+
+Additionally, PVM's `NewHandAction` requires a pre-shuffled deck from Cosmos (via `deck=...` parameter), but the keeper wasn't providing it.
+
+**The Fix:**
+1. **Added "new-hand" to valid actions** (`msg_server_perform_action.go:35,41`):
+   ```go
+   const (
+       // ... existing actions ...
+       NewHand    PlayerActionType = "new-hand"
+   )
+
+   validActions := []PlayerActionType{
+       SmallBlind, BigBlind, Fold, Check, Bet, Call, Raise, AllIn, Muck, SitIn, SitOut, Show, Join, Deal, NewHand,
+   }
+   ```
+
+2. **Special handling in callGameEngine** (`msg_server_perform_action.go:163-178`):
+   ```go
+   if action == "new-hand" {
+       // Generate deterministic shuffled deck from block hash
+       deck, err := k.Keeper.InitializeAndShuffleDeck(ctx)
+       if err != nil {
+           return fmt.Errorf("failed to initialize and shuffle deck: %w", err)
+       }
+       deckStr := k.Keeper.SaveDeckToState(deck)
+       seatData = fmt.Sprintf("deck=%s", deckStr)
+       sdkCtx.Logger().Info("🃏 Generated shuffled deck for new hand", "gameId", gameId)
+   } else {
+       seatData = fmt.Sprintf("seat=%d", seat)
+   }
+   ```
+
+**Files Changed:**
+- `pokerchain/x/poker/keeper/msg_server_perform_action.go` - Added NewHand constant, validation, and deck generation
+
+**How It Works:**
+1. Player clicks "Start New Hand" in UI after showdown
+2. UI sends `performAction(gameId, "new-hand", 0)` via SDK
+3. Cosmos keeper validates "new-hand" is valid action ✅
+4. Keeper generates shuffled deck using `InitializeAndShuffleDeck(ctx)`:
+   - Uses block hash for deterministic randomness
+   - All validators get same deck for same block
+5. Passes deck to PVM as `data="deck=AS-KD-QH-..."`
+6. PVM's `NewHandAction` receives deck and reinitializes game
+7. New hand starts with fresh shuffled deck from Cosmos!
+
+**Test Results:**
+- ✅ "new-hand" action now passes validation
+- ✅ Deck generated from block hash (deterministic)
+- ✅ PVM receives and uses Cosmos-shuffled deck
+- ✅ Players can start new hands after showdown
+- ✅ Each new hand has unique shuffle (different block = different deck)
+
+**Why This Matters:**
+- **Complete Hand Lifecycle**: Players can play continuous cash games
+- **Deterministic Shuffling**: Every new hand uses block hash for shuffle
+- **Consensus Safety**: All validators shuffle identically
+- **No Manual Intervention**: Automatic new hand flow after showdown
+
+---
+
 ## 📊 Migration Progress Tracker
 
 ### Completed ✅
@@ -2387,6 +2468,8 @@ Command → Game Engine → Action Recording
 - [x] **Shuffle logic completely removed from PVM**
 - [x] **Deterministic timestamps from Cosmos block time**
 - [x] **Non-deterministic Date.now() eliminated from game logic**
+- [x] **New hand action with deterministic deck shuffling**
+- [x] **Complete hand lifecycle (ante → showdown → new hand)**
 
 ### In Progress 🚧
 - [ ] Card dealing via Cosmos transactions (Phase 2)
