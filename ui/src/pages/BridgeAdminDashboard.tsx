@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
@@ -59,7 +59,7 @@ export default function BridgeAdminDashboard() {
     }, []);
 
     // Load deposits from Ethereum contract
-    const loadDeposits = async () => {
+    const loadDeposits = useCallback(async () => {
         setIsLoading(true);
         const newDeposits: Deposit[] = [];
 
@@ -103,7 +103,7 @@ export default function BridgeAdminDashboard() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [maxIndex, ethRpcUrl]);
 
     // Check if deposits have been processed on Cosmos
     const checkProcessingStatus = async (depositsToCheck: Deposit[]) => {
@@ -236,7 +236,7 @@ export default function BridgeAdminDashboard() {
     // Load deposits on mount
     useEffect(() => {
         loadDeposits();
-    }, [maxIndex]);
+    }, [maxIndex, loadDeposits]);
 
     // Filter deposits based on selected filter
     const filteredDeposits = deposits.filter(deposit => {

@@ -6,11 +6,11 @@ import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage"
  *
  * @param tableId - The ID of the table (game ID on Cosmos) to leave
  * @param value - The value to leave with (as string, in microunits)
- * @param nonce - Optional nonce (not used in Cosmos SDK, kept for compatibility)
+ * @param _nonce - Optional nonce (not used in Cosmos SDK, kept for compatibility)
  * @returns Promise with transaction hash
  * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function leaveTable(tableId: string, value: string, nonce?: number): Promise<any> {
+export async function leaveTable(tableId: string, value: string, _nonce?: number): Promise<any> {
     // Get user's Cosmos address and mnemonic
     const userAddress = getCosmosAddress();
     const mnemonic = getCosmosMnemonic();

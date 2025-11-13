@@ -5,17 +5,17 @@ import { useRef, useMemo, useState, useEffect } from "react";
 
 // 🔍 DEBUG: Enhanced logging utility for easy data export (same as GameStateContext)
 const debugLog = (eventType: string, data: any) => {
-  console.log(`🔄 [${eventType}]`, data);
-  
-  // Access the global debug logs array if it exists
-  if (typeof window !== "undefined" && (window as any).debugLogs) {
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      eventType,
-      data
-    };
-    (window as any).debugLogs.push(logEntry);
-  }
+    console.log(`🔄 [${eventType}]`, data);
+
+    // Access the global debug logs array if it exists
+    if (typeof window !== "undefined" && (window as any).debugLogs) {
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            eventType,
+            data
+        };
+        (window as any).debugLogs.push(logEntry);
+    }
 };
 
 /**
@@ -39,10 +39,10 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
 
     // Get game state directly from Context - table ID managed by subscription
     const { gameState, isLoading, error } = useGameStateContext();
-    
+
     // Add ref to track last logged state to prevent spam
     const lastLoggedStateRef = useRef<string>("");
-    
+
     // 🔍 DEBUG: Only log when meaningful state changes occur
     const renderCount = useRef(0);
     renderCount.current += 1;
@@ -144,12 +144,7 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
         }
     }, [
         // 🎯 Only recalculate when these specific properties change
-        gameState?.nextToAct,
-        gameState?.round,
-        gameState?.players,
-        gameState?.smallBlindPosition,
-        gameState?.bigBlindPosition,
-        gameState?.dealer,
+        gameState,
         userAddress,
         isLoading,
         error

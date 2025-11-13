@@ -105,7 +105,7 @@ export const useCosmosGameState = (gameId: string, playerAddress?: string): UseC
         }, 5000); // Poll every 5 seconds
 
         return () => clearInterval(interval);
-    }, [fetchGameState]);
+    }, [gameId, fetchGameState]);
 
     return {
         gameState,

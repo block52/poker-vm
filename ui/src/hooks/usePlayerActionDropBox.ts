@@ -155,7 +155,7 @@ export const usePlayerActionDropBox = (seatIndex: number): PlayerActionDisplay =
         }, 500);
       }, 2000);
     }
-  }, [actionKey, displayValues]); // Removed latestAction and seatIndex for better performance
+  }, [actionKey, displayValues, latestAction]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

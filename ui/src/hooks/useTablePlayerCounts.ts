@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface TablePlayerCount {
     tableId: string;
@@ -18,6 +18,9 @@ interface TablePlayerCount {
 export const useTablePlayerCounts = (tableAddresses: string[]) => {
     const [playerCounts, setPlayerCounts] = useState<Map<string, TablePlayerCount>>(new Map());
     const [isLoading, setIsLoading] = useState(false);
+
+    // Memoize the table addresses string to avoid unnecessary re-renders
+    const tableAddressesKey = useMemo(() => tableAddresses.join(","), [tableAddresses]);
 
     useEffect(() => {
         const fetchPlayerCounts = async () => {
@@ -94,7 +97,7 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
         const interval = setInterval(fetchPlayerCounts, 10000);
 
         return () => clearInterval(interval);
-    }, [tableAddresses.join(",")]); // Re-run when table list changes
+    }, [tableAddresses, tableAddressesKey]); // Re-run when table list changes
 
     return { playerCounts, isLoading };
 };

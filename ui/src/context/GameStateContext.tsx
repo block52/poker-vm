@@ -148,7 +148,6 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
             console.log(`[GameStateContext] Using player address: ${playerAddress} (type: ${cosmosAddress ? "Cosmos" : "Ethereum"})`);
 
-
             // Create WebSocket connection with URL parameters for auto-subscription
             const fullWsUrl = `${WS_URL}?tableAddress=${tableId}&playerId=${playerAddress}`;
             const ws = new WebSocket(fullWsUrl);
@@ -200,9 +199,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                             newRound: message.gameState?.round,
                             playerTurnInfo: {
                                 nextToAct: message.gameState?.nextToAct,
-                                currentActorSeat: message.gameState?.players?.find(
-                                    (p: any) => p.address?.toLowerCase() === playerAddress.toLowerCase()
-                                )?.seat
+                                currentActorSeat: message.gameState?.players?.find((p: any) => p.address?.toLowerCase() === playerAddress.toLowerCase())?.seat
                             },
                             source: "WebSocket gameStateUpdate"
                         });
@@ -286,9 +283,10 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                         console.error("[GameStateContext] Received error from backend:", message);
 
                         // Create a user-friendly error message
-                        const errorMsg = message.code === "GAME_NOT_FOUND"
-                            ? `${message.message}${message.details?.suggestion ? "\n\n" + message.details.suggestion : ""}`
-                            : message.message || "An error occurred";
+                        const errorMsg =
+                            message.code === "GAME_NOT_FOUND"
+                                ? `${message.message}${message.details?.suggestion ? "\n\n" + message.details.suggestion : ""}`
+                                : message.message || "An error occurred";
 
                         setError(new Error(errorMsg));
                         setIsLoading(false);
@@ -318,7 +316,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                 }
             };
 
-            ws.onclose = (event) => {
+            ws.onclose = event => {
                 console.log("🔌 [WebSocket CLOSE]", {
                     timestamp: new Date().toISOString(),
                     tableId,
@@ -331,7 +329,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                 }
             };
 
-            ws.onerror = (event) => {
+            ws.onerror = event => {
                 console.error("❌ [WebSocket ERROR]", {
                     timestamp: new Date().toISOString(),
                     tableId,
@@ -341,7 +339,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                 setIsLoading(false);
             };
         },
-        [] // ✅ STABILITY FIX: Empty deps since WS_URL is constant - prevents reconnect loops
+        [gameState?.nextToAct, gameState?.players?.length] // Added missing dependencies
     );
 
     const unsubscribeFromTable = useCallback(() => {

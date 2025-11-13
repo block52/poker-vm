@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { Bar } from "react-chartjs-2";
@@ -18,13 +18,7 @@ export default function DistributionPage() {
     const [totalCardsDealt, setTotalCardsDealt] = useState(0);
     const { currentNetwork } = useNetwork();
 
-    useEffect(() => {
-        // Clear client when network changes to force re-initialization
-        clearCosmosClient();
-        fetchCardDistribution();
-    }, [currentNetwork]);
-
-    async function fetchCardDistribution() {
+    const fetchCardDistribution = useCallback(async () => {
         try {
             setLoading(true);
 
@@ -92,7 +86,13 @@ export default function DistributionPage() {
             console.error("❌ Error fetching card distribution:", error);
             setLoading(false);
         }
-    }
+    }, [currentNetwork]);
+
+    useEffect(() => {
+        // Clear client when network changes to force re-initialization
+        clearCosmosClient();
+        fetchCardDistribution();
+    }, [currentNetwork, fetchCardDistribution]);
 
     // Initialize all 52 cards with count of 0
     function initializeCardCounts(): CardDistribution {
