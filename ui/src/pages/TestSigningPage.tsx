@@ -133,7 +133,7 @@ export default function TestSigningPage() {
                 chainId: "pokerchain",
                 prefix: "b52",
                 denom: "stake", // Native gas token for local testnet
-                gasPrice: "0.01stake", // Must match validator minimum-gas-prices
+                gasPrice: "0stake", // Testnet has zero gas fees (minimum-gas-prices = "")
                 wallet: hdWallet
             });
 

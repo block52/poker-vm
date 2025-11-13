@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
 import { ethers } from "ethers";
 import { calculatePotBetAmount } from "../utils/calculatePotBetAmount";
+import { LoadingSpinner } from "./common";
 
 // Import hooks from barrel file
 import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
@@ -24,6 +25,9 @@ interface PokerActionPanelProps {
 
 const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransactionSubmitted }) => {
     const { id: tableId } = useParams<{ id: string }>();
+
+    // Loading state for actions
+    const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
     // Detect mobile landscape orientation
     const [isMobileLandscape, setIsMobileLandscape] = useState(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
@@ -100,11 +104,19 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const maxRaise = useMemo(() => (raiseAction ? Number(raiseAction.max || "0") / 1_000_000 : 0), [raiseAction]);
     const callAmount = useMemo(() => (callAction ? Number(callAction.min || "0") / 1_000_000 : 0), [callAction]);
 
-    // Helper function to wrap action handlers and capture transaction hashes
-    const handleActionWithTransaction = async (actionFn: () => Promise<string | null>) => {
-        const txHash = await actionFn();
-        if (txHash && onTransactionSubmitted) {
-            onTransactionSubmitted(txHash);
+    // Helper function to wrap action handlers with loading state and transaction tracking
+    const handleActionWithTransaction = async (actionName: string, actionFn: () => Promise<string | null>) => {
+        try {
+            setLoadingAction(actionName);
+            const txHash = await actionFn();
+            if (txHash && onTransactionSubmitted) {
+                onTransactionSubmitted(txHash);
+            }
+        } catch (error) {
+            console.error(`Error executing ${actionName}:`, error);
+            throw error;
+        } finally {
+            setLoadingAction(null);
         }
     };
 
@@ -205,17 +217,18 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
         if (!smallBlindAmount) return;
 
-        try {
-            console.log("🎰 Attempting to post small blind:", smallBlindAmount);
-            const result = await postSmallBlind(tableId, smallBlindAmount);
-            console.log("✅ Small blind posted successfully");
-            if (result?.hash && onTransactionSubmitted) {
-                onTransactionSubmitted(result.hash);
+        await handleActionWithTransaction("small-blind", async () => {
+            try {
+                console.log("🎰 Attempting to post small blind:", smallBlindAmount);
+                const result = await postSmallBlind(tableId, smallBlindAmount);
+                console.log("✅ Small blind posted successfully");
+                return result?.hash || null;
+            } catch (error: any) {
+                console.error("❌ Failed to post small blind:", error);
+                alert(`Failed to post small blind: ${error.message}`);
+                throw error;
             }
-        } catch (error: any) {
-            console.error("❌ Failed to post small blind:", error);
-            alert(`Failed to post small blind: ${error.message}`);
-        }
+        });
     };
 
     const handlePostBigBlind = async () => {
@@ -224,10 +237,15 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
         if (!bigBlindAmount) return;
 
-        const result = await postBigBlind(tableId, bigBlindAmount);
-        if (result?.hash && onTransactionSubmitted) {
-            onTransactionSubmitted(result.hash);
-        }
+        await handleActionWithTransaction("big-blind", async () => {
+            try {
+                const result = await postBigBlind(tableId, bigBlindAmount);
+                return result?.hash || null;
+            } catch (error: any) {
+                console.error("❌ Failed to post big blind:", error);
+                throw error;
+            }
+        });
     };
 
     const handleBet = async () => {
@@ -236,14 +254,15 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         // Convert amount to microunits (6 decimals for USDC on Cosmos)
         const amountMicrounits = (raiseAmount * 1_000_000).toString();
 
-        try {
-            const result = await betHand(tableId, amountMicrounits);
-            if (result?.hash && onTransactionSubmitted) {
-                onTransactionSubmitted(result.hash);
+        await handleActionWithTransaction("bet", async () => {
+            try {
+                const result = await betHand(tableId, amountMicrounits);
+                return result?.hash || null;
+            } catch (error: any) {
+                console.error("Failed to bet:", error);
+                throw error;
             }
-        } catch (error: any) {
-            console.error("Failed to bet:", error);
-        }
+        });
     };
 
     const handleRaise = async () => {
@@ -252,14 +271,15 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         // Convert amount to microunits (6 decimals for USDC on Cosmos)
         const amountMicrounits = (raiseAmount * 1_000_000).toString();
 
-        try {
-            const result = await raiseHand(tableId, amountMicrounits);
-            if (result?.hash && onTransactionSubmitted) {
-                onTransactionSubmitted(result.hash);
+        await handleActionWithTransaction("raise", async () => {
+            try {
+                const result = await raiseHand(tableId, amountMicrounits);
+                return result?.hash || null;
+            } catch (error: any) {
+                console.error("Failed to raise:", error);
+                throw error;
             }
-        } catch (error: any) {
-            console.error("Failed to raise:", error);
-        }
+        });
     };
 
     // Update to use our hook data for button visibility
@@ -295,19 +315,24 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction(() => handleDeal(tableId))}
-                            className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
+                            onClick={() => handleActionWithTransaction("deal", () => handleDeal(tableId))}
+                            disabled={loadingAction !== null}
+                            className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            DEAL
+                            {loadingAction === "deal" ? (
+                                <LoadingSpinner size="sm" />
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                    />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            )}
+                            {loadingAction === "deal" ? "DEALING..." : "DEAL"}
                         </button>
                     </div>
                 )}
@@ -316,18 +341,23 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {gameState?.round === TexasHoldemRound.END && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction(() => handleStartNewHand(tableId))}
-                            className="btn-new-hand text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
+                            onClick={() => handleActionWithTransaction("new-hand", () => handleStartNewHand(tableId))}
+                            disabled={loadingAction !== null}
+                            className="btn-new-hand text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                            </svg>
-                            START NEW HAND
+                            {loadingAction === "new-hand" ? (
+                                <LoadingSpinner size="sm" />
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                    />
+                                </svg>
+                            )}
+                            {loadingAction === "new-hand" ? "STARTING..." : "START NEW HAND"}
                         </button>
                     </div>
                 )}
@@ -381,34 +411,52 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                             {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostSmallBlind}
-                                    className="btn-small-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
+                                    disabled={loadingAction !== null}
+                                    className="btn-small-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                                 >
-                                    <span className="mr-1">Post Small Blind</span>
-                                    <span className="btn-small-blind-amount backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border">
-                                        ${formattedSmallBlindAmount}
-                                    </span>
+                                    {loadingAction === "small-blind" && <LoadingSpinner size="sm" />}
+                                    {loadingAction === "small-blind" ? (
+                                        <span>Posting...</span>
+                                    ) : (
+                                        <>
+                                            <span className="mr-1">Post Small Blind</span>
+                                            <span className="btn-small-blind-amount backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border">
+                                                ${formattedSmallBlindAmount}
+                                            </span>
+                                        </>
+                                    )}
                                 </button>
                             )}
 
                             {showBigBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
                                     onClick={handlePostBigBlind}
-                                    className="btn-big-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2"
+                                    disabled={loadingAction !== null}
+                                    className="btn-big-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                                 >
-                                    <span className="mr-1">Post Big Blind</span>
-                                    <span className="btn-big-blind-amount backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border">
-                                        ${formattedBigBlindAmount}
-                                    </span>
+                                    {loadingAction === "big-blind" && <LoadingSpinner size="sm" />}
+                                    {loadingAction === "big-blind" ? (
+                                        <span>Posting...</span>
+                                    ) : (
+                                        <>
+                                            <span className="mr-1">Post Big Blind</span>
+                                            <span className="btn-big-blind-amount backdrop-blur-sm px-1 lg:px-2 py-1 rounded text-xs border">
+                                                ${formattedBigBlindAmount}
+                                            </span>
+                                        </>
+                                    )}
                                 </button>
                             )}
                             {canFoldAnytime && (!showActionButtons || showSmallBlindButton || showBigBlindButton) && (
                                 <button
                                     className="btn-fold cursor-pointer active:scale-105
 px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm
-transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
-                                    onClick={() => handleActionWithTransaction(() => handleFold(tableId))}
+transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    onClick={() => handleActionWithTransaction("fold", () => handleFold(tableId))}
+                                    disabled={loadingAction !== null}
                                 >
-                                    FOLD
+                                    {loadingAction === "fold" && <LoadingSpinner size="sm" />}
+                                    {loadingAction === "fold" ? "FOLDING..." : "FOLD"}
                                 </button>
                             )}
                             {/* Show a message if the player has folded */}
@@ -425,14 +473,16 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                 <div className={`flex justify-between ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
                                     {canFoldAnytime && (
                                         <button
-                                            className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium ${
+                                            className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape
                                                     ? "px-2 py-0.5 text-[10px] min-w-[50px]"
                                                     : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]"
                                             }`}
-                                            onClick={() => handleActionWithTransaction(() => handleFold(tableId))}
+                                            onClick={() => handleActionWithTransaction("fold", () => handleFold(tableId))}
+                                            disabled={loadingAction !== null}
                                         >
-                                            FOLD
+                                            {loadingAction === "fold" && <LoadingSpinner size="sm" />}
+                                            {loadingAction === "fold" ? "FOLDING..." : "FOLD"}
                                         </button>
                                     )}
                                     {/* Show a message if the player has folded */}
@@ -446,34 +496,42 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px]"
                                         <button
                                             className={`cursor-pointer bg-gradient-to-r from-[#1e293b] to-[#334155] hover:from-[#1e3a8a]/90 hover:to-[#1e40af]/90 active:from-[#1e40af] active:to-[#2563eb]
                                             rounded-lg w-full border border-[#3a546d] hover:border-[#1e3a8a]/50 active:border-[#3b82f6]/70 shadow-md backdrop-blur-sm
-                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)] ${
+                                            transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
-                                            onClick={() => handleActionWithTransaction(() => handleCheck(tableId))}
+                                            onClick={() => handleActionWithTransaction("check", () => handleCheck(tableId))}
+                                            disabled={loadingAction !== null}
                                         >
-                                            CHECK
+                                            {loadingAction === "check" && <LoadingSpinner size="sm" />}
+                                            {loadingAction === "check" ? "CHECKING..." : "CHECK"}
                                         </button>
                                     )}
                                     {hasCallAction && (
                                         <button
                                             className={`btn-call cursor-pointer rounded-lg w-full border shadow-md backdrop-blur-sm
-                                            transition-all duration-200 font-medium transform active:scale-105 ${
+                                            transition-all duration-200 font-medium transform active:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
-                                            onClick={() => handleActionWithTransaction(() => handleCall(callAction, callAmount, tableId))}
+                                            onClick={() => handleActionWithTransaction("call", () => handleCall(callAction, callAmount, tableId))}
+                                            disabled={loadingAction !== null}
                                         >
-                                            CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span>
+                                            {loadingAction === "call" && <LoadingSpinner size="sm" />}
+                                            {loadingAction === "call" ? "CALLING..." : <>CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span></>}
                                         </button>
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
                                         <button
                                             onClick={hasRaiseAction ? handleRaise : handleBet}
-                                            disabled={hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn}
-                                            className={`cursor-pointer hover:scale-105 btn-raise rounded-lg w-full border shadow-md backdrop-blur-sm transition-all duration-200 font-medium ${
+                                            disabled={loadingAction !== null || (hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn)}
+                                            className={`cursor-pointer hover:scale-105 btn-raise rounded-lg w-full border shadow-md backdrop-blur-sm transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
                                         >
-                                            {hasRaiseAction ? "RAISE" : "BET"} <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span>
+                                            {(loadingAction === "raise" || loadingAction === "bet") && <LoadingSpinner size="sm" />}
+                                            {loadingAction === "raise" || loadingAction === "bet"
+                                                ? (hasRaiseAction ? "RAISING..." : "BETTING...")
+                                                : <>{hasRaiseAction ? "RAISE" : "BET"} <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span></>
+                                            }
                                         </button>
                                     )}
                                 </div>
