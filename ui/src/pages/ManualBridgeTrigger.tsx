@@ -63,7 +63,7 @@ export default function ManualBridgeTrigger() {
                     chainId: "pokerchain",
                     prefix: "b52",
                     denom: "usdc",
-                    gasPrice: "0.025stake"  // Use stake for testnet fees
+                    gasPrice: "0.025stake" // Use stake for testnet fees
                 },
                 mnemonic
             );
@@ -71,6 +71,8 @@ export default function ManualBridgeTrigger() {
             console.log("🌉 Processing deposit index:", index);
 
             // Process the deposit
+            // TODO: Fix SDK types - processDeposit exists but needs proper type definition
+            // @ts-expect-error - Temporarily ignore type error until SDK types are updated
             const hash = await signingClient.processDeposit(index);
 
             // Wait a bit then query the transaction for details and check if it succeeded
@@ -97,7 +99,6 @@ export default function ManualBridgeTrigger() {
                     toast.success(`Deposit ${index} processed successfully!`);
                 }
             }, 2000);
-
         } catch (err: any) {
             console.error("Failed to process deposit:", err);
             const errorMessage = err.message || "Unknown error occurred";
@@ -128,9 +129,7 @@ export default function ManualBridgeTrigger() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-400">Balance:</span>
-                                <span className="text-white">
-                                    {formatUSDC(cosmosWallet.balance.find(b => b.denom === "usdc")?.amount || "0")} USDC
-                                </span>
+                                <span className="text-white">{formatUSDC(cosmosWallet.balance.find(b => b.denom === "usdc")?.amount || "0")} USDC</span>
                             </div>
                         </div>
                     ) : (
@@ -145,21 +144,17 @@ export default function ManualBridgeTrigger() {
                     <div className="space-y-4">
                         {/* Input */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Deposit Index
-                            </label>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Deposit Index</label>
                             <input
                                 type="number"
                                 min="0"
                                 value={depositIndex}
-                                onChange={(e) => setDepositIndex(e.target.value)}
+                                onChange={e => setDepositIndex(e.target.value)}
                                 placeholder="Enter deposit index (e.g., 0, 1, 2...)"
                                 className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                                 disabled={isProcessing}
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                                The index of the deposit in the Ethereum bridge contract
-                            </p>
+                            <p className="text-xs text-gray-500 mt-1">The index of the deposit in the Ethereum bridge contract</p>
                         </div>
 
                         {/* Process Button */}
@@ -167,16 +162,18 @@ export default function ManualBridgeTrigger() {
                             onClick={handleProcessDeposit}
                             disabled={isProcessing || !cosmosWallet.address}
                             className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all ${
-                                isProcessing || !cosmosWallet.address
-                                    ? "bg-gray-600 cursor-not-allowed"
-                                    : "bg-blue-600 hover:bg-blue-700 active:scale-95"
+                                isProcessing || !cosmosWallet.address ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:scale-95"
                             }`}
                         >
                             {isProcessing ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                        />
                                     </svg>
                                     Processing...
                                 </span>
@@ -230,10 +227,7 @@ export default function ManualBridgeTrigger() {
 
                 {/* Back to Dashboard */}
                 <div className="mt-6 text-center">
-                    <a
-                        href="/"
-                        className="text-blue-400 hover:text-blue-300 transition-colors"
-                    >
+                    <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
                         ← Back to Dashboard
                     </a>
                 </div>

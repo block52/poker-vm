@@ -2,15 +2,7 @@ import { useEffect, useState } from "react";
 import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { Bar } from "react-chartjs-2";
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend
-} from "chart.js";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -39,7 +31,7 @@ export default function DistributionPage() {
             // Initialize Cosmos client
             const cosmosClient = getCosmosClient({
                 rpc: currentNetwork.rpc,
-                rest: currentNetwork.rest,
+                rest: currentNetwork.rest
             });
 
             if (!cosmosClient) {
@@ -63,14 +55,16 @@ export default function DistributionPage() {
                     console.log(`🎮 Game ${game.gameId} raw response:`, gameStateResponse);
 
                     // Parse the game_state JSON string
+                    // @ts-expect-error - GameState type is generic, actual response may have game_state field
                     if (!gameStateResponse || !gameStateResponse.game_state) {
                         console.warn(`⚠️ No game_state found for game ${game.gameId}`);
                         continue;
                     }
 
+                    // @ts-expect-error - GameState type is generic, actual response may have game_state field
                     const gameState = JSON.parse(gameStateResponse.game_state);
                     console.log(`🎮 Game ${game.gameId} parsed state:`, gameState);
-                    console.log(`🃏 Deck field:`, gameState?.deck);
+                    console.log("🃏 Deck field:", gameState?.deck);
 
                     if (gameState && gameState.deck) {
                         console.log(`✅ Found deck for game ${game.gameId}: ${gameState.deck.substring(0, 50)}...`);
@@ -206,10 +200,7 @@ export default function DistributionPage() {
         <div className="container mx-auto p-6">
             {/* Navigation */}
             <div className="mb-6">
-                <a
-                    href="/explorer"
-                    className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2"
-                >
+                <a href="/explorer" className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2">
                     ← Back to Explorer
                 </a>
             </div>
@@ -226,24 +217,16 @@ export default function DistributionPage() {
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                         <div className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
-                            <h3 className="text-sm font-medium text-gray-400">
-                                Total Games Analyzed
-                            </h3>
+                            <h3 className="text-sm font-medium text-gray-400">Total Games Analyzed</h3>
                             <p className="text-3xl font-bold mt-2 text-white">{totalGames}</p>
                         </div>
                         <div className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
-                            <h3 className="text-sm font-medium text-gray-400">
-                                Total Cards Dealt
-                            </h3>
+                            <h3 className="text-sm font-medium text-gray-400">Total Cards Dealt</h3>
                             <p className="text-3xl font-bold mt-2 text-white">{totalCardsDealt}</p>
                         </div>
                         <div className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
-                            <h3 className="text-sm font-medium text-gray-400">
-                                Expected Per Card
-                            </h3>
-                            <p className="text-3xl font-bold mt-2 text-white">
-                                {totalCardsDealt > 0 ? (totalCardsDealt / 52).toFixed(1) : "0"}
-                            </p>
+                            <h3 className="text-sm font-medium text-gray-400">Expected Per Card</h3>
+                            <p className="text-3xl font-bold mt-2 text-white">{totalCardsDealt > 0 ? (totalCardsDealt / 52).toFixed(1) : "0"}</p>
                         </div>
                     </div>
 
@@ -259,20 +242,20 @@ export default function DistributionPage() {
                         <h2 className="text-xl font-bold mb-3 text-white">📖 How to Read This Chart</h2>
                         <ul className="space-y-2 text-sm text-gray-300">
                             <li>
-                                ✅ <strong className="text-white">Randomness Check</strong>: If the distribution is fair, each card
-                                should appear roughly the same number of times (within statistical variance).
+                                ✅ <strong className="text-white">Randomness Check</strong>: If the distribution is fair, each card should appear roughly the
+                                same number of times (within statistical variance).
                             </li>
                             <li>
-                                ✅ <strong className="text-white">Expected Frequency</strong>: {totalCardsDealt > 0 ? (totalCardsDealt / 52).toFixed(1) : "N/A"} times per card
-                                (total dealt / 52 cards).
+                                ✅ <strong className="text-white">Expected Frequency</strong>: {totalCardsDealt > 0 ? (totalCardsDealt / 52).toFixed(1) : "N/A"}{" "}
+                                times per card (total dealt / 52 cards).
                             </li>
                             <li>
-                                ✅ <strong className="text-white">Cosmos Blockchain Shuffling</strong>: Decks are shuffled using
-                                deterministic block hash, ensuring verifiable randomness across all validators.
+                                ✅ <strong className="text-white">Cosmos Blockchain Shuffling</strong>: Decks are shuffled using deterministic block hash,
+                                ensuring verifiable randomness across all validators.
                             </li>
                             <li>
-                                ✅ <strong className="text-white">Transparency</strong>: All deck shuffles are on-chain and auditable.
-                                No single party can manipulate card distribution.
+                                ✅ <strong className="text-white">Transparency</strong>: All deck shuffles are on-chain and auditable. No single party can
+                                manipulate card distribution.
                             </li>
                         </ul>
                     </div>

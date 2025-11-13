@@ -16,9 +16,7 @@ import { ethers } from "ethers";
  */
 
 // Bridge contract ABI for deposits mapping
-const DEPOSITS_ABI = [
-    "function deposits(uint256) external view returns (string memory account, uint256 amount)"
-];
+const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string memory account, uint256 amount)"];
 
 // Helper function to format USDC amounts (6 decimals)
 const formatUSDC = (microAmount: string | number): string => {
@@ -52,7 +50,8 @@ export default function BridgeAdminDashboard() {
     // Validate Alchemy URL is configured
     useEffect(() => {
         if (!import.meta.env.VITE_ALCHEMY_URL) {
-            const errorMsg = "⚠️ VITE_ALCHEMY_URL is not configured in .env file. Please add your Alchemy API key to enable bridge deposit queries. See ui/README.md for setup instructions.";
+            const errorMsg =
+                "⚠️ VITE_ALCHEMY_URL is not configured in .env file. Please add your Alchemy API key to enable bridge deposit queries. See ui/README.md for setup instructions.";
             setConfigError(errorMsg);
             console.error(errorMsg);
             toast.error("Alchemy API key not configured. Bridge queries may fail.");
@@ -85,7 +84,7 @@ export default function BridgeAdminDashboard() {
                         recipient: account,
                         amount: amount.toString(),
                         amountFormatted: formatUSDC(amount.toString()),
-                        status: "loading", // Will check processing status next
+                        status: "loading" // Will check processing status next
                     });
                 } catch (err: any) {
                     console.error(`Failed to query deposit ${i}:`, err);
@@ -98,7 +97,6 @@ export default function BridgeAdminDashboard() {
 
             // Now check processing status for each deposit
             await checkProcessingStatus(newDeposits);
-
         } catch (err: any) {
             console.error("Failed to load deposits:", err);
             toast.error(`Failed to load deposits: ${err.message}`);
@@ -116,7 +114,7 @@ export default function BridgeAdminDashboard() {
             // We need to check the deterministic txHash for each deposit
             // txHash = sha256(contractAddress + depositIndex)
             const updatedDeposits = await Promise.all(
-                depositsToCheck.map(async (deposit) => {
+                depositsToCheck.map(async deposit => {
                     try {
                         // Generate deterministic txHash (same as backend)
                         const txHashInput = `${bridgeContractAddress}-${deposit.index}`;
@@ -127,9 +125,7 @@ export default function BridgeAdminDashboard() {
                         const txHash = "0x" + hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
                         // Query Cosmos to see if this txHash has been processed
-                        const response = await fetch(
-                            `${restEndpoint}/block52/pokerchain/poker/v1/is_tx_processed/${txHash}`
-                        );
+                        const response = await fetch(`${restEndpoint}/block52/pokerchain/poker/v1/is_tx_processed/${txHash}`);
 
                         if (response.ok) {
                             const data = await response.json();
@@ -137,22 +133,22 @@ export default function BridgeAdminDashboard() {
 
                             return {
                                 ...deposit,
-                                status: isProcessed ? "processed" as const : "pending" as const,
-                                txHash,
+                                status: isProcessed ? ("processed" as const) : ("pending" as const),
+                                txHash
                             };
                         } else {
                             // API error, mark as pending
                             return {
                                 ...deposit,
                                 status: "pending" as const,
-                                txHash,
+                                txHash
                             };
                         }
                     } catch (err) {
                         console.error(`Failed to check status for deposit ${deposit.index}:`, err);
                         return {
                             ...deposit,
-                            status: "pending" as const,
+                            status: "pending" as const
                         };
                     }
                 })
@@ -199,6 +195,8 @@ export default function BridgeAdminDashboard() {
             console.log("🌉 Processing deposit index:", depositIndex);
 
             // Process the deposit
+            // TODO: Fix SDK types - processDeposit exists but needs proper type definition
+            // @ts-expect-error - Temporarily ignore type error until SDK types are updated
             const hash = await signingClient.processDeposit(depositIndex);
 
             // Wait for transaction confirmation
@@ -211,45 +209,28 @@ export default function BridgeAdminDashboard() {
                         toast.error(`Failed: ${errorMsg}`);
 
                         // Update deposit status to show error
-                        setDeposits(prev => prev.map(d =>
-                            d.index === depositIndex
-                                ? { ...d, status: "error" as const, errorMessage: errorMsg }
-                                : d
-                        ));
+                        setDeposits(prev => prev.map(d => (d.index === depositIndex ? { ...d, status: "error" as const, errorMessage: errorMsg } : d)));
                     } else {
                         toast.success(`Deposit ${depositIndex} processed successfully!`);
 
                         // Update deposit status to processed
-                        setDeposits(prev => prev.map(d =>
-                            d.index === depositIndex
-                                ? { ...d, status: "processed" as const }
-                                : d
-                        ));
+                        setDeposits(prev => prev.map(d => (d.index === depositIndex ? { ...d, status: "processed" as const } : d)));
                     }
                 } catch (err) {
                     console.log("Could not fetch tx details yet:", err);
                     toast.success(`Deposit ${depositIndex} processed successfully!`);
 
                     // Update deposit status to processed
-                    setDeposits(prev => prev.map(d =>
-                        d.index === depositIndex
-                            ? { ...d, status: "processed" as const }
-                            : d
-                    ));
+                    setDeposits(prev => prev.map(d => (d.index === depositIndex ? { ...d, status: "processed" as const } : d)));
                 }
             }, 2000);
-
         } catch (err: any) {
             console.error("Failed to process deposit:", err);
             const errorMessage = err.message || "Unknown error occurred";
             toast.error(`Failed: ${errorMessage}`);
 
             // Update deposit status to show error
-            setDeposits(prev => prev.map(d =>
-                d.index === depositIndex
-                    ? { ...d, status: "error" as const, errorMessage }
-                    : d
-            ));
+            setDeposits(prev => prev.map(d => (d.index === depositIndex ? { ...d, status: "error" as const, errorMessage } : d)));
         } finally {
             setProcessingIndex(null);
         }
@@ -286,7 +267,12 @@ export default function BridgeAdminDashboard() {
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 mt-0.5">
                                 <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                    />
                                 </svg>
                             </div>
                             <div className="flex-1">
@@ -332,7 +318,7 @@ export default function BridgeAdminDashboard() {
                                 min="1"
                                 max="100"
                                 value={maxIndex}
-                                onChange={(e) => setMaxIndex(parseInt(e.target.value) || 10)}
+                                onChange={e => setMaxIndex(parseInt(e.target.value) || 10)}
                                 className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white w-24"
                             />
                             <button
@@ -348,7 +334,7 @@ export default function BridgeAdminDashboard() {
                             <label className="text-white text-sm">Filter:</label>
                             <select
                                 value={filter}
-                                onChange={(e) => setFilter(e.target.value as any)}
+                                onChange={e => setFilter(e.target.value as any)}
                                 className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
                             >
                                 <option value="all">All</option>
@@ -365,21 +351,11 @@ export default function BridgeAdminDashboard() {
                         <table className="w-full">
                             <thead className="bg-gray-900">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        Index
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        Recipient
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        Amount (USDC)
-                                    </th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        Action
-                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Index</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Recipient</th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount (USDC)</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700">
@@ -390,7 +366,7 @@ export default function BridgeAdminDashboard() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredDeposits.map((deposit) => (
+                                    filteredDeposits.map(deposit => (
                                         <tr key={deposit.index} className="hover:bg-gray-700/50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="text-white font-mono text-sm">#{deposit.index}</span>
@@ -408,7 +384,12 @@ export default function BridgeAdminDashboard() {
                                                         className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth="2"
+                                                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                                            />
                                                         </svg>
                                                     </button>
                                                 </div>
@@ -418,9 +399,7 @@ export default function BridgeAdminDashboard() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 {deposit.status === "loading" && (
-                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">
-                                                        Loading...
-                                                    </span>
+                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">Loading...</span>
                                                 )}
                                                 {deposit.status === "processed" && (
                                                     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-900/50 text-green-300 border border-green-700">
@@ -476,10 +455,7 @@ export default function BridgeAdminDashboard() {
 
                 {/* Back to Dashboard */}
                 <div className="mt-6 text-center">
-                    <a
-                        href="/"
-                        className="text-blue-400 hover:text-blue-300 transition-colors"
-                    >
+                    <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
                         ← Back to Dashboard
                     </a>
                 </div>

@@ -36,7 +36,7 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            "@bitcoinbrisbane/block52": "/Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/sdk/dist/index.esm.js",
+            "@bitcoinbrisbane/block52": "../sdk/dist/index.esm.js",
             crypto: "crypto-browserify",
             stream: "stream-browserify",
             buffer: "buffer",

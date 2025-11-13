@@ -21,9 +21,7 @@ export const ClickableAddress: React.FC<ClickableAddressProps> = ({ address, cla
         return <span className={className}>{address}</span>;
     }
 
-    const displayAddress = showFull
-        ? address
-        : `${address.substring(0, 10)}...${address.substring(address.length - 6)}`;
+    const displayAddress = showFull ? address : `${address.substring(0, 10)}...${address.substring(address.length - 6)}`;
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -47,7 +45,7 @@ export const ClickableAddress: React.FC<ClickableAddressProps> = ({ address, cla
  * Recursively renders JSON with clickable addresses
  * Detects any string that looks like a Cosmos address and makes it clickable
  */
-export const renderJSONWithClickableAddresses = (obj: any, depth = 0): JSX.Element => {
+export const renderJSONWithClickableAddresses = (obj: any, depth = 0): React.ReactElement => {
     if (obj === null || obj === undefined) {
         return <span className="text-gray-500">null</span>;
     }
@@ -70,14 +68,16 @@ export const renderJSONWithClickableAddresses = (obj: any, depth = 0): JSX.Eleme
         }
         return (
             <span>
-                [<div style={{ paddingLeft: `${depth + 1}rem` }}>
+                [
+                <div style={{ paddingLeft: `${depth + 1}rem` }}>
                     {obj.map((item, index) => (
                         <div key={index}>
                             {renderJSONWithClickableAddresses(item, depth + 1)}
                             {index < obj.length - 1 && <span>,</span>}
                         </div>
                     ))}
-                </div>]
+                </div>
+                ]
             </span>
         );
     }
