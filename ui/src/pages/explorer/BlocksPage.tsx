@@ -253,6 +253,14 @@ export default function BlocksPage() {
               <p className="text-gray-300">
                 Latest blocks on Pokerchain
               </p>
+              <div className="mt-3 flex gap-4">
+                <a
+                  href="/explorer/distribution"
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  📊 Card Distribution Analytics
+                </a>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}>

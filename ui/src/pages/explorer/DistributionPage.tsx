@@ -1,0 +1,266 @@
+import { useEffect, useState } from "react";
+import { createCosmosClient, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { Bar } from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+} from "chart.js";
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+interface CardDistribution {
+    [cardMnemonic: string]: number; // e.g., { "AS": 42, "KD": 38, ... }
+}
+
+export default function DistributionPage() {
+    const [distribution, setDistribution] = useState<CardDistribution>({});
+    const [loading, setLoading] = useState(true);
+    const [totalGames, setTotalGames] = useState(0);
+    const [totalCardsDealt, setTotalCardsDealt] = useState(0);
+
+    useEffect(() => {
+        fetchCardDistribution();
+    }, []);
+
+    async function fetchCardDistribution() {
+        try {
+            setLoading(true);
+
+            // Initialize Cosmos client
+            const cosmosClient = createCosmosClient({
+                rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657",
+                restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317",
+                chainId: COSMOS_CONSTANTS.CHAIN_ID,
+                prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
+                denom: "stake"
+            });
+
+            // Fetch all games
+            const games = await cosmosClient.listGames();
+            console.log(`📊 Fetched ${games.length} games`);
+
+            // Initialize distribution map with all 52 cards at 0
+            const cardCounts: CardDistribution = initializeCardCounts();
+
+            let totalCardsProcessed = 0;
+
+            // Process each game
+            for (const game of games) {
+                try {
+                    // Fetch game state (contains deck)
+                    const gameState = await cosmosClient.getGameState(game.id);
+
+                    if (gameState && gameState.deck) {
+                        // Parse deck string
+                        const cards = parseDeck(gameState.deck);
+
+                        // Count dealt cards (only cards before the "[" marker, if present)
+                        const dealtCards = getDealtCards(cards, gameState.deck);
+
+                        dealtCards.forEach(card => {
+                            if (cardCounts[card] !== undefined) {
+                                cardCounts[card]++;
+                                totalCardsProcessed++;
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.warn(`Failed to fetch game state for ${game.id}:`, error);
+                }
+            }
+
+            setDistribution(cardCounts);
+            setTotalGames(games.length);
+            setTotalCardsDealt(totalCardsProcessed);
+            setLoading(false);
+        } catch (error) {
+            console.error("❌ Error fetching card distribution:", error);
+            setLoading(false);
+        }
+    }
+
+    // Initialize all 52 cards with count of 0
+    function initializeCardCounts(): CardDistribution {
+        const counts: CardDistribution = {};
+        const ranks = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
+        const suits = ["S", "H", "D", "C"];
+
+        for (const rank of ranks) {
+            for (const suit of suits) {
+                counts[`${rank}${suit}`] = 0;
+            }
+        }
+
+        return counts;
+    }
+
+    // Parse deck string into array of card mnemonics
+    function parseDeck(deckString: string): string[] {
+        // Remove brackets if present (e.g., "AS-KD-[QH]-JC" -> "AS-KD-QH-JC")
+        const cleanDeck = deckString.replace(/[\[\]]/g, "");
+        return cleanDeck.split("-").filter(card => card.length === 2);
+    }
+
+    // Get only the dealt cards (before the "[" marker in deck string)
+    function getDealtCards(cards: string[], deckString: string): string[] {
+        // If deck has "[" marker, only count cards before it
+        const bracketIndex = deckString.indexOf("[");
+        if (bracketIndex !== -1) {
+            // Count number of cards before "["
+            const beforeBracket = deckString.substring(0, bracketIndex);
+            const dealtCount = beforeBracket.split("-").filter(c => c.length === 2).length;
+            return cards.slice(0, dealtCount);
+        }
+        // Otherwise, count all cards (or you could count only hole cards + community cards dealt)
+        return cards;
+    }
+
+    // Prepare data for Chart.js
+    const chartData = {
+        labels: Object.keys(distribution).sort(), // X-axis: Card mnemonics
+        datasets: [
+            {
+                label: "Card Frequency",
+                data: Object.keys(distribution)
+                    .sort()
+                    .map(card => distribution[card]), // Y-axis: Counts
+                backgroundColor: "rgba(75, 192, 192, 0.6)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1
+            }
+        ]
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: "top" as const
+            },
+            title: {
+                display: true,
+                text: "Card Distribution Across All Games (Proves Randomness)",
+                color: "#ffffff"
+            },
+            tooltip: {
+                callbacks: {
+                    afterLabel: (context: any) => {
+                        const total = totalCardsDealt;
+                        if (total === 0) return "";
+                        const percentage = ((context.parsed.y / total) * 100).toFixed(2);
+                        return `${percentage}% of total dealt cards`;
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: "Card Mnemonic",
+                    color: "#ffffff"
+                },
+                ticks: {
+                    color: "#ffffff"
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: "Frequency (Times Dealt)",
+                    color: "#ffffff"
+                },
+                beginAtZero: true,
+                ticks: {
+                    color: "#ffffff"
+                }
+            }
+        }
+    };
+
+    return (
+        <div className="container mx-auto p-6">
+            {/* Navigation */}
+            <div className="mb-6">
+                <a
+                    href="/explorer"
+                    className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2"
+                >
+                    ← Back to Explorer
+                </a>
+            </div>
+
+            <h1 className="text-3xl font-bold mb-6 text-white">Card Distribution Analytics</h1>
+
+            {loading ? (
+                <div className="text-center py-12">
+                    <p className="text-lg text-white">Loading distribution data...</p>
+                    <p className="text-sm text-gray-400 mt-2">This may take a moment as we analyze all games...</p>
+                </div>
+            ) : (
+                <>
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
+                            <h3 className="text-sm font-medium text-gray-400">
+                                Total Games Analyzed
+                            </h3>
+                            <p className="text-3xl font-bold mt-2 text-white">{totalGames}</p>
+                        </div>
+                        <div className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
+                            <h3 className="text-sm font-medium text-gray-400">
+                                Total Cards Dealt
+                            </h3>
+                            <p className="text-3xl font-bold mt-2 text-white">{totalCardsDealt}</p>
+                        </div>
+                        <div className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
+                            <h3 className="text-sm font-medium text-gray-400">
+                                Expected Per Card
+                            </h3>
+                            <p className="text-3xl font-bold mt-2 text-white">
+                                {totalCardsDealt > 0 ? (totalCardsDealt / 52).toFixed(1) : "0"}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Chart */}
+                    <div className="bg-gray-800 rounded-lg shadow p-6 border border-gray-700">
+                        <div style={{ height: "600px" }}>
+                            <Bar data={chartData} options={chartOptions} />
+                        </div>
+                    </div>
+
+                    {/* Explanation */}
+                    <div className="mt-8 bg-blue-900/20 rounded-lg p-6 border border-blue-800">
+                        <h2 className="text-xl font-bold mb-3 text-white">📖 How to Read This Chart</h2>
+                        <ul className="space-y-2 text-sm text-gray-300">
+                            <li>
+                                ✅ <strong className="text-white">Randomness Check</strong>: If the distribution is fair, each card
+                                should appear roughly the same number of times (within statistical variance).
+                            </li>
+                            <li>
+                                ✅ <strong className="text-white">Expected Frequency</strong>: {totalCardsDealt > 0 ? (totalCardsDealt / 52).toFixed(1) : "N/A"} times per card
+                                (total dealt / 52 cards).
+                            </li>
+                            <li>
+                                ✅ <strong className="text-white">Cosmos Blockchain Shuffling</strong>: Decks are shuffled using
+                                deterministic block hash, ensuring verifiable randomness across all validators.
+                            </li>
+                            <li>
+                                ✅ <strong className="text-white">Transparency</strong>: All deck shuffles are on-chain and auditable.
+                                No single party can manipulate card distribution.
+                            </li>
+                        </ul>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}

@@ -14,6 +14,7 @@ import BlocksPage from "./pages/explorer/BlocksPage";
 import BlockDetailPage from "./pages/explorer/BlockDetailPage";
 import TransactionPage from "./pages/explorer/TransactionPage";
 import AddressPage from "./pages/explorer/AddressPage";
+import DistributionPage from "./pages/explorer/DistributionPage";
 import TestSigningPage from "./pages/TestSigningPage";
 import ManualBridgeTrigger from "./pages/ManualBridgeTrigger";
 import BridgeAdminDashboard from "./pages/BridgeAdminDashboard";
@@ -71,6 +72,7 @@ function AppContent() {
                 <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
                 <Route path="/explorer/address/:address" element={<AddressPage />} />
+                <Route path="/explorer/distribution" element={<DistributionPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer
