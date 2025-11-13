@@ -19,6 +19,7 @@ import TestSigningPage from "./pages/TestSigningPage";
 import ManualBridgeTrigger from "./pages/ManualBridgeTrigger";
 import BridgeAdminDashboard from "./pages/BridgeAdminDashboard";
 import TableAdminPage from "./pages/TableAdminPage";
+import { TestSdk } from "./test-sdk";
 import { GameStateProvider } from "./context/GameStateContext";
 import { NetworkProvider } from "./context/NetworkContext";
 import { generateCSSVariables } from "./utils/colorConfig";
@@ -60,6 +61,7 @@ function AppContent() {
         <div className="bg-[#2c3245] min-h-screen">
             <FaviconSetter />
             <Routes>
+                <Route path="/test-sdk" element={<TestSdk />} />
                 <Route path="/table/:id" element={<Table />} />
                 <Route path="/table/admin" element={<TableAdminPage />} />
                 <Route path="/deposit" element={<Deposit />} />

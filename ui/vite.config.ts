@@ -56,9 +56,7 @@ export default defineConfig({
             "stream-browserify",
             "process",
             "util",
-            "events"
-        ],
-        exclude: [
+            "events",
             "@bitcoinbrisbane/block52"
         ],
     },
