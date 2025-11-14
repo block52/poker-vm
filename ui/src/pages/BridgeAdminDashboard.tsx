@@ -348,11 +348,11 @@ export default function BridgeAdminDashboard() {
                         <table className="w-full">
                             <thead className="bg-gray-900">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Index</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Recipient</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount (USDC)</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Action</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Index</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Recipient</th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Amount (USDC)</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700">

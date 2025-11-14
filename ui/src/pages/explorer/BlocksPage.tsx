@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
-import { colors, hexToRgba } from "../../utils/colorConfig";
 import { useNetwork } from "../../context/NetworkContext";
 import { NetworkSelector } from "../../components/NetworkSelector";
 
@@ -41,7 +40,9 @@ export default function BlocksPage() {
             }
 
             const recentBlocks = await cosmosClient.getLatestBlocks(50);
-            setBlocks(recentBlocks);
+            // Sort blocks by height in descending order (newest first)
+            const sortedBlocks = recentBlocks.sort((a, b) => parseInt(b.block.header.height) - parseInt(a.block.header.height));
+            setBlocks(sortedBlocks);
             setError(null);
         } catch (err: any) {
             // Provide detailed, network-specific error messages
@@ -123,35 +124,12 @@ export default function BlocksPage() {
         return `${diffHours} hours ago`;
     };
 
-    // Memoized styles
-    const containerStyle = useMemo(
-        () => ({
-            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-        }),
-        []
-    );
-
-    const headerStyle = useMemo(
-        () => ({
-            background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.2)} 0%, ${hexToRgba(colors.brand.secondary, 0.2)} 100%)`,
-            borderBottom: `2px solid ${hexToRgba(colors.brand.primary, 0.3)}`
-        }),
-        []
-    );
-
     if (loading && blocks.length === 0) {
         return (
-            <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden bg-[#2c3245]">
-                <div className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center" style={containerStyle}>
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+                <div className="bg-gray-800 border border-gray-700 p-8 rounded-lg shadow-2xl text-center">
                     <div className="flex justify-center mb-4">
-                        <svg
-                            className="animate-spin h-10 w-10"
-                            style={{ color: colors.brand.primary }}
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
+                        <svg className="animate-spin h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path
                                 className="opacity-75"
@@ -168,24 +146,22 @@ export default function BlocksPage() {
 
     if (error && blocks.length === 0) {
         return (
-            <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
-                <div className="w-full max-w-7xl">
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+                <div className="max-w-7xl mx-auto">
                     {/* Header with Network Selector */}
-                    <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6 relative z-40" style={containerStyle}>
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h1 className="text-4xl font-extrabold text-white mb-2">Block Explorer</h1>
-                                <p className="text-gray-300">Latest blocks on Pokerchain</p>
-                            </div>
-                            <NetworkSelector />
+                    <div className="mb-8 flex justify-between items-start">
+                        <div>
+                            <h1 className="text-4xl font-bold text-white mb-2">Block Explorer</h1>
+                            <p className="text-gray-400">Latest blocks on Pokerchain</p>
                         </div>
+                        <NetworkSelector />
                     </div>
 
                     {/* Error Card */}
                     <div className="flex justify-center">
-                        <div className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center max-w-lg" style={containerStyle}>
+                        <div className="bg-gray-800 border border-gray-700 p-8 rounded-lg shadow-2xl text-center max-w-lg">
                             <div className="flex justify-center mb-4">
-                                <svg className="h-16 w-16" style={{ color: colors.accent.danger }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="h-16 w-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -197,20 +173,7 @@ export default function BlocksPage() {
                             <button
                                 onClick={() => fetchBlocks()}
                                 disabled={loading}
-                                className="px-6 py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{
-                                    backgroundColor: hexToRgba(colors.brand.primary, 0.2),
-                                    border: `1px solid ${colors.brand.primary}`,
-                                    color: colors.brand.primary
-                                }}
-                                onMouseEnter={e => {
-                                    if (!loading) {
-                                        e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.3);
-                                    }
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.2);
-                                }}
+                                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
                             >
                                 {loading ? "Retrying..." : "🔄 Retry Connection"}
                             </button>
@@ -222,85 +185,77 @@ export default function BlocksPage() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
-            <div className="w-full max-w-7xl">
-                {/* Header Card */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6 relative z-40" style={containerStyle}>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-4xl font-extrabold text-white mb-2">Block Explorer</h1>
-                            <p className="text-gray-300">Latest blocks on Pokerchain</p>
-                            <div className="mt-3 flex gap-4">
-                                <a href="/explorer/distribution" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                                    📊 Card Distribution Analytics
-                                </a>
-                            </div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="mb-8 flex justify-between items-start">
+                    <div>
+                        <h1 className="text-4xl font-bold text-white mb-2">Block Explorer</h1>
+                        <p className="text-gray-400">Latest blocks on Pokerchain</p>
+                        <div className="mt-3 flex gap-4">
+                            <a href="/explorer/distribution" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                                📊 Card Distribution Analytics
+                            </a>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-full" style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}>
-                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.accent.success }}></div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="bg-gray-800 rounded-lg px-4 py-2 border border-gray-700">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full animate-pulse bg-green-400"></div>
                                 <span className="text-sm text-gray-300">{blocks.length} blocks</span>
                             </div>
-                            <NetworkSelector />
                         </div>
+                        <NetworkSelector />
                     </div>
                 </div>
 
-                {/* Blocks Table Card */}
-                <div className="backdrop-blur-md rounded-xl shadow-2xl overflow-hidden" style={containerStyle}>
+                {/* Blocks Table */}
+                <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full" style={{ fontSize: "14px" }}>
-                            <thead>
-                                <tr style={headerStyle}>
-                                    <th className="px-6 py-4 text-left text-white font-bold">Height</th>
-                                    <th className="px-6 py-4 text-left text-white font-bold">Block Hash</th>
-                                    <th className="px-6 py-4 text-left text-white font-bold">Transactions</th>
-                                    <th className="px-6 py-4 text-left text-white font-bold">Proposer</th>
-                                    <th className="px-6 py-4 text-left text-white font-bold">Time</th>
+                        <table className="w-full">
+                            <thead className="bg-gray-900">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Height</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Block Hash</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Transactions</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Proposer</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Time</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {blocks.map((block, index) => (
-                                    <tr
-                                        key={block.block.header.height}
-                                        className="transition-colors duration-200 hover:bg-opacity-50"
-                                        style={{
-                                            borderBottom: index < blocks.length - 1 ? `1px solid ${hexToRgba(colors.brand.primary, 0.1)}` : "none",
-                                            backgroundColor: "transparent"
-                                        }}
-                                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.05))}
-                                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
-                                    >
-                                        <td className="px-6 py-4 font-bold" style={{ color: colors.brand.primary }}>
-                                            #{block.block.header.height}
+                            <tbody className="divide-y divide-gray-700">
+                                {blocks.map(block => (
+                                    <tr key={block.block.header.height} className="hover:bg-gray-700/50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-blue-400 font-bold">#{block.block.header.height}</span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <a
                                                 href={`/explorer/block/${block.block.header.height}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="font-mono text-xs cursor-pointer transition-colors duration-200 break-all block"
-                                                style={{ color: colors.brand.primary }}
-                                                onMouseEnter={e => (e.currentTarget.style.color = colors.accent.glow)}
-                                                onMouseLeave={e => (e.currentTarget.style.color = colors.brand.primary)}
+                                                className="font-mono text-xs text-blue-400 hover:text-blue-300 cursor-pointer transition-colors break-all block"
                                                 title="Click to view block details in new tab"
                                             >
                                                 {block.block_id.hash}
                                             </a>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             {block.block.data.txs.length === 0 ? (
                                                 <span className="text-gray-400">0 txs</span>
                                             ) : (
-                                                <span className="font-bold" style={{ color: colors.accent.success }}>
+                                                <span className="text-green-400 font-semibold">
                                                     {block.block.data.txs.length} tx{block.block.data.txs.length > 1 ? "s" : ""}
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 font-mono text-xs text-gray-300" title={block.block.header.proposer_address}>
-                                            {truncateHash(block.block.header.proposer_address)}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="font-mono text-xs text-gray-300" title={block.block.header.proposer_address}>
+                                                {truncateHash(block.block.header.proposer_address)}
+                                            </span>
                                         </td>
-                                        <td className="px-6 py-4 text-xs text-gray-400">{formatTimestamp(block.block.header.time)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-xs text-gray-400">{formatTimestamp(block.block.header.time)}</span>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -310,45 +265,20 @@ export default function BlocksPage() {
 
                 {/* Error Display */}
                 {error && (
-                    <div
-                        className="backdrop-blur-md p-4 rounded-xl shadow-2xl mt-6"
-                        style={{
-                            backgroundColor: hexToRgba(colors.accent.danger, 0.2),
-                            border: `1px solid ${hexToRgba(colors.accent.danger, 0.5)}`
-                        }}
-                    >
+                    <div className="mb-6 bg-red-900/30 border-2 border-red-700 rounded-lg p-4">
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <svg
-                                    className="h-6 w-6 flex-shrink-0"
-                                    style={{ color: colors.accent.danger }}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
+                                <svg className="h-6 w-6 flex-shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span className="text-white font-semibold">Error: {error}</span>
+                                <span className="text-red-200 font-semibold">Error: {error}</span>
                             </div>
 
                             {/* Retry Button */}
                             <button
                                 onClick={() => fetchBlocks()}
                                 disabled={loading}
-                                className="px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                style={{
-                                    backgroundColor: hexToRgba(colors.brand.primary, 0.2),
-                                    border: `1px solid ${colors.brand.primary}`,
-                                    color: colors.brand.primary
-                                }}
-                                onMouseEnter={e => {
-                                    if (!loading) {
-                                        e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.3);
-                                    }
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.2);
-                                }}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg font-semibold text-sm transition-colors whitespace-nowrap"
                             >
                                 {loading ? "⏳" : "🔄 Retry"}
                             </button>
