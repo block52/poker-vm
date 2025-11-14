@@ -1,5 +1,5 @@
 # PVM (Poker Virtual Machine) Dockerfile
-FROM node:22.21.1-alpine
+FROM node:22.12-alpine
 
 # Install system dependencies
 RUN apk add --no-cache curl && rm -rf /var/cache/apk/*
