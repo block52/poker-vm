@@ -13,3 +13,21 @@ echo \
 sudo apt-get update
 
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Test Docker installation
+echo "Testing Docker installation..."
+docker --version
+
+# Start the services
+echo "Starting Docker services..."
+docker compose up -d
+
+# Wait for services to be healthy
+echo "Waiting for services to start (60 seconds)..."
+sleep 60
+
+# Test the PVM backend on port 8545
+echo "Testing PVM backend health endpoint..."
+curl -f http://localhost:8545/health || echo "Warning: Health check failed"
+
+echo "Docker setup complete!"

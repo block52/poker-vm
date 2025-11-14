@@ -1,11 +1,8 @@
-import { ZeroHash } from "ethers";
 import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 import {
-    GetNodesCommand,
     ISignedResponse,
     MeCommand,
-    SharedSecretCommand,
 } from "./commands";
 
 import { PerformActionCommand } from "./commands/cosmos/performActionCommand";
@@ -13,7 +10,6 @@ import { PerformActionCommand } from "./commands/cosmos/performActionCommand";
 import { makeErrorRPCResponse } from "./types/response";
 import { READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { getServerInstance } from "./core/server";
-import { Node } from "./core/types";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -48,72 +44,27 @@ export class RPC {
 
         try {
             switch (method) {
-
-                case RPCMethods.FIND_CONTRACT: {
-                    throw new Error("FIND_CONTRACT not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_ACCOUNT: {
-                    throw new Error("GET_ACCOUNT not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_BLOCK: {
-                    throw new Error("GET_BLOCK not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_BLOCK_BY_HASH: {
-                    throw new Error("GET_BLOCK_BY_HASH not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_BLOCK_HEIGHT: {
-                    throw new Error("GET_BLOCK_HEIGHT not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_LAST_BLOCK: {
-                    throw new Error("GET_LAST_BLOCK not implemented, call cosmos directly");
-                }
-
                 case RPCMethods.GET_CLIENT: {
                     const command = new MeCommand();
                     result = await command.execute();
                     break;
                 }
 
-                case RPCMethods.GET_NODES: {
-                    const server = getServerInstance();
-                    const nodes: Map<string, Node> = server.nodes;
-                    const command = new GetNodesCommand(nodes);
-                    result = await command.execute();
-                    break;
-                }
-
-                case RPCMethods.GET_MEMPOOL: {
-                    throw new Error("GET_MEMPOOL not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_TRANSACTION: {
-                    throw new Error("GET_TRANSACTION not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_TRANSACTIONS: {
-                    throw new Error("GET_TRANSACTIONS not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_BLOCKS: {
-                    throw new Error("GET_BLOCKS not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_GAME_STATE: {
-                    ;
-                    throw new Error("GET_GAME_STATE not implemented, call cosmos directly");
-                }
-
-                case RPCMethods.GET_SHARED_SECRET: {
-                    const [publicKey] = request.params as RPCRequestParams[RPCMethods.GET_SHARED_SECRET];
-                    const command = new SharedSecretCommand(publicKey);
-                    result = await command.execute();
-                    break;
-                }
+                // All blockchain/state management methods are handled by Cosmos
+                case RPCMethods.FIND_CONTRACT:
+                case RPCMethods.GET_ACCOUNT:
+                case RPCMethods.GET_BLOCK:
+                case RPCMethods.GET_BLOCK_BY_HASH:
+                case RPCMethods.GET_BLOCK_HEIGHT:
+                case RPCMethods.GET_LAST_BLOCK:
+                case RPCMethods.GET_BLOCKS:
+                case RPCMethods.GET_MEMPOOL:
+                case RPCMethods.GET_TRANSACTION:
+                case RPCMethods.GET_TRANSACTIONS:
+                case RPCMethods.GET_GAME_STATE:
+                case RPCMethods.GET_NODES:
+                case RPCMethods.GET_SHARED_SECRET:
+                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`);
 
                 default:
                     return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
@@ -141,7 +92,6 @@ export class RPC {
         const id = request.id;
         console.log("handleWriteMethod", method, request);
 
-        let result: ISignedResponse<any | null>;
         try {
             switch (method) {
                 // This readonly now too

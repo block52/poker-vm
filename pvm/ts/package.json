@@ -6,11 +6,8 @@
     "scripts": {
         "dev": "npx ts-node src/index.ts",
         "start": "node dist/src/index.js",
-        "start-server": "npx ts-node src/core/server.ts",
         "test": "jest",
-        "build": "tsc",
-        "gen": "npx ts-node scripts/createGenesisBlock.ts",
-        "sign": "npx ts-node scripts/sign.ts"
+        "build": "tsc"
     },
     "dependencies": {
         "@bitcoinbrisbane/block52": "^3.0.6",
