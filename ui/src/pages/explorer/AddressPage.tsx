@@ -11,6 +11,7 @@ interface Coin {
     amount: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Transaction {
     txhash: string;
     height: string;
@@ -23,7 +24,6 @@ interface Transaction {
     };
     events?: any[];
 }
-
 
 export default function AddressPage() {
     const { address: urlAddress } = useParams<{ address: string }>();
@@ -57,7 +57,7 @@ export default function AddressPage() {
                 setError(null);
                 const cosmosClient = getCosmosClient({
                     rpc: currentNetwork.rpc,
-                    rest: currentNetwork.rest,
+                    rest: currentNetwork.rest
                 });
 
                 if (!cosmosClient) {
@@ -87,9 +87,7 @@ export default function AddressPage() {
 
                     // Combine and deduplicate transactions by hash
                     const allTxs = [...(sentData.tx_responses || []), ...(receivedData.tx_responses || [])];
-                    const uniqueTxs = Array.from(
-                        new Map(allTxs.map((tx: any) => [tx.txhash, tx])).values()
-                    );
+                    const uniqueTxs = Array.from(new Map(allTxs.map((tx: any) => [tx.txhash, tx])).values());
 
                     // Sort by height (descending)
                     uniqueTxs.sort((a: any, b: any) => parseInt(b.height) - parseInt(a.height));
@@ -100,7 +98,6 @@ export default function AddressPage() {
                     // Don't fail the whole query if transactions fail
                     setTransactions([]);
                 }
-
             } catch (err: any) {
                 let errorMessage = "Failed to fetch address data";
 
@@ -134,7 +131,7 @@ export default function AddressPage() {
         if (urlAddress) {
             handleSearch(urlAddress);
         }
-    }, [urlAddress, currentNetwork]);
+    }, [urlAddress, currentNetwork, handleSearch]);
 
     // Set page title
     useEffect(() => {
@@ -211,7 +208,7 @@ export default function AddressPage() {
                         <input
                             type="text"
                             value={address}
-                            onChange={(e) => setAddress(e.target.value)}
+                            onChange={e => setAddress(e.target.value)}
                             onKeyDown={handleKeyPress}
                             placeholder="Enter Cosmos address (e.g., b521234...)"
                             className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
@@ -267,9 +264,7 @@ export default function AddressPage() {
                                 onClick={() => setActiveTab("balances")}
                                 className="flex-1 px-6 py-3 rounded-lg font-bold transition-all"
                                 style={{
-                                    backgroundColor: activeTab === "balances"
-                                        ? colors.brand.primary
-                                        : "transparent",
+                                    backgroundColor: activeTab === "balances" ? colors.brand.primary : "transparent",
                                     color: "white"
                                 }}
                             >
@@ -279,9 +274,7 @@ export default function AddressPage() {
                                 onClick={() => setActiveTab("transactions")}
                                 className="flex-1 px-6 py-3 rounded-lg font-bold transition-all"
                                 style={{
-                                    backgroundColor: activeTab === "transactions"
-                                        ? colors.brand.primary
-                                        : "transparent",
+                                    backgroundColor: activeTab === "transactions" ? colors.brand.primary : "transparent",
                                     color: "white"
                                 }}
                             >
@@ -313,9 +306,7 @@ export default function AddressPage() {
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-gray-400 text-sm">Amount</p>
-                                                        <p className="text-white font-bold text-lg">
-                                                            {formatAmount(balance.amount, balance.denom)}
-                                                        </p>
+                                                        <p className="text-white font-bold text-lg">{formatAmount(balance.amount, balance.denom)}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -346,16 +337,13 @@ export default function AddressPage() {
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div className="flex-1">
                                                         <p className="text-gray-400 text-sm">Transaction Hash</p>
-                                                        <p className="text-white font-mono text-sm break-all">
-                                                            {tx.txhash}
-                                                        </p>
+                                                        <p className="text-white font-mono text-sm break-all">{tx.txhash}</p>
                                                     </div>
                                                     <div
                                                         className="px-3 py-1 rounded-full text-xs font-bold ml-4"
                                                         style={{
-                                                            backgroundColor: tx.code === 0
-                                                                ? hexToRgba(colors.accent.success, 0.2)
-                                                                : hexToRgba(colors.accent.danger, 0.2),
+                                                            backgroundColor:
+                                                                tx.code === 0 ? hexToRgba(colors.accent.success, 0.2) : hexToRgba(colors.accent.danger, 0.2),
                                                             color: tx.code === 0 ? colors.accent.success : colors.accent.danger
                                                         }}
                                                     >

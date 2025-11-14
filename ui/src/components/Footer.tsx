@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ethers } from "ethers";
 import { calculatePotBetAmount } from "../utils/calculatePotBetAmount";
 import { LoadingSpinner } from "./common";
@@ -366,7 +367,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {hasMuckAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction(() => handleMuck(tableId))}
+                            onClick={() => handleActionWithTransaction("muck", () => handleMuck(tableId))}
                             className="btn-muck text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -386,7 +387,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {hasShowAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction(() => handleShow(tableId))}
+                            onClick={() => handleActionWithTransaction("show", () => handleShow(tableId))}
                             className="btn-show text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -516,7 +517,13 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                             disabled={loadingAction !== null}
                                         >
                                             {loadingAction === "call" && <LoadingSpinner size="sm" />}
-                                            {loadingAction === "call" ? "CALLING..." : <>CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span></>}
+                                            {loadingAction === "call" ? (
+                                                "CALLING..."
+                                            ) : (
+                                                <>
+                                                    CALL <span style={{ color: colors.brand.primary }}>${formattedCallAmount}</span>
+                                                </>
+                                            )}
                                         </button>
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
@@ -528,10 +535,18 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                             }`}
                                         >
                                             {(loadingAction === "raise" || loadingAction === "bet") && <LoadingSpinner size="sm" />}
-                                            {loadingAction === "raise" || loadingAction === "bet"
-                                                ? (hasRaiseAction ? "RAISING..." : "BETTING...")
-                                                : <>{hasRaiseAction ? "RAISE" : "BET"} <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span></>
-                                            }
+                                            {loadingAction === "raise" || loadingAction === "bet" ? (
+                                                hasRaiseAction ? (
+                                                    "RAISING..."
+                                                ) : (
+                                                    "BETTING..."
+                                                )
+                                            ) : (
+                                                <>
+                                                    {hasRaiseAction ? "RAISE" : "BET"}{" "}
+                                                    <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span>
+                                                </>
+                                            )}
                                         </button>
                                     )}
                                 </div>

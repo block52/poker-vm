@@ -75,7 +75,7 @@ import { useParams } from "react-router-dom";
 import { RxExit } from "react-icons/rx";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
-import { formatWeiToSimpleDollars, formatWeiToUSD, formatUSDCToSimpleDollars } from "../../utils/numberUtils";
+import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 
 import { ethers } from "ethers";
 
@@ -236,13 +236,16 @@ const Table = React.memo(() => {
     const [recentTxHash, setRecentTxHash] = useState<string | null>(null);
 
     // Callback to show transaction popup
-    const handleTransactionSubmitted = useCallback((txHash: string | null) => {
-        if (txHash) {
-            setRecentTxHash(txHash);
-            // Auto-refresh balance after transaction
-            fetchAccountBalance();
-        }
-    }, [fetchAccountBalance]);
+    const handleTransactionSubmitted = useCallback(
+        (txHash: string | null) => {
+            if (txHash) {
+                setRecentTxHash(txHash);
+                // Auto-refresh balance after transaction
+                fetchAccountBalance();
+            }
+        },
+        [fetchAccountBalance]
+    );
 
     // Callback to close transaction popup
     const handleCloseTransactionPopup = useCallback(() => {
@@ -436,7 +439,7 @@ const Table = React.memo(() => {
         const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
 
         return activePlayers;
-    }, [tableDataValues.tableDataPlayers, userWalletAddress, currentUserSeat]);
+    }, [tableDataValues.tableDataPlayers]);
 
     // Optimize window width detection - only check on resize
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 414);
@@ -769,10 +772,7 @@ const Table = React.memo(() => {
 
     // Debug logging - full game state from WebSocket
     useEffect(() => {
-        console.log(
-            "🎲 TABLE - Full Game State from WebSocket:\n" +
-                JSON.stringify(gameState, null, 2)
-        );
+        console.log("🎲 TABLE - Full Game State from WebSocket:\n" + JSON.stringify(gameState, null, 2));
 
         // Also log active players mapping
         const activePlayers = gameState?.players?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
@@ -1407,10 +1407,7 @@ const Table = React.memo(() => {
             </div>
 
             {/* Transaction Popup - Bottom Right */}
-            <TransactionPopup
-                txHash={recentTxHash}
-                onClose={handleCloseTransactionPopup}
-            />
+            <TransactionPopup txHash={recentTxHash} onClose={handleCloseTransactionPopup} />
         </div>
     );
 });

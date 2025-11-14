@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, seed } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Reinit", () => {
@@ -57,10 +57,10 @@ describe("Texas Holdem - Reinit", () => {
             expect(game.handNumber).toEqual(1);
             expect(game.getActionIndex()).toEqual(16); // 15 actions performed (1-15)
 
-            game.performAction(PLAYER_1, NonPlayerActionType.NEW_HAND, 16, undefined, seed); // 16th action
+            game.performAction(PLAYER_1, NonPlayerActionType.NEW_HAND, 16, undefined, `deck=${mnemonic}`); // 16th action
             expect(game.handNumber).toEqual(2);
             expect(game.getActionIndex()).toEqual(17); // 0 actions performed (16 + 1 for next action index) New hand counts as an action
-            
+
             const json = game.toJson();
             expect(json).toBeDefined();
             expect(json.actionCount).toEqual(16);

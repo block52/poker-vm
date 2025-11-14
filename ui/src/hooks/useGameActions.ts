@@ -109,7 +109,7 @@ export const useGameActions = (): GameActionHook => {
         }
     }, []);
 
-    const getGameState = useCallback(async (gameId: string): Promise<any> => {
+    const getGameState = useCallback(async (_gameId: string): Promise<any> => {
         if (USE_COSMOS) {
             // TODO: Use SigningCosmosClient directly when implementing Cosmos hooks
             throw new Error("Cosmos backend not yet implemented - use proxy mode");
@@ -121,7 +121,7 @@ export const useGameActions = (): GameActionHook => {
         }
     }, []);
 
-    const getLegalActions = useCallback(async (gameId: string, playerAddress: string): Promise<any> => {
+    const getLegalActions = useCallback(async (_gameId: string, _playerAddress: string): Promise<any> => {
         if (USE_COSMOS) {
             // TODO: Use SigningCosmosClient directly when implementing Cosmos hooks
             throw new Error("Cosmos backend not yet implemented - use proxy mode");

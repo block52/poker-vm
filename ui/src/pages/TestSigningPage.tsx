@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { SigningCosmosClient, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
+import { SigningCosmosClient } from "@bitcoinbrisbane/block52";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
@@ -55,10 +55,30 @@ export default function TestSigningPage() {
 
     // Test accounts from genesis - Static addresses from TEST_ACTORS.md
     const TEST_ACCOUNTS = [
-        { name: "alice", address: "b521dfe7r39q88zeqtde44efdqeky9thdtwngkzy2y", mnemonic: "cement shadow leave crash crisp aisle model hip lend february library ten cereal soul bind boil bargain barely rookie odor panda artwork damage reason" },
-        { name: "bob", address: "b521hg93rsm2f5v3zlepf20ru88uweajt3nf492s2p", mnemonic: "vanish legend pelican blush control spike useful usage into any remove wear flee short october naive swear wall spy cup sort avoid agent credit" },
-        { name: "charlie", address: "b521xkh7eznh50km2lxh783sqqyml8fjwl0tqjsc0c", mnemonic: "video short denial minimum vague arm dose parrot poverty saddle kingdom life buyer globe fashion topic vicious theme voice keep try jacket fresh potato" },
-        { name: "diana", address: "b521n25h4eg6uhtdvs26988k9ye497sylum8lz5vns", mnemonic: "twice bacon whale space improve galaxy liberty trumpet outside sunny action reflect doll hill ugly torch ride gossip snack fork talk market proud nothing" },
+        {
+            name: "alice",
+            address: "b521dfe7r39q88zeqtde44efdqeky9thdtwngkzy2y",
+            mnemonic:
+                "cement shadow leave crash crisp aisle model hip lend february library ten cereal soul bind boil bargain barely rookie odor panda artwork damage reason"
+        },
+        {
+            name: "bob",
+            address: "b521hg93rsm2f5v3zlepf20ru88uweajt3nf492s2p",
+            mnemonic:
+                "vanish legend pelican blush control spike useful usage into any remove wear flee short october naive swear wall spy cup sort avoid agent credit"
+        },
+        {
+            name: "charlie",
+            address: "b521xkh7eznh50km2lxh783sqqyml8fjwl0tqjsc0c",
+            mnemonic:
+                "video short denial minimum vague arm dose parrot poverty saddle kingdom life buyer globe fashion topic vicious theme voice keep try jacket fresh potato"
+        },
+        {
+            name: "diana",
+            address: "b521n25h4eg6uhtdvs26988k9ye497sylum8lz5vns",
+            mnemonic:
+                "twice bacon whale space improve galaxy liberty trumpet outside sunny action reflect doll hill ugly torch ride gossip snack fork talk market proud nothing"
+        }
     ];
 
     const copyCommand = (account: string, denom: string, amount: string) => {
@@ -75,15 +95,21 @@ export default function TestSigningPage() {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Styles
-    const containerStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-    }), []);
+    const containerStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
+            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+        }),
+        []
+    );
 
-    const inputStyle = useMemo(() => ({
-        backgroundColor: hexToRgba(colors.ui.bgMedium, 0.8),
-        border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
-    }), []);
+    const inputStyle = useMemo(
+        () => ({
+            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.8),
+            border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
+        }),
+        []
+    );
 
     const addResult = (result: TestResult) => {
         setTestResults(prev => [result, ...prev]);
@@ -250,13 +276,7 @@ export default function TestSigningPage() {
                 denom: sendDenom
             });
 
-            const txHash = await signingClient.sendTokens(
-                walletAddress,
-                recipientAddress,
-                BigInt(microUnits),
-                sendDenom,
-                "Test transfer via SDK"
-            );
+            const txHash = await signingClient.sendTokens(walletAddress, recipientAddress, BigInt(microUnits), sendDenom, "Test transfer via SDK");
 
             console.log("✅ sendTokens() successful:", txHash);
 
@@ -416,11 +436,7 @@ export default function TestSigningPage() {
                 originalInput: buyInAmount
             });
 
-            const txHash = await signingClient.joinGame(
-                gameId,
-                seat,
-                BigInt(cleanBuyInAmount)
-            );
+            const txHash = await signingClient.joinGame(gameId, seat, BigInt(cleanBuyInAmount));
 
             console.log("✅ joinGame() successful:", txHash);
 
@@ -480,11 +496,7 @@ export default function TestSigningPage() {
                 originalInput: actionAmount
             });
 
-            const txHash = await signingClient.performAction(
-                gameId,
-                action,
-                BigInt(cleanActionAmount)
-            );
+            const txHash = await signingClient.performAction(gameId, action, BigInt(cleanActionAmount));
 
             console.log("✅ performAction() successful:", txHash);
 
@@ -600,10 +612,7 @@ export default function TestSigningPage() {
                 {/* Header */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                     <div className="flex items-center justify-between mb-4">
-                        <button
-                            onClick={() => navigate("/")}
-                            className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity"
-                        >
+                        <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                             </svg>
@@ -619,10 +628,13 @@ export default function TestSigningPage() {
                 </div>
 
                 {/* Token Info Section */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={{
-                    backgroundColor: hexToRgba(colors.accent.glow, 0.1),
-                    border: `1px solid ${hexToRgba(colors.accent.glow, 0.3)}`
-                }}>
+                <div
+                    className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
+                    style={{
+                        backgroundColor: hexToRgba(colors.accent.glow, 0.1),
+                        border: `1px solid ${hexToRgba(colors.accent.glow, 0.3)}`
+                    }}
+                >
                     <h2 className="text-xl font-bold mb-3" style={{ color: colors.accent.glow }}>
                         💡 Where Do Test Tokens Come From?
                     </h2>
@@ -632,25 +644,29 @@ export default function TestSigningPage() {
                         </div>
                         <div className="ml-4 space-y-2">
                             <div>
-                                <span className="font-semibold" style={{ color: colors.brand.primary }}>1. stake</span> - For gas fees
+                                <span className="font-semibold" style={{ color: colors.brand.primary }}>
+                                    1. stake
+                                </span>{" "}
+                                - For gas fees
                                 <div className="text-xs text-gray-400 ml-4 mt-1">
                                     • Used to pay for ALL blockchain transactions
                                     <br />
                                     • Without this, your transactions will fail!
                                     <br />
                                     • Get from: Faucet or genesis account
-                                    <br />
-                                    • Note: Local testnet uses 'stake' denomination
+                                    <br />• Note: Local testnet uses 'stake' denomination
                                 </div>
                             </div>
                             <div>
-                                <span className="font-semibold" style={{ color: colors.accent.success }}>2. usdc</span> - For poker games
+                                <span className="font-semibold" style={{ color: colors.accent.success }}>
+                                    2. usdc
+                                </span>{" "}
+                                - For poker games
                                 <div className="text-xs text-gray-400 ml-4 mt-1">
                                     • Used for game buy-ins and bets
                                     <br />
                                     • Get from: Bridge deposit from Base Chain or mint via blockchain command
-                                    <br />
-                                    • ⚠️ Note: Use "usdc" denom (not "uusdc" or "b52USDC")
+                                    <br />• ⚠️ Note: Use "usdc" denom (not "uusdc" or "b52USDC")
                                 </div>
                             </div>
                         </div>
@@ -670,10 +686,13 @@ export default function TestSigningPage() {
 
                 {/* Validator Funding Section - Primary Method for Fresh Testnet */}
                 {walletAddress && (
-                    <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={{
-                        backgroundColor: hexToRgba(colors.accent.warning, 0.1),
-                        border: `2px solid ${hexToRgba(colors.accent.warning, 0.4)}`
-                    }}>
+                    <div
+                        className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
+                        style={{
+                            backgroundColor: hexToRgba(colors.accent.warning, 0.1),
+                            border: `2px solid ${hexToRgba(colors.accent.warning, 0.4)}`
+                        }}
+                    >
                         <h2 className="text-2xl font-bold mb-4" style={{ color: colors.accent.warning }}>
                             ⚡ Fund from Validator (Recommended for Fresh Testnet)
                         </h2>
@@ -683,20 +702,34 @@ export default function TestSigningPage() {
                                     <strong className="text-white">Why use the validator account instead of alice/bob/charlie/diana?</strong>
                                 </p>
                                 <ul className="list-disc ml-5 space-y-1 text-gray-400">
-                                    <li>The <span className="font-mono text-white">validator</span> account is created during testnet initialization and gets funded with tokens automatically</li>
-                                    <li>Genesis accounts (alice, bob, etc.) are only created if you run <span className="font-mono">ignite chain serve</span></li>
-                                    <li>When running <span className="font-mono">run-local-testnet.sh</span>, only the validator exists in the keyring</li>
-                                    <li>The validator keyring is stored at <span className="font-mono">~/.pokerchain-testnet/node1</span> (not the default location)</li>
+                                    <li>
+                                        The <span className="font-mono text-white">validator</span> account is created during testnet initialization and gets
+                                        funded with tokens automatically
+                                    </li>
+                                    <li>
+                                        Genesis accounts (alice, bob, etc.) are only created if you run <span className="font-mono">ignite chain serve</span>
+                                    </li>
+                                    <li>
+                                        When running <span className="font-mono">run-local-testnet.sh</span>, only the validator exists in the keyring
+                                    </li>
+                                    <li>
+                                        The validator keyring is stored at <span className="font-mono">~/.pokerchain-testnet/node1</span> (not the default
+                                        location)
+                                    </li>
                                 </ul>
                             </div>
 
-                            <div className="p-4 rounded-lg" style={{
-                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                border: `1px solid ${hexToRgba(colors.accent.warning, 0.3)}`
-                            }}>
+                            <div
+                                className="p-4 rounded-lg"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                    border: `1px solid ${hexToRgba(colors.accent.warning, 0.3)}`
+                                }}
+                            >
                                 <div className="font-semibold text-white mb-2">📋 Copy this command:</div>
                                 <div className="text-xs font-mono text-gray-400 mb-3 break-all">
-                                    pokerchaind tx bank send validator {walletAddress} 100000000stake --chain-id pokerchain --keyring-backend test --home ~/.pokerchain-testnet/node1 --fees 2000stake -y
+                                    pokerchaind tx bank send validator {walletAddress} 100000000stake --chain-id pokerchain --keyring-backend test --home
+                                    ~/.pokerchain-testnet/node1 --fees 2000stake -y
                                 </div>
                                 <button
                                     onClick={() => {
@@ -714,15 +747,24 @@ export default function TestSigningPage() {
                                 </button>
                             </div>
 
-                            <div className="p-3 rounded text-xs" style={{
-                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
-                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                            }}>
+                            <div
+                                className="p-3 rounded text-xs"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                }}
+                            >
                                 <div className="font-semibold text-white mb-2">🔑 Key Differences from Test Accounts Below:</div>
                                 <div className="space-y-1 text-gray-400">
-                                    <div>• <span className="text-white font-mono">validator</span> instead of <span className="font-mono">alice/bob/etc.</span></div>
-                                    <div>• Requires <span className="text-white font-mono">--home ~/.pokerchain-testnet/node1</span> flag</div>
-                                    <div>• Only exists when using <span className="font-mono">run-local-testnet.sh</span></div>
+                                    <div>
+                                        • <span className="text-white font-mono">validator</span> instead of <span className="font-mono">alice/bob/etc.</span>
+                                    </div>
+                                    <div>
+                                        • Requires <span className="text-white font-mono">--home ~/.pokerchain-testnet/node1</span> flag
+                                    </div>
+                                    <div>
+                                        • Only exists when using <span className="font-mono">run-local-testnet.sh</span>
+                                    </div>
                                     <div>• Has unlimited tokens (can fund as much as needed)</div>
                                 </div>
                             </div>
@@ -732,10 +774,13 @@ export default function TestSigningPage() {
 
                 {/* Test Accounts Section */}
                 {walletAddress && (
-                    <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={{
-                        backgroundColor: hexToRgba(colors.accent.success, 0.1),
-                        border: `1px solid ${hexToRgba(colors.accent.success, 0.3)}`
-                    }}>
+                    <div
+                        className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
+                        style={{
+                            backgroundColor: hexToRgba(colors.accent.success, 0.1),
+                            border: `1px solid ${hexToRgba(colors.accent.success, 0.3)}`
+                        }}
+                    >
                         <h2 className="text-xl font-bold mb-4" style={{ color: colors.accent.success }}>
                             🏦 Test Accounts - Send Tokens (Only for Ignite Serve)
                         </h2>
@@ -744,23 +789,40 @@ export default function TestSigningPage() {
                         </div>
 
                         {/* Command Explanation */}
-                        <div className="mb-4 p-3 rounded text-xs" style={{
-                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
-                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                        }}>
+                        <div
+                            className="mb-4 p-3 rounded text-xs"
+                            style={{
+                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                            }}
+                        >
                             <div className="font-semibold text-white mb-2">📚 Command Breakdown:</div>
                             <div className="space-y-1 text-gray-400 font-mono">
-                                <div><span className="text-gray-300">pokerchaind tx bank send</span> - Send tokens command</div>
-                                <div><span className="text-gray-300">[from]</span> - Source account name (alice, bob, etc.)</div>
-                                <div><span className="text-gray-300">[to]</span> - Your wallet address (destination)</div>
-                                <div><span className="text-gray-300">[amount][denom]</span> - Amount + token type (10000000stake or 50000000usdc)</div>
-                                <div><span className="text-gray-300">--chain-id pokerchain</span> - Blockchain network ID</div>
-                                <div><span className="text-gray-300">--keyring-backend test</span> - Use test keyring (for development)</div>
-                                <div><span className="text-gray-300">-y</span> - Auto-confirm transaction (skip prompt)</div>
+                                <div>
+                                    <span className="text-gray-300">pokerchaind tx bank send</span> - Send tokens command
+                                </div>
+                                <div>
+                                    <span className="text-gray-300">[from]</span> - Source account name (alice, bob, etc.)
+                                </div>
+                                <div>
+                                    <span className="text-gray-300">[to]</span> - Your wallet address (destination)
+                                </div>
+                                <div>
+                                    <span className="text-gray-300">[amount][denom]</span> - Amount + token type (10000000stake or 50000000usdc)
+                                </div>
+                                <div>
+                                    <span className="text-gray-300">--chain-id pokerchain</span> - Blockchain network ID
+                                </div>
+                                <div>
+                                    <span className="text-gray-300">--keyring-backend test</span> - Use test keyring (for development)
+                                </div>
+                                <div>
+                                    <span className="text-gray-300">-y</span> - Auto-confirm transaction (skip prompt)
+                                </div>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {TEST_ACCOUNTS.map((account) => (
+                            {TEST_ACCOUNTS.map(account => (
                                 <div
                                     key={account.address}
                                     className="p-4 rounded-lg"
@@ -816,12 +878,9 @@ export default function TestSigningPage() {
                         </div>
                         <div className="mt-4 p-3 rounded text-xs" style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.4) }}>
                             <div className="text-gray-400">
-                                <strong className="text-white">Your address:</strong>{" "}
-                                <span className="font-mono text-gray-300">{walletAddress}</span>
+                                <strong className="text-white">Your address:</strong> <span className="font-mono text-gray-300">{walletAddress}</span>
                             </div>
-                            <div className="text-gray-500 mt-2">
-                                After running the command, refresh this page to see your new balance.
-                            </div>
+                            <div className="text-gray-500 mt-2">After running the command, refresh this page to see your new balance.</div>
                         </div>
                     </div>
                 )}
@@ -844,30 +903,27 @@ export default function TestSigningPage() {
                         </button>
                     ) : (
                         <div>
-                            <div className="text-green-400 font-semibold mb-4">
-                                ✅ Client Initialized
-                            </div>
+                            <div className="text-green-400 font-semibold mb-4">✅ Client Initialized</div>
 
                             {/* Configuration Display */}
-                            <div className="mb-4 p-4 rounded-lg" style={{
-                                backgroundColor: hexToRgba(colors.brand.primary, 0.1),
-                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
-                            }}>
+                            <div
+                                className="mb-4 p-4 rounded-lg"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.brand.primary, 0.1),
+                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
+                                }}
+                            >
                                 <div className="text-sm font-semibold mb-2" style={{ color: colors.brand.primary }}>
                                     📡 Connected to: {currentNetwork.name}
                                 </div>
                                 <div className="space-y-1 text-xs font-mono">
                                     <div className="flex justify-between text-gray-300">
                                         <span className="text-gray-400">RPC:</span>
-                                        <span style={{ color: colors.accent.success }}>
-                                            {currentNetwork.rpc}
-                                        </span>
+                                        <span style={{ color: colors.accent.success }}>{currentNetwork.rpc}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-300">
                                         <span className="text-gray-400">REST:</span>
-                                        <span style={{ color: colors.accent.success }}>
-                                            {currentNetwork.rest}
-                                        </span>
+                                        <span style={{ color: colors.accent.success }}>{currentNetwork.rest}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-300">
                                         <span className="text-gray-400">Chain:</span>
@@ -895,17 +951,13 @@ export default function TestSigningPage() {
                                     <span className="font-semibold">Balances:</span>
                                 </div>
                                 {balances.length === 0 ? (
-                                    <div className="text-yellow-400 text-sm ml-4">
-                                        ⚠️ No tokens found - You need tokens to send transactions!
-                                    </div>
+                                    <div className="text-yellow-400 text-sm ml-4">⚠️ No tokens found - You need tokens to send transactions!</div>
                                 ) : (
                                     <div className="ml-4 space-y-2">
                                         {balances.map((balance, idx) => {
                                             // Format balance with proper decimals (6 for micro-denominated tokens)
                                             const isMicroDenom = balance.denom === "usdc";
-                                            const numericAmount = isMicroDenom
-                                                ? Number(balance.amount) / 1_000_000
-                                                : Number(balance.amount);
+                                            const numericAmount = isMicroDenom ? Number(balance.amount) / 1_000_000 : Number(balance.amount);
 
                                             const displayAmount = numericAmount.toLocaleString("en-US", {
                                                 minimumFractionDigits: 2,
@@ -914,12 +966,14 @@ export default function TestSigningPage() {
 
                                             // For usdc, show USD equivalent
                                             const isUSDC = balance.denom === "usdc";
-                                            const usdValue = isUSDC ? numericAmount.toLocaleString("en-US", {
-                                                style: "currency",
-                                                currency: "USD",
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2
-                                            }) : null;
+                                            const usdValue = isUSDC
+                                                ? numericAmount.toLocaleString("en-US", {
+                                                      style: "currency",
+                                                      currency: "USD",
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2
+                                                  })
+                                                : null;
 
                                             return (
                                                 <div key={idx} className="text-sm">
@@ -927,14 +981,8 @@ export default function TestSigningPage() {
                                                         <span className="font-bold text-lg" style={{ color: colors.accent.success }}>
                                                             {displayAmount}
                                                         </span>
-                                                        <span className="text-white font-medium">
-                                                            {balance.denom}
-                                                        </span>
-                                                        {usdValue && (
-                                                            <span className="text-gray-400 text-sm">
-                                                                ≈ {usdValue}
-                                                            </span>
-                                                        )}
+                                                        <span className="text-white font-medium">{balance.denom}</span>
+                                                        {usdValue && <span className="text-gray-400 text-sm">≈ {usdValue}</span>}
                                                     </div>
                                                     <div className="text-xs text-gray-500 ml-1">
                                                         {Number(balance.amount).toLocaleString("en-US")} micro-units
@@ -975,7 +1023,7 @@ export default function TestSigningPage() {
                                             type="text"
                                             placeholder="b521..."
                                             value={recipientAddress}
-                                            onChange={(e) => setRecipientAddress(e.target.value)}
+                                            onChange={e => setRecipientAddress(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
@@ -995,7 +1043,7 @@ export default function TestSigningPage() {
                                                 step="0.01"
                                                 placeholder="1.00"
                                                 value={sendAmount}
-                                                onChange={(e) => setSendAmount(e.target.value)}
+                                                onChange={e => setSendAmount(e.target.value)}
                                                 className="flex-1 p-2 rounded-lg text-white"
                                                 style={inputStyle}
                                             />
@@ -1041,7 +1089,7 @@ export default function TestSigningPage() {
                                         <label className="block text-sm text-gray-400 mb-1">Token Type</label>
                                         <select
                                             value={sendDenom}
-                                            onChange={(e) => setSendDenom(e.target.value)}
+                                            onChange={e => setSendDenom(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         >
@@ -1068,7 +1116,7 @@ export default function TestSigningPage() {
                                     <label className="block text-sm text-gray-400 mb-1">Game Type</label>
                                     <select
                                         value={gameType}
-                                        onChange={(e) => setGameType(e.target.value)}
+                                        onChange={e => setGameType(e.target.value)}
                                         className="w-full p-2 rounded-lg text-white"
                                         style={inputStyle}
                                     >
@@ -1082,7 +1130,7 @@ export default function TestSigningPage() {
                                     type="number"
                                     placeholder="Timeout (seconds)"
                                     value={timeout}
-                                    onChange={(e) => setTimeout(Number(e.target.value))}
+                                    onChange={e => setTimeout(Number(e.target.value))}
                                     className="p-2 rounded-lg text-white"
                                     style={inputStyle}
                                 />
@@ -1090,7 +1138,7 @@ export default function TestSigningPage() {
                                     type="number"
                                     placeholder="Min Players"
                                     value={minPlayers}
-                                    onChange={(e) => setMinPlayers(Number(e.target.value))}
+                                    onChange={e => setMinPlayers(Number(e.target.value))}
                                     className="p-2 rounded-lg text-white"
                                     style={inputStyle}
                                 />
@@ -1098,7 +1146,7 @@ export default function TestSigningPage() {
                                     type="number"
                                     placeholder="Max Players"
                                     value={maxPlayers}
-                                    onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                                    onChange={e => setMaxPlayers(Number(e.target.value))}
                                     className="p-2 rounded-lg text-white"
                                     style={inputStyle}
                                 />
@@ -1112,7 +1160,7 @@ export default function TestSigningPage() {
                                             type="text"
                                             placeholder="10000000"
                                             value={sitAndGoBuyIn}
-                                            onChange={(e) => setSitAndGoBuyIn(e.target.value)}
+                                            onChange={e => setSitAndGoBuyIn(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
@@ -1125,7 +1173,7 @@ export default function TestSigningPage() {
                                             type="text"
                                             placeholder="Min Buy-In"
                                             value={minBuyIn}
-                                            onChange={(e) => setMinBuyIn(e.target.value)}
+                                            onChange={e => setMinBuyIn(e.target.value)}
                                             className="p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
@@ -1133,7 +1181,7 @@ export default function TestSigningPage() {
                                             type="text"
                                             placeholder="Max Buy-In"
                                             value={maxBuyIn}
-                                            onChange={(e) => setMaxBuyIn(e.target.value)}
+                                            onChange={e => setMaxBuyIn(e.target.value)}
                                             className="p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
@@ -1146,7 +1194,7 @@ export default function TestSigningPage() {
                                         type="text"
                                         placeholder="100000"
                                         value={smallBlind}
-                                        onChange={(e) => setSmallBlind(e.target.value)}
+                                        onChange={e => setSmallBlind(e.target.value)}
                                         className="w-full p-2 rounded-lg text-white"
                                         style={inputStyle}
                                     />
@@ -1158,7 +1206,7 @@ export default function TestSigningPage() {
                                         type="text"
                                         placeholder="200000"
                                         value={bigBlind}
-                                        onChange={(e) => setBigBlind(e.target.value)}
+                                        onChange={e => setBigBlind(e.target.value)}
                                         className="w-full p-2 rounded-lg text-white"
                                         style={inputStyle}
                                     />
@@ -1184,7 +1232,7 @@ export default function TestSigningPage() {
                                         type="text"
                                         placeholder="0x645d17cae33d8832e38cb16639983d2239631356d60e3656d54036f7792b13ed"
                                         value={gameId}
-                                        onChange={(e) => setGameId(e.target.value)}
+                                        onChange={e => setGameId(e.target.value)}
                                         className="w-full p-2 rounded-lg text-white"
                                         style={inputStyle}
                                     />
@@ -1196,7 +1244,7 @@ export default function TestSigningPage() {
                                             type="number"
                                             placeholder="0"
                                             value={seat}
-                                            onChange={(e) => setSeat(Number(e.target.value))}
+                                            onChange={e => setSeat(Number(e.target.value))}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
@@ -1207,7 +1255,7 @@ export default function TestSigningPage() {
                                             type="text"
                                             placeholder="10000000"
                                             value={buyInAmount}
-                                            onChange={(e) => setBuyInAmount(e.target.value)}
+                                            onChange={e => setBuyInAmount(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
@@ -1234,7 +1282,7 @@ export default function TestSigningPage() {
                                         type="text"
                                         placeholder="0x645d17cae33d8832e38cb16639983d2239631356d60e3656d54036f7792b13ed"
                                         value={gameId}
-                                        onChange={(e) => setGameId(e.target.value)}
+                                        onChange={e => setGameId(e.target.value)}
                                         className="w-full p-2 rounded-lg text-white"
                                         style={inputStyle}
                                     />
@@ -1244,7 +1292,7 @@ export default function TestSigningPage() {
                                         <label className="block text-sm text-gray-400 mb-1">Action Type</label>
                                         <select
                                             value={action}
-                                            onChange={(e) => setAction(e.target.value)}
+                                            onChange={e => setAction(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         >
@@ -1261,7 +1309,7 @@ export default function TestSigningPage() {
                                             type="text"
                                             placeholder="0"
                                             value={actionAmount}
-                                            onChange={(e) => setActionAmount(e.target.value)}
+                                            onChange={e => setActionAmount(e.target.value)}
                                             className="w-full p-2 rounded-lg text-white"
                                             style={inputStyle}
                                         />
@@ -1300,7 +1348,7 @@ export default function TestSigningPage() {
                                         type="text"
                                         placeholder="0x..."
                                         value={gameId}
-                                        onChange={(e) => setGameId(e.target.value)}
+                                        onChange={e => setGameId(e.target.value)}
                                         className="w-full p-2 rounded-lg text-white"
                                         style={inputStyle}
                                     />
@@ -1346,27 +1394,15 @@ export default function TestSigningPage() {
                                         </span>
                                         <span
                                             className={`text-xs font-bold ${
-                                                result.status === "success"
-                                                    ? "text-green-400"
-                                                    : result.status === "error"
-                                                    ? "text-red-400"
-                                                    : "text-yellow-400"
+                                                result.status === "success" ? "text-green-400" : result.status === "error" ? "text-red-400" : "text-yellow-400"
                                             }`}
                                         >
                                             {result.status.toUpperCase()}
                                         </span>
                                     </div>
                                     <p className="text-gray-300 text-sm mb-2">{result.message}</p>
-                                    {result.txHash && (
-                                        <p className="text-xs font-mono text-gray-400">
-                                            Tx: {result.txHash}
-                                        </p>
-                                    )}
-                                    {result.data && (
-                                        <pre className="text-xs text-gray-400 mt-2 overflow-auto">
-                                            {JSON.stringify(result.data, null, 2)}
-                                        </pre>
-                                    )}
+                                    {result.txHash && <p className="text-xs font-mono text-gray-400">Tx: {result.txHash}</p>}
+                                    {result.data && <pre className="text-xs text-gray-400 mt-2 overflow-auto">{JSON.stringify(result.data, null, 2)}</pre>}
                                 </div>
                             ))}
                         </div>
@@ -1385,20 +1421,14 @@ export default function TestSigningPage() {
                                 </div>
                             </div>
 
-                            <h2 className="text-2xl font-bold text-white text-center mb-4">
-                                Transaction Successful!
-                            </h2>
+                            <h2 className="text-2xl font-bold text-white text-center mb-4">Transaction Successful!</h2>
 
-                            <p className="text-gray-300 text-center mb-6">
-                                {successMessage}
-                            </p>
+                            <p className="text-gray-300 text-center mb-6">{successMessage}</p>
 
                             <div className="bg-gray-900 rounded-lg p-4 mb-6">
                                 <p className="text-gray-400 text-sm mb-2">Transaction Hash:</p>
                                 <div className="flex items-center justify-between gap-2">
-                                    <code className="text-green-400 text-xs font-mono break-all">
-                                        {successTxHash}
-                                    </code>
+                                    <code className="text-green-400 text-xs font-mono break-all">{successTxHash}</code>
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(successTxHash);
@@ -1408,7 +1438,12 @@ export default function TestSigningPage() {
                                         title="Copy transaction hash"
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                            />
                                         </svg>
                                     </button>
                                 </div>

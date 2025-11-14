@@ -1,7 +1,7 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic, seed } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Ante - Heads Up", () => {
@@ -227,7 +227,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(gameState.winners).toBeDefined();
             expect(gameState.winners.length).toEqual(1);
 
-            game.performAction(PLAYER_1, NonPlayerActionType.NEW_HAND, 16, undefined, seed);
+            game.performAction(PLAYER_1, NonPlayerActionType.NEW_HAND, 16, undefined, `deck=${mnemonic}`);
             expect(game.handNumber).toEqual(2);
 
             const json: TexasHoldemStateDTO = game.toJson();
@@ -383,7 +383,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(smallBlindPlayer?.chips).toEqual(100200000000000000000n);
             expect(bigBlindPlayer?.chips).toEqual(99800000000000000000n);
 
-            game.performAction(PLAYER_1, NonPlayerActionType.NEW_HAND, 16, undefined, seed);
+            game.performAction(PLAYER_1, NonPlayerActionType.NEW_HAND, 16, undefined, `deck=${mnemonic}`);
 
             // Check the game state after re-initialization
             expect(game.handNumber).toEqual(2);
