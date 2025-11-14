@@ -39,7 +39,7 @@ export class Server {
         console.log("Server stopping...");
     }
 
-    public async bootstrap(args: string[] = []) {
+    public async bootstrap(_args: string[] = []) {
         this._started = true;
         console.log(`Server started on port ${this._port}`);
     }

@@ -1,4 +1,4 @@
-import { GameOptions, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions } from "@bitcoinbrisbane/block52";
 
 export interface IJSONModel {
     toJson(): any;
