@@ -60,7 +60,6 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(game.type).toBe(GameType.SIT_AND_GO);
 
             // Phase 1: Player Registration
-            console.log("=== PHASE 1: PLAYER REGISTRATION ===");
 
             // Players join the tournament
             game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
@@ -149,8 +148,6 @@ describe.skip("Sit and Go - Full Game", () => {
             const playerCount = game.getPlayerCount();
             expect(playerCount).toEqual(6); // At least one player should be eliminated
 
-            console.log("✓ First hand completed - some players may be eliminated");
-
             const gameState: TexasHoldemStateDTO = game.toJson();
             expect(gameState.results).toBeDefined();
 
@@ -170,7 +167,6 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(game.type).toBe(GameType.SIT_AND_GO);
 
             // Phase 1: Player Registration
-            console.log("=== PHASE 1: PLAYER REGISTRATION ===");
 
             // Players join the tournament
             game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
@@ -207,10 +203,7 @@ describe.skip("Sit and Go - Full Game", () => {
                 player && (seatMap[i] = player.address);
             }
 
-            console.log("✓ All 6 players registered successfully");
-
             // Phase 2: First Hand - Early Tournament Play
-            console.log("\n=== PHASE 2: EARLY TOURNAMENT PLAY ===");
 
             // Start first hand
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
@@ -235,11 +228,9 @@ describe.skip("Sit and Go - Full Game", () => {
             game.performAction(seatMap[1], PlayerActionType.CALL, 14, ONE_TOKEN); // Complete small blind
             game.performAction(seatMap[2], PlayerActionType.CHECK, 15);
 
-            console.log("✓ Preflop action completed - 3 players to flop");
             expect(game.pot).toBeGreaterThan(0n);
 
             // Phase 3: Mid-game - Players start getting eliminated
-            console.log("\n=== PHASE 3: MID-GAME ELIMINATION PHASE ===");
 
             // Simulate several hands where players get eliminated
             // For brevity, we'll simulate this by having players leave when their chips get low
@@ -331,31 +322,24 @@ describe.skip("Sit and Go - Full Game", () => {
                     handsPlayed++;
                 } catch (error) {
                     // Handle any game state issues gracefully
-                    console.warn(`Hand ${handsPlayed} simulation issue:`, error);
                     handsPlayed++;
                 }
             }
 
             // Phase 4: Final Table (3 players or less)
-            console.log("\n=== PHASE 4: FINAL TABLE ===");
 
             const finalPlayers = game.findLivePlayers();
             expect(finalPlayers.length).toBeLessThanOrEqual(3);
             expect(finalPlayers.length).toBeGreaterThanOrEqual(1);
 
-            console.log(`Final table has ${finalPlayers.length} players`);
-
             // Phase 5: Heads-up or Final Payouts
-            console.log("\n=== PHASE 5: TOURNAMENT COMPLETION ===");
 
             if (finalPlayers.length === 3) {
                 // Eliminate one more to get to heads-up
                 const thirdPlacePlayer = finalPlayers[0];
-                console.log(`3rd place: ${thirdPlacePlayer.address}`);
 
                 const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, finalPlayers);
                 const thirdPlacePayout = payoutManager.calculatePayout(3);
-                console.log(`3rd place payout: ${thirdPlacePayout}`);
 
                 game.performAction(thirdPlacePlayer.address, NonPlayerActionType.LEAVE, 100);
             }
@@ -363,7 +347,6 @@ describe.skip("Sit and Go - Full Game", () => {
             const remainingPlayers = game.findLivePlayers();
 
             if (remainingPlayers.length === 2) {
-                console.log("=== HEADS-UP PLAY ===");
                 const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, remainingPlayers);
 
                 // Simulate heads-up completion
@@ -372,9 +355,6 @@ describe.skip("Sit and Go - Full Game", () => {
 
                 const secondPlacePayout = payoutManager.calculatePayout(2);
                 const firstPlacePayout = payoutManager.calculatePayout(1);
-
-                console.log(`2nd place: ${secondPlacePlayer.address} - Payout: ${secondPlacePayout}`);
-                console.log(`1st place: ${firstPlacePlayer.address} - Payout: ${firstPlacePayout}`);
 
                 // Verify payouts are correct
                 expect(secondPlacePayout).toBe((ONE_HUNDRED_TOKENS * 6n * 30n) / 100n); // 30% of prize pool
@@ -386,9 +366,6 @@ describe.skip("Sit and Go - Full Game", () => {
             // Final verification
             const winner = game.findLivePlayers();
             expect(winner.length).toBe(1);
-
-            console.log(`\n🏆 TOURNAMENT WINNER: ${winner[0].address}`);
-            console.log("✓ Sit and Go tournament completed successfully!");
 
             // Verify tournament integrity
             expect(game.getPlayerCount()).toBe(1); // Only winner remains
