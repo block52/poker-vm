@@ -8,6 +8,8 @@ import { ethers } from "ethers";
 import { BASE_RPC_URL, BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
 import { useAccount as useWagmiAccount, useSwitchChain } from "wagmi";
 
+import { microToUsdc } from "../constants/currency";
+
 const RPC_URL = BASE_RPC_URL; // Base Chain RPC for USDC balance queries
 const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
 
@@ -1316,7 +1318,7 @@ const Dashboard: React.FC = () => {
                                                                 const usdcBalance = cosmosWallet.balance.find(b => b.denom === "usdc");
 
                                                                 if (usdcBalance) {
-                                                                    const amount = Number(usdcBalance.amount) / 1_000_000;
+                                                                    const amount = microToUsdc(usdcBalance.amount);
                                                                     return amount.toLocaleString("en-US", {
                                                                         style: "currency",
                                                                         currency: "USD",
@@ -1364,7 +1366,7 @@ const Dashboard: React.FC = () => {
                                                 {cosmosWallet.balance.map((balance, idx) => {
                                                     // Format balance with proper decimals (6 for micro-denominated tokens)
                                                     const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
-                                                    const numericAmount = isMicroDenom ? Number(balance.amount) / 1_000_000 : Number(balance.amount);
+                                                    const numericAmount = isMicroDenom ? microToUsdc(balance.amount) : Number(balance.amount);
 
                                                     const displayAmount = numericAmount.toLocaleString("en-US", {
                                                         minimumFractionDigits: 2,

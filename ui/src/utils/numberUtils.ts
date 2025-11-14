@@ -1,5 +1,6 @@
 import { BigUnit } from "bigunit";
 import { ethers } from "ethers";
+import { microToUsdc } from "../constants/currency";
 
 // Modify formatBalance to add logging
 export const formatBalance = (balance: string | number) => {
@@ -120,7 +121,7 @@ export const formatUSDCToSimpleDollars = (usdcAmount: string | bigint | undefine
  * @returns Number representation (e.g., 1.0)
  */
 export const convertUSDCToNumber = (microunits: string | bigint): number => {
-    return Number(microunits) / 1_000_000;
+    return microToUsdc(String(microunits));
 };
 
 /**

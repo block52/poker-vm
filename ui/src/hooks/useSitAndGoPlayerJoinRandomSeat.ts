@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
+import { USDC_TO_MICRO } from "../constants/currency";
 
 interface SitAndGoJoinOptions {
     tableId: string;
@@ -48,7 +49,7 @@ export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSe
             console.log(`💰 Amount (USDC): $${options.amount}`);
 
             // Convert USDC to microunits (1 USDC = 1,000,000 microunits)
-            const amountInMicrounits = options.amount * 1_000_000;
+            const amountInMicrounits = options.amount * USDC_TO_MICRO;
             console.log(`📊 Amount in microunits: ${amountInMicrounits}`);
 
             // Create signing client from mnemonic

@@ -7,6 +7,7 @@ import defaultLogo from "../assets/YOUR_CLUB.png";
 import { useNavigate } from "react-router-dom";
 import { useNetwork } from "../context/NetworkContext";
 import { NetworkSelector } from "../components/NetworkSelector";
+import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
 
 interface TestResult {
     functionName: string;
@@ -266,7 +267,7 @@ export default function TestSigningPage() {
             }
 
             // Convert dollars to micro-units (multiply by 1,000,000)
-            const microUnits = Math.floor(dollarAmount * 1_000_000);
+            const microUnits = Math.floor(dollarAmount * USDC_TO_MICRO);
 
             console.log("💸 sendTokens():", {
                 from: walletAddress,
@@ -957,7 +958,7 @@ export default function TestSigningPage() {
                                         {balances.map((balance, idx) => {
                                             // Format balance with proper decimals (6 for micro-denominated tokens)
                                             const isMicroDenom = balance.denom === "usdc";
-                                            const numericAmount = isMicroDenom ? Number(balance.amount) / 1_000_000 : Number(balance.amount);
+                                            const numericAmount = isMicroDenom ? microToUsdc(balance.amount) : Number(balance.amount);
 
                                             const displayAmount = numericAmount.toLocaleString("en-US", {
                                                 minimumFractionDigits: 2,
@@ -1033,7 +1034,7 @@ export default function TestSigningPage() {
                                             Amount ({sendDenom.toUpperCase()})
                                             {sendAmount && (
                                                 <span className="ml-2 text-xs text-gray-500">
-                                                    = {Math.floor(parseFloat(sendAmount || "0") * 1_000_000).toLocaleString()} micro-units
+                                                    = {Math.floor(parseFloat(sendAmount || "0") * USDC_TO_MICRO).toLocaleString()} micro-units
                                                 </span>
                                             )}
                                         </label>

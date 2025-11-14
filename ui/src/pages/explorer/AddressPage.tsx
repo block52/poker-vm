@@ -4,6 +4,7 @@ import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { useNetwork } from "../../context/NetworkContext";
 import { NetworkSelector } from "../../components/NetworkSelector";
+import { microToUsdc } from "../../constants/currency";
 
 // Types for balance and transactions
 interface Coin {
@@ -175,7 +176,7 @@ export default function AddressPage() {
 
     const formatAmount = (amount: string, denom: string) => {
         // Assuming micro-denominations (6 decimals)
-        const value = parseInt(amount) / 1_000_000;
+        const value = microToUsdc(amount);
         return `${value.toFixed(6)} ${denom.replace("u", "").toUpperCase()}`;
     };
 

@@ -1,5 +1,6 @@
 import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
 import { LegalActionDTO } from "@bitcoinbrisbane/block52";
+import { usdcToMicro } from "../../constants/currency";
 
 /**
  * All handlers now return Promise<string | null> where:
@@ -37,7 +38,7 @@ const handleCall = async (callAction: LegalActionDTO | undefined, amount: number
     if (callAction) {
         try {
             // Convert amount to microunits (6 decimals for USDC on Cosmos)
-            const amountMicrounits = (amount * 1_000_000).toString();
+            const amountMicrounits = usdcToMicro(amount).toString();
             const result = await callHand(tableId, amountMicrounits);
             return result?.hash || null;
         } catch (error: any) {
@@ -54,7 +55,7 @@ const handleBet = async (betAction: LegalActionDTO | undefined, amount: number, 
     if (!tableId) return null;
 
     // Convert amount to microunits (6 decimals for USDC on Cosmos)
-    const amountMicrounits = (amount * 1_000_000).toString();
+    const amountMicrounits = usdcToMicro(amount).toString();
 
     try {
         const result = await betHand(tableId, amountMicrounits);

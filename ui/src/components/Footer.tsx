@@ -2,10 +2,9 @@ import React, { useEffect, useState, useMemo } from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ethers } from "ethers";
 import { calculatePotBetAmount } from "../utils/calculatePotBetAmount";
 import { LoadingSpinner } from "./common";
+import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
 
 // Import hooks from barrel file
 import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
@@ -99,11 +98,11 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const raiseAction = getActionByType(legalActions, PlayerActionType.RAISE);
 
     // Convert values from microunits (6 decimals) to USDC for display
-    const minBet = useMemo(() => (betAction ? Number(betAction.min || "0") / 1_000_000 : 0), [betAction]);
-    const maxBet = useMemo(() => (betAction ? Number(betAction.max || "0") / 1_000_000 : 0), [betAction]);
-    const minRaise = useMemo(() => (raiseAction ? Number(raiseAction.min || "0") / 1_000_000 : 0), [raiseAction]);
-    const maxRaise = useMemo(() => (raiseAction ? Number(raiseAction.max || "0") / 1_000_000 : 0), [raiseAction]);
-    const callAmount = useMemo(() => (callAction ? Number(callAction.min || "0") / 1_000_000 : 0), [callAction]);
+    const minBet = useMemo(() => (betAction ? microToUsdc(betAction.min || "0") : 0), [betAction]);
+    const maxBet = useMemo(() => (betAction ? microToUsdc(betAction.max || "0") : 0), [betAction]);
+    const minRaise = useMemo(() => (raiseAction ? microToUsdc(raiseAction.min || "0") : 0), [raiseAction]);
+    const maxRaise = useMemo(() => (raiseAction ? microToUsdc(raiseAction.max || "0") : 0), [raiseAction]);
+    const callAmount = useMemo(() => (callAction ? microToUsdc(callAction.min || "0") : 0), [callAction]);
 
     // Helper function to wrap action handlers with loading state and transaction tracking
     const handleActionWithTransaction = async (actionName: string, actionFn: () => Promise<string | null>) => {
@@ -160,8 +159,8 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const minMaxTextClassName = useMemo(() => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
     // Memoize expensive computations - convert from microunits (6 decimals) to USDC
-    const formattedSmallBlindAmount = useMemo(() => (Number(smallBlindAction?.min || "0") / 1_000_000).toFixed(2), [smallBlindAction?.min]);
-    const formattedBigBlindAmount = useMemo(() => (Number(bigBlindAction?.min || "0") / 1_000_000).toFixed(2), [bigBlindAction?.min]);
+    const formattedSmallBlindAmount = useMemo(() => microToUsdc(smallBlindAction?.min || "0").toFixed(2), [smallBlindAction?.min]);
+    const formattedBigBlindAmount = useMemo(() => microToUsdc(bigBlindAction?.min || "0").toFixed(2), [bigBlindAction?.min]);
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
     const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
 
@@ -253,7 +252,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         if (!tableId) return;
 
         // Convert amount to microunits (6 decimals for USDC on Cosmos)
-        const amountMicrounits = (raiseAmount * 1_000_000).toString();
+        const amountMicrounits = (raiseAmount * USDC_TO_MICRO).toString();
 
         await handleActionWithTransaction("bet", async () => {
             try {
@@ -270,7 +269,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         if (!tableId) return;
 
         // Convert amount to microunits (6 decimals for USDC on Cosmos)
-        const amountMicrounits = (raiseAmount * 1_000_000).toString();
+        const amountMicrounits = (raiseAmount * USDC_TO_MICRO).toString();
 
         await handleActionWithTransaction("raise", async () => {
             try {

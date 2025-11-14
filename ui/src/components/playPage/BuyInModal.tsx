@@ -7,6 +7,7 @@ import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { joinTable } from "../../hooks/playerActions/joinTable";
 import { JoinTableOptions } from "../../hooks/playerActions/types";
 import { useCosmosWallet } from "../../hooks";
+import { USDC_TO_MICRO, microToUsdc } from "../../constants/currency";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {
@@ -110,7 +111,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
         // Get USDC balance from cosmosWallet hook (which shows all token balances)
         const usdcBalance = cosmosWallet.balance.find(b => b.denom === "usdc");
-        const balance = usdcBalance ? Number(usdcBalance.amount) / 1_000_000 : 0;
+        const balance = usdcBalance ? microToUsdc(usdcBalance.amount) : 0;
 
         console.log("💵 BuyInModal - Buy-in limits (Cosmos USDC):");
         console.log("  minBuyInWei:", minBuyInWei);
@@ -196,7 +197,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     const handleJoinClick = useCallback(() => {
         try {
             // Convert dollar amount to USDC microunits (6 decimals)
-            const buyInMicrounits = BigInt(Math.floor(parseFloat(buyInAmount) * 1_000_000));
+            const buyInMicrounits = BigInt(Math.floor(parseFloat(buyInAmount) * USDC_TO_MICRO));
 
             console.log("💰 BuyInModal - handleJoinClick:");
             console.log("  buyInAmount (input):", buyInAmount);
@@ -235,7 +236,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             setIsJoiningRandomSeat(true);
 
             // Validate buy-in amount first - convert to USDC microunits (6 decimals)
-            const buyInMicrounits = BigInt(Math.floor(parseFloat(buyInAmount) * 1_000_000));
+            const buyInMicrounits = BigInt(Math.floor(parseFloat(buyInAmount) * USDC_TO_MICRO));
 
             console.log("💰 BuyInModal - Random seat join:");
             console.log("  buyInAmount (input):", buyInAmount);
@@ -330,7 +331,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                             {cosmosWallet.balance.map((balance, idx) => {
                                 // Format balance with proper decimals (6 for micro-denominated tokens)
                                 const isMicroDenom = balance.denom === "b52Token" || balance.denom === "usdc";
-                                const numericAmount = isMicroDenom ? Number(balance.amount) / 1_000_000 : Number(balance.amount);
+                                const numericAmount = isMicroDenom ? microToUsdc(balance.amount) : Number(balance.amount);
 
                                 const displayAmount = numericAmount.toLocaleString("en-US", {
                                     minimumFractionDigits: 2,
@@ -386,15 +387,16 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
                 {/* Buy-In Amount Selection */}
                 <div className="mb-6">
-                    <label className="block text-gray-300 mb-2 font-medium text-sm">
-                        {isSitAndGo ? "Fixed Buy-In (Sit & Go)" : "Select Buy-In Amount"}
-                    </label>
+                    <label className="block text-gray-300 mb-2 font-medium text-sm">{isSitAndGo ? "Fixed Buy-In (Sit & Go)" : "Select Buy-In Amount"}</label>
                     {isSitAndGo ? (
                         // Sit & Go: Show fixed buy-in amount (non-editable)
-                        <div className="p-4 rounded-lg border-2" style={{
-                            backgroundColor: colors.ui.bgMedium,
-                            borderColor: colors.brand.primary
-                        }}>
+                        <div
+                            className="p-4 rounded-lg border-2"
+                            style={{
+                                backgroundColor: colors.ui.bgMedium,
+                                borderColor: colors.brand.primary
+                            }}
+                        >
                             <div className="text-center">
                                 <div className="text-xs text-gray-400 mb-1">Required Buy-In</div>
                                 <div className="text-3xl font-bold text-white">${maxBuyInFormatted}</div>

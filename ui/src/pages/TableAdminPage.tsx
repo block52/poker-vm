@@ -4,6 +4,7 @@ import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNewTable } from "../hooks/useNewTable";
 import { useFindGames } from "../hooks/useFindGames";
 import { toast } from "react-toastify";
+import { formatMicroAsUsdc } from "../constants/currency";
 
 /**
  * TableAdminPage - Admin interface for creating and managing poker tables
@@ -31,8 +32,7 @@ interface TableData {
 
 // Helper function to format USDC amounts (6 decimals)
 const formatUSDC = (microAmount: string | number): string => {
-    const amount = typeof microAmount === "string" ? parseFloat(microAmount) : microAmount;
-    return (amount / 1_000_000).toFixed(2);
+    return formatMicroAsUsdc(microAmount, 2);
 };
 
 export default function TableAdminPage() {

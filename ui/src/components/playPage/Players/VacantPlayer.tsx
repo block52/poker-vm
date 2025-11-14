@@ -1,23 +1,23 @@
 /**
  * VacantPlayer Component
- * 
+ *
  * This component represents an empty seat at the poker table.
  * It displays:
  * - Empty seat indicator
  * - Join button for available seats
  * - Confirmation modal for joining
- * 
+ *
  * Behavior:
  * 1. For New Users (not in table):
  *    - Clicking shows join confirmation modal directly
  *    - No popup is shown
  *    - Direct path to joining the table
- * 
+ *
  * 2. For Existing Users (already in table):
  *    - Clicking shows "CHANGE SEAT" popup
  *    - Popup triggers join confirmation modal
  *    - Allows seat changing functionality
- * 
+ *
  * PlayerPopUpCard Integration:
  * The PlayerPopUpCard is a popup menu that appears when clicking on a vacant seat.
  * It serves several purposes:
@@ -25,22 +25,22 @@
  *    - Shows seat number and availability
  *    - Provides "CHANGE SEAT" button for future implementation
  *    - Will handle seat change confirmation
- * 
+ *
  * 2. Seat Information:
  *    - Displays seat number
  *    - Shows seat status (available/taken)
  *    - Future: Will show seat preferences and history
- * 
+ *
  * 3. Interactive Features:
  *    - Note-taking for seat preferences (placeholder)
  *    - Seat rating system (placeholder)
  *    - Quick actions menu (placeholder)
- * 
+ *
  * The popup appears when:
  * - isCardVisible is true
  * - It slides in with an animation
  * - It can be closed using the X button
- * 
+ *
  * Props:
  * - left/top: Position on the table
  * - index: Seat number
@@ -61,6 +61,7 @@ import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
 import { formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
 import { useCosmosWallet } from "../../../hooks";
+import { microToUsdc } from "../../../constants/currency";
 
 const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo(
     ({ left, top, index, onJoin, uiPosition }) => {
@@ -79,7 +80,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const [buyInAmount, setBuyInAmount] = useState<string>("");
 
         const { dealerSeat } = useDealerPosition();
-    
+
         // Check if this seat is the dealer
         const isDealer = dealerSeat === index;
 
@@ -197,47 +198,54 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             }
         }, [tableId, index, onJoin, gameOptions?.minBuyIn, gameOptions?.maxBuyIn, buyInAmount, isSitAndGo]);
 
-
         // Memoize container styles
-        const containerStyle = useMemo(() => ({
-            left,
-            top
-        }), [left, top]);
+        const containerStyle = useMemo(
+            () => ({
+                left,
+                top
+            }),
+            [left, top]
+        );
 
         // Memoize popup styles
-        const popupStyle = useMemo(() => ({
-            left,
-            top,
-            transform: "translate(-50%, -50%)"
-        }), [left, top]);
+        const popupStyle = useMemo(
+            () => ({
+                left,
+                top,
+                transform: "translate(-50%, -50%)"
+            }),
+            [left, top]
+        );
 
         // Memoize popup class names
-        const popupClassName = useMemo(() => 
-            `absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
-                isCardVisible ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
-            }`,
+        const popupClassName = useMemo(
+            () =>
+                `absolute z-[1000] transition-all duration-1000 ease-in-out transform ${
+                    isCardVisible ? "opacity-100 animate-slide-left-to-right" : "opacity-0 animate-slide-top-to-bottom"
+                }`,
             [isCardVisible]
         );
 
         // Memoize seat text
-        const seatText = useMemo(() => ({
-            title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${index}`,
-            subtitle: !isUserAlreadyPlaying ? (canJoinThisSeat ? "Click to Join" : "Seat Taken") : null
-        }), [isUserAlreadyPlaying, canJoinThisSeat, index]);
+        const seatText = useMemo(
+            () => ({
+                title: isUserAlreadyPlaying ? "Vacant Seat" : `Seat ${index}`,
+                subtitle: !isUserAlreadyPlaying ? (canJoinThisSeat ? "Click to Join" : "Seat Taken") : null
+            }),
+            [isUserAlreadyPlaying, canJoinThisSeat, index]
+        );
 
         return (
             <>
-                <div
-                    className="absolute cursor-pointer"
-                    style={containerStyle}
-                    onClick={handleSeatClick}
-                >
+                <div className="absolute cursor-pointer" style={containerStyle} onClick={handleSeatClick}>
                     {/* Development Mode Debug Info */}
                     {import.meta.env.VITE_NODE_ENV === "development" && (
                         <div className="absolute top-[-50px] left-1/2 transform -translate-x-1/2 bg-gray-600 bg-opacity-80 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap z-50 border border-gray-400">
                             <div className="text-gray-300">UI Pos: {uiPosition ?? "N/A"}</div>
                             <div className="text-yellow-300">Vacant Seat: {index}</div>
-                            <div className="text-gray-300">XY: {left}, {top}</div>
+                            <div className="text-gray-300">
+                                XY: {left}, {top}
+                            </div>
                         </div>
                     )}
                     <div className="flex justify-center mb-2">
@@ -258,10 +266,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
 
                 {/* PlayerPopUpCard - Only show for seat changing */}
                 {isUserAlreadyPlaying && (
-                    <div
-                        className={popupClassName}
-                        style={popupStyle}
-                    >
+                    <div className={popupClassName} style={popupStyle}>
                         {isCardVisible && (
                             <PlayerPopUpCard
                                 id={index + 1}
@@ -280,10 +285,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
 
                 {/* Step 1: Simple confirmation modal */}
                 {showConfirmModal && (
-                    <div
-                        className="fixed inset-0 flex items-center justify-center z-50"
-                        onClick={() => !isJoining && setShowConfirmModal(false)}
-                    >
+                    <div className="fixed inset-0 flex items-center justify-center z-50" onClick={() => !isJoining && setShowConfirmModal(false)}>
                         <div
                             className="p-6 rounded-xl w-96 shadow-2xl"
                             style={{
@@ -292,7 +294,9 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>Join Seat {index}</h3>
+                            <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>
+                                Join Seat {index}
+                            </h3>
 
                             <p className="mb-6 text-center" style={{ color: colors.ui.textSecondary + "dd" }}>
                                 Ready to join at seat {index}?
@@ -314,7 +318,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                     className="px-4 py-2 text-sm rounded-lg transition duration-300 transform shadow-md"
                                     style={{
                                         background: colors.brand.primary,
-                                        color: "white",
+                                        color: "white"
                                     }}
                                 >
                                     Yes
@@ -338,32 +342,32 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             }}
                             onClick={e => e.stopPropagation()}
                         >
-                            <h3 className="text-2xl font-bold mb-4 text-white text-center">
-                                {isSitAndGo ? "Sit & Go Buy-In" : "Cash Game Buy-In"}
-                            </h3>
+                            <h3 className="text-2xl font-bold mb-4 text-white text-center">{isSitAndGo ? "Sit & Go Buy-In" : "Cash Game Buy-In"}</h3>
 
                             {/* Buy-In Amount - Fixed for Sit & Go, Input for Cash Game */}
                             {isSitAndGo ? (
                                 // Sit & Go: Fixed buy-in amount
-                                <div className="mb-6 p-4 rounded-lg border-2" style={{
-                                    backgroundColor: colors.ui.bgMedium,
-                                    borderColor: colors.brand.primary
-                                }}>
+                                <div
+                                    className="mb-6 p-4 rounded-lg border-2"
+                                    style={{
+                                        backgroundColor: colors.ui.bgMedium,
+                                        borderColor: colors.brand.primary
+                                    }}
+                                >
                                     <div className="text-center">
                                         <div className="text-xs text-gray-400 mb-1">Required Buy-In</div>
                                         <div className="text-3xl font-bold text-white">
                                             ${formatUSDCToSimpleDollars(gameOptions.minBuyIn || gameOptions.maxBuyIn)}
                                         </div>
-                                        <div className="text-xs text-gray-400 mt-1">
-                                            Fixed amount for this tournament
-                                        </div>
+                                        <div className="text-xs text-gray-400 mt-1">Fixed amount for this tournament</div>
                                     </div>
                                 </div>
                             ) : (
                                 // Cash Game: Editable buy-in amount
                                 <div className="mb-6">
                                     <label className="block text-xs text-gray-400 mb-2">
-                                        Buy-In Amount (between ${formatUSDCToSimpleDollars(gameOptions.minBuyIn)} - ${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)})
+                                        Buy-In Amount (between ${formatUSDCToSimpleDollars(gameOptions.minBuyIn)} - $
+                                        {formatUSDCToSimpleDollars(gameOptions.maxBuyIn)})
                                     </label>
                                     <div className="flex gap-2 mb-3">
                                         <button
@@ -375,7 +379,8 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                                 border: `1px solid ${colors.ui.borderColor}`
                                             }}
                                         >
-                                            MIN<br/>${formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
+                                            MIN
+                                            <br />${formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
                                         </button>
                                         <button
                                             onClick={() => setBuyInAmount(formatUSDCToSimpleDollars(gameOptions.maxBuyIn || "0"))}
@@ -386,12 +391,13 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                                 border: `1px solid ${colors.ui.borderColor}`
                                             }}
                                         >
-                                            MAX<br/>${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                            MAX
+                                            <br />${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
                                         </button>
                                         <input
                                             type="number"
                                             value={buyInAmount}
-                                            onChange={(e) => setBuyInAmount(e.target.value)}
+                                            onChange={e => setBuyInAmount(e.target.value)}
                                             placeholder="Enter amount"
                                             className="flex-1 px-4 py-2 rounded-lg text-white text-center text-lg"
                                             style={{
@@ -411,15 +417,25 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 <div className="text-xs text-gray-400 mb-2">Your USDC Balance:</div>
                                 {cosmosWallet.balance.map((balance, idx) => {
                                     if (balance.denom === "usdc") {
-                                        const usdcAmount = Number(balance.amount) / 1_000_000;
+                                        const usdcAmount = microToUsdc(balance.amount);
                                         return (
-                                            <div key={idx} className="p-3 rounded-lg" style={{
-                                                backgroundColor: colors.ui.bgMedium + "80",
-                                                border: `1px solid ${colors.ui.borderColor}`
-                                            }}>
+                                            <div
+                                                key={idx}
+                                                className="p-3 rounded-lg"
+                                                style={{
+                                                    backgroundColor: colors.ui.bgMedium + "80",
+                                                    border: `1px solid ${colors.ui.borderColor}`
+                                                }}
+                                            >
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-white font-semibold">USDC</span>
-                                                    <span className={`text-lg font-bold ${usdcAmount >= parseFloat(formatUSDCToSimpleDollars(gameOptions.maxBuyIn)) ? "text-green-400" : "text-red-400"}`}>
+                                                    <span
+                                                        className={`text-lg font-bold ${
+                                                            usdcAmount >= parseFloat(formatUSDCToSimpleDollars(gameOptions.maxBuyIn))
+                                                                ? "text-green-400"
+                                                                : "text-red-400"
+                                                        }`}
+                                                    >
                                                         ${usdcAmount.toFixed(2)}
                                                     </span>
                                                 </div>
@@ -463,7 +479,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                     className="px-6 py-3 text-sm rounded-lg transition duration-300 flex items-center"
                                     style={{
                                         background: colors.brand.primary,
-                                        color: "white",
+                                        color: "white"
                                     }}
                                 >
                                     {isJoining ? (
@@ -503,11 +519,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
     },
     (prevProps, nextProps) => {
         // Custom comparison function for memo
-        return (
-            prevProps.left === nextProps.left &&
-            prevProps.top === nextProps.top &&
-            prevProps.index === nextProps.index
-        );
+        return prevProps.left === nextProps.left && prevProps.top === nextProps.top && prevProps.index === nextProps.index;
     }
 );
 

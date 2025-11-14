@@ -1,7 +1,7 @@
 /**
  * AMOUNT HANDLING PATTERN (Cosmos SDK):
  * - Components work with numbers (dollars): e.g., amount = 10 means $10
- * - Hooks convert numbers to USDC microunits: amount * 1_000_000
+ * - Hooks convert numbers to USDC microunits: amount * USDC_TO_MICRO
  * - SDK receives microunits as strings: "10000000"
  * - Backend expects USDC microunits (6 decimals), not Wei (18 decimals)
  */
@@ -13,6 +13,7 @@ import { useSitAndGoPlayerJoinRandomSeat } from "../../hooks/useSitAndGoPlayerJo
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { getCosmosBalance } from "../../utils/cosmosAccountUtils";
 import { colors as _colors, hexToRgba as _hexToRgba } from "../../utils/colorConfig";
+import { microToUsdc } from "../../constants/currency";
 import { useGameStateContext } from "../../context/GameStateContext";
 
 interface SitAndGoAutoJoinModalProps {
@@ -138,7 +139,7 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             // STEP 1: Convert USDC microunits from gameOptions to dollar amount (number)
             // gameOptions.maxBuyIn is in USDC microunits (e.g., "1000000" for $1)
             const buyInAmountInMicrounits = gameOptions.maxBuyIn;
-            const buyInAmountInDollars = parseFloat(buyInAmountInMicrounits) / 1_000_000;
+            const buyInAmountInDollars = microToUsdc(buyInAmountInMicrounits);
 
             console.log("💰 Converting from gameOptions:");
             console.log(`   USDC microunits: "${buyInAmountInMicrounits}"`);
@@ -184,7 +185,19 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
             console.error("❌ Failed to join Sit & Go:", error);
             setBuyInError(error.message || "Failed to join table");
         }
-    }, [publicKey, tableId, isUserAlreadyPlaying, hasJoined, emptySeatIndexes.length, maxBuyInFormatted, balanceFormatted, gameOptions, joinSitAndGo, subscribeToTable, onJoinSuccess]);
+    }, [
+        publicKey,
+        tableId,
+        isUserAlreadyPlaying,
+        hasJoined,
+        emptySeatIndexes.length,
+        maxBuyInFormatted,
+        balanceFormatted,
+        gameOptions,
+        joinSitAndGo,
+        subscribeToTable,
+        onJoinSuccess
+    ]);
 
     // Don't show modal if user is already playing or has joined
     if (isUserAlreadyPlaying || hasJoined) {

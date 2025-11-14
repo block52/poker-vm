@@ -4,6 +4,7 @@ import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
+import { formatMicroAsUsdc } from "../constants/currency";
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
@@ -20,8 +21,7 @@ const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string 
 
 // Helper function to format USDC amounts (6 decimals)
 const formatUSDC = (microAmount: string | number): string => {
-    const amount = typeof microAmount === "string" ? parseFloat(microAmount) : microAmount;
-    return (amount / 1_000_000).toFixed(6);
+    return formatMicroAsUsdc(microAmount, 6);
 };
 
 interface Deposit {

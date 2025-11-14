@@ -3,6 +3,7 @@ import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { toast } from "react-toastify";
+import { formatMicroAsUsdc } from "../constants/currency";
 
 /**
  * ManualBridgeTrigger - Simple page to manually process bridge deposits
@@ -16,8 +17,7 @@ import { toast } from "react-toastify";
 
 // Helper function to format USDC amounts (6 decimals)
 const formatUSDC = (microAmount: string | number): string => {
-    const amount = typeof microAmount === "string" ? parseFloat(microAmount) : microAmount;
-    return (amount / 1_000_000).toFixed(6);
+    return formatMicroAsUsdc(microAmount, 6);
 };
 
 export default function ManualBridgeTrigger() {
