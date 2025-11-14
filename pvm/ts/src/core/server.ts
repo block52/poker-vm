@@ -9,15 +9,8 @@ import { getBootNodes } from "../state/nodeManagement";
 let serverInstance: Server | null = null;
 
 export function getServerInstance(): Server {
-    const privateKey = process.env.VALIDATOR_KEY;
-    if (!privateKey) {
-        console.error("CRITICAL: Validator key (VALIDATOR_KEY) is not set in the environment variables.");
-        console.error("Please set VALIDATOR_KEY in your .env file before starting the application.");
-        process.exit(1);
-    }
-
     if (!serverInstance) {
-        serverInstance = new Server(privateKey);
+        serverInstance = new Server();
     }
     return serverInstance;
 }
@@ -31,16 +24,9 @@ export class Server {
     private readonly _port: number = parseInt(process.env.PORT || "8545");
     private readonly _nodes: Map<string, Node> = new Map();
 
-    constructor(private readonly privateKey: string) {
+    constructor() {
         this.isValidator = false;
         this.publicKey = ethers.ZeroAddress;
-
-        if (privateKey && privateKey !== ZeroHash) {
-            const wallet = new ethers.Wallet(privateKey);
-            this.publicKey = wallet.address;
-            console.log(`Public key: ${this.publicKey}`);
-            this.isValidator = true;
-        }
 
         console.log(`Validator status: ${this.isValidator}`);
         console.log(`Validator public key: ${this.publicKey}`);

@@ -45,7 +45,6 @@ export class RPC {
     static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
         const id = request.id;
         let result: ISignedResponse<any>;
-        const validatorPrivateKey = process.env.VALIDATOR_KEY || ZeroHash;
 
         try {
             switch (method) {
@@ -75,7 +74,7 @@ export class RPC {
                 }
 
                 case RPCMethods.GET_CLIENT: {
-                    const command = new MeCommand(validatorPrivateKey);
+                    const command = new MeCommand();
                     result = await command.execute();
                     break;
                 }
@@ -83,7 +82,7 @@ export class RPC {
                 case RPCMethods.GET_NODES: {
                     const server = getServerInstance();
                     const nodes: Map<string, Node> = server.nodes;
-                    const command = new GetNodesCommand(nodes, validatorPrivateKey);
+                    const command = new GetNodesCommand(nodes);
                     result = await command.execute();
                     break;
                 }
@@ -104,13 +103,14 @@ export class RPC {
                     throw new Error("GET_BLOCKS not implemented, call cosmos directly");
                 }
 
-                case RPCMethods.GET_GAME_STATE: {;
+                case RPCMethods.GET_GAME_STATE: {
+                    ;
                     throw new Error("GET_GAME_STATE not implemented, call cosmos directly");
                 }
 
                 case RPCMethods.GET_SHARED_SECRET: {
                     const [publicKey] = request.params as RPCRequestParams[RPCMethods.GET_SHARED_SECRET];
-                    const command = new SharedSecretCommand(publicKey, validatorPrivateKey);
+                    const command = new SharedSecretCommand(publicKey);
                     result = await command.execute();
                     break;
                 }

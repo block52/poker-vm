@@ -35,7 +35,7 @@ function logWebSocketEvent(playerId: string, eventType: string, data: any, direc
         const timestamp = new Date().toISOString();
         const filename = createSafeFilename(playerId);
         const filepath = path.join(LOGS_DIR, filename);
-        
+
         const logEntry = {
             timestamp,
             playerId: playerId.substring(0, 8) + "...", // Shortened for privacy
@@ -44,12 +44,12 @@ function logWebSocketEvent(playerId: string, eventType: string, data: any, direc
             dataSize: JSON.stringify(data).length,
             data: data
         };
-        
+
         const logLine = JSON.stringify(logEntry, null, 2) + "\n" + "=".repeat(80) + "\n";
-        
+
         // Append to file (create if doesn't exist)
         fs.appendFileSync(filepath, logLine, "utf8");
-        
+
         console.log(`📝 Logged ${direction} ${eventType} for ${playerId.substring(0, 8)}... (${JSON.stringify(data).length} bytes)`);
     } catch (error) {
         console.error("Error writing WebSocket log:", error);
@@ -87,7 +87,7 @@ function logGameStateEvent(playerId: string, tableAddress: string, gameState: Te
         communityCardCount: gameState.communityCards.length,
         handNumber: gameState.handNumber,
         actionCount: gameState.previousActions.length,
-        lastActionTimestamp: gameState.previousActions.length > 0 ? 
+        lastActionTimestamp: gameState.previousActions.length > 0 ?
             gameState.previousActions[gameState.previousActions.length - 1].timestamp : null
     };
 
@@ -108,8 +108,8 @@ function logGameStateEvent(playerId: string, tableAddress: string, gameState: Te
             stack: player.stack,
             hasHoleCards: !!player.holeCards,
             holeCardCount: player.holeCards ? player.holeCards.length : 0,
-            ...(player.holeCards && player.holeCards.some(card => card !== "??") ? 
-                { holeCards: player.holeCards } : 
+            ...(player.holeCards && player.holeCards.some(card => card !== "??") ?
+                { holeCards: player.holeCards } :
                 { holeCards: "HIDDEN" }),
             // Add legal actions for this player
             legalActions: legalActionsFormatted,
@@ -218,7 +218,7 @@ export class SocketService implements SocketServiceInterface {
     private readonly maxConnections: number;
     private activeConnections: number = 0;
 
-    constructor(server: HttpServer, private readonly validatorPrivateKey: string, maxConnections: number = 100) {
+    constructor(server: HttpServer, maxConnections: number = 100) {
         this.wss = new WebSocket.Server({ server });
         this.maxConnections = maxConnections;
         this.setupSocketEvents();
@@ -317,7 +317,7 @@ export class SocketService implements SocketServiceInterface {
 
                 // Check if this is a 404 game not found error
                 const isGameNotFound = (error as any)?.response?.status === 404 ||
-                                      (error as any)?.status === 404;
+                    (error as any)?.status === 404;
 
                 // Log error concisely (don't dump entire error object)
                 if (isGameNotFound) {
@@ -468,14 +468,14 @@ export class SocketService implements SocketServiceInterface {
             ws.on("close", () => {
                 this.activeConnections--;
                 console.log("WebSocket disconnected");
-                
+
                 // Log disconnection if we can identify the player
                 if (playerId) {
                     logConnectionEvent(playerId, "DISCONNECTED", {
                         reason: "CLIENT_CLOSE"
                     });
                 }
-                
+
                 this.handleDisconnect(ws);
             });
 
@@ -485,7 +485,7 @@ export class SocketService implements SocketServiceInterface {
                 message: "Connected to PVM WebSocket Server"
             };
             this.sendMessage(ws, welcomeMessage, playerId);
-            
+
             // Log welcome message
             if (playerId) {
                 logWebSocketEvent(playerId, "OUTGOING_CONNECTED", welcomeMessage);
@@ -497,14 +497,14 @@ export class SocketService implements SocketServiceInterface {
         if (ws.readyState === WebSocket.OPEN) {
             try {
                 ws.send(JSON.stringify(data));
-                
+
                 // Log outgoing message if we have a playerId
                 if (playerId) {
                     logWebSocketEvent(playerId, "OUTGOING_MESSAGE", data);
                 }
             } catch (error) {
                 console.error("Error sending WebSocket message:", error);
-                
+
                 // Log error if we have a playerId
                 if (playerId) {
                     logWebSocketEvent(playerId, "SEND_ERROR", {
@@ -570,7 +570,7 @@ export class SocketService implements SocketServiceInterface {
             for (const playerId of playersToRemove) {
                 playerMap.delete(playerId);
                 console.log(`Removed disconnected player ${playerId} from table ${tableAddress}`);
-                
+
                 // Log disconnection cleanup
                 logConnectionEvent(playerId, "CLEANUP_DISCONNECT", {
                     tableAddress,
@@ -594,7 +594,7 @@ export class SocketService implements SocketServiceInterface {
     //     try {
     //         const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
     //         const mempoolResult = await mempoolCommand.execute();
-            
+
     //         const updateMessage: MempoolUpdateMessage = {
     //             type: "mempoolUpdate",
     //             transactions: mempoolResult.data.toJson()
@@ -617,7 +617,7 @@ export class SocketService implements SocketServiceInterface {
     //     try {
     //         const mempoolCommand = new MempoolCommand(this.validatorPrivateKey);
     //         const mempoolResult = await mempoolCommand.execute();
-            
+
     //         const updateMessage: MempoolUpdateMessage = {
     //             type: "mempoolUpdate",
     //             transactions: mempoolResult.data.toJson()
@@ -628,7 +628,7 @@ export class SocketService implements SocketServiceInterface {
 
     //         // Send to all mempool subscribers
     //         const disconnectedClients: WebSocket[] = [];
-            
+
     //         for (const ws of mempoolSubscriptions) {
     //             if (ws.readyState === WebSocket.OPEN) {
     //                 try {
@@ -660,7 +660,7 @@ export class SocketService implements SocketServiceInterface {
         const playerMap = tableSubscriptions.get(tableAddress);
         if (!playerMap) {
             console.log(`No subscribers for table ${tableAddress}, skipping player update`);
-            
+
             // Log the skip event
             logWebSocketEvent(playerId, "GAME_STATE_SKIP_NO_SUBSCRIBERS", {
                 tableAddress,
@@ -672,7 +672,7 @@ export class SocketService implements SocketServiceInterface {
         const ws = playerMap.get(playerId);
         if (!ws || ws.readyState !== WebSocket.OPEN) {
             console.log(`Player ${playerId} not connected or connection not open, skipping update`);
-            
+
             // Log the skip event
             logWebSocketEvent(playerId, "GAME_STATE_SKIP_CONNECTION", {
                 tableAddress,
@@ -707,7 +707,7 @@ export class SocketService implements SocketServiceInterface {
         try {
             ws.send(JSON.stringify(updateMessage));
             console.log(`Sent game state update to player ${playerId} for table ${tableAddress}`);
-            
+
             // Log successful send
             logWebSocketEvent(playerId, "GAME_STATE_SENT_SUCCESS", {
                 tableAddress,
@@ -717,7 +717,7 @@ export class SocketService implements SocketServiceInterface {
             });
         } catch (error) {
             console.error(`Error sending game state to player ${playerId}:`, error);
-            
+
             // Log send error
             logWebSocketEvent(playerId, "GAME_STATE_SEND_ERROR", {
                 tableAddress,
@@ -739,7 +739,7 @@ export class SocketService implements SocketServiceInterface {
 
         if (!playerMap || playerMap.size === 0) {
             console.log(`No subscribers for table ${tableAddress}, skipping broadcast`);
-            
+
             // Log broadcast skip
             logWebSocketEvent(playerId, "BROADCAST_SKIP_NO_SUBSCRIBERS", {
                 tableAddress,
@@ -772,13 +772,13 @@ export class SocketService implements SocketServiceInterface {
             try {
                 ws.send(message);
                 console.log(`Sent game state update to player ${playerId} for table ${tableAddress}`);
-                
+
                 // Log detailed game state for this specific player
                 logGameStateEvent(playerId, tableAddress, gameState, {
                     triggerType: "BROADCAST_SINGLE",
                     method: "broadcastGameStateUpdate"
                 });
-                
+
                 // Log successful broadcast send
                 logWebSocketEvent(playerId, "BROADCAST_SENT_SUCCESS", {
                     tableAddress,
@@ -787,14 +787,14 @@ export class SocketService implements SocketServiceInterface {
                 });
             } catch (error) {
                 console.error(`Error sending game state to player ${playerId}:`, error);
-                
+
                 // Log broadcast error
                 logWebSocketEvent(playerId, "BROADCAST_SEND_ERROR", {
                     tableAddress,
                     error: error instanceof Error ? error.message : String(error),
                     round: gameState.round
                 });
-                
+
                 playerMap.delete(playerId); // Clean up problematic connection
             }
         } else {
@@ -878,7 +878,7 @@ export class SocketService implements SocketServiceInterface {
 
                         ws.send(JSON.stringify(updateMessage));
                         console.log(`Sent game state update to subscriber ${subscriberId} for table ${tableAddress}`);
-                        
+
                         // Log successful send
                         logWebSocketEvent(subscriberId, "BROADCAST_ALL_SENT_SUCCESS", {
                             tableAddress,
@@ -888,13 +888,13 @@ export class SocketService implements SocketServiceInterface {
                         });
                     } catch (error) {
                         console.error(`Error sending game state to subscriber ${subscriberId}:`, error);
-                        
+
                         // Log broadcast error
                         logWebSocketEvent(subscriberId, "BROADCAST_ALL_SEND_ERROR", {
                             tableAddress,
                             error: error instanceof Error ? error.message : String(error)
                         });
-                        
+
                         disconnectedClients.push(subscriberId);
                     }
                 } else {
@@ -954,7 +954,7 @@ export class SocketService implements SocketServiceInterface {
                     const filepath = path.join(LOGS_DIR, filename);
                     const stats = fs.statSync(filepath);
                     const accountAddress = "0x" + filename.replace('.log', '');
-                    
+
                     return {
                         filename,
                         accountAddress,
@@ -974,14 +974,14 @@ export class SocketService implements SocketServiceInterface {
         try {
             const filename = createSafeFilename(accountAddress);
             const filepath = path.join(LOGS_DIR, filename);
-            
+
             if (!fs.existsSync(filepath)) {
                 return [`No log file found for account: ${accountAddress}`];
             }
-            
+
             const content = fs.readFileSync(filepath, 'utf8');
             const lines = content.split('\n').filter(line => line.trim().length > 0);
-            
+
             // Return last N lines
             return lines.slice(-maxLines);
         } catch (error) {
@@ -996,12 +996,12 @@ export class SocketService implements SocketServiceInterface {
             const files = fs.readdirSync(LOGS_DIR);
             const cutoffTime = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
             let deletedCount = 0;
-            
+
             for (const filename of files) {
                 if (filename.endsWith('.log')) {
                     const filepath = path.join(LOGS_DIR, filename);
                     const stats = fs.statSync(filepath);
-                    
+
                     if (stats.mtime.getTime() < cutoffTime) {
                         fs.unlinkSync(filepath);
                         deletedCount++;
@@ -1009,7 +1009,7 @@ export class SocketService implements SocketServiceInterface {
                     }
                 }
             }
-            
+
             console.log(`Cleaned up ${deletedCount} old log files`);
             return deletedCount;
         } catch (error) {
@@ -1022,8 +1022,7 @@ export class SocketService implements SocketServiceInterface {
 let socketServiceInstance: SocketService | null = null;
 export function initSocketServer(server: HttpServer, maxConnections: number = 100): SocketService {
     if (!socketServiceInstance) {
-        const validatorKey = process.env.VALIDATOR_KEY || ZeroHash;
-        socketServiceInstance = new SocketService(server, validatorKey, maxConnections);
+        socketServiceInstance = new SocketService(server, maxConnections);
     }
     return socketServiceInstance;
 }
