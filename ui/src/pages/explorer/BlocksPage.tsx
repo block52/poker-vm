@@ -3,24 +3,7 @@ import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { useNetwork } from "../../context/NetworkContext";
 import { NetworkSelector } from "../../components/NetworkSelector";
-
-// Types from CosmosClient
-interface CosmosBlock {
-    block_id: {
-        hash: string;
-    };
-    block: {
-        header: {
-            height: string;
-            time: string;
-            chain_id: string;
-            proposer_address: string;
-        };
-        data: {
-            txs: string[]; // Base64 encoded transactions
-        };
-    };
-}
+import { CosmosBlock } from "./types";
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -41,7 +24,9 @@ export default function BlocksPage() {
             }
 
             const recentBlocks = await cosmosClient.getLatestBlocks(50);
-            setBlocks(recentBlocks);
+            // Sort blocks by height in descending order (newest first)
+            const sortedBlocks = recentBlocks.sort((a, b) => parseInt(b.block.header.height) - parseInt(a.block.header.height));
+            setBlocks(sortedBlocks);
             setError(null);
         } catch (err: any) {
             // Provide detailed, network-specific error messages

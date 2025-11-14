@@ -3,24 +3,7 @@ import { useParams } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { renderJSONWithClickableAddresses } from "../../components/explorer/ClickableAddress";
-
-// Types for Cosmos transaction
-interface CosmosTransaction {
-    tx: {
-        body: {
-            messages: any[];
-        };
-    };
-    tx_response: {
-        height: string;
-        txhash: string;
-        code: number;
-        gas_used: string;
-        gas_wanted: string;
-        timestamp: string;
-        events: any[];
-    };
-}
+import { CosmosTransaction } from "./types";
 
 export default function TransactionPage() {
     // Check if hash is provided via URL params (for /explorer/tx/:hash route)

@@ -3,13 +3,10 @@ import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
+import { CardDistribution } from "./types";
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-interface CardDistribution {
-    [cardMnemonic: string]: number; // e.g., { "AS": 42, "KD": 38, ... }
-}
 
 export default function DistributionPage() {
     const [distribution, setDistribution] = useState<CardDistribution>({});

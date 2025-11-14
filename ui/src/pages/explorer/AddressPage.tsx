@@ -5,26 +5,7 @@ import { colors, hexToRgba } from "../../utils/colorConfig";
 import { useNetwork } from "../../context/NetworkContext";
 import { NetworkSelector } from "../../components/NetworkSelector";
 import { microToUsdc } from "../../constants/currency";
-
-// Types for balance and transactions
-interface Coin {
-    denom: string;
-    amount: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface Transaction {
-    txhash: string;
-    height: string;
-    code: number;
-    timestamp: string;
-    tx: {
-        body: {
-            messages: any[];
-        };
-    };
-    events?: any[];
-}
+import { Coin } from "./types";
 
 export default function AddressPage() {
     const { address: urlAddress } = useParams<{ address: string }>();

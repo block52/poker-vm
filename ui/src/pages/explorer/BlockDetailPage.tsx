@@ -3,24 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { ClickableAddress } from "../../components/explorer/ClickableAddress";
-
-// Types from CosmosClient
-interface CosmosBlock {
-    block_id: {
-        hash: string;
-    };
-    block: {
-        header: {
-            height: string;
-            time: string;
-            chain_id: string;
-            proposer_address: string;
-        };
-        data: {
-            txs: string[]; // Base64 encoded transactions
-        };
-    };
-}
+import { CosmosBlock } from "./types";
 
 export default function BlockDetailPage() {
     const { height } = useParams<{ height: string }>();
