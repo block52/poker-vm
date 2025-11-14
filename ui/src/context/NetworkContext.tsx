@@ -59,7 +59,7 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
     },
     // ✅ WORKING - Recommended for production testing
     {
-        name: "Texas Hodl (Production)",
+        name: "Texas Hodl",
         rpc: "https://texashodl.net/rpc",
         rest: "https://node.texashodl.net",
         grpc: "grpcs://texashodl.net:9443"
@@ -67,7 +67,7 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
     // ⚠️ Block52 - Tested Nov 5th, 2025 @ 9:50 AM - was not responding
     // May come back online - test with CLI command above before using
     {
-        name: "Block52 (Production)",
+        name: "Block52",
         rpc: "https://node1.block52.xyz/rpc",
         rest: "https://node1.block52.xyz",
         grpc: "grpcs://node1.block52.xyz:9443"
