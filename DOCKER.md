@@ -30,8 +30,6 @@ This guide explains how to run the entire Poker VM stack using Docker.
     - 🎰 **Frontend UI**: http://localhost:5173
     - 🔧 **PVM API**: http://localhost:8545
     - 🔧 **API Health**: http://localhost:8545/health
-    - 🗄️ **MongoDB**: mongodb://localhost:27017
-    - 🔄 **Redis**: redis://localhost:6379
 
 ## Services Overview
 
@@ -48,19 +46,6 @@ This guide explains how to run the entire Poker VM stack using Docker.
 -   **Description**: React-based poker interface
 -   **Technology**: React + Vite + TypeScript
 -   **Mode**: Development server with hot reload
-
-### MongoDB Database
-
--   **Port**: 27017
--   **Description**: Primary database for game state
--   **Credentials**: `node1:Passw0rd123`
--   **Database**: `pvm`
-
-### Redis Cache
-
--   **Port**: 6379
--   **Description**: Caching and session management
--   **Password**: `Passw0rd123`
 
 ## Development Workflow
 
@@ -86,18 +71,6 @@ make logs
 # Specific service logs
 docker compose logs -f pvm
 docker compose logs -f frontend
-docker compose logs -f mongo
-docker compose logs -f redis
-```
-
-### Database Access
-
-```bash
-# MongoDB shell
-make mongo-shell
-
-# Redis CLI
-make redis-cli
 ```
 
 ### Health Checks
@@ -134,7 +107,7 @@ VITE_CLUB_NAME="Your Club Name"
 
     ```bash
     # Check what's using the ports
-    lsof -i :8545 -i :5173 -i :27017 -i :6379
+    lsof -i :8545 -i :5173
 
     # Stop conflicting services or change ports in docker-compose.yaml
     ```
@@ -154,16 +127,6 @@ VITE_CLUB_NAME="Your Club Name"
     docker compose build --no-cache
     ```
 
-4. **Database connection issues:**
-
-    ```bash
-    # Check MongoDB logs
-    make logs-mongo
-
-    # Reset database
-    make reset-data
-    ```
-
 ### Health Check Failures
 
 ```bash
@@ -176,19 +139,6 @@ docker compose ps
 
 # Check logs for errors
 make logs
-```
-
-### Data Management
-
-```bash
-# Reset all data (DESTRUCTIVE)
-make reset-data
-
-# Backup database
-docker compose exec mongo mongodump --out /data/backup
-
-# View data volumes
-docker volume ls | grep poker-vm
 ```
 
 ## Available Commands
@@ -210,23 +160,10 @@ docker volume ls | grep poker-vm
 │   (React/Vite)  │◄──►│  (Node.js/TS)   │
 │   Port: 5173    │    │   Port: 8545    │
 └─────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │     MongoDB     │
-                    │   Port: 27017   │
-                    └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │      Redis      │
-                    │   Port: 6379    │
-                    └─────────────────┘
 ```
 
 ## Security Notes
 
 -   🔒 Default passwords should be changed in production
--   🔒 MongoDB and Redis are not exposed externally in production
 -   🔒 Environment variables should be properly secured
 -   🔒 Consider using Docker secrets for sensitive data

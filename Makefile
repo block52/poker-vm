@@ -21,12 +21,12 @@ build:
 # Start services
 up:
 	@echo "Starting services..."
-	docker compose up -d
+	docker compose up -d --remove-orphans
 
 # Start services and show logs
 up-logs:
 	@echo "Starting services with logs..."
-	docker compose up
+	docker compose up --remove-orphans
 
 # Stop all services
 down:

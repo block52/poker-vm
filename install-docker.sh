@@ -18,9 +18,12 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 echo "Testing Docker installation..."
 docker --version
 
-# Start the services
+# Build and start the services
+echo "Building Docker images..."
+docker compose build --no-cache
+
 echo "Starting Docker services..."
-docker compose up -d
+docker compose up -d --remove-orphans
 
 # Wait for services to be healthy
 echo "Waiting for services to start (60 seconds)..."

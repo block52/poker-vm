@@ -380,12 +380,12 @@ main() {
         setup_nginx
         # Build and start Docker containers
         log_info "Building Docker images..."
-        docker compose build || {
+        docker compose build --no-cache || {
             log_error "Failed to build Docker images."
             exit 1
         }
         log_info "Starting Docker containers..."
-        docker compose up -d || {
+        docker compose up -d --remove-orphans || {
             log_error "Failed to start Docker containers."
             exit 1
         }
