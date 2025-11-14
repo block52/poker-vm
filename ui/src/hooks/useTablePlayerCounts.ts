@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { getCosmosUrls } from "../utils/cosmos/urls";
 
 interface TablePlayerCount {
     tableId: string;
@@ -30,7 +31,7 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
             const newCounts = new Map<string, TablePlayerCount>();
 
             try {
-                const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+                const { restEndpoint } = getCosmosUrls();
 
                 // Fetch game state for each table in parallel from Cosmos blockchain
                 const promises = tableAddresses.map(async (gameId) => {

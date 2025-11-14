@@ -7,6 +7,7 @@
 
 import { CosmosClient, getDefaultCosmosConfig as getDefaultCosmosConfigSDK, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "./storage";
+import { getCosmosUrls } from "./urls";
 
 // Re-export types and constants from SDK
 export type { CosmosClient };
@@ -18,11 +19,12 @@ export { COSMOS_CONSTANTS };
  */
 export const getDefaultCosmosConfig = () => {
     const sdkConfig = getDefaultCosmosConfigSDK();
+    const { rpcEndpoint, restEndpoint } = getCosmosUrls();
 
     return {
         ...sdkConfig,
-        rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://node1.block52.xyz:26657",
-        restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://node1.block52.xyz:1317",
+        rpcEndpoint,
+        restEndpoint,
     };
 };
 

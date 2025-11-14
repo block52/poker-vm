@@ -4,6 +4,7 @@ import { generateWallet as generateWalletSDK, createWalletFromMnemonic as create
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import defaultLogo from "../assets/YOUR_CLUB.png";
+import { getCosmosUrls } from "../utils/cosmos/urls";
 
 const CosmosWalletPage = () => {
     const navigate = useNavigate();
@@ -31,7 +32,7 @@ const CosmosWalletPage = () => {
     // Fetch test account balances
     const fetchBalance = async (address: string) => {
         try {
-            const restUrl = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+            const { restEndpoint: restUrl } = getCosmosUrls();
             const response = await fetch(`${restUrl}/cosmos/bank/v1beta1/balances/${address}`);
             const data = await response.json();
             return data.balances || [];
@@ -169,16 +170,12 @@ const CosmosWalletPage = () => {
                 </div>
 
                 <h1 className="text-4xl font-bold text-white mb-2 text-center">Cosmos Wallet Manager</h1>
-                <p
-                    className="text-center mb-8"
-                    style={{ color: hexToRgba(colors.ui.textSecondary, 0.8) }}
-                >
+                <p className="text-center mb-8" style={{ color: hexToRgba(colors.ui.textSecondary, 0.8) }}>
                     Generate or import a wallet to receive deposits and play poker
                 </p>
             </div>
 
             <div className="max-w-4xl mx-auto">
-
                 {/* Existing Wallet Display */}
                 {existingAddress && (
                     <div

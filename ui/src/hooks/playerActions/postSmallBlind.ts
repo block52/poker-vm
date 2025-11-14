@@ -1,5 +1,6 @@
 import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
+import { getCosmosUrls } from "../../utils/cosmos/urls";
 
 /**
  * Post small blind using Cosmos SDK SigningCosmosClient.
@@ -24,8 +25,7 @@ export async function postSmallBlind(tableId: string, smallBlindAmount: string):
     console.log("  Small blind amount:", smallBlindAmount);
 
     // Create signing client from mnemonic
-    const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
-    const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+    const { rpcEndpoint, restEndpoint } = getCosmosUrls();
 
     const signingClient = await createSigningClientFromMnemonic(
         {

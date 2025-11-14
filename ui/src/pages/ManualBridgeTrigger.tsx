@@ -4,6 +4,7 @@ import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { toast } from "react-toastify";
 import { formatMicroAsUsdc } from "../constants/currency";
+import { getCosmosUrls } from "../utils/cosmos/urls";
 
 /**
  * ManualBridgeTrigger - Simple page to manually process bridge deposits
@@ -53,8 +54,7 @@ export default function ManualBridgeTrigger() {
             }
 
             // Create signing client
-            const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
-            const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+            const { rpcEndpoint, restEndpoint } = getCosmosUrls();
 
             const signingClient = await createSigningClientFromMnemonic(
                 {

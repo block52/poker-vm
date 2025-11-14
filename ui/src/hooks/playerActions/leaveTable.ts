@@ -1,5 +1,6 @@
 import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
+import { getCosmosUrls } from "../../utils/cosmos/urls";
 
 /**
  * Leave a poker table using Cosmos SDK SigningCosmosClient.
@@ -22,11 +23,10 @@ export async function leaveTable(tableId: string, value: string, _nonce?: number
     console.log("👋 Leave table on Cosmos blockchain");
     console.log("  Player:", userAddress);
     console.log("  Game ID:", tableId);
-    console.log("  Value:", value);
+    console.log("  Game ID:", tableId);
 
     // Create signing client from mnemonic
-    const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
-    const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+    const { rpcEndpoint, restEndpoint } = getCosmosUrls();
 
     const signingClient = await createSigningClientFromMnemonic(
         {

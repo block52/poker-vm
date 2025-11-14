@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { GameType, COSMOS_CONSTANTS, createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
 import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
+import { getCosmosUrls } from "../utils/cosmos/urls";
 
 // Type for creating new table options
 export interface CreateTableOptions {
@@ -47,8 +48,7 @@ export const useNewTable = (): UseNewTableReturn => {
             }
 
             // Create signing client from mnemonic
-            const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
-            const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+            const { rpcEndpoint, restEndpoint } = getCosmosUrls();
 
             const signingClient = await createSigningClientFromMnemonic(
                 {
@@ -89,7 +89,7 @@ export const useNewTable = (): UseNewTableReturn => {
 
             // Map GameType to string for Cosmos
             const gameTypeStr = gameOptions.type === GameType.SIT_AND_GO ? "sit_and_go" :
-                               gameOptions.type === GameType.TOURNAMENT ? "tournament" : "cash";
+                gameOptions.type === GameType.TOURNAMENT ? "tournament" : "cash";
 
             // Timeout in seconds (5 minutes = 300 seconds)
             const timeoutSeconds = 300;

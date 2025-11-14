@@ -5,6 +5,7 @@ import useCosmosWallet from "../hooks/useCosmosWallet";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
+import { getCosmosUrls } from "../utils/cosmos/urls";
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
@@ -108,7 +109,7 @@ export default function BridgeAdminDashboard() {
     // Check if deposits have been processed on Cosmos
     const checkProcessingStatus = async (depositsToCheck: Deposit[]) => {
         try {
-            const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+            const { restEndpoint } = getCosmosUrls();
 
             // We need to check the deterministic txHash for each deposit
             // txHash = sha256(contractAddress + depositIndex)
@@ -176,8 +177,7 @@ export default function BridgeAdminDashboard() {
             }
 
             // Create signing client
-            const rpcEndpoint = import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657";
-            const restEndpoint = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+            const { rpcEndpoint, restEndpoint } = getCosmosUrls();
 
             const signingClient = await createSigningClientFromMnemonic(
                 {
