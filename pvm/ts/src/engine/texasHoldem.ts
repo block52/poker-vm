@@ -3,7 +3,6 @@ import {
     Card,
     GameOptions,
     GameOptionsDTO,
-    GameStatus,
     GameType,
     LegalActionDTO,
     NonPlayerActionType,
@@ -141,7 +140,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Initialize update handler
         this._update = new (class implements IUpdate {
             constructor(public game: TexasHoldemGame) { }
-            addAction(action: Turn): void { }
+            addAction(_action: Turn): void { }
         })(this);
 
         // Initialize action handlers
@@ -1381,10 +1380,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        const heroEvaluation = PokerSolver.findBestHand(heroCards);
+        const _heroEvaluation = PokerSolver.findBestHand(heroCards);
 
         // Evaluate all player hands - ensure each has exactly 7 cards
-        const playerEvaluations = playerCards
+        const _playerEvaluations = playerCards
             .filter(cards => cards.length === 7)
             .map(cards => PokerSolver.findBestHand(cards));
 
@@ -1558,7 +1557,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     /**
      * Converts the game state to a DTO for serialization
      */
-    toJson(caller?: string): TexasHoldemStateDTO {
+    toJson(_caller?: string): TexasHoldemStateDTO {
         // Create player DTOs
         const players: PlayerDTO[] = Array.from(this._playersMap.entries())
             .filter(([_, player]) => player !== null)
