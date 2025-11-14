@@ -1,49 +1,5 @@
 name: poker-vm
 services:
-    # MongoDB Database
-    mongo:
-        image: mongo:8.0-noble
-        container_name: pvm-mongo
-        restart: always
-        environment:
-            MONGO_INITDB_DATABASE: pvm
-            MONGO_INITDB_ROOT_USERNAME: node1
-            MONGO_INITDB_ROOT_PASSWORD: Passw0rd123
-        ports:
-            - "27017:27017"
-        volumes:
-            - mongodb_data:/data/db
-            - ./mongo-init:/docker-entrypoint-initdb.d
-        networks:
-            - poker-network
-        healthcheck:
-            test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 40s
-
-    # Redis Cache
-    redis:
-        image: redis:8.0-alpine
-        container_name: pvm-redis
-        restart: always
-        command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-Passw0rd123}
-        ports:
-            - "6379:6379"
-        volumes:
-            - redis_data:/data
-        networks:
-            - poker-network
-        environment:
-            REDIS_PASSWORD: ${REDIS_PASSWORD:-Passw0rd123}
-        healthcheck:
-            test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 40s
-
     # PVM (Poker Virtual Machine) Backend
     pvm:
         build:
@@ -53,8 +9,6 @@ services:
         restart: unless-stopped
         environment:
             PORT: 8545
-            DB_URL: mongodb://node1:Passw0rd123@mongo:27017/pvm?authSource=admin
-            REDIS_URL: redis://:Passw0rd123@redis:6379
             ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
             ADMIN_PASSWORD: ${ADMIN_PASSWORD:-password}
             VALIDATOR_KEY: ${VALIDATOR_KEY:-}
@@ -67,11 +21,6 @@ services:
             SEED: ${SEED:-}
         ports:
             - "8545:8545"
-        depends_on:
-            mongo:
-                condition: service_healthy
-            redis:
-                condition: service_healthy
         volumes:
             # For development hot reload
             - ./pvm/ts:/app:cached
@@ -124,9 +73,3 @@ services:
 networks:
     poker-network:
         driver: bridge
-
-volumes:
-    mongodb_data:
-        driver: local
-    redis_data:
-        driver: local
