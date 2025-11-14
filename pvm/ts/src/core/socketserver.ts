@@ -1,10 +1,9 @@
 import { Server as HttpServer } from "http";
 import * as WebSocket from "ws";
-import { TexasHoldemStateDTO, TransactionDTO } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import * as url from "url";
 import { verifySignature } from "../utils/crypto";
 import { GameStateCommand } from "../commands";
-import { ZeroHash } from "ethers";
 import * as fs from "fs";
 import * as path from "path";
 import { getCosmosConfig } from "../state/cosmos/config";
@@ -197,11 +196,6 @@ type GameStateUpdateMessage = {
     type: "gameStateUpdate";
     tableAddress: string;
     gameState: TexasHoldemStateDTO;
-};
-
-type MempoolUpdateMessage = {
-    type: "mempoolUpdate";
-    transactions: TransactionDTO[];
 };
 
 export interface SocketServiceInterface {

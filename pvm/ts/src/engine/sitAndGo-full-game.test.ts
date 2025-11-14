@@ -320,7 +320,7 @@ describe.skip("Sit and Go - Full Game", () => {
                     // }
 
                     handsPlayed++;
-                } catch (error) {
+                } catch (_error) {
                     // Handle any game state issues gracefully
                     handsPlayed++;
                 }
@@ -339,7 +339,7 @@ describe.skip("Sit and Go - Full Game", () => {
                 const thirdPlacePlayer = finalPlayers[0];
 
                 const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, finalPlayers);
-                const thirdPlacePayout = payoutManager.calculatePayout(3);
+                const _thirdPlacePayout = payoutManager.calculatePayout(3);
 
                 game.performAction(thirdPlacePlayer.address, NonPlayerActionType.LEAVE, 100);
             }
@@ -351,7 +351,7 @@ describe.skip("Sit and Go - Full Game", () => {
 
                 // Simulate heads-up completion
                 const secondPlacePlayer = remainingPlayers[0];
-                const firstPlacePlayer = remainingPlayers[1];
+                const _firstPlacePlayer = remainingPlayers[1];
 
                 const secondPlacePayout = payoutManager.calculatePayout(2);
                 const firstPlacePayout = payoutManager.calculatePayout(1);

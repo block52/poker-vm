@@ -1,7 +1,7 @@
 import TexasHoldemGame from "../engine/texasHoldem";
 import { PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
-import { baseGameConfig, gameOptions, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp, resetTestTimestamp } from "./testConstants";
+import { gameOptions, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp, resetTestTimestamp } from "./testConstants";
 import { ethers } from "ethers";
 
 describe("hasRoundEnded", () => {

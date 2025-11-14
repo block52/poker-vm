@@ -28,7 +28,7 @@ describe("Texas Holdem Game - Next seat", () => {
 
         it("should find seat 1 when only higher-numbered seats are filled", () => {
             // Create a game with custom player setup where seats 2-6 are filled
-            const customGameConfig = { ...baseGameConfig };
+            const _customGameConfig = { ...baseGameConfig };
 
             // Manually set up the players map to fill specific seats
             const players = new Map<number, Player | null>();

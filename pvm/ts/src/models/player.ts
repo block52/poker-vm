@@ -1,7 +1,6 @@
 import { PlayerStatus, PlayerDTO, Card } from "@bitcoinbrisbane/block52";
 import { IJSONModel } from "./interfaces";
 import { Turn } from "../engine/types";
-import { Stack } from "../core/datastructures/stack";
 
 export class Player implements IJSONModel {
     chips: bigint = 0n;
@@ -10,8 +9,7 @@ export class Player implements IJSONModel {
     lastActed?: number;
     status: PlayerStatus = PlayerStatus.ACTIVE;
 
-    private _previousActions: Stack<Turn> = new Stack<Turn>();
-    // The last action is the top of the stack.
+    private _previousActions: Turn[] = [];
 
     get id(): string { return this.address; }
 
@@ -41,14 +39,12 @@ export class Player implements IJSONModel {
 
     addAction(action: Turn, timestamp: number): void {
         this._previousActions.push(action);
-
-        // Could peek at the top of the stack to get the last action.
         this.lastAction = action;
         this.lastActed = timestamp;
     };
 
     previousActions(): Turn[] {
-        return this._previousActions.toArray();
+        return this._previousActions;
     }
 
     public toJson(): PlayerDTO {

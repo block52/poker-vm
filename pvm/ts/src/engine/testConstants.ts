@@ -117,11 +117,11 @@ export class MockBetManager implements IBetManager {
     private mockPlayerBets: Map<string, bigint> = new Map();
     private mockLargestBet: bigint = 0n;
 
-    add(action: Turn): void {
+    add(_action: Turn): void {
         throw new Error("Method not implemented.");
     }
 
-    addTurns(turns: Turn[]): void {
+    addTurns(_turns: Turn[]): void {
         throw new Error("Method not implemented.");
     }
 

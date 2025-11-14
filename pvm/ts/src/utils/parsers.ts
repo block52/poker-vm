@@ -2,7 +2,7 @@ import { GameOptions, PlayerActionType, KEYS, NonPlayerActionType } from "@bitco
 import { OrderedTransaction } from "../engine/types";
 import { ITransaction } from "../models/interfaces";
 
-export const toGameOptions = (data: string): GameOptions => {
+export const toGameOptions = (_data: string): GameOptions => {
     throw new Error("Not implemented");
 };
 
