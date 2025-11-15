@@ -2,7 +2,6 @@ import { useState } from "react";
 import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
-import defaultLogo from "../assets/YOUR_CLUB.png";
 
 const CosmosWalletPage = () => {
     const [mnemonic, setMnemonic] = useState<string>("");
@@ -11,10 +10,6 @@ const CosmosWalletPage = () => {
     const [importMnemonic, setImportMnemonic] = useState("");
     const [error, setError] = useState<string>("");
     const [showMnemonic, setShowMnemonic] = useState(false);
-
-    // Get club logo from env
-    const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
-    const clubName = import.meta.env.VITE_CLUB_NAME || "Block52";
 
     // Check if wallet already exists
     const existingMnemonic = getCosmosMnemonic();
@@ -112,13 +107,8 @@ const CosmosWalletPage = () => {
                 minHeight: "100vh"
             }}
         >
-            {/* Header with Logo */}
+            {/* Header */}
             <div className="max-w-4xl mx-auto mb-8">
-                <div className="flex items-center justify-end mb-6">
-                    {/* Logo */}
-                    <img src={clubLogo} alt={`${clubName} Logo`} className="h-12" />
-                </div>
-
                 <h1 className="text-4xl font-bold text-white mb-2 text-center">Block52 Wallet Manager</h1>
                 <p className="text-center mb-8" style={{ color: hexToRgba(colors.ui.textSecondary, 0.8) }}>
                     Generate or import a wallet to receive deposits and play poker
