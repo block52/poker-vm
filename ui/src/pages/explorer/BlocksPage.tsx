@@ -183,7 +183,7 @@ export default function BlocksPage() {
                         <div className="bg-gray-800 rounded-lg px-4 py-2 border border-gray-700">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full animate-pulse bg-green-400"></div>
-                                <span className="text-sm text-gray-300">{blocks.length} blocks</span>
+                                <span className="text-sm text-gray-300">Latest: #{blocks.length > 0 ? blocks[0].block.header.height : "..."}</span>
                             </div>
                         </div>
                     </div>

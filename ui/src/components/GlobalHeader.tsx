@@ -3,6 +3,13 @@ import { useLocation, Link } from "react-router-dom";
 import { NetworkSelector } from "./NetworkSelector";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
+interface MenuItem {
+    path: string;
+    label: string;
+    icon: string;
+    badge?: string;
+}
+
 export const GlobalHeader: React.FC = () => {
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,9 +22,9 @@ export const GlobalHeader: React.FC = () => {
         return null;
     }
 
-    const menuItems = [
+    const menuItems: MenuItem[] = [
         { path: "/wallet", label: "Block52 Wallet", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
-        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" },
+        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14", badge: "50" },
         { path: "/bridge/manual", label: "Manual Bridge", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" },
         { path: "/test-signing", label: "Test Signing", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
         {
@@ -65,6 +72,17 @@ export const GlobalHeader: React.FC = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
                                     </svg>
                                     {item.label}
+                                    {item.badge && (
+                                        <span
+                                            className="ml-1 px-1.5 py-0.5 rounded text-xs font-semibold"
+                                            style={{
+                                                backgroundColor: hexToRgba(colors.brand.primary, 0.2),
+                                                color: colors.brand.primary
+                                            }}
+                                        >
+                                            {item.badge}
+                                        </span>
+                                    )}
                                 </Link>
                             ))}
                         </nav>
@@ -110,6 +128,17 @@ export const GlobalHeader: React.FC = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
                                     </svg>
                                     {item.label}
+                                    {item.badge && (
+                                        <span
+                                            className="ml-auto px-2 py-0.5 rounded text-xs font-semibold"
+                                            style={{
+                                                backgroundColor: hexToRgba(colors.brand.primary, 0.2),
+                                                color: colors.brand.primary
+                                            }}
+                                        >
+                                            {item.badge}
+                                        </span>
+                                    )}
                                 </Link>
                             ))}
                         </div>
