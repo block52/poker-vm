@@ -300,7 +300,7 @@ const Dashboard: React.FC = () => {
     const handleCreateNewGame = async () => {
         // Check for Cosmos wallet
         if (!cosmosWallet.address) {
-            setCreateGameError("No Cosmos wallet found. Please create or import a Cosmos wallet first.");
+            setCreateGameError("No Block52 wallet found. Please create or import a Block52 wallet first.");
             return;
         }
 

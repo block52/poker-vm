@@ -119,7 +119,7 @@ const CosmosWalletPage = () => {
                     <img src={clubLogo} alt={`${clubName} Logo`} className="h-12" />
                 </div>
 
-                <h1 className="text-4xl font-bold text-white mb-2 text-center">Cosmos Wallet Manager</h1>
+                <h1 className="text-4xl font-bold text-white mb-2 text-center">Block52 Wallet Manager</h1>
                 <p className="text-center mb-8" style={{ color: hexToRgba(colors.ui.textSecondary, 0.8) }}>
                     Generate or import a wallet to receive deposits and play poker
                 </p>
@@ -215,7 +215,7 @@ const CosmosWalletPage = () => {
                     >
                         <h2 className="text-2xl font-semibold text-white mb-4">Generate New Wallet</h2>
                         <p className="mb-6" style={{ color: "var(--ui-text-secondary)" }}>
-                            Create a new Cosmos wallet with a 24-word seed phrase. This will be saved in your browser.
+                            Create a new Block52 wallet with a 24-word seed phrase. This will be saved in your browser.
                         </p>
 
                         <button

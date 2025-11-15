@@ -168,7 +168,7 @@ export default function BridgeAdminDashboard() {
     // Process a single deposit
     const handleProcessDeposit = async (depositIndex: number) => {
         if (!cosmosWallet.address) {
-            toast.error("No Cosmos wallet found. Please create or import a wallet first.");
+            toast.error("No Block52 wallet found. Please create or import a wallet first.");
             return;
         }
 
