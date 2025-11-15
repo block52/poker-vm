@@ -62,6 +62,7 @@ import { colors } from "../../../utils/colorConfig";
 import { formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
 import { useCosmosWallet } from "../../../hooks";
 import { microToUsdc } from "../../../constants/currency";
+import { useNetwork } from "../../../context/NetworkContext";
 
 const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo(
     ({ left, top, index, onJoin, uiPosition }) => {
@@ -69,6 +70,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
         const cosmosWallet = useCosmosWallet();
+        const { currentNetwork } = useNetwork();
 
         const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [showBuyInModal, setShowBuyInModal] = useState(false);
@@ -177,10 +179,14 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
 
                 // joinTable expects amount in USDC dollar format (e.g., "5.00")
                 // The hook will convert it to microunits internally
-                const response = await joinTable(tableId, {
-                    amount: buyInDollars,
-                    seatNumber: index
-                });
+                const response = await joinTable(
+                    tableId,
+                    {
+                        amount: buyInDollars,
+                        seatNumber: index
+                    },
+                    currentNetwork
+                );
 
                 setJoinResponse(response);
                 setJoinSuccess(true);
@@ -196,7 +202,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 setJoinError(err instanceof Error ? err.message : "Unknown error joining table");
                 setIsJoining(false);
             }
-        }, [tableId, index, onJoin, gameOptions?.minBuyIn, gameOptions?.maxBuyIn, buyInAmount, isSitAndGo]);
+        }, [tableId, index, onJoin, gameOptions?.minBuyIn, gameOptions?.maxBuyIn, buyInAmount, isSitAndGo, currentNetwork]);
 
         // Memoize container styles
         const containerStyle = useMemo(

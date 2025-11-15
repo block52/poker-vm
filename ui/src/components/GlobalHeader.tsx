@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { NetworkSelector } from "./NetworkSelector";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
@@ -27,9 +27,9 @@ export const GlobalHeader: React.FC = () => {
                 <div className="flex items-center justify-between">
                     {/* Left side - Logo/Title (can be expanded later) */}
                     <div className="flex items-center gap-4">
-                        <h1 className="text-xl font-bold" style={{ color: colors.brand.primary }}>
+                        <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
                             {import.meta.env.VITE_CLUB_NAME || "Block 52"}
-                        </h1>
+                        </Link>
                     </div>
 
                     {/* Right side - Network Selector */}

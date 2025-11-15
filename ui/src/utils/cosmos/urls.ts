@@ -1,8 +1,10 @@
+import type { NetworkEndpoints } from "../../context/NetworkContext";
+
 /**
  * Centralized Cosmos network URL configuration
  * 
  * Provides consistent access to RPC and REST endpoints across the application.
- * Uses environment variables with fallback to localhost for development.
+ * Uses the network selected in the NetworkSelector dropdown.
  */
 
 export interface CosmosUrls {
@@ -11,19 +13,21 @@ export interface CosmosUrls {
 }
 
 /**
- * Get Cosmos network URLs (RPC and REST endpoints)
+ * Get Cosmos network URLs (RPC and REST endpoints) from the selected network
  * 
+ * @param network - The currently selected network from NetworkContext
  * @returns Object containing rpcEndpoint and restEndpoint
  * 
  * @example
  * ```ts
- * const { rpcEndpoint, restEndpoint } = getCosmosUrls();
+ * const { currentNetwork } = useNetwork();
+ * const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
  * const client = await createSigningClientFromMnemonic({ rpcEndpoint, restEndpoint, ... }, mnemonic);
  * ```
  */
-export function getCosmosUrls(): CosmosUrls {
+export function getCosmosUrls(network: NetworkEndpoints): CosmosUrls {
     return {
-        rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL || "http://localhost:26657",
-        restEndpoint: import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317"
+        rpcEndpoint: network.rpc,
+        restEndpoint: network.rest
     };
 }
