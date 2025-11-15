@@ -4,13 +4,15 @@
  */
 
 import { getCosmosClient } from "./cosmos/client";
+import type { NetworkEndpoints } from "./cosmos/urls";
 
 /**
  * Get the user's Cosmos address from the initialized client
+ * @param network - The network endpoints to use
  * @returns The Cosmos address (b52...) or null if not found
  */
-export const getCosmosAddress = async (): Promise<string | null> => {
-    const client = getCosmosClient();
+export const getCosmosAddress = async (network: NetworkEndpoints): Promise<string | null> => {
+    const client = getCosmosClient(network);
     if (!client) return null;
 
     try {
@@ -53,12 +55,13 @@ export const hasCosmosWallet = (): boolean => {
 
 /**
  * Get Cosmos account balance for specific token
+ * @param network - The network endpoints to use
  * @param denom The token denomination to query (default: "usdc")
  * @returns Promise with the account balance as string in microunits (6 decimals)
  * @throws Error if wallet is not connected or fetch fails
  */
-export const getCosmosBalance = async (denom: string = "usdc"): Promise<string> => {
-    const client = getCosmosClient();
+export const getCosmosBalance = async (network: NetworkEndpoints, denom: string = "usdc"): Promise<string> => {
+    const client = getCosmosClient(network);
 
     if (!client) {
         throw new Error("No Cosmos wallet connected. Please create or import a wallet first.");
@@ -89,11 +92,12 @@ export const getCosmosBalance = async (denom: string = "usdc"): Promise<string> 
 
 /**
  * Get all balances for the connected Cosmos account
+ * @param network - The network endpoints to use
  * @returns Promise with array of all token balances
  * @throws Error if wallet is not connected or fetch fails
  */
-export const getAllCosmosBalances = async (): Promise<Array<{denom: string; amount: string}>> => {
-    const client = getCosmosClient();
+export const getAllCosmosBalances = async (network: NetworkEndpoints): Promise<Array<{ denom: string; amount: string }>> => {
+    const client = getCosmosClient(network);
 
     if (!client) {
         throw new Error("No Cosmos wallet connected. Please create or import a wallet first.");

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
+import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { renderJSONWithClickableAddresses } from "../../components/explorer/ClickableAddress";
 import { CosmosTransaction } from "./types";
@@ -8,6 +9,7 @@ import { CosmosTransaction } from "./types";
 export default function TransactionPage() {
     // Check if hash is provided via URL params (for /explorer/tx/:hash route)
     const { hash: urlHash } = useParams<{ hash: string }>();
+    const { currentNetwork } = useNetwork();
 
     const [txHash, setTxHash] = useState(urlHash || "");
     const [transaction, setTransaction] = useState<CosmosTransaction | null>(null);
@@ -27,7 +29,7 @@ export default function TransactionPage() {
             try {
                 setLoading(true);
                 setError(null);
-                const cosmosClient = getCosmosClient();
+                const cosmosClient = getCosmosClient(currentNetwork);
 
                 if (!cosmosClient) {
                     throw new Error("Cosmos client not initialized. Please check your wallet connection.");
@@ -60,7 +62,7 @@ export default function TransactionPage() {
                 setLoading(false);
             }
         },
-        [txHash]
+        [txHash, currentNetwork]
     );
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -74,7 +76,6 @@ export default function TransactionPage() {
         if (urlHash) {
             handleSearch(urlHash);
         }
-         
     }, [urlHash, handleSearch]);
 
     // Set page title based on transaction hash

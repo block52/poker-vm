@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { GameOptionsResponse } from "@bitcoinbrisbane/block52";
 import { FindGamesReturn } from "../types/index";
 import { getCosmosClient } from "../utils/cosmos/client";
+import { useNetwork } from "../context/NetworkContext";
 
 /**
  * Custom hook to find available games from Cosmos blockchain
@@ -11,6 +12,7 @@ export const useFindGames = (): FindGamesReturn => {
     const [games, setGames] = useState<GameOptionsResponse[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
+    const { currentNetwork } = useNetwork();
 
     const fetchGames = useCallback(async () => {
         setIsLoading(true);
@@ -18,7 +20,7 @@ export const useFindGames = (): FindGamesReturn => {
 
         try {
             // Get Cosmos client
-            const cosmosClient = getCosmosClient();
+            const cosmosClient = getCosmosClient(currentNetwork);
             if (!cosmosClient) {
                 throw new Error("Cosmos client not initialized. Please create or import a Cosmos wallet first.");
             }
@@ -35,7 +37,7 @@ export const useFindGames = (): FindGamesReturn => {
             // Map Cosmos game structure to GameOptionsResponse format
             // Cosmos returns camelCase JSON (gameId, minBuyIn, etc.)
             const availableGames: GameOptionsResponse[] = cosmosGames.map((game: any) => {
-                
+
                 // Cosmos blockchain returns values in USDC micro-units (6 decimals)
                 // These are already the correct values, just need to convert to strings
                 const minBuyInStr = game.minBuyIn ? String(game.minBuyIn) : (game.min_buy_in ? String(game.min_buy_in) : "0");
@@ -109,7 +111,7 @@ export const useFindGames = (): FindGamesReturn => {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [currentNetwork]);
 
     useEffect(() => {
         fetchGames();

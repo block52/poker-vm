@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
+import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
@@ -23,6 +24,7 @@ const formatUSDC = (microAmount: string | number): string => {
 
 export default function ManualBridgeTrigger() {
     const cosmosWallet = useCosmosWallet();
+    const { currentNetwork } = useNetwork();
     const [depositIndex, setDepositIndex] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [txHash, setTxHash] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function ManualBridgeTrigger() {
             }
 
             // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls();
+            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
 
             const signingClient = await createSigningClientFromMnemonic(
                 {

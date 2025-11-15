@@ -1,6 +1,7 @@
 import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
 import { LegalActionDTO } from "@bitcoinbrisbane/block52";
 import { usdcToMicro } from "../../constants/currency";
+import type { NetworkEndpoints } from "../../context/NetworkContext";
 
 /**
  * All handlers now return Promise<string | null> where:
@@ -8,11 +9,11 @@ import { usdcToMicro } from "../../constants/currency";
  * - null is returned on error or if tableId is missing
  */
 
-const handleCheck = async (tableId?: string): Promise<string | null> => {
+const handleCheck = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        const result = await checkHand(tableId);
+        const result = await checkHand(tableId, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to check:", error);
@@ -20,11 +21,11 @@ const handleCheck = async (tableId?: string): Promise<string | null> => {
     }
 };
 
-const handleFold = async (tableId?: string): Promise<string | null> => {
+const handleFold = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        const result = await foldHand(tableId);
+        const result = await foldHand(tableId, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to fold:", error);
@@ -32,14 +33,14 @@ const handleFold = async (tableId?: string): Promise<string | null> => {
     }
 };
 
-const handleCall = async (callAction: LegalActionDTO | undefined, amount: number, tableId?: string): Promise<string | null> => {
+const handleCall = async (callAction: LegalActionDTO | undefined, amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     if (callAction) {
         try {
             // Convert amount to microunits (6 decimals for USDC on Cosmos)
             const amountMicrounits = usdcToMicro(amount).toString();
-            const result = await callHand(tableId, amountMicrounits);
+            const result = await callHand(tableId, amountMicrounits, network);
             return result?.hash || null;
         } catch (error: any) {
             console.error("Failed to call:", error);
@@ -51,14 +52,14 @@ const handleCall = async (callAction: LegalActionDTO | undefined, amount: number
     }
 };
 
-const handleBet = async (betAction: LegalActionDTO | undefined, amount: number, tableId?: string): Promise<string | null> => {
+const handleBet = async (betAction: LegalActionDTO | undefined, amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     // Convert amount to microunits (6 decimals for USDC on Cosmos)
     const amountMicrounits = usdcToMicro(amount).toString();
 
     try {
-        const result = await betHand(tableId, amountMicrounits);
+        const result = await betHand(tableId, amountMicrounits, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to bet:", error);
@@ -67,11 +68,11 @@ const handleBet = async (betAction: LegalActionDTO | undefined, amount: number, 
 };
 
 // Handler for muck action
-const handleMuck = async (tableId?: string): Promise<string | null> => {
+const handleMuck = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        const result = await muckCards(tableId);
+        const result = await muckCards(tableId, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to muck cards:", error);
@@ -80,11 +81,11 @@ const handleMuck = async (tableId?: string): Promise<string | null> => {
 };
 
 // Handler for show action
-const handleShow = async (tableId?: string): Promise<string | null> => {
+const handleShow = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        const result = await showCards(tableId);
+        const result = await showCards(tableId, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to show cards:", error);
@@ -93,11 +94,11 @@ const handleShow = async (tableId?: string): Promise<string | null> => {
 };
 
 // Handler for deal action
-const handleDeal = async (tableId?: string): Promise<string | null> => {
+const handleDeal = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        const result = await dealCards(tableId);
+        const result = await dealCards(tableId, network);
         console.log("Deal completed successfully");
         return result?.hash || null;
     } catch (error: any) {
@@ -107,12 +108,12 @@ const handleDeal = async (tableId?: string): Promise<string | null> => {
 };
 
 // Add the handleStartNewHand function after the other handler functions
-const handleStartNewHand = async (tableId?: string): Promise<string | null> => {
+const handleStartNewHand = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
         // Simple call - let errors bubble up naturally
-        const result = await startNewHand(tableId);
+        const result = await startNewHand(tableId, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to start new hand:", error);
@@ -121,11 +122,11 @@ const handleStartNewHand = async (tableId?: string): Promise<string | null> => {
 };
 
 // Handler for sit out action
-const handleSitOut = async (tableId?: string): Promise<string | null> => {
+const handleSitOut = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        const result = await sitOut(tableId);
+        const result = await sitOut(tableId, network);
         console.log("Sit out completed successfully");
         return result?.hash || null;
     } catch (error: any) {
@@ -135,11 +136,11 @@ const handleSitOut = async (tableId?: string): Promise<string | null> => {
 };
 
 // Handler for sit in action
-const handleSitIn = async (tableId?: string): Promise<string | null> => {
+const handleSitIn = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        const result = await sitIn(tableId);
+        const result = await sitIn(tableId, network);
         console.log("Sit in completed successfully");
         return result?.hash || null;
     } catch (error: any) {
