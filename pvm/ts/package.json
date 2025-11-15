@@ -8,6 +8,7 @@
         "start": "node dist/src/index.js",
         "test": "jest",
         "build": "tsc",
+        "clean": "rm -rf node_modules",
         "lint": "eslint src/**/*.ts",
         "lint:fix": "eslint src/**/*.ts --fix"
     },

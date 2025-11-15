@@ -25,6 +25,7 @@ import { NetworkProvider } from "./context/NetworkContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
 import FaviconSetter from "./components/FaviconSetter";
+import { GlobalHeader } from "./components/GlobalHeader";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ function AppContent() {
     return (
         <div className="bg-[#2c3245] min-h-screen">
             <FaviconSetter />
+            <GlobalHeader />
             <Routes>
                 <Route path="/test-sdk" element={<TestSdk />} />
                 <Route path="/table/:id" element={<Table />} />

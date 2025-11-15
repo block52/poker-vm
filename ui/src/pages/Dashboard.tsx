@@ -16,7 +16,6 @@ const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
 import BuyInModal from "../components/playPage/BuyInModal";
 import WithdrawalModal from "../components/WithdrawalModal";
 import USDCDepositModal from "../components/USDCDepositModal";
-import { NetworkSelector } from "../components/NetworkSelector";
 
 // Game wallet and SDK imports
 // ...existing code...
@@ -1042,10 +1041,6 @@ const Dashboard: React.FC = () => {
 
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
-                            <div className="flex items-center gap-4">
-                                <NetworkSelector />
-                                {/* <CosmosStatus /> */}
-                            </div>
                         </div>
 
                         {/* Web3 Wallet Section */}
