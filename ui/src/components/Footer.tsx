@@ -7,7 +7,7 @@ import { LoadingSpinner } from "./common";
 import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
 
 // Import hooks from barrel file
-import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
+import { useTableState, useNextToActInfo, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
 
 // Import specific hooks not in barrel
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
@@ -52,7 +52,6 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const { gameState } = useGameStateContext();
     const players = gameState?.players || null;
     const { legalActions, isPlayerTurn, playerStatus } = usePlayerLegalActions();
-    const { gameOptions } = useGameOptions();
 
     // Use the useNextToActInfo hook
     const { isCurrentUserTurn } = useNextToActInfo(tableId);
@@ -212,78 +211,6 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         }
     }, [hasRaiseAction, hasBetAction, minRaise, minBet]);
 
-    // Handler functions for different actions - simplified
-    const handlePostSmallBlind = async () => {
-        if (!tableId) return;
-
-        const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
-        if (!smallBlindAmount) return;
-
-        await handleActionWithTransaction("small-blind", async () => {
-            try {
-                console.log("🎰 Attempting to post small blind:", smallBlindAmount);
-                const result = await postSmallBlind(tableId, smallBlindAmount, currentNetwork);
-                console.log("✅ Small blind posted successfully");
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("❌ Failed to post small blind:", error);
-                alert(`Failed to post small blind: ${error.message}`);
-                throw error;
-            }
-        });
-    };
-
-    const handlePostBigBlind = async () => {
-        if (!tableId) return;
-
-        const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
-        if (!bigBlindAmount) return;
-
-        await handleActionWithTransaction("big-blind", async () => {
-            try {
-                const result = await postBigBlind(tableId, bigBlindAmount, currentNetwork);
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("❌ Failed to post big blind:", error);
-                throw error;
-            }
-        });
-    };
-
-    const handleBet = async () => {
-        if (!tableId) return;
-
-        // Convert amount to microunits (6 decimals for USDC on Cosmos)
-        const amountMicrounits = (raiseAmount * USDC_TO_MICRO).toString();
-
-        await handleActionWithTransaction("bet", async () => {
-            try {
-                const result = await betHand(tableId, amountMicrounits, currentNetwork);
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("Failed to bet:", error);
-                throw error;
-            }
-        });
-    };
-
-    const handleRaise = async () => {
-        if (!tableId) return;
-
-        // Convert amount to microunits (6 decimals for USDC on Cosmos)
-        const amountMicrounits = (raiseAmount * USDC_TO_MICRO).toString();
-
-        await handleActionWithTransaction("raise", async () => {
-            try {
-                const result = await raiseHand(tableId, amountMicrounits, currentNetwork);
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("Failed to raise:", error);
-                throw error;
-            }
-        });
-    };
-
     // Update to use our hook data for button visibility
     const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
     const shouldShowBigBlindButton = hasBigBlindAction && isUsersTurn;
@@ -412,7 +339,15 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                         <div className={`flex justify-center items-center ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
                             {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
-                                    onClick={handlePostSmallBlind}
+                                    onClick={() =>
+                                        handleActionWithTransaction("small-blind", async () => {
+                                            if (!tableId) return null;
+                                            const smallBlindAmount = smallBlindAction?.min;
+                                            if (!smallBlindAmount) return null;
+                                            const result = await postSmallBlind(tableId, smallBlindAmount, currentNetwork);
+                                            return result?.hash || null;
+                                        })
+                                    }
                                     disabled={loadingAction !== null}
                                     className="btn-small-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                                 >
@@ -432,7 +367,15 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
 
                             {showBigBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
-                                    onClick={handlePostBigBlind}
+                                    onClick={() =>
+                                        handleActionWithTransaction("big-blind", async () => {
+                                            if (!tableId) return null;
+                                            const bigBlindAmount = bigBlindAction?.min;
+                                            if (!bigBlindAmount) return null;
+                                            const result = await postBigBlind(tableId, bigBlindAmount, currentNetwork);
+                                            return result?.hash || null;
+                                        })
+                                    }
                                     disabled={loadingAction !== null}
                                     className="btn-big-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                                 >
@@ -531,7 +474,16 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
                                         <button
-                                            onClick={hasRaiseAction ? handleRaise : handleBet}
+                                            onClick={() =>
+                                                handleActionWithTransaction(hasRaiseAction ? "raise" : "bet", async () => {
+                                                    if (!tableId) return null;
+                                                    const amountMicrounits = (raiseAmount * USDC_TO_MICRO).toString();
+                                                    const result = hasRaiseAction
+                                                        ? await raiseHand(tableId, amountMicrounits, currentNetwork)
+                                                        : await betHand(tableId, amountMicrounits, currentNetwork);
+                                                    return result?.hash || null;
+                                                })
+                                            }
                                             disabled={loadingAction !== null || (hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn)}
                                             className={`cursor-pointer hover:scale-105 btn-raise rounded-lg w-full border shadow-md backdrop-blur-sm transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
