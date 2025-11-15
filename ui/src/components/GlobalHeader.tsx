@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { NetworkSelector } from "./NetworkSelector";
 import { colors, hexToRgba } from "../utils/colorConfig";
+import { useNetwork } from "../context/NetworkContext";
+import { getCosmosClient } from "../utils/cosmos/client";
 
 interface MenuItem {
     path: string;
@@ -13,6 +15,37 @@ interface MenuItem {
 export const GlobalHeader: React.FC = () => {
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { currentNetwork } = useNetwork();
+    const [latestBlockHeight, setLatestBlockHeight] = useState<string | null>(null);
+    const [hasError, setHasError] = useState(false);
+
+    // Fetch latest block height
+    useEffect(() => {
+        const fetchBlockHeight = async () => {
+            try {
+                const cosmosClient = getCosmosClient({
+                    rpc: currentNetwork.rpc,
+                    rest: currentNetwork.rest
+                });
+
+                if (!cosmosClient) return;
+
+                const blocks = await cosmosClient.getLatestBlocks(1);
+                if (blocks.length > 0) {
+                    setLatestBlockHeight(blocks[0].block.header.height);
+                    setHasError(false);
+                }
+            } catch (error) {
+                console.debug("Failed to fetch block height:", error);
+                setHasError(true);
+            }
+        };
+
+        fetchBlockHeight();
+        const interval = setInterval(fetchBlockHeight, 10000); // Update every 10 seconds
+
+        return () => clearInterval(interval);
+    }, [currentNetwork]);
 
     // Don't show header on table pages (they have their own layout)
     const hideOnPaths = ["/table/"];
@@ -90,6 +123,19 @@ export const GlobalHeader: React.FC = () => {
 
                     {/* Right side - Network Selector & Mobile Menu */}
                     <div className="flex items-center gap-4">
+                        {/* Block Height Indicator */}
+                        {latestBlockHeight && (
+                            <div
+                                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
+                            >
+                                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
+                                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
+                                    #{latestBlockHeight}
+                                </span>
+                            </div>
+                        )}
+
                         <NetworkSelector />
 
                         {/* Mobile Menu Button */}
