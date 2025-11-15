@@ -466,6 +466,5 @@ bot/dashboard/build
 bot/dashboard/dist
 pvm/ts/.DS_Store
 
+# TypeScript build info files
 *.tsbuildinfo
-ui/tsconfig.tsbuildinfo
-ui/tsconfig.tsbuildinfo
