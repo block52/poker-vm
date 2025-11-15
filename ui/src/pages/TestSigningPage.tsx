@@ -4,7 +4,6 @@ import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import defaultLogo from "../assets/YOUR_CLUB.png";
-import { useNavigate } from "react-router-dom";
 import { useNetwork } from "../context/NetworkContext";
 import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
 
@@ -17,7 +16,6 @@ interface TestResult {
 }
 
 export default function TestSigningPage() {
-    const navigate = useNavigate();
     const { currentNetwork } = useNetwork(); // Get current network from context
     const [signingClient, setSigningClient] = useState<SigningCosmosClient | null>(null);
     const [, setWallet] = useState<DirectSecp256k1HdWallet | null>(null);
@@ -611,13 +609,7 @@ export default function TestSigningPage() {
             <div className="w-full max-w-7xl">
                 {/* Header */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <div className="flex items-center justify-between mb-4">
-                        <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                            </svg>
-                            <span>Back to Dashboard</span>
-                        </button>
+                    <div className="flex items-center justify-end mb-4">
                         <div className="flex items-center gap-4">
                             <img src={clubLogo} alt={clubName} className="h-12" />
                         </div>

@@ -224,13 +224,6 @@ export default function ManualBridgeTrigger() {
                         <li>If valid and not processed, mints USDC on Cosmos</li>
                     </ol>
                 </div>
-
-                {/* Back to Dashboard */}
-                <div className="mt-6 text-center">
-                    <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
-                        ← Back to Dashboard
-                    </a>
-                </div>
             </div>
         </div>
     );

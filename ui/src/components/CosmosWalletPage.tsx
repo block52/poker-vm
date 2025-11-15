@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
@@ -8,7 +7,6 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
 import { useNetwork } from "../context/NetworkContext";
 
 const CosmosWalletPage = () => {
-    const navigate = useNavigate();
     const { currentNetwork } = useNetwork();
     const [mnemonic, setMnemonic] = useState<string>("");
     const [address, setAddress] = useState<string>("");
@@ -153,21 +151,9 @@ const CosmosWalletPage = () => {
                 minHeight: "100vh"
             }}
         >
-            {/* Header with Logo and Back Button */}
+            {/* Header with Logo */}
             <div className="max-w-4xl mx-auto mb-8">
-                <div className="flex items-center justify-between mb-6">
-                    {/* Back Button */}
-                    <button
-                        onClick={() => navigate("/")}
-                        className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity"
-                        style={{ color: colors.brand.primary }}
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        <span className="font-semibold">Back to Dashboard</span>
-                    </button>
-
+                <div className="flex items-center justify-end mb-6">
                     {/* Logo */}
                     <img src={clubLogo} alt={`${clubName} Logo`} className="h-12" />
                 </div>

@@ -61,6 +61,63 @@ export default function BridgeAdminDashboard() {
         }
     }, []);
 
+    // Check if deposits have been processed on Cosmos
+    const checkProcessingStatus = useCallback(
+        async (depositsToCheck: Deposit[]) => {
+            try {
+                const { restEndpoint } = getCosmosUrls(currentNetwork);
+
+                // We need to check the deterministic txHash for each deposit
+                // txHash = sha256(contractAddress + depositIndex)
+                const updatedDeposits = await Promise.all(
+                    depositsToCheck.map(async deposit => {
+                        try {
+                            // Generate deterministic txHash (same as backend)
+                            const txHashInput = `${bridgeContractAddress}-${deposit.index}`;
+                            const encoder = new TextEncoder();
+                            const data = encoder.encode(txHashInput);
+                            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+                            const hashArray = Array.from(new Uint8Array(hashBuffer));
+                            const txHash = "0x" + hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+                            // Query Cosmos to see if this txHash has been processed
+                            const response = await fetch(`${restEndpoint}/block52/pokerchain/poker/v1/is_tx_processed/${txHash}`);
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                const isProcessed = data.processed === true || data.processed === "true";
+
+                                return {
+                                    ...deposit,
+                                    status: isProcessed ? ("processed" as const) : ("pending" as const),
+                                    txHash
+                                };
+                            } else {
+                                // API error, mark as pending
+                                return {
+                                    ...deposit,
+                                    status: "pending" as const,
+                                    txHash
+                                };
+                            }
+                        } catch (err) {
+                            console.error(`Failed to check status for deposit ${deposit.index}:`, err);
+                            return {
+                                ...deposit,
+                                status: "pending" as const
+                            };
+                        }
+                    })
+                );
+
+                setDeposits(updatedDeposits);
+            } catch (err) {
+                console.error("Failed to check processing status:", err);
+            }
+        },
+        [currentNetwork, bridgeContractAddress]
+    );
+
     // Load deposits from Ethereum contract
     const loadDeposits = useCallback(async () => {
         setIsLoading(true);
@@ -106,61 +163,7 @@ export default function BridgeAdminDashboard() {
         } finally {
             setIsLoading(false);
         }
-    }, [maxIndex, ethRpcUrl]);
-
-    // Check if deposits have been processed on Cosmos
-    const checkProcessingStatus = async (depositsToCheck: Deposit[]) => {
-        try {
-            const { restEndpoint } = getCosmosUrls(currentNetwork);
-
-            // We need to check the deterministic txHash for each deposit
-            // txHash = sha256(contractAddress + depositIndex)
-            const updatedDeposits = await Promise.all(
-                depositsToCheck.map(async deposit => {
-                    try {
-                        // Generate deterministic txHash (same as backend)
-                        const txHashInput = `${bridgeContractAddress}-${deposit.index}`;
-                        const encoder = new TextEncoder();
-                        const data = encoder.encode(txHashInput);
-                        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-                        const hashArray = Array.from(new Uint8Array(hashBuffer));
-                        const txHash = "0x" + hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
-                        // Query Cosmos to see if this txHash has been processed
-                        const response = await fetch(`${restEndpoint}/block52/pokerchain/poker/v1/is_tx_processed/${txHash}`);
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            const isProcessed = data.processed === true || data.processed === "true";
-
-                            return {
-                                ...deposit,
-                                status: isProcessed ? ("processed" as const) : ("pending" as const),
-                                txHash
-                            };
-                        } else {
-                            // API error, mark as pending
-                            return {
-                                ...deposit,
-                                status: "pending" as const,
-                                txHash
-                            };
-                        }
-                    } catch (err) {
-                        console.error(`Failed to check status for deposit ${deposit.index}:`, err);
-                        return {
-                            ...deposit,
-                            status: "pending" as const
-                        };
-                    }
-                })
-            );
-
-            setDeposits(updatedDeposits);
-        } catch (err) {
-            console.error("Failed to check processing status:", err);
-        }
-    };
+    }, [maxIndex, ethRpcUrl, checkProcessingStatus]);
 
     // Process a single deposit
     const handleProcessDeposit = async (depositIndex: number) => {
@@ -450,13 +453,6 @@ export default function BridgeAdminDashboard() {
                         <li>Click "Process" to mint USDC on Cosmos for pending deposits</li>
                         <li>Processed deposits cannot be processed again (idempotency protection)</li>
                     </ul>
-                </div>
-
-                {/* Back to Dashboard */}
-                <div className="mt-6 text-center">
-                    <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
-                        ← Back to Dashboard
-                    </a>
                 </div>
             </div>
         </div>

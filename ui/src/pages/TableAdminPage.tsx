@@ -400,13 +400,6 @@ export default function TableAdminPage() {
                         <li>Default setup: Sit & Go, 4 players, Texas Hold'em</li>
                     </ul>
                 </div>
-
-                {/* Back to Dashboard */}
-                <div className="mt-6 text-center">
-                    <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
-                        ← Back to Dashboard
-                    </a>
-                </div>
             </div>
 
             {/* Success Modal */}
