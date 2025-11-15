@@ -5,6 +5,7 @@ import { colors } from "../utils/colorConfig";
 import { calculatePotBetAmount } from "../utils/calculatePotBetAmount";
 import { LoadingSpinner } from "./common";
 import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
+import { handleDecimalInput } from "../utils/inputUtils";
 
 // Import hooks from barrel file
 import { useTableState, useNextToActInfo, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
@@ -583,27 +584,20 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                                         type="text"
                                                         inputMode="decimal"
                                                         value={raiseAmount.toFixed(2)}
-                                                        onChange={e => {
-                                                            const raw = e.target.value;
-
-                                                            // Always allow clearing the field
-                                                            if (raw === "") {
-                                                                setRaiseInputRaw("");
-                                                                setRaiseAmount(0);
-                                                                return;
-                                                            }
-
-                                                            // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
-                                                            if (/^\d*\.?\d{0,2}$/.test(raw)) {
-                                                                setRaiseInputRaw(raw);
-
-                                                                // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
-                                                                if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
-                                                                    setRaiseAmount(parseFloat(raw));
+                                                        onChange={e =>
+                                                            handleDecimalInput(
+                                                                e.target.value,
+                                                                value => {
+                                                                    setRaiseAmount(value);
                                                                     setLastAmountSource("input");
-                                                                }
-                                                            }
-                                                        }}
+                                                                },
+                                                                () => {
+                                                                    setRaiseInputRaw("");
+                                                                    setRaiseAmount(0);
+                                                                },
+                                                                raw => setRaiseInputRaw(raw)
+                                                            )
+                                                        }
                                                         className={`${inputFieldClassName} px-1 lg:px-2 py-1 rounded text-xs lg:text-sm w-[80px] lg:w-[100px] transition-all duration-200 border`}
                                                         disabled={!isPlayerTurn}
                                                     />
@@ -619,27 +613,20 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                                     type="text"
                                                     inputMode="decimal"
                                                     value={raiseAmount.toFixed(2)}
-                                                    onChange={e => {
-                                                        const raw = e.target.value;
-
-                                                        // Always allow clearing the field
-                                                        if (raw === "") {
-                                                            setRaiseInputRaw("");
-                                                            setRaiseAmount(0);
-                                                            return;
-                                                        }
-
-                                                        // Allow typing incomplete decimals like "2.", "2.0", or "2.08"
-                                                        if (/^\d*\.?\d{0,2}$/.test(raw)) {
-                                                            setRaiseInputRaw(raw);
-
-                                                            // Only parse if it's a valid number (e.g. "2", "2.0", "2.08")
-                                                            if (!isNaN(Number(raw)) && /^\d*\.?\d{1,2}$/.test(raw)) {
-                                                                setRaiseAmount(parseFloat(raw));
+                                                    onChange={e =>
+                                                        handleDecimalInput(
+                                                            e.target.value,
+                                                            value => {
+                                                                setRaiseAmount(value);
                                                                 setLastAmountSource("input");
-                                                            }
-                                                        }
-                                                    }}
+                                                            },
+                                                            () => {
+                                                                setRaiseInputRaw("");
+                                                                setRaiseAmount(0);
+                                                            },
+                                                            raw => setRaiseInputRaw(raw)
+                                                        )
+                                                    }
                                                     className={`${inputFieldClassName} px-1 py-0.5 rounded text-[10px] w-[50px] transition-all duration-200 border`}
                                                     disabled={!isPlayerTurn}
                                                 />
