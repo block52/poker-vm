@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { CosmosBlock } from "./types";
+import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -87,24 +88,6 @@ export default function BlocksPage() {
             document.title = "Block52 Chain";
         };
     }, [currentNetwork, fetchBlocks]);
-
-    const truncateHash = (hash: string) => {
-        if (!hash) return "N/A";
-        return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
-    };
-
-    const formatTimestamp = (timestamp: string) => {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffSecs = Math.floor(diffMs / 1000);
-
-        if (diffSecs < 60) return `${diffSecs} seconds ago`;
-        const diffMins = Math.floor(diffSecs / 60);
-        if (diffMins < 60) return `${diffMins} minutes ago`;
-        const diffHours = Math.floor(diffMins / 60);
-        return `${diffHours} hours ago`;
-    };
 
     if (loading && blocks.length === 0) {
         return (
@@ -234,7 +217,7 @@ export default function BlocksPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-xs text-gray-400">{formatTimestamp(block.block.header.time)}</span>
+                                            <span className="text-xs text-gray-400">{formatTimestampRelative(block.block.header.time)}</span>
                                         </td>
                                     </tr>
                                 ))}
