@@ -260,7 +260,10 @@ export default function BridgeAdminDashboard() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2">Bridge Admin Dashboard</h1>
-                    <p className="text-gray-400">View and process Ethereum USDC bridge deposits</p>
+                    <p className="text-gray-400">
+                        View and process Ethereum USDC bridge deposits
+                        <span className="ml-2 font-mono text-sm text-gray-500">({bridgeContractAddress})</span>
+                    </p>
                 </div>
 
                 {/* Configuration Error Warning */}
@@ -289,7 +292,7 @@ export default function BridgeAdminDashboard() {
                 )}
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                         <p className="text-gray-400 text-sm mb-1">Total Deposits</p>
                         <p className="text-2xl font-bold text-white">{totalDeposits}</p>
@@ -301,12 +304,6 @@ export default function BridgeAdminDashboard() {
                     <div className="bg-yellow-900/30 rounded-lg p-4 border border-yellow-700">
                         <p className="text-yellow-400 text-sm mb-1">Pending</p>
                         <p className="text-2xl font-bold text-yellow-300">{pendingCount}</p>
-                    </div>
-                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                        <p className="text-gray-400 text-sm mb-1">Contract</p>
-                        <p className="text-xs font-mono text-white truncate" title={bridgeContractAddress}>
-                            {bridgeContractAddress.slice(0, 10)}...
-                        </p>
                     </div>
                 </div>
 
