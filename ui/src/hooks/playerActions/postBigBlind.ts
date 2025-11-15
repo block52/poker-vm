@@ -1,16 +1,18 @@
 import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
 import { getCosmosUrls } from "../../utils/cosmos/urls";
+import type { NetworkEndpoints } from "../../context/NetworkContext";
 
 /**
  * Post big blind using Cosmos SDK SigningCosmosClient.
  *
  * @param tableId - The ID of the table (game ID on Cosmos) where the action will be performed
  * @param bigBlindAmount - The big blind amount in microunits (uusdc)
+ * @param network - The current network configuration from NetworkContext
  * @returns Promise with transaction hash
  * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function postBigBlind(tableId: string, bigBlindAmount: string): Promise<any> {
+export async function postBigBlind(tableId: string, bigBlindAmount: string, network: NetworkEndpoints): Promise<any> {
     // Get user's Cosmos address and mnemonic
     const userAddress = getCosmosAddress();
     const mnemonic = getCosmosMnemonic();
@@ -24,8 +26,8 @@ export async function postBigBlind(tableId: string, bigBlindAmount: string): Pro
     console.log("  Game ID:", tableId);
     console.log("  Big blind amount:", bigBlindAmount);
 
-    // Create signing client from mnemonic
-    const { rpcEndpoint, restEndpoint } = getCosmosUrls();
+    // Create signing client from mnemonic using the selected network
+    const { rpcEndpoint, restEndpoint } = getCosmosUrls(network);
 
     const signingClient = await createSigningClientFromMnemonic(
         {
