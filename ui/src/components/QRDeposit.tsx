@@ -6,7 +6,6 @@ import axios from "axios";
 import { DEPOSIT_ADDRESS, PROXY_URL, TOKEN_ADDRESS } from "../config/constants";
 import useUserWallet from "../hooks/useUserWallet";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
-import { Link } from "react-router-dom";
 import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
 import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types";
 import spinner from "../assets/spinning-circles.svg";
@@ -738,55 +737,36 @@ const QRDeposit: React.FC = () => {
             <div
                 className="fixed inset-0 z-0 opacity-30"
                 style={{
-                    backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${hexToRgba(colors.brand.primary, 0.1)} 25%, rgba(0,0,0,0) 50%, ${hexToRgba(colors.brand.primary, 0.1)} 75%, rgba(0,0,0,0) 100%)`,
+                    backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${hexToRgba(colors.brand.primary, 0.1)} 25%, rgba(0,0,0,0) 50%, ${hexToRgba(
+                        colors.brand.primary,
+                        0.1
+                    )} 75%, rgba(0,0,0,0) 100%)`,
                     backgroundSize: "200% 100%",
                     animation: "shimmer 8s infinite linear"
                 }}
             />
 
-            <div 
+            <div
                 className="max-w-xl w-full backdrop-blur-md rounded-xl shadow-2xl p-10 relative z-10 transition-all duration-300"
                 style={{
                     backgroundColor: colors.ui.bgDark,
                     border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`,
                     boxShadow: `0 0 20px ${hexToRgba(colors.brand.primary, 0.1)}`
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={e => {
                     e.currentTarget.style.boxShadow = `0 0 25px ${hexToRgba(colors.brand.primary, 0.15)}`;
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                     e.currentTarget.style.boxShadow = `0 0 20px ${hexToRgba(colors.brand.primary, 0.1)}`;
                 }}
             >
-                {/* Back Button */}
-                <Link 
-                    to="/" 
-                    className="absolute top-4 left-4 flex items-center transition duration-300"
-                    style={{ color: colors.ui.textSecondary }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.color = "white";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.color = colors.ui.textSecondary;
-                    }}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path
-                            fillRule="evenodd"
-                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                            clipRule="evenodd"
-                        />
-                    </svg>
-                    <span>Back to Dashboard</span>
-                </Link>
-
                 <h1 className="text-2xl font-extrabold text-center mb-2 mt-5" style={{ color: "white" }}>
                     Deposit Funds to {CLUB_NAME}
                 </h1>
                 <p className="text-center text-sm mb-4" style={{ color: colors.ui.textSecondary }}>
                     Choose your preferred deposit method below
                 </p>
-                
+
                 {/* Debug Toggle Button */}
                 <button
                     onClick={() => setShowDebug(!showDebug)}
@@ -799,52 +779,91 @@ const QRDeposit: React.FC = () => {
                 >
                     {showDebug ? "Hide" : "Show"} Debug
                 </button>
-                
+
                 {/* Debug Panel */}
                 {showDebug && (
-                    <div className="mb-4 p-3 rounded-lg text-xs" style={{
-                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`,
-                        fontFamily: "monospace"
-                    }}>
-                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>🔧 Debug Information</h3>
+                    <div
+                        className="mb-4 p-3 rounded-lg text-xs"
+                        style={{
+                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
+                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`,
+                            fontFamily: "monospace"
+                        }}
+                    >
+                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
+                            🔧 Debug Information
+                        </h3>
                         <div className="space-y-1" style={{ color: colors.ui.textSecondary }}>
-                            <div><strong>Proxy URL:</strong> {PROXY_URL || "Not configured"}</div>
-                            <div><strong>Deposit Address:</strong> {DEPOSIT_ADDRESS || "Not configured"}</div>
-                            <div><strong>Token Address (USDC):</strong> {TOKEN_ADDRESS || "Not configured"}</div>
-                            <div><strong>RPC URL:</strong> {RPC_URL || "Default: https://eth.llamarpc.com"}</div>
-                            <div><strong>Bitcoin Payments:</strong> {BITCOIN_PAYMENTS ? "Enabled" : "Disabled"}</div>
-                            {loggedInAccount && <div><strong>Block52 Account:</strong> {loggedInAccount}</div>}
-                            {web3Address && <div><strong>Web3 Wallet:</strong> {web3Address}</div>}
-                            {sessionId && <div><strong>Session ID:</strong> {sessionId}</div>}
+                            <div>
+                                <strong>Proxy URL:</strong> {PROXY_URL || "Not configured"}
+                            </div>
+                            <div>
+                                <strong>Deposit Address:</strong> {DEPOSIT_ADDRESS || "Not configured"}
+                            </div>
+                            <div>
+                                <strong>Token Address (USDC):</strong> {TOKEN_ADDRESS || "Not configured"}
+                            </div>
+                            <div>
+                                <strong>RPC URL:</strong> {RPC_URL || "Default: https://eth.llamarpc.com"}
+                            </div>
+                            <div>
+                                <strong>Bitcoin Payments:</strong> {BITCOIN_PAYMENTS ? "Enabled" : "Disabled"}
+                            </div>
+                            {loggedInAccount && (
+                                <div>
+                                    <strong>Block52 Account:</strong> {loggedInAccount}
+                                </div>
+                            )}
+                            {web3Address && (
+                                <div>
+                                    <strong>Web3 Wallet:</strong> {web3Address}
+                                </div>
+                            )}
+                            {sessionId && (
+                                <div>
+                                    <strong>Session ID:</strong> {sessionId}
+                                </div>
+                            )}
                             {currentSession && (
                                 <>
-                                    <div><strong>Session Status:</strong> {currentSession.status}</div>
-                                    <div><strong>Session Deposit Address:</strong> {currentSession.depositAddress}</div>
-                                    {currentSession.txHash && <div><strong>TX Hash:</strong> {currentSession.txHash}</div>}
+                                    <div>
+                                        <strong>Session Status:</strong> {currentSession.status}
+                                    </div>
+                                    <div>
+                                        <strong>Session Deposit Address:</strong> {currentSession.depositAddress}
+                                    </div>
+                                    {currentSession.txHash && (
+                                        <div>
+                                            <strong>TX Hash:</strong> {currentSession.txHash}
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
                     </div>
                 )}
 
-                <div 
+                <div
                     className="backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg transition-all duration-300"
                     style={{
                         backgroundColor: colors.ui.bgMedium,
                         border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
                     }}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={e => {
                         e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
                     }}
-                    onMouseLeave={(e) => {
+                    onMouseLeave={e => {
                         e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                     }}
                 >
-                    <p className="text-lg mb-2" style={{ color: "white" }}>{CLUB_NAME} Balance:</p>
-                    <p className="text-xl font-bold" style={{ color: colors.brand.primary }}>${formatBalance(displayBalance)} USDC</p>
+                    <p className="text-lg mb-2" style={{ color: "white" }}>
+                        {CLUB_NAME} Balance:
+                    </p>
+                    <p className="text-xl font-bold" style={{ color: colors.brand.primary }}>
+                        ${formatBalance(displayBalance)} USDC
+                    </p>
                     {b52Nonce !== null && (
-                        <p 
+                        <p
                             className="text-sm mt-2 border-t pt-2"
                             style={{
                                 color: colors.ui.textSecondary + "dd",
@@ -860,13 +879,17 @@ const QRDeposit: React.FC = () => {
                 {transactionStatus && (
                     <div className="mb-6">
                         <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-lg font-semibold" style={{ color: "white" }}>Deposit Status</h2>
-                            <span className="text-sm" style={{ color: colors.accent.success }}>{getStatusMessage()}</span>
+                            <h2 className="text-lg font-semibold" style={{ color: "white" }}>
+                                Deposit Status
+                            </h2>
+                            <span className="text-sm" style={{ color: colors.accent.success }}>
+                                {getStatusMessage()}
+                            </span>
                         </div>
                         <div className="w-full rounded-full h-4" style={{ backgroundColor: colors.ui.bgMedium }}>
                             <div
                                 className="h-4 rounded-full transition-all duration-500 ease-out"
-                                style={{ 
+                                style={{
                                     width: `${progressPercentage}%`,
                                     backgroundColor: colors.accent.success
                                 }}
@@ -891,34 +914,46 @@ const QRDeposit: React.FC = () => {
 
                 {/* Session Status */}
                 {currentSession && !transactionStatus && (
-                    <div 
+                    <div
                         className="backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg transition-all duration-300"
                         style={{
                             backgroundColor: colors.ui.bgMedium,
                             border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
                         }}
-                        onMouseEnter={(e) => {
+                        onMouseEnter={e => {
                             e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
                         }}
-                        onMouseLeave={(e) => {
+                        onMouseLeave={e => {
                             e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                         }}
                     >
-                        <h2 className="text-lg font-semibold mb-2" style={{ color: "white" }}>Session Status</h2>
-                        <p className="text-sm" style={{ color: colors.ui.textSecondary + "dd" }}>Status: {currentSession.status}</p>
-                        <p className="text-sm" style={{ color: colors.ui.textSecondary + "dd" }}>Session ID: {currentSession._id}</p>
-                        {currentSession.amount && <p className="text-sm" style={{ color: colors.ui.textSecondary + "dd" }}>Amount: ${(Number(currentSession.amount) / 1e6).toFixed(2)} USDC</p>}
+                        <h2 className="text-lg font-semibold mb-2" style={{ color: "white" }}>
+                            Session Status
+                        </h2>
+                        <p className="text-sm" style={{ color: colors.ui.textSecondary + "dd" }}>
+                            Status: {currentSession.status}
+                        </p>
+                        <p className="text-sm" style={{ color: colors.ui.textSecondary + "dd" }}>
+                            Session ID: {currentSession._id}
+                        </p>
+                        {currentSession.amount && (
+                            <p className="text-sm" style={{ color: colors.ui.textSecondary + "dd" }}>
+                                Amount: ${(Number(currentSession.amount) / 1e6).toFixed(2)} USDC
+                            </p>
+                        )}
                     </div>
                 )}
 
                 {/* Timer Display */}
                 {showQR && currentSession?.status === "PENDING" && !transactionStatus && (
                     <div className="text-center mb-4">
-                        <div className="text-xl font-bold" style={{ color: "white" }}>Time Remaining: {formatTime(timeLeft)}</div>
+                        <div className="text-xl font-bold" style={{ color: "white" }}>
+                            Time Remaining: {formatTime(timeLeft)}
+                        </div>
                         <div className="text-sm" style={{ color: colors.ui.textSecondary }}>
                             Session will expire in {Math.floor(timeLeft / 60)} minutes and {timeLeft % 60} seconds
                         </div>
-                        <div 
+                        <div
                             className="mt-2 p-2 backdrop-blur-sm rounded-lg"
                             style={{
                                 backgroundColor: colors.ui.bgMedium,
@@ -942,21 +977,23 @@ const QRDeposit: React.FC = () => {
                 {/* Block52 Account Display */}
                 <form onSubmit={handleSubmit}>
                     {!showQR && (
-                        <div 
+                        <div
                             className="backdrop-blur-sm rounded-xl p-5 mb-6 shadow-lg transition-all duration-300"
                             style={{
                                 backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
                                 border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
                             }}
-                            onMouseEnter={(e) => {
+                            onMouseEnter={e => {
                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
                             }}
-                            onMouseLeave={(e) => {
+                            onMouseLeave={e => {
                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                             }}
                         >
                             <div className="flex items-center gap-2 mb-3">
-                                <h2 className="text-xl font-bold" style={{ color: "white" }}>Block52 Game Wallet</h2>
+                                <h2 className="text-xl font-bold" style={{ color: "white" }}>
+                                    Block52 Game Wallet
+                                </h2>
                                 <div className="relative group">
                                     <svg
                                         className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
@@ -971,27 +1008,40 @@ const QRDeposit: React.FC = () => {
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20" style={{
-                                        backgroundColor: colors.ui.bgDark,
-                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                    }}>
-                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>Your Deposit Address</h3>
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
+                                        style={{
+                                            backgroundColor: colors.ui.bgDark,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
+                                    >
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
+                                            Your Deposit Address
+                                        </h3>
                                         <p>Send your deposits to this address. Funds will be automatically credited to your Block52 gaming account.</p>
-                                        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent" style={{ borderTopColor: colors.ui.bgDark }}></div>
+                                        <div
+                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
+                                            style={{ borderTopColor: colors.ui.bgDark }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
                             {b52Address ? (
-                                <div className="flex items-center justify-between p-2 rounded-lg" style={{
-                                    backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                }}>
-                                    <p className="font-mono text-xs hidden md:inline break-all" style={{ color: colors.brand.primary }}>{b52Address}</p>
+                                <div
+                                    className="flex items-center justify-between p-2 rounded-lg"
+                                    style={{
+                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                    }}
+                                >
+                                    <p className="font-mono text-xs hidden md:inline break-all" style={{ color: colors.brand.primary }}>
+                                        {b52Address}
+                                    </p>
                                     <p className="font-mono text-xs md:hidden" style={{ color: colors.brand.primary }}>
                                         {b52Address.slice(0, 6)}...{b52Address.slice(-4)}
                                     </p>
                                     <button
-                                        onClick={(e) => {
+                                        onClick={e => {
                                             e.preventDefault();
                                             navigator.clipboard.writeText(b52Address || "");
                                         }}
@@ -1015,43 +1065,57 @@ const QRDeposit: React.FC = () => {
                     )}
 
                     {BITCOIN_PAYMENTS && (
-                        <div 
+                        <div
                             className="backdrop-blur-sm rounded-xl p-5 mb-6 shadow-lg transition-all duration-300"
                             style={{
                                 backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
                                 border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
                             }}
-                            onMouseEnter={(e) => {
+                            onMouseEnter={e => {
                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
                             }}
-                            onMouseLeave={(e) => {
+                            onMouseLeave={e => {
                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                             }}
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba("#f7931a", 0.2) }}>
-                                        <span className="font-bold text-lg" style={{ color: "#f7931a" }}>₿</span>
+                                    <div
+                                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                                        style={{ backgroundColor: hexToRgba("#f7931a", 0.2) }}
+                                    >
+                                        <span className="font-bold text-lg" style={{ color: "#f7931a" }}>
+                                            ₿
+                                        </span>
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-bold" style={{ color: "white" }}>Method 1: Bitcoin Payment</h2>
-                                        <p className="text-xs" style={{ color: colors.ui.textSecondary }}>Pay with BTC • Auto-converts to USDC on Layer 2</p>
+                                        <h2 className="text-lg font-bold" style={{ color: "white" }}>
+                                            Method 1: Bitcoin Payment
+                                        </h2>
+                                        <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
+                                            Pay with BTC • Auto-converts to USDC on Layer 2
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                            <div className="p-3 rounded-lg mb-4" style={{
-                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
-                                border: `1px solid ${hexToRgba("#f7931a", 0.2)}`
-                            }}>
+                            <div
+                                className="p-3 rounded-lg mb-4"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                                    border: `1px solid ${hexToRgba("#f7931a", 0.2)}`
+                                }}
+                            >
                                 <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
                                     <strong>How it works:</strong> Pay with Bitcoin → Automatically converts to USDC → Credits your gaming account
                                 </p>
                             </div>
-                            <p className="text-sm mb-2" style={{ color: colors.ui.textSecondary + "dd" }}>Enter amount in USD:</p>
-                            <input 
-                                name="usdcAmount" 
-                                type="number" 
-                                placeholder="100.00" 
+                            <p className="text-sm mb-2" style={{ color: colors.ui.textSecondary + "dd" }}>
+                                Enter amount in USD:
+                            </p>
+                            <input
+                                name="usdcAmount"
+                                type="number"
+                                placeholder="100.00"
                                 className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
                                 style={{
                                     backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
@@ -1075,12 +1139,12 @@ const QRDeposit: React.FC = () => {
                                 color: "white",
                                 cursor: !loggedInAccount ? "not-allowed" : "pointer"
                             }}
-                            onMouseEnter={(e) => {
+                            onMouseEnter={e => {
                                 if (loggedInAccount) {
                                     e.currentTarget.style.backgroundColor = colors.brand.secondary;
                                 }
                             }}
-                            onMouseLeave={(e) => {
+                            onMouseLeave={e => {
                                 if (loggedInAccount) {
                                     e.currentTarget.style.backgroundColor = colors.brand.primary;
                                 }
@@ -1101,21 +1165,25 @@ const QRDeposit: React.FC = () => {
                             {/* Only show QR if no transaction is in progress */}
                             {!transactionStatus && (
                                 <>
-                                    <div 
+                                    <div
                                         className="backdrop-blur-sm rounded-lg p-4 mb-6 shadow-lg transition-all duration-300"
                                         style={{
                                             backgroundColor: colors.ui.bgMedium,
                                             border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
                                         }}
-                                        onMouseEnter={(e) => {
+                                        onMouseEnter={e => {
                                             e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
                                         }}
-                                        onMouseLeave={(e) => {
+                                        onMouseLeave={e => {
                                             e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                                         }}
                                     >
-                                        <h2 className="text-lg font-semibold mb-2" style={{ color: "white" }}>Pay with USDC ERC20</h2>
-                                        <p className="text-sm mb-4" style={{ color: colors.ui.textSecondary + "dd" }}>Only send USDC using the Ethereum network</p>
+                                        <h2 className="text-lg font-semibold mb-2" style={{ color: "white" }}>
+                                            Pay with USDC ERC20
+                                        </h2>
+                                        <p className="text-sm mb-4" style={{ color: colors.ui.textSecondary + "dd" }}>
+                                            Only send USDC using the Ethereum network
+                                        </p>
                                     </div>
 
                                     {/* QR Code */}
@@ -1149,7 +1217,7 @@ const QRDeposit: React.FC = () => {
                                 <div className="mt-6">
                                     <div className="flex justify-between items-center mb-2">
                                         <h3 className="text-lg font-semibold text-white">Latest Transaction</h3>
-                                        <span 
+                                        <span
                                             className="text-xs"
                                             style={{
                                                 color: isQuerying ? colors.accent.success : colors.ui.textSecondary
@@ -1158,7 +1226,7 @@ const QRDeposit: React.FC = () => {
                                             {isQuerying ? "🔄 Checking for new transactions..." : "Last checked just now"}
                                         </span>
                                     </div>
-                                    <div 
+                                    <div
                                         className="p-3 rounded text-sm"
                                         style={{
                                             backgroundColor: colors.ui.bgMedium,
@@ -1191,16 +1259,16 @@ const QRDeposit: React.FC = () => {
                         </div>
                     </div>
 
-                    <div 
+                    <div
                         className="backdrop-blur-sm rounded-xl p-5 shadow-lg transition-all duration-300"
                         style={{
                             backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
                             border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
                         }}
-                        onMouseEnter={(e) => {
+                        onMouseEnter={e => {
                             e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
                         }}
-                        onMouseLeave={(e) => {
+                        onMouseLeave={e => {
                             e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                         }}
                     >
@@ -1208,22 +1276,30 @@ const QRDeposit: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 <svg className="w-8 h-8" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
                                     <g fill="none" fillRule="evenodd">
-                                        <circle cx="16" cy="16" r="16" fill="#2775CA"/>
-                                        <path fill="#FFF" d="M15.75 27.5C9.26 27.5 4 22.24 4 15.75S9.26 4 15.75 4a11.75 11.75 0 110 23.5zm-.7-16.11a2.58 2.58 0 00-2.45 2.47c0 1.21.74 2 2.31 2.33 1.1.26 1.3.5 1.3.93s-.27.69-.9.69a4.46 4.46 0 01-2.44-.75l-.44 1.84a5.26 5.26 0 002.44.57v1.78h1.5V19c1.84-.17 2.87-1.33 2.87-2.69 0-1.17-.7-1.94-2.27-2.3-1.1-.23-1.34-.48-1.34-.91s.28-.66.83-.66a4.06 4.06 0 012 .54L19 11.3a5.66 5.66 0 00-2-.43v-1.8h-1.5v1.78a2.52 2.52 0 00-.45.04zm4.93 8.68a2.58 2.58 0 002.45-2.47c0-1.21-.74-2-2.31-2.33-1.1-.26-1.3-.5-1.3-.93s.27-.69.9-.69a4.46 4.46 0 012.44.75l.44-1.84a5.26 5.26 0 00-2.44-.57V9.26h-1.5V11a2.58 2.58 0 00-2.45 2.47c0 1.17.7 1.94 2.27 2.3 1.1.23 1.34.48 1.34.91s-.28.66-.83.66a4.06 4.06 0 01-2-.54L13 18.48a5.66 5.66 0 002 .43v1.8h1.5v-1.78c.15.03.3.04.45.04z"/>
+                                        <circle cx="16" cy="16" r="16" fill="#2775CA" />
+                                        <path
+                                            fill="#FFF"
+                                            d="M15.75 27.5C9.26 27.5 4 22.24 4 15.75S9.26 4 15.75 4a11.75 11.75 0 110 23.5zm-.7-16.11a2.58 2.58 0 00-2.45 2.47c0 1.21.74 2 2.31 2.33 1.1.26 1.3.5 1.3.93s-.27.69-.9.69a4.46 4.46 0 01-2.44-.75l-.44 1.84a5.26 5.26 0 002.44.57v1.78h1.5V19c1.84-.17 2.87-1.33 2.87-2.69 0-1.17-.7-1.94-2.27-2.3-1.1-.23-1.34-.48-1.34-.91s.28-.66.83-.66a4.06 4.06 0 012 .54L19 11.3a5.66 5.66 0 00-2-.43v-1.8h-1.5v1.78a2.52 2.52 0 00-.45.04zm4.93 8.68a2.58 2.58 0 002.45-2.47c0-1.21-.74-2-2.31-2.33-1.1-.26-1.3-.5-1.3-.93s.27-.69.9-.69a4.46 4.46 0 012.44.75l.44-1.84a5.26 5.26 0 00-2.44-.57V9.26h-1.5V11a2.58 2.58 0 00-2.45 2.47c0 1.17.7 1.94 2.27 2.3 1.1.23 1.34.48 1.34.91s-.28.66-.83.66a4.06 4.06 0 01-2-.54L13 18.48a5.66 5.66 0 002 .43v1.8h1.5v-1.78c.15.03.3.04.45.04z"
+                                        />
                                     </g>
                                 </svg>
                                 <div>
                                     <h2 className="text-lg font-bold" style={{ color: "white" }}>
                                         Method 2: Web3 Wallet Direct Deposit
                                     </h2>
-                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>Pay with USDC • Direct from your wallet</p>
+                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
+                                        Pay with USDC • Direct from your wallet
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                        <div className="p-3 rounded-lg mb-4" style={{
-                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
-                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                        }}>
+                        <div
+                            className="p-3 rounded-lg mb-4"
+                            style={{
+                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                            }}
+                        >
                             <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
                                 <strong>How it works:</strong> Connect wallet → Send USDC directly → No conversion fees → Credits your gaming account
                             </p>
@@ -1233,8 +1309,11 @@ const QRDeposit: React.FC = () => {
                             <button
                                 onClick={open}
                                 className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                style={{ 
-                                    background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)` 
+                                style={{
+                                    background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(
+                                        colors.brand.primary,
+                                        0.8
+                                    )} 100%)`
                                 }}
                             >
                                 <div className="flex items-center justify-center gap-2">
@@ -1257,19 +1336,31 @@ const QRDeposit: React.FC = () => {
                                         Disconnect
                                     </button>
                                 </div>
-                                
-                                <div className="p-3 rounded-lg" style={{
-                                    backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                }}>
+
+                                <div
+                                    className="p-3 rounded-lg"
+                                    style={{
+                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                    }}
+                                >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}>
-                                                <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>$</span>
+                                            <div
+                                                className="w-10 h-10 rounded-full flex items-center justify-center"
+                                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
+                                            >
+                                                <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>
+                                                    $
+                                                </span>
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold" style={{ color: "white" }}>Web3 Wallet USDC Balance</p>
-                                                <p className="text-xs" style={{ color: colors.ui.textSecondary }}>Available on Ethereum Mainnet</p>
+                                                <p className="text-sm font-bold" style={{ color: "white" }}>
+                                                    Web3 Wallet USDC Balance
+                                                </p>
+                                                <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
+                                                    Available on Ethereum Mainnet
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -1283,17 +1374,29 @@ const QRDeposit: React.FC = () => {
                                                 className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
                                                 title="Refresh balance"
                                             >
-                                                <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                <svg
+                                                    className="w-4 h-4"
+                                                    style={{ color: colors.brand.primary }}
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                                    />
                                                 </svg>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                
 
                                 <div className="space-y-2">
-                                    <p className="text-sm mb-2" style={{ color: colors.ui.textSecondary + "dd" }}>Enter amount in USD:</p>
+                                    <p className="text-sm mb-2" style={{ color: colors.ui.textSecondary + "dd" }}>
+                                        Enter amount in USD:
+                                    </p>
                                     <input
                                         type="number"
                                         value={depositAmount}
@@ -1314,20 +1417,19 @@ const QRDeposit: React.FC = () => {
                                         disabled={!depositAmount || isTransferring || parseFloat(depositAmount) <= 0}
                                         className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md"
                                         style={{
-                                            backgroundColor: (!depositAmount || isTransferring || parseFloat(depositAmount) <= 0) 
-                                                ? colors.ui.textSecondary 
-                                                : colors.brand.primary,
+                                            backgroundColor:
+                                                !depositAmount || isTransferring || parseFloat(depositAmount) <= 0
+                                                    ? colors.ui.textSecondary
+                                                    : colors.brand.primary,
                                             color: "white",
-                                            cursor: (!depositAmount || isTransferring || parseFloat(depositAmount) <= 0) 
-                                                ? "not-allowed" 
-                                                : "pointer"
+                                            cursor: !depositAmount || isTransferring || parseFloat(depositAmount) <= 0 ? "not-allowed" : "pointer"
                                         }}
-                                        onMouseEnter={(e) => {
+                                        onMouseEnter={e => {
                                             if (depositAmount && !isTransferring && parseFloat(depositAmount) > 0) {
                                                 e.currentTarget.style.backgroundColor = colors.brand.secondary;
                                             }
                                         }}
-                                        onMouseLeave={(e) => {
+                                        onMouseLeave={e => {
                                             if (depositAmount && !isTransferring && parseFloat(depositAmount) > 0) {
                                                 e.currentTarget.style.backgroundColor = colors.brand.primary;
                                             }
@@ -1344,7 +1446,7 @@ const QRDeposit: React.FC = () => {
 
             {/* Error message display */}
             {error && (
-                <div 
+                <div
                     className="mt-4 p-3 backdrop-blur-md rounded-lg shadow-lg z-10"
                     style={{
                         backgroundColor: colors.accent.danger + "/90",

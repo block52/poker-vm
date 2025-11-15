@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
-import { NetworkSelector } from "../../components/NetworkSelector";
 import { CosmosBlock } from "./types";
+import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -89,24 +89,6 @@ export default function BlocksPage() {
         };
     }, [currentNetwork, fetchBlocks]);
 
-    const truncateHash = (hash: string) => {
-        if (!hash) return "N/A";
-        return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
-    };
-
-    const formatTimestamp = (timestamp: string) => {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffSecs = Math.floor(diffMs / 1000);
-
-        if (diffSecs < 60) return `${diffSecs} seconds ago`;
-        const diffMins = Math.floor(diffSecs / 60);
-        if (diffMins < 60) return `${diffMins} minutes ago`;
-        const diffHours = Math.floor(diffMins / 60);
-        return `${diffHours} hours ago`;
-    };
-
     if (loading && blocks.length === 0) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -131,13 +113,12 @@ export default function BlocksPage() {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
                 <div className="max-w-7xl mx-auto">
-                    {/* Header with Network Selector */}
-                    <div className="mb-8 flex justify-between items-start">
+                    {/* Header */}
+                    <div className="mb-8">
                         <div>
                             <h1 className="text-4xl font-bold text-white mb-2">Block Explorer</h1>
                             <p className="text-gray-400">Latest blocks on Pokerchain</p>
                         </div>
-                        <NetworkSelector />
                     </div>
 
                     {/* Error Card */}
@@ -185,10 +166,9 @@ export default function BlocksPage() {
                         <div className="bg-gray-800 rounded-lg px-4 py-2 border border-gray-700">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full animate-pulse bg-green-400"></div>
-                                <span className="text-sm text-gray-300">{blocks.length} blocks</span>
+                                <span className="text-sm text-gray-300">Latest: #{blocks.length > 0 ? blocks[0].block.header.height : "..."}</span>
                             </div>
                         </div>
-                        <NetworkSelector />
                     </div>
                 </div>
 
@@ -237,7 +217,7 @@ export default function BlocksPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-xs text-gray-400">{formatTimestamp(block.block.header.time)}</span>
+                                            <span className="text-xs text-gray-400">{formatTimestampRelative(block.block.header.time)}</span>
                                         </td>
                                     </tr>
                                 ))}

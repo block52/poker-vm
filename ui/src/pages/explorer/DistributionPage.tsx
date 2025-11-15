@@ -193,13 +193,6 @@ export default function DistributionPage() {
 
     return (
         <div className="container mx-auto p-6">
-            {/* Navigation */}
-            <div className="mb-6">
-                <a href="/explorer" className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-2">
-                    ← Back to Explorer
-                </a>
-            </div>
-
             <h1 className="text-3xl font-bold mb-6 text-white">Card Distribution Analytics</h1>
 
             {loading ? (

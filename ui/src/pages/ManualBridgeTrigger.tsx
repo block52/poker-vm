@@ -39,7 +39,7 @@ export default function ManualBridgeTrigger() {
         }
 
         if (!cosmosWallet.address) {
-            setError("No Cosmos wallet found. Please create or import a wallet first.");
+            setError("No Block52 wallet found. Please create or import a wallet first.");
             return;
         }
 
@@ -120,7 +120,7 @@ export default function ManualBridgeTrigger() {
 
                 {/* Wallet Info */}
                 <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
-                    <h2 className="text-lg font-semibold text-white mb-3">Cosmos Wallet</h2>
+                    <h2 className="text-lg font-semibold text-white mb-3">Block52 Wallet</h2>
                     {cosmosWallet.address ? (
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
@@ -178,7 +178,7 @@ export default function ManualBridgeTrigger() {
                                     Processing...
                                 </span>
                             ) : (
-                                "Process Deposit on Cosmos"
+                                "Process Deposit on Block52"
                             )}
                         </button>
                     </div>
@@ -223,13 +223,6 @@ export default function ManualBridgeTrigger() {
                         <li>Chain queries Ethereum contract for deposit data</li>
                         <li>If valid and not processed, mints USDC on Cosmos</li>
                     </ol>
-                </div>
-
-                {/* Back to Dashboard */}
-                <div className="mt-6 text-center">
-                    <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
-                        ← Back to Dashboard
-                    </a>
                 </div>
             </div>
         </div>

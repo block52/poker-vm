@@ -6,6 +6,7 @@ import { useNetwork } from "../../context/NetworkContext";
 import { NetworkSelector } from "../../components/NetworkSelector";
 import { microToUsdc } from "../../constants/currency";
 import { Coin } from "./types";
+import { formatTimestampRelative } from "../../utils/formatUtils";
 
 export default function AddressPage() {
     const { address: urlAddress } = useParams<{ address: string }>();
@@ -159,10 +160,6 @@ export default function AddressPage() {
         // Assuming micro-denominations (6 decimals)
         const value = microToUsdc(amount);
         return `${value.toFixed(6)} ${denom.replace("u", "").toUpperCase()}`;
-    };
-
-    const formatTimestamp = (timestamp: string) => {
-        return new Date(timestamp).toLocaleString();
     };
 
     const copyToClipboard = (text: string) => {
@@ -339,7 +336,7 @@ export default function AddressPage() {
                                                     </div>
                                                     <div>
                                                         <p className="text-gray-400">Timestamp</p>
-                                                        <p className="text-white">{formatTimestamp(tx.timestamp)}</p>
+                                                        <p className="text-white">{formatTimestampRelative(tx.timestamp)}</p>
                                                     </div>
                                                 </div>
                                             </div>

@@ -78,7 +78,7 @@ export default function TableAdminPage() {
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
         if (!cosmosWallet.address) {
-            toast.error("No Cosmos wallet found. Please create or import a wallet first.");
+            toast.error("No Block52 wallet found. Please create or import a wallet first.");
             return;
         }
 
@@ -275,7 +275,7 @@ export default function TableAdminPage() {
                         </button>
                     </div>
 
-                    {!cosmosWallet.address && <p className="mt-3 text-yellow-400 text-sm">⚠️ Please connect your Cosmos wallet first</p>}
+                    {!cosmosWallet.address && <p className="mt-3 text-yellow-400 text-sm">⚠️ Please connect your Block52 wallet first</p>}
                 </div>
 
                 {/* Tables List */}
@@ -399,13 +399,6 @@ export default function TableAdminPage() {
                         <li>Tables show real-time status (waiting, playing, finished)</li>
                         <li>Default setup: Sit & Go, 4 players, Texas Hold'em</li>
                     </ul>
-                </div>
-
-                {/* Back to Dashboard */}
-                <div className="mt-6 text-center">
-                    <a href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
-                        ← Back to Dashboard
-                    </a>
                 </div>
             </div>
 
