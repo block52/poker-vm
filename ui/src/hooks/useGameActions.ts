@@ -8,6 +8,7 @@ import { raiseHand } from "./playerActions/raiseHand";
 import { checkHand } from "./playerActions/checkHand";
 import { sitOut } from "./playerActions/sitOut";
 import { sitIn } from "./playerActions/sitIn";
+import { useNetwork } from "../context/NetworkContext";
 
 // Environment variable to control which backend to use
 const USE_COSMOS = import.meta.env.VITE_USE_COSMOS === "true";
@@ -33,6 +34,7 @@ interface GameActionHook {
  */
 export const useGameActions = (): GameActionHook => {
     const backendType = useMemo(() => USE_COSMOS ? "cosmos" : "proxy", []);
+    const { currentNetwork } = useNetwork();
 
     const performPokerAction = useCallback(async (gameId: string, action: string, amount: bigint = 0n): Promise<string> => {
         if (USE_COSMOS) {
@@ -44,37 +46,37 @@ export const useGameActions = (): GameActionHook => {
 
             switch (action.toLowerCase()) {
                 case "fold": {
-                    const foldResult = await foldHand(gameId);
+                    const foldResult = await foldHand(gameId, currentNetwork);
                     return foldResult?.hash || "proxy-fold-" + Date.now();
                 }
 
                 case "call": {
-                    const callResult = await callHand(gameId, amountStr);
+                    const callResult = await callHand(gameId, amountStr, currentNetwork);
                     return callResult?.hash || "proxy-call-" + Date.now();
                 }
 
                 case "bet": {
-                    const betResult = await betHand(gameId, amountStr);
+                    const betResult = await betHand(gameId, amountStr, currentNetwork);
                     return betResult?.hash || "proxy-bet-" + Date.now();
                 }
 
                 case "raise": {
-                    const raiseResult = await raiseHand(gameId, amountStr);
+                    const raiseResult = await raiseHand(gameId, amountStr, currentNetwork);
                     return raiseResult?.hash || "proxy-raise-" + Date.now();
                 }
 
                 case "check": {
-                    const checkResult = await checkHand(gameId);
+                    const checkResult = await checkHand(gameId, currentNetwork);
                     return checkResult?.hash || "proxy-check-" + Date.now();
                 }
 
                 case "sitout": {
-                    const sitoutResult = await sitOut(gameId);
+                    const sitoutResult = await sitOut(gameId, currentNetwork);
                     return sitoutResult?.hash || "proxy-sitout-" + Date.now();
                 }
 
                 case "sitin": {
-                    const sitinResult = await sitIn(gameId);
+                    const sitinResult = await sitIn(gameId, currentNetwork);
                     return sitinResult?.hash || "proxy-sitin-" + Date.now();
                 }
 
@@ -82,7 +84,7 @@ export const useGameActions = (): GameActionHook => {
                     throw new Error(`Unknown action: ${action}`);
             }
         }
-    }, []);
+    }, [currentNetwork]);
 
     const joinGame = useCallback(async (gameId: string, seat: number, buyInAmount: bigint): Promise<string> => {
         if (USE_COSMOS) {
@@ -93,10 +95,10 @@ export const useGameActions = (): GameActionHook => {
             const result = await joinTable(gameId, {
                 amount: buyInAmount.toString(),
                 seatNumber: seat
-            });
+            }, currentNetwork);
             return result?.hash || "proxy-join-" + Date.now();
         }
-    }, []);
+    }, [currentNetwork]);
 
     const leaveGame = useCallback(async (gameId: string): Promise<string> => {
         if (USE_COSMOS) {
@@ -104,10 +106,10 @@ export const useGameActions = (): GameActionHook => {
             throw new Error("Cosmos backend not yet implemented - use proxy mode");
         } else {
             // Use the existing proxy-based leave with correct parameters
-            const result = await leaveTable(gameId, "0"); // value parameter required
+            const result = await leaveTable(gameId, "0", currentNetwork); // value parameter required
             return result?.hash || "proxy-leave-" + Date.now();
         }
-    }, []);
+    }, [currentNetwork]);
 
     const getGameState = useCallback(async (_gameId: string): Promise<any> => {
         if (USE_COSMOS) {

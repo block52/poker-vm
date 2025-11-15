@@ -1,13 +1,32 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
+import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { ClickableAddress } from "../../components/explorer/ClickableAddress";
-import { CosmosBlock } from "./types";
+
+// Types from CosmosClient
+interface CosmosBlock {
+    block_id: {
+        hash: string;
+    };
+    block: {
+        header: {
+            height: string;
+            time: string;
+            chain_id: string;
+            proposer_address: string;
+        };
+        data: {
+            txs: string[]; // Base64 encoded transactions
+        };
+    };
+}
 
 export default function BlockDetailPage() {
     const { height } = useParams<{ height: string }>();
     const navigate = useNavigate();
+    const { currentNetwork } = useNetwork();
     const [block, setBlock] = useState<CosmosBlock | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,11 +40,10 @@ export default function BlockDetailPage() {
         const fetchBlock = async () => {
             try {
                 if (!height) {
-                    throw new Error("Block height is required");
+                    throw new Error("No height provided");
                 }
 
-                setLoading(true);
-                const cosmosClient = getCosmosClient();
+                const cosmosClient = getCosmosClient(currentNetwork);
 
                 if (!cosmosClient) {
                     throw new Error("Cosmos client not initialized. Please check your wallet connection.");
@@ -48,7 +66,7 @@ export default function BlockDetailPage() {
         return () => {
             document.title = "Block52 Chain";
         };
-    }, [height]);
+    }, [height, currentNetwork]);
 
     // Compute transaction hashes after block is loaded
     useEffect(() => {
@@ -67,7 +85,6 @@ export default function BlockDetailPage() {
         computeHashes();
     }, [block]);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const truncateHash = (hash: string, length: number = 16) => {
         if (!hash) return "N/A";
         if (hash.length <= length * 2) return hash;
@@ -160,7 +177,7 @@ export default function BlockDetailPage() {
             }
 
             return "Unknown Message Type";
-        } catch {
+        } catch (err) {
             return "Unknown";
         }
     };

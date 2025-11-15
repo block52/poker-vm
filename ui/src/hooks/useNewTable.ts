@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { GameType, COSMOS_CONSTANTS, createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
 import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
 import { getCosmosUrls } from "../utils/cosmos/urls";
+import { useNetwork } from "../context/NetworkContext";
 
 // Type for creating new table options
 export interface CreateTableOptions {
@@ -30,6 +31,7 @@ export const useNewTable = (): UseNewTableReturn => {
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const [newGameId, setNewGameId] = useState<string | null>(null);
+    const { currentNetwork } = useNetwork();
 
     const createTable = useCallback(async (
         gameOptions: CreateTableOptions
@@ -48,7 +50,7 @@ export const useNewTable = (): UseNewTableReturn => {
             }
 
             // Create signing client from mnemonic
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls();
+            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
 
             const signingClient = await createSigningClientFromMnemonic(
                 {
@@ -123,7 +125,7 @@ export const useNewTable = (): UseNewTableReturn => {
         } finally {
             setIsCreating(false);
         }
-    }, []);
+    }, [currentNetwork]);
 
     return {
         createTable,

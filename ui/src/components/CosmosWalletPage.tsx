@@ -5,9 +5,11 @@ import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddres
 import { colors, hexToRgba } from "../utils/colorConfig";
 import defaultLogo from "../assets/YOUR_CLUB.png";
 import { getCosmosUrls } from "../utils/cosmos/urls";
+import { useNetwork } from "../context/NetworkContext";
 
 const CosmosWalletPage = () => {
     const navigate = useNavigate();
+    const { currentNetwork } = useNetwork();
     const [mnemonic, setMnemonic] = useState<string>("");
     const [address, setAddress] = useState<string>("");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -32,7 +34,7 @@ const CosmosWalletPage = () => {
     // Fetch test account balances
     const fetchBalance = async (address: string) => {
         try {
-            const { restEndpoint: restUrl } = getCosmosUrls();
+            const { restEndpoint: restUrl } = getCosmosUrls(currentNetwork);
             const response = await fetch(`${restUrl}/cosmos/bank/v1beta1/balances/${address}`);
             const data = await response.json();
             return data.balances || [];
@@ -56,7 +58,8 @@ const CosmosWalletPage = () => {
                 setBobBalance(formatted || "0");
             }
         });
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentNetwork]);
 
     // Generate new wallet
     const generateWalletHandler = async () => {

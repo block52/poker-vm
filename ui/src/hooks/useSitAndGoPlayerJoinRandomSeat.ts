@@ -3,6 +3,7 @@ import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisb
 import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
 import { USDC_TO_MICRO } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
+import { useNetwork } from "../context/NetworkContext";
 
 interface SitAndGoJoinOptions {
     tableId: string;
@@ -31,6 +32,7 @@ interface UseSitAndGoPlayerJoinRandomSeatReturn {
 export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSeatReturn => {
     const [isJoining, setIsJoining] = useState(false);
     const [error, setError] = useState<Error | null>(null);
+    const { currentNetwork } = useNetwork();
 
     const joinSitAndGo = useCallback(async (options: SitAndGoJoinOptions): Promise<any> => {
         setIsJoining(true);
@@ -54,7 +56,7 @@ export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSe
             console.log(`📊 Amount in microunits: ${amountInMicrounits}`);
 
             // Create signing client from mnemonic
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls();
+            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
 
             const signingClient = await createSigningClientFromMnemonic(
                 {
@@ -93,7 +95,7 @@ export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSe
         } finally {
             setIsJoining(false);
         }
-    }, []);
+    }, [currentNetwork]);
 
     return {
         joinSitAndGo,

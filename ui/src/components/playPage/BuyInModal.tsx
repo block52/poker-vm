@@ -8,6 +8,7 @@ import { joinTable } from "../../hooks/playerActions/joinTable";
 import { JoinTableOptions } from "../../hooks/playerActions/types";
 import { useCosmosWallet } from "../../hooks";
 import { USDC_TO_MICRO, microToUsdc } from "../../constants/currency";
+import { useNetwork } from "../../context/NetworkContext";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {
@@ -73,8 +74,9 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     const [waitForBigBlind, setWaitForBigBlind] = useState(true);
     const [isJoiningRandomSeat, setIsJoiningRandomSeat] = useState(false);
 
-    // Get Cosmos wallet hook
+    // Get Cosmos wallet hook and network context
     const cosmosWallet = useCosmosWallet();
+    const { currentNetwork } = useNetwork();
 
     // Use props if provided, otherwise fall back to hook
     const hookBuyIns = useMinAndMaxBuyIns();
@@ -272,7 +274,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             console.log("  joinOptions.amount:", joinOptions.amount);
             console.log("  tableId:", tableId);
 
-            joinTable(tableId || "default-game-id", joinOptions);
+            joinTable(tableId || "default-game-id", joinOptions, currentNetwork);
 
             // Navigate to table
             navigate(`/table/${tableId}`);
@@ -292,7 +294,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         navigate,
         tableId,
         minBuyInFormatted,
-        maxBuyInFormatted
+        maxBuyInFormatted,
+        currentNetwork
     ]);
 
     return (

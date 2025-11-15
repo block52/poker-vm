@@ -12,6 +12,7 @@ import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { useSitAndGoPlayerJoinRandomSeat } from "../../hooks/useSitAndGoPlayerJoinRandomSeat";
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { getCosmosBalance } from "../../utils/cosmosAccountUtils";
+import { useNetwork } from "../../context/NetworkContext";
 import { colors as _colors, hexToRgba as _hexToRgba } from "../../utils/colorConfig";
 import { microToUsdc } from "../../constants/currency";
 import { useGameStateContext } from "../../context/GameStateContext";
@@ -26,6 +27,7 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
     const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(true);
     const [buyInError, setBuyInError] = useState("");
     const [hasJoined, setHasJoined] = useState(false);
+    const { currentNetwork } = useNetwork();
 
     // Get game options
     const { gameOptions } = useGameOptions();
@@ -93,7 +95,7 @@ const SitAndGoAutoJoinModal: React.FC<SitAndGoAutoJoinModalProps> = ({ tableId, 
                     return;
                 }
 
-                const balance = await getCosmosBalance("usdc");
+                const balance = await getCosmosBalance(currentNetwork, "usdc");
                 setAccountBalance(balance);
             } catch (err) {
                 console.error("Error fetching Cosmos balance:", err);

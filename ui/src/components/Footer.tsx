@@ -12,6 +12,7 @@ import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind,
 // Import specific hooks not in barrel
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
 import { useGameStateContext } from "../context/GameStateContext";
+import { useNetwork } from "../context/NetworkContext";
 
 // Import action handlers (removing unused ones)
 import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
@@ -25,6 +26,7 @@ interface PokerActionPanelProps {
 
 const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransactionSubmitted }) => {
     const { id: tableId } = useParams<{ id: string }>();
+    const { currentNetwork } = useNetwork();
 
     // Loading state for actions
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -220,7 +222,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         await handleActionWithTransaction("small-blind", async () => {
             try {
                 console.log("🎰 Attempting to post small blind:", smallBlindAmount);
-                const result = await postSmallBlind(tableId, smallBlindAmount);
+                const result = await postSmallBlind(tableId, smallBlindAmount, currentNetwork);
                 console.log("✅ Small blind posted successfully");
                 return result?.hash || null;
             } catch (error: any) {
@@ -239,7 +241,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
 
         await handleActionWithTransaction("big-blind", async () => {
             try {
-                const result = await postBigBlind(tableId, bigBlindAmount);
+                const result = await postBigBlind(tableId, bigBlindAmount, currentNetwork);
                 return result?.hash || null;
             } catch (error: any) {
                 console.error("❌ Failed to post big blind:", error);
@@ -256,7 +258,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
 
         await handleActionWithTransaction("bet", async () => {
             try {
-                const result = await betHand(tableId, amountMicrounits);
+                const result = await betHand(tableId, amountMicrounits, currentNetwork);
                 return result?.hash || null;
             } catch (error: any) {
                 console.error("Failed to bet:", error);
@@ -273,7 +275,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
 
         await handleActionWithTransaction("raise", async () => {
             try {
-                const result = await raiseHand(tableId, amountMicrounits);
+                const result = await raiseHand(tableId, amountMicrounits, currentNetwork);
                 return result?.hash || null;
             } catch (error: any) {
                 console.error("Failed to raise:", error);
@@ -315,7 +317,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {shouldShowDealButton && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction("deal", () => handleDeal(tableId))}
+                            onClick={() => handleActionWithTransaction("deal", () => handleDeal(tableId, currentNetwork))}
                             disabled={loadingAction !== null}
                             className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -341,7 +343,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {gameState?.round === TexasHoldemRound.END && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction("new-hand", () => handleStartNewHand(tableId))}
+                            onClick={() => handleActionWithTransaction("new-hand", () => handleStartNewHand(tableId, currentNetwork))}
                             disabled={loadingAction !== null}
                             className="btn-new-hand text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -366,7 +368,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {hasMuckAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction("muck", () => handleMuck(tableId))}
+                            onClick={() => handleActionWithTransaction("muck", () => handleMuck(tableId, currentNetwork))}
                             className="btn-muck text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -386,7 +388,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                 {hasShowAction && (
                     <div className="flex justify-center mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction("show", () => handleShow(tableId))}
+                            onClick={() => handleActionWithTransaction("show", () => handleShow(tableId, currentNetwork))}
                             className="btn-show text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -452,7 +454,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                                     className="btn-fold cursor-pointer active:scale-105
 px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm
 transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    onClick={() => handleActionWithTransaction("fold", () => handleFold(tableId))}
+                                    onClick={() => handleActionWithTransaction("fold", () => handleFold(tableId, currentNetwork))}
                                     disabled={loadingAction !== null}
                                 >
                                     {loadingAction === "fold" && <LoadingSpinner size="sm" />}
@@ -478,7 +480,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                                     ? "px-2 py-0.5 text-[10px] min-w-[50px]"
                                                     : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]"
                                             }`}
-                                            onClick={() => handleActionWithTransaction("fold", () => handleFold(tableId))}
+                                            onClick={() => handleActionWithTransaction("fold", () => handleFold(tableId, currentNetwork))}
                                             disabled={loadingAction !== null}
                                         >
                                             {loadingAction === "fold" && <LoadingSpinner size="sm" />}
@@ -499,7 +501,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                             transition-all duration-200 font-medium transform active:scale-105 active:shadow-[0_0_15px_rgba(59,130,246,0.2)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
-                                            onClick={() => handleActionWithTransaction("check", () => handleCheck(tableId))}
+                                            onClick={() => handleActionWithTransaction("check", () => handleCheck(tableId, currentNetwork))}
                                             disabled={loadingAction !== null}
                                         >
                                             {loadingAction === "check" && <LoadingSpinner size="sm" />}
@@ -512,7 +514,9 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                             transition-all duration-200 font-medium transform active:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
-                                            onClick={() => handleActionWithTransaction("call", () => handleCall(callAction, callAmount, tableId))}
+                                            onClick={() =>
+                                                handleActionWithTransaction("call", () => handleCall(callAction, callAmount, tableId, currentNetwork))
+                                            }
                                             disabled={loadingAction !== null}
                                         >
                                             {loadingAction === "call" && <LoadingSpinner size="sm" />}

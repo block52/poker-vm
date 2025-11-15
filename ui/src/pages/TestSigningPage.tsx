@@ -6,7 +6,6 @@ import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import defaultLogo from "../assets/YOUR_CLUB.png";
 import { useNavigate } from "react-router-dom";
 import { useNetwork } from "../context/NetworkContext";
-import { NetworkSelector } from "../components/NetworkSelector";
 import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
 
 interface TestResult {
@@ -620,7 +619,6 @@ export default function TestSigningPage() {
                             <span>Back to Dashboard</span>
                         </button>
                         <div className="flex items-center gap-4">
-                            <NetworkSelector />
                             <img src={clubLogo} alt={clubName} className="h-12" />
                         </div>
                     </div>

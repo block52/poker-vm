@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
+import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
@@ -37,6 +38,7 @@ interface Deposit {
 
 export default function BridgeAdminDashboard() {
     const cosmosWallet = useCosmosWallet();
+    const { currentNetwork } = useNetwork();
     const [deposits, setDeposits] = useState<Deposit[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [maxIndex, setMaxIndex] = useState(10); // Query first 10 deposits by default
@@ -109,7 +111,7 @@ export default function BridgeAdminDashboard() {
     // Check if deposits have been processed on Cosmos
     const checkProcessingStatus = async (depositsToCheck: Deposit[]) => {
         try {
-            const { restEndpoint } = getCosmosUrls();
+            const { restEndpoint } = getCosmosUrls(currentNetwork);
 
             // We need to check the deterministic txHash for each deposit
             // txHash = sha256(contractAddress + depositIndex)
@@ -177,7 +179,7 @@ export default function BridgeAdminDashboard() {
             }
 
             // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls();
+            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
 
             const signingClient = await createSigningClientFromMnemonic(
                 {
