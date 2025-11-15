@@ -1,21 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import defaultLogo from "../assets/YOUR_CLUB.png";
-import { getCosmosUrls } from "../utils/cosmos/urls";
-import { useNetwork } from "../context/NetworkContext";
 
 const CosmosWalletPage = () => {
-    const { currentNetwork } = useNetwork();
     const [mnemonic, setMnemonic] = useState<string>("");
     const [address, setAddress] = useState<string>("");
     const [isGenerating, setIsGenerating] = useState(false);
     const [importMnemonic, setImportMnemonic] = useState("");
     const [error, setError] = useState<string>("");
     const [showMnemonic, setShowMnemonic] = useState(false);
-    const [aliceBalance, setAliceBalance] = useState<string | null>(null);
-    const [bobBalance, setBobBalance] = useState<string | null>(null);
 
     // Get club logo from env
     const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
@@ -24,40 +19,6 @@ const CosmosWalletPage = () => {
     // Check if wallet already exists
     const existingMnemonic = getCosmosMnemonic();
     const existingAddress = getCosmosAddress();
-
-    // TODO: Move this to SDK - CosmosClient should implement IClient interface
-    // This fetchBalance function should be part of the CosmosClient class
-    // See: /Users/alexmiller/projects/pvm_cosmos_under_one_roof/poker-vm/sdk/src/cosmosClient.ts
-    // The CosmosClient needs to implement the IClient interface from client.ts
-    // Fetch test account balances
-    const fetchBalance = async (address: string) => {
-        try {
-            const { restEndpoint: restUrl } = getCosmosUrls(currentNetwork);
-            const response = await fetch(`${restUrl}/cosmos/bank/v1beta1/balances/${address}`);
-            const data = await response.json();
-            return data.balances || [];
-        } catch (err) {
-            console.error("Failed to fetch balance:", err);
-            return null;
-        }
-    };
-
-    // Load test account balances on mount
-    useEffect(() => {
-        fetchBalance("b521xa0ue7p4z4vlfphkvxwz0w8sj5gam8zxszqy9l").then(balances => {
-            if (balances) {
-                const formatted = balances.map((b: any) => `${(parseInt(b.amount) / 1000000).toFixed(2)} ${b.denom}`).join(", ");
-                setAliceBalance(formatted || "0");
-            }
-        });
-        fetchBalance("b521qu2qmrc6rve2az7r74nc5jh5fuqe8j5fpd7hq0").then(balances => {
-            if (balances) {
-                const formatted = balances.map((b: any) => `${(parseInt(b.amount) / 1000000).toFixed(2)} ${b.denom}`).join(", ");
-                setBobBalance(formatted || "0");
-            }
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentNetwork]);
 
     // Generate new wallet
     const generateWalletHandler = async () => {
@@ -383,57 +344,6 @@ const CosmosWalletPage = () => {
                         <p className="text-red-300">{error}</p>
                     </div>
                 )}
-
-                {/* Test Addresses */}
-                <div
-                    className="mt-8 rounded-lg p-6 border"
-                    style={{
-                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.5),
-                        borderColor: hexToRgba(colors.brand.primary, 0.1)
-                    }}
-                >
-                    <h3 className="text-lg font-semibold text-white mb-4">Development Test Accounts</h3>
-                    <div className="space-y-4 text-sm">
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-gray-300 font-medium">Alice</span>
-                                {aliceBalance && (
-                                    <span
-                                        className="text-xs px-2 py-1 rounded"
-                                        style={{
-                                            backgroundColor: hexToRgba(colors.accent.success, 0.2),
-                                            color: "var(--accent-success)"
-                                        }}
-                                    >
-                                        {aliceBalance}
-                                    </span>
-                                )}
-                            </div>
-                            <code className="font-mono text-xs block" style={{ color: "var(--brand-primary)" }}>
-                                b521xa0ue7p4z4vlfphkvxwz0w8sj5gam8zxszqy9l
-                            </code>
-                        </div>
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-gray-300 font-medium">Bob</span>
-                                {bobBalance && (
-                                    <span
-                                        className="text-xs px-2 py-1 rounded"
-                                        style={{
-                                            backgroundColor: hexToRgba(colors.accent.success, 0.2),
-                                            color: "var(--accent-success)"
-                                        }}
-                                    >
-                                        {bobBalance}
-                                    </span>
-                                )}
-                            </div>
-                            <code className="font-mono text-xs block" style={{ color: "var(--brand-primary)" }}>
-                                b521qu2qmrc6rve2az7r74nc5jh5fuqe8j5fpd7hq0
-                            </code>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );
