@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useGameStateContext } from "../context/GameStateContext";
+import { useNetwork } from "../context/NetworkContext";
 import { PlayerStatus, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { PlayerTimerReturn } from "../types/index";
 import { foldHand } from "./playerActions/foldHand";
@@ -19,6 +20,7 @@ const timeExtensions = new Map<string, { extensionTime: number; hasUsedExtension
 export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTimerReturn => {
     const [currentTime, setCurrentTime] = useState(Date.now());
     const [lastAutoFoldTime, setLastAutoFoldTime] = useState<number>(0);
+    const { currentNetwork } = useNetwork();
     // Functions imported directly - no hook destructuring needed
     const { legalActions } = usePlayerLegalActions();
 
@@ -190,11 +192,11 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
 
             if (canCheck) {
                 console.log(`✅ Auto-checking player at seat ${playerSeat} due to ${timeoutInSeconds}-second timeout`);
-                await checkHand(tableId!);
+                await checkHand(tableId!, currentNetwork);
                 console.log(`✅ Auto-check successful for seat ${playerSeat}`);
             } else if (canFold) {
                 console.log(`⏰ Auto-folding player at seat ${playerSeat} due to ${timeoutInSeconds}-second timeout`);
-                await foldHand(tableId);
+                await foldHand(tableId, currentNetwork);
                 console.log(`✅ Auto-fold successful for seat ${playerSeat}`);
             }
         } catch (error) {
@@ -203,7 +205,7 @@ export const usePlayerTimer = (tableId?: string, playerSeat?: number): PlayerTim
         } finally {
             latestValues.current.isExecutingAutoAction = false;
         }
-    }, [isNextToAct, isCurrentUser, tableId, playerSeat]);
+    }, [isNextToAct, isCurrentUser, tableId, playerSeat, currentNetwork]);
 
     // Update current time every second - ONLY for active players
     useEffect(() => {

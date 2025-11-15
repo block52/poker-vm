@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { getCosmosUrls } from "../utils/cosmos/urls";
+import { useNetwork } from "../context/NetworkContext";
 
 interface TablePlayerCount {
     tableId: string;
@@ -19,6 +20,7 @@ interface TablePlayerCount {
 export const useTablePlayerCounts = (tableAddresses: string[]) => {
     const [playerCounts, setPlayerCounts] = useState<Map<string, TablePlayerCount>>(new Map());
     const [isLoading, setIsLoading] = useState(false);
+    const { currentNetwork } = useNetwork();
 
     // Memoize the table addresses string to avoid unnecessary re-renders
     const tableAddressesKey = useMemo(() => tableAddresses.join(","), [tableAddresses]);
@@ -31,7 +33,7 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
             const newCounts = new Map<string, TablePlayerCount>();
 
             try {
-                const { restEndpoint } = getCosmosUrls();
+                const { restEndpoint } = getCosmosUrls(currentNetwork);
 
                 // Fetch game state for each table in parallel from Cosmos blockchain
                 const promises = tableAddresses.map(async (gameId) => {
@@ -98,7 +100,7 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
         const interval = setInterval(fetchPlayerCounts, 10000);
 
         return () => clearInterval(interval);
-    }, [tableAddresses, tableAddressesKey]); // Re-run when table list changes
+    }, [tableAddresses, tableAddressesKey, currentNetwork]); // Re-run when table list changes
 
     return { playerCounts, isLoading };
 };

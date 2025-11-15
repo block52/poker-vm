@@ -106,10 +106,10 @@ export const useGameActions = (): GameActionHook => {
             throw new Error("Cosmos backend not yet implemented - use proxy mode");
         } else {
             // Use the existing proxy-based leave with correct parameters
-            const result = await leaveTable(gameId, "0"); // value parameter required
+            const result = await leaveTable(gameId, "0", currentNetwork); // value parameter required
             return result?.hash || "proxy-leave-" + Date.now();
         }
-    }, []);
+    }, [currentNetwork]);
 
     const getGameState = useCallback(async (_gameId: string): Promise<any> => {
         if (USE_COSMOS) {

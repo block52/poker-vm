@@ -112,6 +112,7 @@ import { handleSitOut, handleSitIn } from "../common/actionHandlers";
 import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
+import { useNetwork } from "../../context/NetworkContext";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
@@ -171,6 +172,7 @@ const Table = React.memo(() => {
     const { id } = useParams<{ id: string }>();
     // Game state context and subscription
     const { subscribeToTable, gameState } = useGameStateContext();
+    const { currentNetwork } = useNetwork();
     useEffect(() => {
         if (id) {
             subscribeToTable(id);
@@ -204,7 +206,7 @@ const Table = React.memo(() => {
             setIsBalanceLoading(true);
             setBalanceError(null);
 
-            const balance = await getCosmosBalance("usdc");
+            const balance = await getCosmosBalance(currentNetwork, "usdc");
             setAccountBalance(balance);
         } catch (err) {
             console.error("Error fetching Cosmos balance:", err);
@@ -212,7 +214,7 @@ const Table = React.memo(() => {
         } finally {
             setIsBalanceLoading(false);
         }
-    }, []);
+    }, [currentNetwork]);
 
     // Fetch balance once on page load
     useEffect(() => {
@@ -752,7 +754,7 @@ const Table = React.memo(() => {
         const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
 
         if (id && playerData) {
-            leaveTable(id, playerData.stack || "0")
+            leaveTable(id, playerData.stack || "0", currentNetwork)
                 .then(() => {
                     window.location.href = "/";
                 })
@@ -763,7 +765,7 @@ const Table = React.memo(() => {
         } else {
             window.location.href = "/";
         }
-    }, [tableDataValues.tableDataPlayers, userWalletAddress, id]);
+    }, [tableDataValues.tableDataPlayers, userWalletAddress, id, currentNetwork]);
 
     if (tableDataValues.error) {
         console.error("Error loading table data:", tableDataValues.error);
@@ -1308,7 +1310,7 @@ const Table = React.memo(() => {
                     {/* Mobile: Compact Button Design */}
                     {isMobile || isMobileLandscape ? (
                         <button
-                            onClick={() => handleSitOut(id)}
+                            onClick={() => handleSitOut(id, currentNetwork)}
                             className="btn-sit-out text-white font-medium py-1.5 px-3 rounded-lg shadow-md text-xs
                             backdrop-blur-sm transition-all duration-300 border
                             flex items-center justify-center gap-2 transform hover:scale-105"
@@ -1326,7 +1328,7 @@ const Table = React.memo(() => {
                     ) : (
                         /* Desktop: Original Button Design */
                         <button
-                            onClick={() => handleSitOut(id)}
+                            onClick={() => handleSitOut(id, currentNetwork)}
                             className="btn-sit-out text-white font-medium py-2 px-4 rounded-lg shadow-md text-sm
                             backdrop-blur-sm transition-all duration-300 border
                             flex items-center justify-center gap-2 transform hover:scale-105"
@@ -1349,7 +1351,7 @@ const Table = React.memo(() => {
             {hasSitInAction && (
                 <div className={`fixed z-30 ${isMobileLandscape ? "bottom-2 left-2" : isMobile ? "bottom-[260px] right-4" : "bottom-20 left-4"}`}>
                     <button
-                        onClick={() => handleSitIn(id)}
+                        onClick={() => handleSitIn(id, currentNetwork)}
                         className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600
                             text-white font-bold py-2 px-4 rounded-lg shadow-lg border-2 border-green-600
                             transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105

@@ -1,5 +1,8 @@
 import type { NetworkEndpoints } from "../../context/NetworkContext";
 
+// Re-export for convenience
+export type { NetworkEndpoints };
+
 /**
  * Centralized Cosmos network URL configuration
  * 

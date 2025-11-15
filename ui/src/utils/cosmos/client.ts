@@ -7,7 +7,7 @@
 
 import { CosmosClient, getDefaultCosmosConfig as getDefaultCosmosConfigSDK, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "./storage";
-import { getCosmosUrls } from "./urls";
+import { getCosmosUrls, type NetworkEndpoints } from "./urls";
 
 // Re-export types and constants from SDK
 export type { CosmosClient };
@@ -17,9 +17,9 @@ export { COSMOS_CONSTANTS };
  * Get default cosmos configuration with environment variable overrides
  * Uses SDK's getDefaultCosmosConfig() and overrides with env vars if present
  */
-export const getDefaultCosmosConfig = () => {
+export const getDefaultCosmosConfig = (network: NetworkEndpoints) => {
     const sdkConfig = getDefaultCosmosConfigSDK();
-    const { rpcEndpoint, restEndpoint } = getCosmosUrls();
+    const { rpcEndpoint, restEndpoint } = getCosmosUrls(network);
 
     return {
         ...sdkConfig,
@@ -49,7 +49,16 @@ export const getCosmosConfigWithEndpoints = (rpcEndpoint: string, restEndpoint: 
 let clientInstance: CosmosClient | null = null;
 let currentEndpoints: { rpc: string; rest: string } | null = null;
 
-export const getCosmosClient = (customEndpoints?: { rpc: string; rest: string }): CosmosClient | null => {
+export const getCosmosClient = (
+    networkOrEndpoints: NetworkEndpoints | { rpc: string; rest: string }
+): CosmosClient | null => {
+    // Determine if we have custom endpoints or a network config
+    const customEndpoints = "rpc" in networkOrEndpoints && "rest" in networkOrEndpoints && !("name" in networkOrEndpoints)
+        ? networkOrEndpoints as { rpc: string; rest: string }
+        : null;
+
+    const network = customEndpoints ? null : networkOrEndpoints as NetworkEndpoints;
+
     // If custom endpoints are provided and different from current, clear the client
     if (customEndpoints) {
         if (
@@ -68,12 +77,12 @@ export const getCosmosClient = (customEndpoints?: { rpc: string; rest: string })
             // For read-only operations (like explorer), create client without mnemonic
             const config = customEndpoints
                 ? getCosmosConfigWithEndpoints(customEndpoints.rpc, customEndpoints.rest)
-                : getDefaultCosmosConfig();
+                : getDefaultCosmosConfig(network!);
             clientInstance = new CosmosClient(config);
         } else {
             const config = customEndpoints
                 ? getCosmosConfigWithEndpoints(customEndpoints.rpc, customEndpoints.rest)
-                : getDefaultCosmosConfig();
+                : getDefaultCosmosConfig(network!);
             clientInstance = new CosmosClient({ ...config, mnemonic });
         }
     }

@@ -65,7 +65,7 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
         setError(null);
 
         try {
-            const client = getCosmosClient();
+            const client = getCosmosClient(currentNetwork);
             if (!client) {
                 throw new Error("Cosmos client not initialized");
             }
@@ -78,7 +78,7 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
         } finally {
             setIsLoading(false);
         }
-    }, [address]);
+    }, [address, currentNetwork]);
 
     // Auto-refresh balance when address changes
     useEffect(() => {
