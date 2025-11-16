@@ -47,9 +47,10 @@ export const GlobalHeader: React.FC = () => {
         return () => clearInterval(interval);
     }, [currentNetwork]);
 
-    // Don't show header on table pages (they have their own layout)
+    // Don't show header on game table pages (they have their own layout)
+    // But DO show it on /table/admin
     const hideOnPaths = ["/table/"];
-    const shouldHide = hideOnPaths.some(path => location.pathname.startsWith(path));
+    const shouldHide = hideOnPaths.some(path => location.pathname.startsWith(path)) && location.pathname !== "/table/admin";
 
     if (shouldHide) {
         return null;
