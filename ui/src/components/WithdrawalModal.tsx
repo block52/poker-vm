@@ -262,7 +262,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
             console.log("[WithdrawalModal] - To Mainnet Address:", web3Address);
 
             // STEP 1: Call the SDK to prepare the withdrawal
-            // @ts-expect-error - Old Ethereum client for bridge only, will be updated when bridge is migrated
+            // Old Ethereum client for bridge only, will be updated when bridge is migrated
             const result: WithdrawResponseDTO = await client.withdraw(
                 amountInWei,
                 publicKey || undefined,

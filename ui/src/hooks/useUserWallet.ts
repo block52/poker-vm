@@ -57,7 +57,7 @@ const useUserWallet = (): UserWalletResult => {
             const client = getClient();
 
             // Use the SDK's getAccount method
-            // @ts-expect-error - Old Ethereum client for bridge only, will be updated when bridge is migrated
+            // Old Ethereum client for bridge only, will be updated when bridge is migrated
             const data = await client.getAccount(accountData.address);
             console.log("[useUserWallet] Account data received:", {
                 address: data.address,

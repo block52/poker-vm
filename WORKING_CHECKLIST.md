@@ -1,13 +1,188 @@
 # PVM on Cosmos - Working Checklist
 
-**Last Updated**: November 12, 2025
-**Status**: ✅ PHASE 3.5 COMPLETE - Sit & Go Buy-In Implementation Working!
+**Last Updated**: November 16, 2025
+**Status**: 🚧 PHASE 4 - USDC Withdrawal Testing & Bug Fixes
 **Current Phase**: Phase 4 - Testing & Polish
 **CosmosClient Progress**: ✅ createGame, joinGame, performAction all working!
 **Architecture**: ✅ Hybrid - Cosmos for transactions, PVM WebSocket for real-time updates
-**Recent Work**: ✅ Fixed Sit & Go buy-in modals, table creation, and VacantPlayer join flow
-**Bridge Status**: ✅ Complete - Documented in BRIDGE_DEPOSIT_FLOW.md (archived)
-**Next**: Test multi-player Sit & Go gameplay
+**Recent Work**: 🔧 Withdrawal flow testing - Fixed 3 critical bugs + signature verification
+**Bridge Status**: ✅ Deposits working | 🚧 Withdrawals in testing
+**Next**: Register validator address in Vault contract for withdrawal signing
+
+---
+
+## 🔧 PHASE 4 - USDC Withdrawal Testing (Nov 16, 2025)
+
+### ✅ Bugs Fixed
+
+**Bug #1: Deposit Index Off-by-One** (`msg_server_process_deposit.go:38`)
+- **Problem**: Code was subtracting 1 from deposit index (`contractStorageIndex = msg.DepositIndex - 1`)
+- **Result**: Clicking deposit #4 (0.01 USDC) processed deposit #3 (1.00 USDC)
+- **Fix**: Removed the `-1` offset - deposit index matches storage index directly
+- **File**: `/pokerchain/x/poker/keeper/msg_server_process_deposit.go`
+- **Status**: ✅ Fixed & tested
+
+**Bug #2: Withdrawal Nonce Starting at Zero** (`withdrawal_keeper.go:92`)
+- **Problem**: `collections.Sequence.Next()` returns 0 for first call
+- **Result**: First withdrawal had nonce `0x0000...0000` instead of `0x0000...0001`
+- **Fix**: Added `nonceSeq = nonceSeq + 1` after calling `.Next()`
+- **File**: `/pokerchain/x/poker/keeper/withdrawal_keeper.go`
+- **Status**: ✅ Fixed & tested - nonce now starts at 1
+
+**Bug #3: Missing Ethereum Signed Message Prefix** (`withdrawal_keeper.go:181-188`)
+- **Problem**: Cosmos was signing raw hash without `"\x19Ethereum Signed Message:\n32"` prefix
+- **Contract expects**: `sign(keccak256("\x19Ethereum Signed Message:\n32" + keccak256(receiver, amount, nonce)))`
+- **Cosmos was doing**: `sign(keccak256(receiver, amount, nonce))` ❌
+- **Fix**: Added Ethereum signed message prefix before signing
+- **File**: `/pokerchain/x/poker/keeper/withdrawal_keeper.go`
+- **Status**: ✅ Fixed & tested
+
+**Bug #4: UI Wrong ABI & Function Call** (`WithdrawalDashboard.tsx`)
+- **Problem**: UI had wrong contract ABI and was calling non-existent function
+  - UI called: `completeWithdrawal(cosmosAddress, amount, nonce, signature)` ❌
+  - Contract has: `withdraw(amount, baseAddress, nonce, signature)` ✅
+- **Fix**: Updated ABI and parameter order + added comprehensive logging
+- **File**: `/poker-vm/ui/src/pages/WithdrawalDashboard.tsx`
+- **Status**: ✅ Fixed & tested
+
+### 🔐 Validator Key Issue (UNRESOLVED)
+
+**Problem**: Signature validation failing with "withdraw: invalid signature"
+- **Root Cause**: Private key address `0x85e0d34495166B7E475b93759348b1da58D6C91e` is NOT registered as a validator in Vault contract `0x893c26846d7cE76445230B2b6285a663BF4C3BF5`
+- **Contract Check**: `IValidator(vault).isValidator(signer)` returns `false`
+- **Status**: ❌ BLOCKED - Need validator registration or different private key
+
+**Configuration Variable Renamed for Clarity**:
+- **OLD**: `validator_eth_private_key` (confusing - implies validator staking)
+- **NEW**: `bridge_eth_private_key` (clearer - this is for bridge withdrawal signing)
+- **Location**: `~/.pokerchain-testnet/node1/config/app.toml` (after rebuilding)
+- **Note**: ⚠️ This private key MUST correspond to an address registered in the Vault contract
+
+**✅ SOLUTION FOUND** (Nov 16, 2025):
+
+**Vault Contract Configuration** (verified on Base mainnet):
+- **Vault Address**: `0x893c26846d7cE76445230B2b6285a663BF4C3BF5`
+- **Underlying Token**: USDC on Base (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`)
+- **Min Validator Stake**: **100 USDC** (100,000,000 with 6 decimals)
+- **Lock Time**: 365 days (31,536,000 seconds)
+- **Current Validators**: 0 (nobody has staked yet!)
+
+**How Validators Work**:
+The Vault contract's `isValidator()` function checks if an address has staked >= 100 USDC:
+```solidity
+function _isValidator(address account) private view returns (bool) {
+    return _balances[account] >= _minValidatorStake;  // 100 USDC
+}
+```
+
+**To Become a Validator & Enable Withdrawals**:
+1. **Get 100 USDC on Base Chain** in the wallet `0x85e0d34495166B7E475b93759348b1da58D6C91e`
+2. **Approve Vault to spend USDC**:
+   ```bash
+   cast send 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 \
+     "approve(address,uint256)" \
+     0x893c26846d7cE76445230B2b6285a663BF4C3BF5 \
+     100000000 \
+     --private-key PRIVATE_KEY \
+     --rpc-url https://mainnet.base.org
+   ```
+3. **Stake 100 USDC in Vault**:
+   ```bash
+   cast send 0x893c26846d7cE76445230B2b6285a663BF4C3BF5 \
+     "stake(uint256)" \
+     100000000 \
+     --private-key PRIVATE_KEY \
+     --rpc-url https://mainnet.base.org
+   ```
+4. **Verify registration**:
+   ```bash
+   cast call 0x893c26846d7cE76445230B2b6285a663BF4C3BF5 \
+     "isValidator(address)" \
+     0x85e0d34495166B7E475b93759348b1da58D6C91e \
+     --rpc-url https://mainnet.base.org
+   ```
+   Should return `true` (0x0000...0001)
+
+**⚠️ IMPORTANT**:
+- Your 100 USDC will be locked for 365 days
+- This is a mainnet transaction with real USDC
+- After staking, withdrawals will work immediately
+
+**Alternative Options (if you don't want to lock 100 USDC)**:
+1. **Use a different private key** - One that's already a validator (if available)
+2. **Deploy test contracts on Base Sepolia** - No real money, but requires contract deployment
+3. **Modify Vault min stake temporarily** - Deploy new Vault with 0.01 USDC minimum (testnet only)
+
+### 📝 Configuration Changes
+
+**File**: `~/.pokerchain-testnet/node1/config/app.toml`
+
+```toml
+[bridge]
+enabled = true
+ethereum_rpc_url = "https://base-mainnet.g.alchemy.com/v2/YOUR_KEY"
+deposit_contract_address = "0xcc391c8f1aFd6DB5D8b0e064BA81b1383b14FE5B"
+usdc_contract_address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+polling_interval_seconds = 15
+starting_block = 36469223
+
+# Bridge signing key for withdrawal authorization
+# ⚠️ This address MUST be registered as a validator in the Vault contract
+# Current issue: 0x85e0d34495166B7E475b93759348b1da58D6C91e is NOT registered
+bridge_eth_private_key = "PASTE_VALIDATOR_PRIVATE_KEY_HERE"
+```
+
+**Important**:
+- Do NOT commit real private keys to git
+- The `bridge_eth_private_key` is ONLY in `app.toml` (not in code)
+- This key must derive to an address registered in `0x893c26846d7cE76445230B2b6285a663BF4C3BF5`
+
+### 🧪 Test Results
+
+**Deposit Flow**: ✅ WORKING
+```
+1. User deposits 0.01 USDC via Base bridge
+2. Cosmos detects deposit (index #4)
+3. Mints 10,000 uusdc (0.01 USDC with 6 decimals)
+4. Balance displays correctly in UI
+```
+
+**Withdrawal Flow**: 🚧 PARTIALLY WORKING
+```
+1. User initiates withdrawal ✅
+2. USDC burned on Cosmos ✅
+3. Nonce generated correctly (starts at 1) ✅
+4. Validator auto-signs withdrawal ✅
+5. Signature format correct (with Ethereum prefix) ✅
+6. UI calls contract with correct parameters ✅
+7. Contract rejects: "withdraw: invalid signature" ❌
+   → Signer not registered as validator in Vault
+```
+
+### 📊 Logging Added
+
+**Cosmos Logs** (`withdrawal_keeper.go`):
+```
+🔢 Current withdrawal nonce sequence (before Next) currentSeq=0
+🔢 Generated withdrawal nonce (after Next + 1) nonceSeq=1
+🔢 Formatted nonce as hex nonce=0x0000...0001
+```
+
+**UI Console Logs** (`WithdrawalDashboard.tsx`):
+```
+🌉 Completing withdrawal on Base chain - DETAILED PARAMETERS:
+  📍 Cosmos Address: b521...
+  📍 Base Receiver: 0xc2613a...
+  💰 Amount (micro): 10000
+  🔢 Nonce: 0x0000...0001
+  ✍️  Signature (base64): tZ/n...
+  ✍️  Signature (hex): 0xb59f...
+  📝 Function call parameters (in order):
+    1. amount: 10000
+    2. receiver (Base address): 0xc2613a...
+    3. nonce: 0x0000...0001
+    4. signature: 0xb59f...
+```
 
 ---
 

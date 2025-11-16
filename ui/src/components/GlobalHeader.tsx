@@ -58,8 +58,10 @@ export const GlobalHeader: React.FC = () => {
 
     const menuItems: MenuItem[] = [
         { path: "/wallet", label: "Block52 Wallet", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
+        { path: "/genesis", label: "Genesis State", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
         { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14", badge: "50" },
         { path: "/bridge/manual", label: "Manual Bridge", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" },
+        { path: "/bridge/withdrawals", label: "Withdrawals", icon: "M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" },
         { path: "/test-signing", label: "Test Signing", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
         {
             path: "/bridge/admin",
