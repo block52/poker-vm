@@ -284,23 +284,19 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         });
     };
 
-    // Update to use our hook data for button visibility
-    const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
-    const shouldShowBigBlindButton = hasBigBlindAction && isUsersTurn;
+    // Calculate button visibility flags
+    const { canFoldAnytime, showActionButtons, showSmallBlindButton, showBigBlindButton } = useMemo(() => {
+        const showButtons = isUserInTable;
+        const shouldShowSmallBlindButton = hasSmallBlindAction && isUsersTurn;
+        const shouldShowBigBlindButton = hasBigBlindAction && isUsersTurn;
 
-    // Only show action buttons if user is in the table
-    const showButtons = isUserInTable;
-
-    // Only show fold button if the player has the fold action and is in the table
-    const canFoldAnytime = useMemo(() => hasFoldAction && playerStatus !== PlayerStatus.FOLDED && showButtons, [hasFoldAction, playerStatus, showButtons]);
-
-    // Only show other action buttons if it's the player's turn, they have legal actions,
-    // the game is in progress, AND there's no big blind or small blind to post (prioritize blind posting)
-    const showActionButtons = isUsersTurn && legalActions && legalActions.length > 0 && showButtons;
-
-    // Show blinds buttons when needed
-    const showSmallBlindButton = shouldShowSmallBlindButton && showButtons;
-    const showBigBlindButton = shouldShowBigBlindButton && showButtons;
+        return {
+            canFoldAnytime: hasFoldAction && playerStatus !== PlayerStatus.FOLDED && showButtons,
+            showActionButtons: isUsersTurn && legalActions && legalActions.length > 0 && showButtons,
+            showSmallBlindButton: shouldShowSmallBlindButton && showButtons,
+            showBigBlindButton: shouldShowBigBlindButton && showButtons
+        };
+    }, [hasSmallBlindAction, hasBigBlindAction, isUsersTurn, isUserInTable, hasFoldAction, playerStatus, legalActions]);
 
     return (
         <div
