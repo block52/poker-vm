@@ -4,6 +4,7 @@ import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
+import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
 
@@ -12,10 +13,14 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
  *
  * MVP Features:
  * - Input field for deposit index
+ * - "Query" button to preview deposit info
  * - "Process Deposit" button
  * - Status display
  * - Transaction hash on success
  */
+
+// Bridge contract ABI for deposits mapping
+const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string memory account, uint256 amount)"];
 
 // Helper function to format USDC amounts (6 decimals)
 const formatUSDC = (microAmount: string | number): string => {
@@ -27,9 +32,63 @@ export default function ManualBridgeTrigger() {
     const { currentNetwork } = useNetwork();
     const [depositIndex, setDepositIndex] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isQuerying, setIsQuerying] = useState(false);
     const [txHash, setTxHash] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [depositDetails, setDepositDetails] = useState<any>(null);
+    const [queryResult, setQueryResult] = useState<{ recipient: string; amount: string } | null>(null);
+
+    // Bridge configuration
+    const bridgeContractAddress = "0xcc391c8f1aFd6DB5D8b0e064BA81b1383b14FE5B"; // Base Chain production
+    const ethRpcUrl = import.meta.env.VITE_ALCHEMY_URL || import.meta.env.VITE_MAINNET_RPC_URL;
+
+    const handleQueryDeposit = async () => {
+        const index = parseInt(depositIndex);
+        if (isNaN(index) || index < 0) {
+            setError("Please enter a valid deposit index (0 or greater)");
+            return;
+        }
+
+        if (!ethRpcUrl) {
+            setError("Ethereum RPC URL not configured. Please add VITE_ALCHEMY_URL to .env file.");
+            return;
+        }
+
+        setIsQuerying(true);
+        setError(null);
+        setQueryResult(null);
+
+        try {
+            console.log("🔍 Querying deposit from Ethereum contract...");
+
+            // Connect to Base Chain
+            const provider = new ethers.JsonRpcProvider(ethRpcUrl);
+            const contract = new ethers.Contract(bridgeContractAddress, DEPOSITS_ABI, provider);
+
+            // Query the deposit
+            const [recipient, amount] = await contract.deposits(index);
+
+            console.log("📦 Deposit data:", { recipient, amount: amount.toString() });
+
+            if (recipient === "0x0000000000000000000000000000000000000000" || recipient === "") {
+                setError(`Deposit ${index} not found or is empty`);
+                setQueryResult(null);
+            } else {
+                setQueryResult({
+                    recipient,
+                    amount: amount.toString()
+                });
+                toast.success("Deposit data retrieved successfully!");
+            }
+        } catch (err: any) {
+            console.error("Failed to query deposit:", err);
+            const errorMessage = err.message || "Unknown error occurred";
+            setError(`Query failed: ${errorMessage}`);
+            toast.error(`Query failed: ${errorMessage}`);
+        } finally {
+            setIsQuerying(false);
+        }
+    };
 
     const handleProcessDeposit = async () => {
         const index = parseInt(depositIndex);
@@ -58,6 +117,12 @@ export default function ManualBridgeTrigger() {
             // Create signing client
             const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
 
+            console.log("🔗 Connecting to network:", {
+                name: currentNetwork.name,
+                rpc: rpcEndpoint,
+                rest: restEndpoint
+            });
+
             const signingClient = await createSigningClientFromMnemonic(
                 {
                     rpcEndpoint,
@@ -70,21 +135,29 @@ export default function ManualBridgeTrigger() {
                 mnemonic
             );
 
+            console.log("✅ Signing client created successfully");
             console.log("🌉 Processing deposit index:", index);
 
             // Process the deposit
             const hash = await signingClient.processDeposit(index);
 
+            console.log("✅ Deposit processed! Transaction hash:", hash);
+
             // Wait a bit then query the transaction for details and check if it succeeded
             setTimeout(async () => {
                 try {
+                    console.log("🔍 Fetching transaction details...");
                     const txResponse = await signingClient.getTx(hash);
-                    console.log("Transaction details:", txResponse);
+                    console.log("📦 Transaction response:", txResponse);
                     setDepositDetails(txResponse);
 
                     // Check if transaction actually succeeded (code 0 = success, non-zero = error)
-                    if (txResponse.tx_response.code !== 0) {
-                        const errorMsg = txResponse.tx_response.raw_log || "Transaction failed";
+                    // Handle both possible response structures
+                    const code = txResponse.tx_response?.code ?? txResponse.code ?? 0;
+                    const rawLog = txResponse.tx_response?.raw_log ?? txResponse.raw_log ?? "";
+
+                    if (code !== 0) {
+                        const errorMsg = rawLog || "Transaction failed";
                         setError(errorMsg);
                         setTxHash(null);
                         toast.error(`Failed: ${errorMsg}`);
@@ -92,16 +165,39 @@ export default function ManualBridgeTrigger() {
                         setTxHash(hash);
                         toast.success(`Deposit ${index} processed successfully!`);
                     }
-                } catch (err) {
-                    console.log("Could not fetch tx details yet:", err);
-                    // If we can't fetch details, assume it succeeded (hash was returned)
+                } catch (err: any) {
+                    console.error("Error fetching tx details:", err);
+                    console.log("Error details:", {
+                        message: err.message,
+                        response: err.response,
+                        data: err.response?.data
+                    });
+
+                    // If we can't fetch details, still show the hash but with a warning
                     setTxHash(hash);
-                    toast.success(`Deposit ${index} processed successfully!`);
+                    toast.warning(`Deposit processed (hash: ${hash.substring(0, 10)}...), but couldn't verify details. Check explorer.`);
                 }
             }, 2000);
         } catch (err: any) {
-            console.error("Failed to process deposit:", err);
-            const errorMessage = err.message || "Unknown error occurred";
+            console.error("❌ Failed to process deposit:", err);
+            console.log("Error details:", {
+                message: err.message,
+                stack: err.stack,
+                response: err.response,
+                data: err.response?.data,
+                cause: err.cause
+            });
+
+            let errorMessage = err.message || "Unknown error occurred";
+
+            // Add more helpful error messages for common issues
+            if (errorMessage.includes("not valid JSON") || errorMessage.includes("<html>")) {
+                errorMessage =
+                    "Network endpoint returned invalid response. Please check your network configuration (RPC/REST URLs) or try a different network from the dropdown.";
+            } else if (errorMessage.includes("fetch") || errorMessage.includes("network")) {
+                errorMessage = `Network error: ${errorMessage}. Check your connection and network configuration.`;
+            }
+
             setError(errorMessage);
             toast.error(`Failed: ${errorMessage}`);
         } finally {
@@ -152,17 +248,61 @@ export default function ManualBridgeTrigger() {
                                 onChange={e => setDepositIndex(e.target.value)}
                                 placeholder="Enter deposit index (e.g., 0, 1, 2...)"
                                 className="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                                disabled={isProcessing}
+                                disabled={isProcessing || isQuerying}
                             />
                             <p className="text-xs text-gray-500 mt-1">The index of the deposit in the Ethereum bridge contract</p>
                         </div>
 
+                        {/* Query Button */}
+                        <button
+                            onClick={handleQueryDeposit}
+                            disabled={isQuerying || isProcessing}
+                            className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all ${
+                                isQuerying || isProcessing ? "bg-gray-600 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 active:scale-95"
+                            }`}
+                        >
+                            {isQuerying ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                        />
+                                    </svg>
+                                    Querying...
+                                </span>
+                            ) : (
+                                "Query Deposit from Base Chain"
+                            )}
+                        </button>
+
+                        {/* Query Result Display */}
+                        {queryResult && (
+                            <div className="p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
+                                <p className="text-blue-200 text-sm font-medium mb-3">📦 Deposit Information</p>
+                                <div className="space-y-2">
+                                    <div>
+                                        <p className="text-blue-300 text-xs">Recipient (Cosmos Address):</p>
+                                        <p className="text-blue-100 text-sm font-mono break-all">{queryResult.recipient}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-blue-300 text-xs">Amount:</p>
+                                        <p className="text-blue-100 text-sm font-mono">{formatUSDC(queryResult.amount)} USDC</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Process Button */}
                         <button
                             onClick={handleProcessDeposit}
-                            disabled={isProcessing || !cosmosWallet.address}
+                            disabled={isProcessing || isQuerying || !cosmosWallet.address}
                             className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all ${
-                                isProcessing || !cosmosWallet.address ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:scale-95"
+                                isProcessing || isQuerying || !cosmosWallet.address
+                                    ? "bg-gray-600 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700 active:scale-95"
                             }`}
                         >
                             {isProcessing ? (
@@ -219,7 +359,8 @@ export default function ManualBridgeTrigger() {
                     <ol className="text-blue-300 text-sm space-y-1 list-decimal list-inside">
                         <li>User deposits USDC on Base Chain to bridge contract</li>
                         <li>Deposit is logged with an incremental index (0, 1, 2, ...)</li>
-                        <li>Enter the deposit index here and click "Process"</li>
+                        <li>Enter the deposit index and click "Query" to preview deposit info</li>
+                        <li>Click "Process" to mint USDC on Block52 chain</li>
                         <li>Chain queries Ethereum contract for deposit data</li>
                         <li>If valid and not processed, mints USDC on Cosmos</li>
                     </ol>

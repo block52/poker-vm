@@ -4,10 +4,10 @@ import { getCosmosUrls } from "../../utils/cosmos/urls";
 import type { NetworkEndpoints } from "../../context/NetworkContext";
 
 /**
- * Post small blind using Cosmos SDK SigningCosmosClient.
+ * Post small blind in a poker game using Cosmos SDK SigningCosmosClient.
  *
  * @param tableId - The ID of the table (game ID on Cosmos) where the action will be performed
- * @param smallBlindAmount - The small blind amount in microunits (uusdc)
+ * @param smallBlindAmount - The small blind amount in microunits (usdc)
  * @param network - The current network configuration from NetworkContext
  * @returns Promise with transaction hash
  * @throws Error if Cosmos wallet is not initialized or if the action fails

@@ -4,7 +4,6 @@ import { getCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { ClickableAddress } from "../../components/explorer/ClickableAddress";
-import { formatTimestampAbsolute } from "../../utils/formatUtils";
 
 // Types from CosmosClient
 interface CosmosBlock {
@@ -85,6 +84,17 @@ export default function BlockDetailPage() {
 
         computeHashes();
     }, [block]);
+
+    const truncateHash = (hash: string, length: number = 16) => {
+        if (!hash) return "N/A";
+        if (hash.length <= length * 2) return hash;
+        return `${hash.slice(0, length)}...${hash.slice(-length)}`;
+    };
+
+    const formatTimestamp = (timestamp: string) => {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
+    };
 
     const copyToClipboard = async (text: string) => {
         try {
@@ -167,7 +177,7 @@ export default function BlockDetailPage() {
             }
 
             return "Unknown Message Type";
-        } catch {
+        } catch (err) {
             return "Unknown";
         }
     };
@@ -222,11 +232,11 @@ export default function BlockDetailPage() {
                 details.denom = "b52Token";
             }
 
-            // Also try to match uusdc pattern
-            const uusdcPattern = hexTx.match(/0a05757573646312([0-9a-f]{2})([0-9a-f]+)/);
-            if (uusdcPattern && !details.amount) {
-                const lengthByte = parseInt(uusdcPattern[1], 16);
-                const amountHex = uusdcPattern[2].substring(0, lengthByte * 2);
+            // Also try to match usdc pattern
+            const usdcPattern = hexTx.match(/0a05757573646312([0-9a-f]{2})([0-9a-f]+)/);
+            if (usdcPattern && !details.amount) {
+                const lengthByte = parseInt(usdcPattern[1], 16);
+                const amountHex = usdcPattern[2].substring(0, lengthByte * 2);
 
                 const amount =
                     amountHex
@@ -234,7 +244,7 @@ export default function BlockDetailPage() {
                         ?.map(byte => String.fromCharCode(parseInt(byte, 16)))
                         .join("") || "";
                 details.amount = amount;
-                details.denom = "uusdc";
+                details.denom = "usdc";
             }
 
             return details;
@@ -363,7 +373,7 @@ export default function BlockDetailPage() {
 
                         <div>
                             <p className="text-gray-400 text-sm mb-1">Timestamp</p>
-                            <p className="text-white font-mono text-sm">{formatTimestampAbsolute(block.block.header.time)}</p>
+                            <p className="text-white font-mono text-sm">{formatTimestamp(block.block.header.time)}</p>
                         </div>
 
                         <div>

@@ -64,11 +64,12 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
         rest: "https://node.texashodl.net",
         grpc: "grpcs://texashodl.net:9443"
     },
-    // ⚠️ Block52 - Tested Nov 5th, 2025 @ 9:50 AM - was not responding
-    // May come back online - test with CLI command above before using
+    // ⚠️ Block52 - Using direct ports to avoid CORS issues with HTTPS redirects
+    // HTTPS endpoints return 301 redirects which cause CORS errors
+    // Using direct RPC port 26657 and REST port 1317 instead
     {
         name: "Block52",
-        rpc: "https://node1.block52.xyz/rpc",
+        rpc: "http://node1.block52.xyz:26657",
         rest: "https://node1.block52.xyz",
         grpc: "grpcs://node1.block52.xyz:9443"
     }

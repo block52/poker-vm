@@ -212,13 +212,13 @@ Error: Unregistered type url: /pokerchain.poker.v1.MsgCreateGame
 ### ✅ RESOLVED: Gas Token Configuration (Oct 18, 2025)
 
 **Problem:**
-SDK is using `uusdc` for gas fees, but pokerchain uses native token for gas.
+SDK is using `usdc` for gas fees, but pokerchain uses native token for gas.
 
 **Current code in `/poker-vm/sdk/src/cosmosClient.ts`:**
 ```typescript
 // ❌ WRONG:
 const fee = {
-    amount: [{ denom: "uusdc", amount: "1000" }],  // Can't pay gas with game currency!
+    amount: [{ denom: "usdc", amount: "1000" }],  // Can't pay gas with game currency!
     gas: "200000"
 };
 
@@ -230,7 +230,7 @@ const fee = {
 ```
 
 **Why this matters:**
-- `uusdc` is for poker games (bridged USDC)
+- `usdc` is for poker games (bridged USDC)
 - `b52Token` is for blockchain operations (gas fees, staking)
 - Mixing them causes transaction failures
 
@@ -269,7 +269,7 @@ const fee = {
 
 **Note**: All configuration files now use `b52Token` consistently across `config.yml`, `app.toml`, and `genesis.json`.
 
-#### 2. **`uusdc`** (Bridge Token - Gaming Currency)
+#### 2. **`usdc`** (Bridge Token - Gaming Currency)
 - **Purpose**: In-game poker currency (buy-ins, pots, payouts)
 - **Created**: Dynamically minted when users deposit USDC from Base Chain via bridge
 - **NOT in config.yml**: This token is created on-demand, not pre-allocated
@@ -283,7 +283,7 @@ User deposits 100 USDC on Base Chain
     ↓
 Bridge detects Deposited event
     ↓
-Pokerchain mints 100,000,000 uusdc (100 * 10^6)
+Pokerchain mints 100,000,000 usdc (100 * 10^6)
     ↓
 User receives b52USDC in Cosmos wallet
     ↓
@@ -300,7 +300,7 @@ User plays poker with b52USDC
 
 **Separation of Concerns:**
 - `b52Token` = **Blockchain utility** (like ETH for Ethereum)
-- `uusdc/b52USDC` = **Application currency** (like USDC for payments)
+- `usdc/b52USDC` = **Application currency** (like USDC for payments)
 
 **Benefits:**
 - Gas prices stable (in b52Token)
@@ -435,7 +435,7 @@ Users need TWO different tokens to play poker on Pokerchain:
    - Without it: Transactions will be rejected!
    - **Previously**: Was called `stake` (changed via PR #10)
 
-2. **`uusdc`** (displays as `b52USDC`) - For poker games
+2. **`usdc`** (displays as `b52USDC`) - For poker games
    - Required for playing poker (buy-ins, bets)
    - Obtained by depositing USDC from Base Chain
 
@@ -443,7 +443,7 @@ Users need TWO different tokens to play poker on Pokerchain:
 ```
 User creates a game with $100 buy-in:
 ├── Gas fee: 1000 b52Token (deducted from user's b52Token balance)
-└── Buy-in: 100,000,000 uusdc (locked from user's uusdc balance)
+└── Buy-in: 100,000,000 usdc (locked from user's usdc balance)
 ```
 
 ### Where Gas Fees Are Configured
@@ -495,7 +495,7 @@ minimum-gas-prices = "0.01b52Token"
    minimum-gas-prices = "0.001b52Token"                # Tiny fee (testing)
    minimum-gas-prices = "0.01b52Token"                 # Current setting
    minimum-gas-prices = "0.025b52Token"                # Higher fee (mainnet level)
-   minimum-gas-prices = "0.01b52Token,0.001uusdc"      # Accept either token
+   minimum-gas-prices = "0.01b52Token,0.001usdc"      # Accept either token
    ```
 
 4. **Save the file** (Ctrl+O in nano, :wq in vim)
@@ -516,13 +516,13 @@ minimum-gas-prices = "0.01b52Token"
 
 You can accept MULTIPLE tokens for gas fees:
 ```toml
-# Accept either stake OR uusdc for gas
-minimum-gas-prices = "0.025stake,0.001uusdc"
+# Accept either stake OR usdc for gas
+minimum-gas-prices = "0.025stake,0.001usdc"
 ```
 
 This means users can pay gas fees with either:
 - 0.025 stake per gas unit, OR
-- 0.001 uusdc per gas unit
+- 0.001 usdc per gas unit
 
 **Note:** Ignite CLI does NOT support setting this in `config.yml` - you must edit `app.toml` directly.
 
@@ -613,7 +613,7 @@ minimum-gas-prices = "0.025stake"     # Mainnet level
 # or
 minimum-gas-prices = "0.001stake"     # Testing level
 # or
-minimum-gas-prices = "0stake,0.001uusdc"  # Multi-token
+minimum-gas-prices = "0stake,0.001usdc"  # Multi-token
 
 # 5. Save and exit (Ctrl+O, Enter, Ctrl+X in nano)
 
@@ -638,12 +638,12 @@ grep "minimum-gas-prices" ~/.pokerchain/config/app.toml
 
 ```toml
 # Users can pay with EITHER token
-minimum-gas-prices = "0.025stake,0.001uusdc"
+minimum-gas-prices = "0.025stake,0.001usdc"
 ```
 
 This allows users to choose:
 - Pay 0.025 stake per gas, OR
-- Pay 0.001 uusdc per gas
+- Pay 0.001 usdc per gas
 
 **Note:** The setting in `~/.pokerchain/config/app.toml` is only used when running the chain locally. For production/testnet, you'll configure this in your validator's `app.toml` file.
 
@@ -679,7 +679,7 @@ this.signingClient = await SigningStargateClient.connectWithSigner(
 **Location C: Transaction Fee (line ~482 in createGame method)**
 ```typescript
 const fee = {
-    amount: [{ denom: "uusdc", amount: "1000" }],  // ❌ WRONG - Should be "stake"
+    amount: [{ denom: "usdc", amount: "1000" }],  // ❌ WRONG - Should be "stake"
     gas: "200000"  // Gas limit (max computation units)
 };
 ```
@@ -768,7 +768,7 @@ Estimated gas usage (to be measured):
 
 **✅ BRIDGE TEST SUCCESSFUL - CONFIRMED IN UI**:
 - Test deposit from Base Chain (tx: `0x77c534e452b1b46ec5857c7ce0f92c49f96c41ad9f55d7f15302cab9daba2d9e`)
-- Amount: 10000 uusdc (0.01 USDC)
+- Amount: 10000 usdc (0.01 USDC)
 - Recipient: `b52168ketml7jed9gl7t2quelfkktr0zuuescapgde`
 - Status: ✅ Minted successfully and balance confirmed in blockchain!
 - Frontend: ✅ UI displays "0.01 b52USD" correctly under "Cosmos b52USDC Balance"
@@ -864,7 +864,7 @@ When you deposit USDC on Base Chain, here's what should happen:
 
 1. **Base Chain** - You approve and deposit USDC to bridge contract (`0xcc391c8f1aFd6DB5D8b0e064BA81b1383b14FE5B`)
 2. **Bridge Service** - Pokerchain bridge polls Base every 15 seconds, detects deposit event
-3. **Cosmos Chain** - Bridge mints equivalent `uusdc` tokens to your Cosmos address
+3. **Cosmos Chain** - Bridge mints equivalent `usdc` tokens to your Cosmos address
 4. **UI** - Dashboard queries Cosmos balance and displays it
 
 ### Check if Bridge Detected Your Deposit
@@ -931,7 +931,7 @@ The Dashboard now has detailed console logging. Open browser console (F12) and l
 [Cosmos Balance] Fetching balance for Cosmos address: b52...
 [Cosmos Balance] RPC endpoint: http://localhost:26657
 [Cosmos Balance] All balances from Cosmos: [...]
-[Cosmos Balance] ✅ Found uusdc balance: ...
+[Cosmos Balance] ✅ Found usdc balance: ...
 ```
 
 If you see errors, they'll be prefixed with `[Cosmos Balance] ❌`.
@@ -1143,8 +1143,8 @@ grep -r "user_eth_public_key" . --include="*.ts" --include="*.tsx"
 
 **Test Account**:
 - Address: `b52168ketml7jed9gl7t2quelfkktr0zuuescapgde`
-- Balance: 6,570 uusdc (0.00657 USDC)
-- Previous Issue: Needed 1,000,000 uusdc (1.00 USDC) for Sit & Go game - **RESOLVED by creating transaction**
+- Balance: 6,570 usdc (0.00657 USDC)
+- Previous Issue: Needed 1,000,000 usdc (1.00 USDC) for Sit & Go game - **RESOLVED by creating transaction**
 
 ### Base Chain USDC Deposit Test
 **Goal**: Test real USDC deposit from Base Chain to CosmosBridge contract
@@ -1335,7 +1335,7 @@ yarn test:bridge:withdraw
    - Confirm saves to localStorage
 
 3. **Create Balance Display Component**
-   - Show all token balances (stake, token, uusdc)
+   - Show all token balances (stake, token, usdc)
    - Real-time balance updates
    - Copy address button
 
@@ -1431,8 +1431,8 @@ yarn test:bridge:withdraw
 - [x] **Test bridge with real deposit from Base Chain** ✅ COMPLETED (Oct 8, 2025)
   - [x] Create test deposit transaction (tx: `0x77c534e452b1b46ec5857c7ce0f92c49f96c41ad9f55d7f15302cab9daba2d9e`)
   - [x] Verify bridge detects Deposited event (✅ Found at block 36481998)
-  - [x] Confirm EndBlocker mints b52USDC to Cosmos address (✅ Minted 10000uusdc)
-  - [x] Query balance to verify tokens received (✅ Balance confirmed: 10000uusdc)
+  - [x] Confirm EndBlocker mints b52USDC to Cosmos address (✅ Minted 10000usdc)
+  - [x] Query balance to verify tokens received (✅ Balance confirmed: 10000usdc)
   - **Result**: Bridge working end-to-end with trackMint logging throughout
 - [ ] **Implement CosmosClient in SDK to implement IClient interface**
   - **Goal**: Extend CosmosClient to fully implement IClient interface (same as NodeRpcClient)

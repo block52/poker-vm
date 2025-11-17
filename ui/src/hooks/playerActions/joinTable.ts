@@ -60,7 +60,7 @@ export async function joinTable(tableId: string, options: JoinTableOptions, netw
     console.log("🪑 Calling SigningCosmosClient.joinGame:");
     console.log("  Game ID:", tableId);
     console.log("  Seat:", seat);
-    console.log("  Buy-in:", buyInAmount, "uusdc");
+    console.log("  Buy-in:", buyInAmount, "usdc");
 
     // Call SigningCosmosClient.joinGame()
     const transactionHash = await signingClient.joinGame(

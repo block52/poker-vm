@@ -50,7 +50,7 @@ yarn dev
 2. Click **"Initialize SigningCosmosClient"**
 3. Verify your balances show:
    - `100.000000 stake` (100000000 micro-units)
-   - `100000.000000 uusdc` (100000000000 micro-units)
+   - `100000.000000 usdc` (100000000000 micro-units)
 4. Test each function one by one
 5. Check browser console for detailed logs
 6. Verify transaction hashes on `/explorer` page
@@ -63,7 +63,7 @@ yarn dev
 - [x] ✅ Created TestSigningPage.tsx (http://localhost:5173/test-signing)
 - [x] ✅ Added balance display to test page
 - [x] ✅ Added token info section explaining where tokens come from
-- [x] ✅ Funded test wallet with stake and uusdc tokens
+- [x] ✅ Funded test wallet with stake and usdc tokens
 - [x] ✅ Verified balance shows correctly on test page
 - [x] ✅ Lucas's commits reviewed (6 commits from f211f15 to 95d439fa)
 - [x] ✅ Fixed TransactionPage bugs (auto-search, null safety, response format)
@@ -101,9 +101,9 @@ yarn dev
 
 #### **1. createGame() - SUCCESS** ✅
 - **First attempt (failed)**: Tx DD36D7A537ABE6E2F80C653AB4BEF1DA4640229A2EFC41A124BAD0679B61EB2A
-  - Error: "creator needs 1uusdc to create a game, but only has 0" (code 5)
+  - Error: "creator needs 1usdc to create a game, but only has 0" (code 5)
   - Proved message type registration works - transaction was accepted and validated
-- **Fix**: Minted 100,000 uusdc tokens using CLI
+- **Fix**: Minted 100,000 usdc tokens using CLI
 - **Second attempt (success)**: Tx 389AA2D6E137F143E4C3AB492F5E02D78FD2F306A2FA51026FCA89057A98161F
   - Status: SUCCESS
   - Block: #1987
@@ -116,7 +116,7 @@ yarn dev
 - **Status**: SUCCESS
 - **Block**: #2354
 - **Gas**: 49,147 / 150,000
-- **Details**: Joined game at seat 0 with 100 uusdc buy-in
+- **Details**: Joined game at seat 0 with 100 usdc buy-in
 - **Cost**: 150 micro-stake gas fee
 
 #### **3. performAction() - SDK WORKING, GAME LOGIC REJECTION** ✅
@@ -137,7 +137,7 @@ yarn dev
 - ✅ Registry integration works - All custom message types recognized
 - ✅ Transaction encoding works - Protobuf serialization correct
 - ✅ Transaction signing works - Mnemonic-based wallet signing functional
-- ✅ Gas configuration correct - Uses `stake` for fees, not `uusdc`
+- ✅ Gas configuration correct - Uses `stake` for fees, not `usdc`
 - ✅ BigInt handling works - All numeric fields convert properly with Long types
 - ✅ All three poker functions work: createGame(), joinGame(), performAction()
 
@@ -169,22 +169,22 @@ yarn dev
 
 **Test Results**:
 - ✅ First createGame() test: Message type recognized and transaction processed
-- ✅ Transaction only failed due to insufficient uusdc (expected validation error)
+- ✅ Transaction only failed due to insufficient usdc (expected validation error)
 - ✅ Proves the registry integration works correctly
 
 **Status**: ✅ RESOLVED - Transactions work with correct type registration
 
 #### ✅ **BLOCKER #2: Gas Token Configuration - VERIFIED** (Oct 17, 2025)
-**Problem**: ~~SDK might be using `uusdc` for gas fees~~ ✅ VERIFIED CORRECT
+**Problem**: ~~SDK might be using `usdc` for gas fees~~ ✅ VERIFIED CORRECT
 
 **Test Results**:
-- ✅ createGame() transaction shows gas fee: `200stake` (not uusdc)
+- ✅ createGame() transaction shows gas fee: `200stake` (not usdc)
 - ✅ Fee payer: `b5219dj7nyvsj2aq8vrrhyuvlah05e6lx05r3ghqy3`
 - ✅ Gas used: 63,640 / 200,000
 - ✅ SDK correctly configured with `stake` for gas fees
 
 **Why this matters**:
-- `uusdc` is for poker games (bridged USDC)
+- `usdc` is for poker games (bridged USDC)
 - `stake` is for blockchain operations (gas fees, staking)
 - Confirmed: SDK uses `stake` for all transaction fees
 
@@ -195,23 +195,23 @@ yarn dev
 During testing, we discovered the blockchain has token requirements:
 
 **For Creating Games**:
-- Minimum 1 uusdc required in wallet to create a game
-- Error if insufficient: `creator needs 1uusdc to create a game, but only has 0`
+- Minimum 1 usdc required in wallet to create a game
+- Error if insufficient: `creator needs 1usdc to create a game, but only has 0`
 
 **Current Test Wallet Balance**:
 ```
 Address: b5219dj7nyvsj2aq8vrrhyuvlah05e6lx05r3ghqy3
 - 99,999,800 micro-stake (99.9998 stake) - for gas fees
-- 100,000,000,000 micro-uusdc (100,000 uusdc) - for poker games
+- 100,000,000,000 micro-usdc (100,000 usdc) - for poker games
 ```
 
 **How to Mint Tokens** (for testing):
 ```bash
-# Mint uusdc tokens
+# Mint usdc tokens
 ~/go/bin/pokerchaind tx poker mint <address> <amount> <eth-tx-hash> <nonce> \
   --from alice --keyring-backend test --chain-id pokerchain --yes
 
-# Example: Mint 100,000 uusdc
+# Example: Mint 100,000 usdc
 ~/go/bin/pokerchaind tx poker mint b5219dj7nyvsj2aq8vrrhyuvlah05e6lx05r3ghqy3 100000000000 \
   0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef 1 \
   --from alice --keyring-backend test --chain-id pokerchain --yes
@@ -220,8 +220,8 @@ Address: b5219dj7nyvsj2aq8vrrhyuvlah05e6lx05r3ghqy3
 ### **Next Steps**
 1. ✅ ~~Fix BLOCKER #1: Register custom poker message types~~ - DONE
 2. ✅ ~~Verify gas token configuration (BLOCKER #2)~~ - VERIFIED
-3. 🔄 **IN PROGRESS**: Test createGame() with sufficient uusdc balance
-   - Wallet now has 100,000 uusdc tokens
+3. 🔄 **IN PROGRESS**: Test createGame() with sufficient usdc balance
+   - Wallet now has 100,000 usdc tokens
    - Ready to retry transaction on /test-signing page
 4. ⏳ Test joinGame() after successful game creation
 5. ⏳ Test performAction() after successful join
@@ -471,9 +471,9 @@ These components need refactoring:
   - Added `getCosmosAddress()` import for stored address retrieval
 - **Status**: ⚠️ **FIXED** (we already deleted walletUtils.ts and updated CosmosWalletPage)
 
-#### Commit 3: `af584c28` - Remove uusdc (Oct 15, 2025)
+#### Commit 3: `af584c28` - Remove usdc (Oct 15, 2025)
 - **Type**: Chore
-- **Changes**: Changed `uusdc` → `b52USDC` in SDK cosmosClient.ts (5 lines)
+- **Changes**: Changed `usdc` → `b52USDC` in SDK cosmosClient.ts (5 lines)
 - **Impact**: Denom naming consistency
 - **Status**: ✅ OK
 

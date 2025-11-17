@@ -72,12 +72,26 @@ export default function TableAdminPage() {
 
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
+        console.log("🎮 handleCreateTable called");
+        console.log("Cosmos wallet address:", cosmosWallet.address);
+
         if (!cosmosWallet.address) {
             toast.error("No Block52 wallet found. Please create or import a wallet first.");
             return;
         }
 
+        console.log("📋 Table configuration:", {
+            type: gameType,
+            minBuyIn: parseFloat(minBuyIn),
+            maxBuyIn: parseFloat(maxBuyIn),
+            minPlayers,
+            maxPlayers,
+            smallBlind: parseFloat(smallBlind),
+            bigBlind: parseFloat(bigBlind)
+        });
+
         try {
+            console.log("🚀 Calling createTable...");
             const txHash = await createTable({
                 type: gameType,
                 minBuyIn: parseFloat(minBuyIn),
@@ -88,6 +102,8 @@ export default function TableAdminPage() {
                 bigBlind: parseFloat(bigBlind)
             });
 
+            console.log("✅ createTable returned:", txHash);
+
             if (txHash) {
                 // Show success modal with transaction link
                 setSuccessTxHash(txHash);
@@ -97,9 +113,17 @@ export default function TableAdminPage() {
                 setTimeout(() => {
                     refetch();
                 }, 2000);
+            } else {
+                console.warn("⚠️ createTable returned null/undefined");
+                toast.error("Table creation failed - no transaction hash returned");
             }
         } catch (err: any) {
-            console.error("Failed to create table:", err);
+            console.error("❌ Failed to create table:", err);
+            console.error("Error details:", {
+                message: err.message,
+                stack: err.stack,
+                name: err.name
+            });
             const errorMessage = err.message || "Unknown error occurred";
             toast.error(`Failed to create table: ${errorMessage}`);
         }

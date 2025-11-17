@@ -657,7 +657,7 @@ export default function TestSigningPage() {
                                     • Used for game buy-ins and bets
                                     <br />
                                     • Get from: Bridge deposit from Base Chain or mint via blockchain command
-                                    <br />• ⚠️ Note: Use "usdc" denom (not "uusdc" or "b52USDC")
+                                    <br />• ⚠️ Note: Use "usdc" denom (not "b52USDC")
                                 </div>
                             </div>
                         </div>

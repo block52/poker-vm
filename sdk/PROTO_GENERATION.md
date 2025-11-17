@@ -90,7 +90,7 @@ The SDK contains auto-generated TypeScript types from Pokerchain's protobuf defi
 **Proto commits since then**: 125+ commits (including denomination changes)
 
 **Known changes**:
-- Oct 7: TokenDenom updated to `uusdc`
+- Oct 7: TokenDenom updated to `usdc`
 - Multiple keeper logic updates
 - Bridge-related changes (MsgMint, MsgBurn)
 
@@ -465,7 +465,7 @@ Should export all message and query types.
 #### 3. Denomination Constants
 
 ```bash
-grep -r "usdc\|stake\|b52usdc\|uusdc" src/pokerchain.poker.v1/
+grep -r "usdc\|stake\|b52usdc\|usdc" src/pokerchain.poker.v1/
 ```
 
 Should match current pokerchain proto definitions.
