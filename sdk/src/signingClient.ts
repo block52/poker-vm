@@ -376,6 +376,102 @@ export class SigningCosmosClient extends CosmosClient {
     }
 
     /**
+     * Initiate a withdrawal from Cosmos to Base chain
+     * Burns USDC on Cosmos and creates a withdrawal request that can be completed on Base
+     */
+    async initiateWithdrawal(baseAddress: string, amount: bigint): Promise<string> {
+        await this.initializeSigningClient();
+
+        if (!this.signingClient || !this.wallet) {
+            throw new Error("Signing client not initialized");
+        }
+
+        const [account] = await this.wallet.getAccounts();
+        const creator = account.address;
+
+        // Create the message object
+        const msgInitiateWithdrawal = {
+            creator,
+            baseAddress,
+            amount: Long.fromString(amount.toString(), true)
+        };
+
+        // Create the transaction message
+        const msg: EncodeObject = {
+            typeUrl: "/pokerchain.poker.v1.MsgInitiateWithdrawal",
+            value: msgInitiateWithdrawal
+        };
+
+        const fee = calculateFee(200_000, this.gasPrice);
+        const memo = "Initiate USDC withdrawal to Base chain";
+
+        console.log("🌉 Initiating withdrawal:", {
+            creator,
+            baseAddress,
+            amount: amount.toString()
+        });
+
+        try {
+            const result = await this.signingClient.signAndBroadcast(
+                creator,
+                [msg],
+                fee,
+                memo
+            );
+
+            console.log("✅ Withdrawal initiation successful:", result.transactionHash);
+            return result.transactionHash;
+        } catch (error) {
+            console.error("❌ Withdrawal initiation failed:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Query a specific withdrawal request by nonce
+     */
+    async getWithdrawalRequest(nonce: string): Promise<any> {
+        try {
+            const response = await fetch(
+                `${this.config.restEndpoint}/block52/pokerchain/poker/v1/withdrawal_request/${encodeURIComponent(nonce)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(`Failed to query withdrawal request: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.withdrawal_request;
+        } catch (error) {
+            console.error("❌ getWithdrawalRequest() failed:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * List all withdrawal requests for a specific address (or all if no address provided)
+     */
+    async listWithdrawalRequests(cosmosAddress?: string): Promise<any[]> {
+        try {
+            const url = cosmosAddress
+                ? `${this.config.restEndpoint}/block52/pokerchain/poker/v1/withdrawal_requests?cosmos_address=${encodeURIComponent(cosmosAddress)}`
+                : `${this.config.restEndpoint}/block52/pokerchain/poker/v1/withdrawal_requests`;
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Failed to list withdrawal requests: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.withdrawal_requests || [];
+        } catch (error) {
+            console.error("❌ listWithdrawalRequests() failed:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Get next action index for a game - matches original client pattern
      * Checks previousActions array first, falls back to actionCount + 1
      */

@@ -18,7 +18,9 @@ import DistributionPage from "./pages/explorer/DistributionPage";
 import TestSigningPage from "./pages/TestSigningPage";
 import ManualBridgeTrigger from "./pages/ManualBridgeTrigger";
 import BridgeAdminDashboard from "./pages/BridgeAdminDashboard";
+import WithdrawalDashboard from "./pages/WithdrawalDashboard";
 import TableAdminPage from "./pages/TableAdminPage";
+import GenesisState from "./pages/GenesisState";
 import { TestSdk } from "./test-sdk";
 import { GameStateProvider } from "./context/GameStateContext";
 import { NetworkProvider } from "./context/NetworkContext";
@@ -72,6 +74,8 @@ function AppContent() {
                 <Route path="/test-signing" element={<TestSigningPage />} />
                 <Route path="/bridge/manual" element={<ManualBridgeTrigger />} />
                 <Route path="/bridge/admin" element={<BridgeAdminDashboard />} />
+                <Route path="/bridge/withdrawals" element={<WithdrawalDashboard />} />
+                <Route path="/genesis" element={<GenesisState />} />
                 <Route path="/explorer" element={<BlocksPage />} />
                 <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />

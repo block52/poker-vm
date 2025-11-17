@@ -2,10 +2,11 @@
  * Utility functions for Block52 account management
  */
 
-import { NodeRpcClient } from "@bitcoinbrisbane/block52";
+// NodeRpcClient removed from SDK - using CosmosClient instead
+// import { NodeRpcClient } from "@bitcoinbrisbane/block52";
 
 // Singleton instance for NodeRpcClient
-let clientInstance: NodeRpcClient | null = null;
+let clientInstance: any | null = null;
 
 /**
  * Get the user's private key from browser storage
@@ -65,7 +66,7 @@ export const hasPrivateKey = (): boolean => {
  * @returns NodeRpcClient instance
  * @throws Error if private key is missing
  */
-export const getClient = (): NodeRpcClient => {
+export const getClient = (): any => {
     const privateKey = getPrivateKey();
     if (!privateKey) {
         throw new Error("No private key found. Please connect your wallet first.");
@@ -78,8 +79,9 @@ export const getClient = (): NodeRpcClient => {
 
     // Create new client instance
     const nodeUrl = import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz/";
-    // @ts-expect-error - Old Ethereum client for bridge only, will be updated when bridge is migrated
-    clientInstance = new NodeRpcClient(nodeUrl, privateKey);
+    // Old Ethereum client for bridge only - disabled until migration to CosmosClient
+    // clientInstance = new NodeRpcClient(nodeUrl, privateKey);
+    throw new Error("NodeRpcClient deprecated - use CosmosClient from WithdrawalDashboard instead");
 
     return clientInstance;
 };
@@ -103,9 +105,9 @@ export const getAccountBalance = async (): Promise<string> => {
         throw new Error("No public key found. Please connect your wallet first.");
     }
 
-    // Use singleton client instance
-    const client = getClient();
-    // @ts-expect-error - Old Ethereum client for bridge only, will be updated when bridge is migrated
-    const account = await client.getAccount(publicKey);
-    return account.balance.toString();
+    // Use singleton client instance - disabled until migration
+    // const client = getClient();
+    // const account = await client.getAccount(publicKey);
+    // return account.balance.toString();
+    throw new Error("getAccountBalance deprecated - use CosmosClient.queryBalance() instead");
 };

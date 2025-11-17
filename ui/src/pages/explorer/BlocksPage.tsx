@@ -116,8 +116,8 @@ export default function BlocksPage() {
                     {/* Header */}
                     <div className="mb-8">
                         <div>
-                            <h1 className="text-4xl font-bold text-white mb-2">Block Explorer</h1>
-                            <p className="text-gray-400">Latest blocks on Pokerchain</p>
+                            <h1 className="text-4xl font-bold text-white mb-2 text-center">Block Explorer</h1>
+                            <p className="text-gray-400 text-center">Latest blocks on Pokerchain</p>
                         </div>
                     </div>
 
@@ -153,9 +153,9 @@ export default function BlocksPage() {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-white mb-2">Block Explorer</h1>
-                    <p className="text-gray-400">Latest blocks on Pokerchain</p>
-                    <div className="mt-3 flex gap-4">
+                    <h1 className="text-4xl font-bold text-white mb-2 text-center">Block Explorer</h1>
+                    <p className="text-gray-400 text-center">Latest blocks on Pokerchain</p>
+                    <div className="mt-3 flex gap-4 justify-center">
                         <a href="/explorer/distribution" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
                             📊 Card Distribution Analytics
                         </a>

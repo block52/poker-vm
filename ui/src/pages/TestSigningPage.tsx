@@ -738,8 +738,40 @@ export default function TestSigningPage() {
                                 </button>
                             </div>
 
+                            {/* Stake only command (for bridge testing) */}
                             <div
-                                className="p-3 rounded text-xs"
+                                className="p-4 rounded-lg mt-4"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.accent.success, 0.15),
+                                    border: `2px solid ${hexToRgba(colors.accent.success, 0.4)}`
+                                }}
+                            >
+                                <div className="font-semibold text-white mb-2">⛽ Fund with Stake (Gas Fees Only - For Bridge Testing!):</div>
+                                <div className="text-xs font-mono text-gray-400 mb-3 break-all">
+                                    pokerchaind tx bank send validator {walletAddress} 100000000stake --chain-id pokerchain --keyring-backend test --home
+                                    ~/.pokerchain-testnet/node1 --fees 2000stake -y
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        const command = `pokerchaind tx bank send validator ${walletAddress} 100000000stake --chain-id pokerchain --keyring-backend test --home ~/.pokerchain-testnet/node1 --fees 2000stake -y`;
+                                        navigator.clipboard.writeText(command);
+                                        alert(`Stake funding command copied!\n\nThis will send:\n• 100 stake (for gas fees)\n\nUse bridge to deposit USDC from Base chain!\n\n${command}`);
+                                    }}
+                                    className="w-full py-3 px-4 text-sm font-semibold rounded-lg transition duration-200 hover:opacity-90 active:scale-95"
+                                    style={{
+                                        backgroundColor: colors.accent.success,
+                                        color: colors.ui.bgDark
+                                    }}
+                                >
+                                    📋 Copy Stake Funding Command (100 stake for gas)
+                                </button>
+                                <div className="text-xs text-gray-400 mt-2">
+                                    ⛽ Sends ONLY gas tokens - deposit USDC via bridge for real testing!
+                                </div>
+                            </div>
+
+                            <div
+                                className="p-3 rounded text-xs mt-4"
                                 style={{
                                     backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
                                     border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
