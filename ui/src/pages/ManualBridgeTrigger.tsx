@@ -240,7 +240,7 @@ export default function ManualBridgeTrigger() {
                     <div className="space-y-4">
                         {/* Input */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Deposit Index</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">Deposit Index</label>
                             <input
                                 type="number"
                                 min="0"
