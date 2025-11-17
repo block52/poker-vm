@@ -626,7 +626,7 @@ export default function TestSigningPage() {
                         border: `1px solid ${hexToRgba(colors.accent.glow, 0.3)}`
                     }}
                 >
-                    <h2 className="text-xl font-bold mb-3" style={{ color: colors.accent.glow }}>
+                    <h2 className="text-xl font-bold text-white mb-3">
                         💡 Where Do Test Tokens Come From?
                     </h2>
                     <div className="space-y-3 text-gray-300 text-sm">
@@ -635,7 +635,7 @@ export default function TestSigningPage() {
                         </div>
                         <div className="ml-4 space-y-2">
                             <div>
-                                <span className="font-semibold" style={{ color: colors.brand.primary }}>
+                                <span className="font-semibold text-white">
                                     1. stake
                                 </span>{" "}
                                 - For gas fees
@@ -649,7 +649,7 @@ export default function TestSigningPage() {
                                 </div>
                             </div>
                             <div>
-                                <span className="font-semibold" style={{ color: colors.accent.success }}>
+                                <span className="font-semibold text-white">
                                     2. usdc
                                 </span>{" "}
                                 - For poker games
