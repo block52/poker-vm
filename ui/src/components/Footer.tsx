@@ -511,7 +511,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
                                             onClick={() =>
-                                                handleActionWithTransaction("call", () => handleCall(callAction, callAmount, tableId, currentNetwork))
+                                                handleActionWithTransaction("call", () => handleCall(callAmount, tableId, currentNetwork))
                                             }
                                             disabled={loadingAction !== null}
                                         >

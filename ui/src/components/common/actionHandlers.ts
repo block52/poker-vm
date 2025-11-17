@@ -1,5 +1,4 @@
 import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
-import { LegalActionDTO } from "@bitcoinbrisbane/block52";
 import { usdcToMicro } from "../../constants/currency";
 import type { NetworkEndpoints } from "../../context/NetworkContext";
 
@@ -33,26 +32,21 @@ const handleFold = async (tableId: string | undefined, network: NetworkEndpoints
     }
 };
 
-const handleCall = async (callAction: LegalActionDTO | undefined, amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
+const handleCall = async (amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
-    if (callAction) {
-        try {
-            // Convert amount to microunits (6 decimals for USDC on Cosmos)
-            const amountMicrounits = usdcToMicro(amount).toString();
-            const result = await callHand(tableId, amountMicrounits, network);
-            return result?.hash || null;
-        } catch (error: any) {
-            console.error("Failed to call:", error);
-            return null;
-        }
-    } else {
-        console.error("Call action not available");
+    try {
+        // Convert amount to microunits (6 decimals for USDC on Cosmos)
+        const amountMicrounits = usdcToMicro(amount).toString();
+        const result = await callHand(tableId, amountMicrounits, network);
+        return result?.hash || null;
+    } catch (error: any) {
+        console.error("Failed to call:", error);
         return null;
     }
 };
 
-const handleBet = async (betAction: LegalActionDTO | undefined, amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
+const handleBet = async (amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     // Convert amount to microunits (6 decimals for USDC on Cosmos)
