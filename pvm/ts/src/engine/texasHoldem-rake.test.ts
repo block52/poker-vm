@@ -60,8 +60,8 @@ describe("Texas Holdem - Rake Tests", () => {
 
         it("should not charge rake when pot is below rake-free threshold", () => {
             // Join players
-            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, 1);
-            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, 2);
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
 
             // Post blinds
             game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN / 10n);
@@ -84,9 +84,9 @@ describe("Texas Holdem - Rake Tests", () => {
 
         it("should charge 5% rake when pot is above rake-free threshold", () => {
             // Join players and owner
-            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, 1);
-            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, 2);
-            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, 3);
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
 
             // Post blinds
             game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n);
@@ -131,9 +131,9 @@ describe("Texas Holdem - Rake Tests", () => {
 
         it("should cap rake at maximum value", () => {
             // Create a very large pot scenario
-            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, 1);
-            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, 2);
-            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, 3);
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
 
             // Post blinds
             game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n);
@@ -192,8 +192,8 @@ describe("Texas Holdem - Rake Tests", () => {
             expect(gameNoRake.owner).toBeUndefined();
 
             // Game should work normally without rake
-            gameNoRake.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, 1);
-            gameNoRake.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, 2);
+            gameNoRake.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            gameNoRake.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
 
             gameNoRake.performAction(player1Address, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN / 10n);
             gameNoRake.performAction(player2Address, PlayerActionType.BIG_BLIND, 4, ONE_TOKEN / 5n);
@@ -264,9 +264,9 @@ describe("Texas Holdem - Rake Tests", () => {
             const gameWithOwner = TexasHoldemGame.fromJson(gameConfig, gameOptions);
 
             // Join players including owner
-            gameWithOwner.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, 1);
-            gameWithOwner.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, 2);
-            gameWithOwner.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, TEN_TOKENS, 3);
+            gameWithOwner.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            gameWithOwner.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
+            gameWithOwner.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, TEN_TOKENS, "seat=3");
 
             const ownerInitialChips = gameWithOwner.getPlayer(ownerAddress).chips;
 

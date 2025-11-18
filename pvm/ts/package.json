@@ -13,7 +13,6 @@
         "lint:fix": "eslint src/**/*.ts --fix"
     },
     "dependencies": {
-        "@bitcoinbrisbane/block52": "^3.0.6",
         "@cosmjs/amino": "^0.32.4",
         "@cosmjs/crypto": "^0.32.4",
         "@cosmjs/encoding": "^0.32.4",
@@ -36,17 +35,6 @@
         "typescript": "^5.8.2",
         "ws": "^8.18.2",
         "z-schema": "^6.0.2"
-    },
-    "jest": {
-        "preset": "ts-jest",
-        "testEnvironment": "node",
-        "testMatch": [
-            "**/*.test.ts"
-        ],
-        "testPathIgnorePatterns": [
-            "/node_modules/",
-            "/dist/"
-        ]
     },
     "devDependencies": {
         "@jest/globals": "^29.7.0",
