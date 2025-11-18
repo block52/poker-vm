@@ -100,7 +100,7 @@ const CosmosWalletPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8 pb-24">
             {/* Header */}
             <div className="max-w-4xl mx-auto mb-8">
                 <h1 className="text-4xl font-bold text-white mb-2 text-center">Block52 Wallet Manager</h1>
