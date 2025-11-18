@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
+import { createSigningClientFromMnemonic, SigningCosmosClient } from "@bitcoinbrisbane/block52";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
@@ -95,7 +95,7 @@ export default function WithdrawalDashboard() {
             // Create signing client
             const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
 
-            const signingClient = await createSigningClientFromMnemonic(
+            const signingClient: SigningCosmosClient = await createSigningClientFromMnemonic(
                 {
                     rpcEndpoint,
                     restEndpoint,

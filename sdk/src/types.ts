@@ -67,8 +67,6 @@ declare global {
   }
 }
 
-
-
 // Cosmos blockchain constants (matches pokerchain/x/poker/types/types.go)
 export const COSMOS_CONSTANTS = {
   CHAIN_ID: "pokerchain",

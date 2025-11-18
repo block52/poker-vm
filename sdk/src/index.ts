@@ -36,7 +36,7 @@ import { IgntModule as CosmosNftV_1Beta_1, msgTypes as CosmosNftV_1Beta_1MsgType
 
 
 const Client = IgniteClient.plugin([
-    PokerchainPokerV_1, CosmosCircuitV_1, CosmosAuthV_1Beta_1, CosmosAuthzV_1Beta_1, CosmosBankV_1Beta_1, CosmosBaseNodeV_1Beta_1, CosmosBaseTendermintV_1Beta_1, CosmosConsensusV_1, CosmosDistributionV_1Beta_1, CosmosEpochsV_1Beta_1, CosmosGovV_1, CosmosGovV_1Beta_1, CosmosGroupV_1, CosmosMintV_1Beta_1, CosmosParamsV_1Beta_1, CosmosSlashingV_1Beta_1, CosmosStakingV_1Beta_1, CosmosTxV_1Beta_1, CosmosVestingV_1Beta_1, CosmosEvidenceV_1Beta_1, CosmosUpgradeV_1Beta_1, CosmosFeegrantV_1Beta_1, IbcApplicationsInterchainAccountsControllerV_1, IbcApplicationsInterchainAccountsHostV_1, IbcApplicationsTransferV_1, IbcCoreChannelV_1, IbcCoreChannelV_2, IbcCoreClientV_1, IbcCoreClientV_2, IbcCoreConnectionV_1, CosmosNftV_1Beta_1
+  PokerchainPokerV_1, CosmosCircuitV_1, CosmosAuthV_1Beta_1, CosmosAuthzV_1Beta_1, CosmosBankV_1Beta_1, CosmosBaseNodeV_1Beta_1, CosmosBaseTendermintV_1Beta_1, CosmosConsensusV_1, CosmosDistributionV_1Beta_1, CosmosEpochsV_1Beta_1, CosmosGovV_1, CosmosGovV_1Beta_1, CosmosGroupV_1, CosmosMintV_1Beta_1, CosmosParamsV_1Beta_1, CosmosSlashingV_1Beta_1, CosmosStakingV_1Beta_1, CosmosTxV_1Beta_1, CosmosVestingV_1Beta_1, CosmosEvidenceV_1Beta_1, CosmosUpgradeV_1Beta_1, CosmosFeegrantV_1Beta_1, IbcApplicationsInterchainAccountsControllerV_1, IbcApplicationsInterchainAccountsHostV_1, IbcApplicationsTransferV_1, IbcCoreChannelV_1, IbcCoreChannelV_2, IbcCoreClientV_1, IbcCoreClientV_2, IbcCoreConnectionV_1, CosmosNftV_1Beta_1
 ]);
 
 const registry = new Registry([
@@ -71,7 +71,7 @@ const registry = new Registry([
   ...IbcCoreClientV_2MsgTypes,
   ...IbcCoreConnectionV_1MsgTypes,
   ...CosmosNftV_1Beta_1MsgTypes,
-  
+
 ])
 
 // Re-export all types from pokerchain.poker.v1
@@ -99,12 +99,12 @@ export { Deck } from './deck'
 export { PokerGameIntegration } from './pokerGameIntegration'
 
 // Re-export cosmos client and config
-export { CosmosClient, getDefaultCosmosConfig } from './cosmosClient'
+export { CosmosClient, getDefaultCosmosConfig, COSMOS_CONSTANTS } from './cosmosClient'
 export { SigningCosmosClient, createSigningClientFromMnemonic } from './signingClient'
 
 // Re-export generated client and helpers
 export {
-    Client,
-    registry,
-    MissingWalletError
+  Client,
+  registry,
+  MissingWalletError
 }

@@ -95,7 +95,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Get the wallet address
      */
-    async getWalletAddress(): Promise<string> {
+    public async getWalletAddress(): Promise<string> {
         if (!this.wallet) {
             throw new Error("No wallet provided");
         }
@@ -107,7 +107,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Send tokens from one address to another
      */
-    async sendTokens(
+    public async sendTokens(
         fromAddress: string,
         toAddress: string,
         amount: bigint,
@@ -141,7 +141,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Send B52USDC tokens
      */
-    async sendB52USDC(
+    public async sendB52USDC(
         fromAddress: string,
         toAddress: string,
         amount: bigint,
@@ -153,7 +153,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Create a new poker game
      */
-    async createGame(
+    public async createGame(
         gameType: string,
         minPlayers: number,
         maxPlayers: number,
@@ -225,7 +225,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Join a poker game
      */
-    async joinGame(gameId: string, seat: number, buyInAmount: bigint): Promise<string> {
+    public async joinGame(gameId: string, seat: number, buyInAmount: bigint): Promise<string> {
         await this.initializeSigningClient();
 
         if (!this.signingClient || !this.wallet) {
@@ -277,7 +277,7 @@ export class SigningCosmosClient extends CosmosClient {
      * Perform a game action (fold, call, raise, etc.)
      * The keeper calculates the action index automatically
      */
-    async performAction(gameId: string, action: string, amount: bigint = 0n): Promise<string> {
+    public async performAction(gameId: string, action: string, amount: bigint = 0n): Promise<string> {
         await this.initializeSigningClient();
 
         if (!this.signingClient || !this.wallet) {
@@ -330,7 +330,7 @@ export class SigningCosmosClient extends CosmosClient {
      * Process a bridge deposit by querying the Ethereum contract for the deposit index
      * This replaces auto-sync with manual index-based processing
      */
-    async processDeposit(depositIndex: number): Promise<string> {
+    public async processDeposit(depositIndex: number): Promise<string> {
         await this.initializeSigningClient();
 
         if (!this.signingClient || !this.wallet) {
@@ -380,7 +380,7 @@ export class SigningCosmosClient extends CosmosClient {
      * Initiate a withdrawal from Cosmos to Base chain
      * Burns USDC on Cosmos and creates a withdrawal request that can be completed on Base
      */
-    async initiateWithdrawal(baseAddress: string, amount: bigint): Promise<string> {
+    public async initiateWithdrawal(baseAddress: string, amount: bigint): Promise<string> {
         await this.initializeSigningClient();
 
         if (!this.signingClient || !this.wallet) {
@@ -431,7 +431,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Query a specific withdrawal request by nonce
      */
-    async getWithdrawalRequest(nonce: string): Promise<any> {
+    public async getWithdrawalRequest(nonce: string): Promise<any> {
         try {
             const response = await fetch(
                 `${this.config.restEndpoint}/block52/pokerchain/poker/v1/withdrawal_request/${encodeURIComponent(nonce)}`
@@ -452,7 +452,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * List all withdrawal requests for a specific address (or all if no address provided)
      */
-    async listWithdrawalRequests(cosmosAddress?: string): Promise<any[]> {
+    public async listWithdrawalRequests(cosmosAddress?: string): Promise<any[]> {
         try {
             const url = cosmosAddress
                 ? `${this.config.restEndpoint}/block52/pokerchain/poker/v1/withdrawal_requests?cosmos_address=${encodeURIComponent(cosmosAddress)}`
@@ -523,7 +523,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Query all games from the blockchain
      */
-    async queryGames(): Promise<any[]> {
+    public async queryGames(): Promise<any[]> {
         try {
             const response = await fetch(`${this.config.restEndpoint}/pokerchain/poker/v1/games`);
 
@@ -548,7 +548,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Query game state for a specific game
      */
-    async queryGameState(gameId: string): Promise<any> {
+    public async queryGameState(gameId: string): Promise<any> {
         try {
             const response = await fetch(
                 `${this.config.restEndpoint}/block52/pokerchain/poker/v1/game_state/${encodeURIComponent(gameId)}`
@@ -575,7 +575,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Disconnect the signing client
      */
-    async disconnect(): Promise<void> {
+    public async disconnect(): Promise<void> {
         if (this.signingClient) {
             this.signingClient.disconnect();
             this.signingClient = undefined;
@@ -585,7 +585,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Set a new wallet for signing
      */
-    setWallet(wallet: DirectSecp256k1HdWallet): void {
+    public setWallet(wallet: DirectSecp256k1HdWallet): void {
         this.wallet = wallet;
         // Reset signing client to reinitialize with new wallet
         if (this.signingClient) {
@@ -597,7 +597,7 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Get the current wallet
      */
-    getWallet(): DirectSecp256k1HdWallet | undefined {
+    public getWallet(): DirectSecp256k1HdWallet | undefined {
         return this.wallet;
     }
 }
