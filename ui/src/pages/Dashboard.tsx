@@ -1057,16 +1057,18 @@ const Dashboard: React.FC = () => {
                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                             }}
                         >
-                            <div className="flex justify-center items-center gap-2 mb-4">
-                                <div 
-                                    className="px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90 shadow-md"
-                                    style={{
-                                        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-                                    }}
-                                >
-                                    <h2 className="text-xl font-bold text-white text-center">Wallet</h2>
+                            <div className="relative mb-4">
+                                <div className="flex justify-center items-center">
+                                    <div 
+                                        className="px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90 shadow-md"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                                        }}
+                                    >
+                                        <h2 className="text-xl font-bold text-white text-center">Wallet</h2>
+                                    </div>
                                 </div>
-                                <div className="relative group">
+                                <div className="absolute right-0 top-0 group">
                                     <svg
                                         className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
                                         fill="none"
@@ -1221,16 +1223,18 @@ const Dashboard: React.FC = () => {
                             onMouseEnter={handleWalletMouseEnter}
                             onMouseLeave={handleWalletMouseLeave}
                         >
-                            <div className="flex justify-center items-center gap-2 mb-4">
-                                <div 
-                                    className="px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90 shadow-md"
-                                    style={{
-                                        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-                                    }}
-                                >
-                                    <h2 className="text-xl font-bold text-white text-center">Block52 Game Wallet</h2>
+                            <div className="relative mb-4">
+                                <div className="flex justify-center items-center">
+                                    <div 
+                                        className="px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90 shadow-md"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                                        }}
+                                    >
+                                        <h2 className="text-xl font-bold text-white text-center">Block52 Game Wallet</h2>
+                                    </div>
                                 </div>
-                                <div className="relative group">
+                                <div className="absolute right-0 top-0 group">
                                     <svg
                                         className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
                                         fill="none"
