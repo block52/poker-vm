@@ -100,7 +100,7 @@ const CosmosWalletPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8 pb-24">
             {/* Header */}
             <div className="max-w-4xl mx-auto mb-8">
                 <h1 className="text-4xl font-bold text-white mb-2 text-center">Block52 Wallet Manager</h1>
@@ -270,6 +270,16 @@ const CosmosWalletPage = () => {
                         <p className="text-red-300">{error}</p>
                     </div>
                 )}
+            </div>
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
+                </div>
             </div>
         </div>
     );
