@@ -148,8 +148,8 @@ const Dashboard: React.FC = () => {
     // Removed: Game selection state variables - now handled in Create Game modal
     // Removed: Ethereum wallet state - now using Cosmos wallet only
 
-    // Password protection states
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    // Password protection states - TEMPORARILY DISABLED for screenshot review
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
     const [passwordInput, setPasswordInput] = useState<string>("");
     const [passwordError, setPasswordError] = useState<string>("");
     const [showPassword, setShowPassword] = useState<boolean>(false);
