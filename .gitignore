@@ -468,3 +468,6 @@ pvm/ts/.DS_Store
 
 # TypeScript build info files
 *.tsbuildinfo
+sdk/package-lock.json
+ui/node_modules/
+sdk/node_modules/
