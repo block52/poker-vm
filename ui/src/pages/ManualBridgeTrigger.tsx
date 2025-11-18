@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
+import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
 
 /**
  * ManualBridgeTrigger - Simple page to manually process bridge deposits
@@ -18,14 +19,6 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
  * - Status display
  * - Transaction hash on success
  */
-
-// Bridge contract ABI for deposits mapping
-const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string memory account, uint256 amount)"];
-
-// Helper function to format USDC amounts (6 decimals)
-const formatUSDC = (microAmount: string | number): string => {
-    return formatMicroAsUsdc(microAmount, 6);
-};
 
 export default function ManualBridgeTrigger() {
     const cosmosWallet = useCosmosWallet();
@@ -63,7 +56,7 @@ export default function ManualBridgeTrigger() {
 
             // Connect to Base Chain
             const provider = new ethers.JsonRpcProvider(ethRpcUrl);
-            const contract = new ethers.Contract(bridgeContractAddress, DEPOSITS_ABI, provider);
+            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_DEPOSITS_ABI, provider);
 
             // Query the deposit
             const [recipient, amount] = await contract.deposits(index);
@@ -225,7 +218,7 @@ export default function ManualBridgeTrigger() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-400">Balance:</span>
-                                <span className="text-white">{formatUSDC(cosmosWallet.balance.find(b => b.denom === "usdc")?.amount || "0")} USDC</span>
+                                <span className="text-white">{formatMicroAsUsdc(cosmosWallet.balance.find(b => b.denom === "usdc")?.amount || "0", 6)} USDC</span>
                             </div>
                         </div>
                     ) : (
@@ -289,7 +282,7 @@ export default function ManualBridgeTrigger() {
                                     </div>
                                     <div>
                                         <p className="text-blue-300 text-xs">Amount:</p>
-                                        <p className="text-blue-100 text-sm font-mono">{formatUSDC(queryResult.amount)} USDC</p>
+                                        <p className="text-blue-100 text-sm font-mono">{formatMicroAsUsdc(queryResult.amount, 6)} USDC</p>
                                     </div>
                                 </div>
                             </div>

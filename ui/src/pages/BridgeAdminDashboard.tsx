@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
+import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
@@ -17,14 +18,6 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
  * - Process individual deposits
  * - Filter by status (all/processed/pending)
  */
-
-// Bridge contract ABI for deposits mapping
-const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string memory account, uint256 amount)"];
-
-// Helper function to format USDC amounts (6 decimals)
-const formatUSDC = (microAmount: string | number): string => {
-    return formatMicroAsUsdc(microAmount, 6);
-};
 
 interface Deposit {
     index: number;
@@ -128,7 +121,7 @@ export default function BridgeAdminDashboard() {
         try {
             // Connect to Ethereum
             const provider = new ethers.JsonRpcProvider(ethRpcUrl);
-            const contract = new ethers.Contract(bridgeContractAddress, DEPOSITS_ABI, provider);
+            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_DEPOSITS_ABI, provider);
 
             // Calculate start and end indices based on current page
             const startIndex = (currentPage - 1) * itemsPerPage;
@@ -150,7 +143,7 @@ export default function BridgeAdminDashboard() {
                         index: i,
                         recipient: account,
                         amount: amount.toString(),
-                        amountFormatted: formatUSDC(amount.toString()),
+                        amountFormatted: formatMicroAsUsdc(amount.toString(), 6),
                         status: "loading" // Will check processing status next
                     });
                 } catch (err: any) {
