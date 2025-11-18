@@ -9,6 +9,8 @@ import {
     PlayerActionType,
     PlayerDTO,
     PlayerStatus,
+    RakeConfig,
+    RakeConfigDTO,
     TexasHoldemRound,
     TexasHoldemStateDTO,
     WinnerDTO,
@@ -98,7 +100,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             smallBlind: BigInt(gameOptions.smallBlind),
             bigBlind: BigInt(gameOptions.bigBlind),
             timeout: gameOptions.timeout,
-            type: gameOptions.type
+            type: gameOptions.type,
+            rake: gameOptions.rake ? {
+                rakeFreeThreshold: BigInt(gameOptions.rake.rakeFreeThreshold),
+                rakePercentage: gameOptions.rake.rakePercentage,
+                rakeCap: BigInt(gameOptions.rake.rakeCap)
+            } : undefined,
+            owner: gameOptions.owner
         };
 
         // Hack for old test data
@@ -175,7 +183,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     smallBlind: BigInt(this._gameOptions.smallBlind),
                     bigBlind: BigInt(this._gameOptions.bigBlind),
                     timeout: this._gameOptions.timeout,
-                    type: this._gameOptions.type
+                    type: this._gameOptions.type,
+                    rake: this._gameOptions.rake,
+                    owner: this._gameOptions.owner
                 };
                 this.blindsManager = new SitAndGoBlindsManager(10, gameOptions);
                 break;
@@ -331,6 +341,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     get smallBlind(): bigint {
         const { smallBlind } = this.blindsManager.getBlinds();
         return smallBlind;
+    }
+
+    get rake(): RakeConfig | undefined {
+        return this._gameOptions.rake;
+    }
+
+    get owner(): string | undefined {
+        return this._gameOptions.owner;
     }
 
     // Position getters
@@ -1307,6 +1325,33 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
+     * Calculates the rake amount for a given pot
+     * Returns 0 if rake is not configured
+     */
+    private calculateRake(pot: bigint): bigint {
+        // If no rake config, return 0
+        if (!this._gameOptions.rake) {
+            return 0n;
+        }
+
+        const { rakeFreeThreshold, rakePercentage, rakeCap } = this._gameOptions.rake;
+
+        // If pot is below rake-free threshold, no rake
+        if (pot < rakeFreeThreshold) {
+            return 0n;
+        }
+
+        // Calculate rake as percentage of pot
+        // rakePercentage is a whole number (e.g., 5 for 5%)
+        const calculatedRake = (pot * BigInt(rakePercentage)) / 100n;
+
+        // Apply cap if calculated rake exceeds it
+        const rake = calculatedRake > rakeCap ? rakeCap : calculatedRake;
+
+        return rake;
+    }
+
+    /**
      * Calculates side pots for all-in situations
      */
     private calculateSidePots(): void {
@@ -1433,8 +1478,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // If only one player is active, they win the pot
         if (livePlayers.length === 1) {
             // Winner by default - no hand evaluation needed
+            const totalPot = this.getPot();
+            const rake = this.calculateRake(totalPot);
+            const netPot = totalPot - rake;
+            
             const _winner: Winner = {
-                amount: this.getPot(),
+                amount: netPot,
                 cards: livePlayers[0].holeCards?.map(card => card.mnemonic),
                 name: "Winner by default (others folded)",
                 description: "Winner by default (others folded)"
@@ -1442,7 +1491,15 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
             this._winners = new Map<string, Winner>();
             this._winners.set(livePlayers[0].id, _winner);
-            livePlayers[0].chips += this.getPot();
+            livePlayers[0].chips += netPot;
+            
+            // Allocate rake to owner if configured
+            if (rake > 0n && this._gameOptions.owner) {
+                const owner = this.getPlayer(this._gameOptions.owner);
+                if (owner) {
+                    owner.chips += rake;
+                }
+            }
             return;
         }
 
@@ -1455,6 +1512,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         this._winners = new Map<string, Winner>();
         const showingPlayers = livePlayers.filter(p => this.getPlayerStatus(p.address) === PlayerStatus.SHOWING);
         const pot: bigint = this.getPot();
+        const rake = this.calculateRake(pot);
+        const netPot = pot - rake;
 
         // Check if we have enough community cards for proper evaluation
         const communityCards = this.getCommunityCards();
@@ -1482,7 +1541,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 const result = showdownResult.results[i];
 
                 if (result.isWinner) {
-                    const winAmount = pot / winnersCount;
+                    const winAmount = netPot / winnersCount;
                     const _winner: Winner = {
                         amount: winAmount,
                         cards: player.holeCards?.map(card => card.mnemonic),
@@ -1492,6 +1551,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
                     this._winners.set(player.id, _winner);
                     player.chips += winAmount;
+                }
+            }
+            
+            // Allocate rake to owner if configured
+            if (rake > 0n && this._gameOptions.owner) {
+                const owner = this.getPlayer(this._gameOptions.owner);
+                if (owner) {
+                    owner.chips += rake;
                 }
             }
             return;
@@ -1512,7 +1579,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             const result = showdownResult.results[i];
 
             if (result.isWinner) {
-                const winAmount = pot / winnersCount;
+                const winAmount = netPot / winnersCount;
                 const _winner: Winner = {
                     amount: winAmount,
                     cards: player.holeCards?.map(card => card.mnemonic),
@@ -1521,6 +1588,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 };
                 player.chips += winAmount;
                 this._winners.set(player.address, _winner);
+            }
+        }
+
+        // Allocate rake to owner if configured
+        if (rake > 0n && this._gameOptions.owner) {
+            const owner = this.getPlayer(this._gameOptions.owner);
+            if (owner) {
+                owner.chips += rake;
             }
         }
 
@@ -1652,7 +1727,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             smallBlind: this.blindsManager.getBlinds().smallBlind.toString(),
             bigBlind: this.blindsManager.getBlinds().bigBlind.toString(),
             timeout: this._gameOptions.timeout,
-            type: this.type
+            type: this.type,
+            rake: this._gameOptions.rake ? {
+                rakeFreeThreshold: this._gameOptions.rake.rakeFreeThreshold.toString(),
+                rakePercentage: this._gameOptions.rake.rakePercentage,
+                rakeCap: this._gameOptions.rake.rakeCap.toString()
+            } : undefined,
+            owner: this._gameOptions.owner
         };
 
         const nextPlayerToAct = this.findNextPlayerToActForRound(this.currentRound);
@@ -1699,6 +1780,16 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             gameOptions.bigBlind = BigInt(gameOptions?.bigBlind);
             gameOptions.timeout = gameOptions?.timeout ?? 30; // Default to 30 seconds if not provided
             gameOptions.type = gameOptions?.type;
+            
+            // Parse rake config if present
+            if (gameOptions.rake) {
+                gameOptions.rake = {
+                    rakeFreeThreshold: BigInt(gameOptions.rake.rakeFreeThreshold),
+                    rakePercentage: gameOptions.rake.rakePercentage,
+                    rakeCap: BigInt(gameOptions.rake.rakeCap)
+                };
+            }
+            // Owner is already a string, no conversion needed
         }
 
         // Parse players
