@@ -87,45 +87,45 @@ export const GlobalHeader: React.FC = () => {
             <div className="container mx-auto px-4 py-3">
                 <div className="flex items-center justify-between">
                     {/* Left side - Logo/Title */}
-                    <div className="flex items-center gap-6">
-                        <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
+                    <div className="flex items-center gap-6 flex-1">
+                        <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity whitespace-nowrap" style={{ color: colors.brand.primary }}>
                             {import.meta.env.VITE_CLUB_NAME || "Block 52"}
                         </Link>
-
-                        {/* Desktop Navigation */}
-                        <nav className="hidden lg:flex items-center gap-1">
-                            {menuItems.map(item => (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80 flex items-center gap-1.5"
-                                    style={{
-                                        color: location.pathname === item.path ? colors.brand.primary : colors.ui.textSecondary,
-                                        backgroundColor: location.pathname === item.path ? hexToRgba(colors.brand.primary, 0.1) : "transparent"
-                                    }}
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-                                    </svg>
-                                    {item.label}
-                                    {item.badge && (
-                                        <span
-                                            className="ml-1 px-1.5 py-0.5 rounded text-xs font-semibold"
-                                            style={{
-                                                backgroundColor: hexToRgba(colors.brand.primary, 0.2),
-                                                color: colors.brand.primary
-                                            }}
-                                        >
-                                            {item.badge}
-                                        </span>
-                                    )}
-                                </Link>
-                            ))}
-                        </nav>
                     </div>
 
+                    {/* Center - Desktop Navigation */}
+                    <nav className="hidden lg:flex items-center gap-1 flex-shrink-0">
+                        {menuItems.map(item => (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80 flex items-center gap-1.5"
+                                style={{
+                                    color: location.pathname === item.path ? colors.brand.primary : colors.ui.textSecondary,
+                                    backgroundColor: location.pathname === item.path ? hexToRgba(colors.brand.primary, 0.1) : "transparent"
+                                }}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                                </svg>
+                                {item.label}
+                                {item.badge && (
+                                    <span
+                                        className="ml-1 px-1.5 py-0.5 rounded text-xs font-semibold"
+                                        style={{
+                                            backgroundColor: hexToRgba(colors.brand.primary, 0.2),
+                                            color: colors.brand.primary
+                                        }}
+                                    >
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </Link>
+                        ))}
+                    </nav>
+
                     {/* Right side - Network Selector & Mobile Menu */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-1 justify-end">
                         {/* Block Height Indicator */}
                         {latestBlockHeight && (
                             <div
