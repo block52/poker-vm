@@ -1,7 +1,8 @@
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { SigningStargateClient, GasPrice, calculateFee } from "@cosmjs/stargate";
 import { Registry, EncodeObject } from "@cosmjs/proto-signing";
-import { CosmosClient, CosmosConfig, COSMOS_CONSTANTS } from "./cosmosClient";
+import { CosmosClient, COSMOS_CONSTANTS } from "./cosmosClient";
+import type { CosmosConfig } from "./cosmosClient";
 import { msgTypes } from "./pokerchain.poker.v1/registry";
 import Long from "long";
 
@@ -123,7 +124,7 @@ export class SigningCosmosClient extends CosmosClient {
             denom = this.config.denom;
         }
 
-        const coins = [{ denom, amount: amount.toString() }];
+        const coins = [{ denom: denom as string, amount: amount.toString() }] as any;
         const fee = calculateFee(200_000, this.gasPrice); // Estimate gas
 
         const result = await this.signingClient.sendTokens(

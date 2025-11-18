@@ -1,11 +1,11 @@
 // --- Types for explicit return values (from IClient.ts) ---
-export interface AccountResponse {
+export type CustomAccountResponse = {
   address: string;
   pub_key?: any;
   account_number: string;
   sequence: string;
   [key: string]: any;
-}
+};
 
 export interface TxResponse {
   height: string;
