@@ -34,6 +34,8 @@ export interface IClient {
         bigBlindB52USDC: bigint,
         timeout: number
     ): Promise<string>;
+    initiateWithdrawal(baseAddress: string, amount: bigint): Promise<string>;
+    listWithdrawalRequests(cosmosAddress?: string): Promise<any[]>;
     disconnect(): Promise<void>;
 }
 
