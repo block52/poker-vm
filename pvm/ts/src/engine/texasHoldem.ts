@@ -109,6 +109,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             owner: gameOptions.owner
         };
 
+        // Validate rake configuration
+        if (this._gameOptions.rake) {
+            const { rakeFreeThreshold, rakePercentage, rakeCap } = this._gameOptions.rake;
+            
+            if (rakeFreeThreshold < 0n) {
+                throw new Error("Rake-free threshold must be non-negative");
+            }
+            
+            if (rakePercentage < 0 || rakePercentage > 100) {
+                throw new Error("Rake percentage must be between 0 and 100");
+            }
+            
+            if (rakeCap < 0n) {
+                throw new Error("Rake cap must be non-negative");
+            }
+        }
+
         // Hack for old test data
         if (this.handNumber === 0) this._handNumber = 1;
 

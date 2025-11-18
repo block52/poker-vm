@@ -227,6 +227,122 @@ describe("Texas Holdem - Rake Tests", () => {
         });
     });
 
+    describe("Rake validation", () => {
+        it("should reject negative rake-free threshold", () => {
+            const gameConfig = {
+                address: ethers.ZeroAddress,
+                dealer: 1,
+                handNumber: 1,
+                actionCount: 0,
+                round: TexasHoldemRound.ANTE,
+                communityCards: [],
+                pots: [0n],
+                previousActions: [],
+                players: [],
+                deck: "",
+                winners: [],
+                now: Date.now()
+            };
+
+            const invalidGameOptions = {
+                minBuyIn: ONE_TOKEN.toString(),
+                maxBuyIn: ONE_HUNDRED_TOKENS.toString(),
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: (ONE_TOKEN / 10n).toString(),
+                bigBlind: (ONE_TOKEN / 5n).toString(),
+                timeout: 30,
+                type: GameType.CASH,
+                rake: {
+                    rakeFreeThreshold: (-1n).toString(),
+                    rakePercentage: 5,
+                    rakeCap: ONE_TOKEN.toString()
+                },
+                owner: ownerAddress
+            };
+
+            expect(() => {
+                TexasHoldemGame.fromJson(gameConfig, invalidGameOptions);
+            }).toThrow("Rake-free threshold must be non-negative");
+        });
+
+        it("should reject invalid rake percentage", () => {
+            const gameConfig = {
+                address: ethers.ZeroAddress,
+                dealer: 1,
+                handNumber: 1,
+                actionCount: 0,
+                round: TexasHoldemRound.ANTE,
+                communityCards: [],
+                pots: [0n],
+                previousActions: [],
+                players: [],
+                deck: "",
+                winners: [],
+                now: Date.now()
+            };
+
+            const invalidGameOptions = {
+                minBuyIn: ONE_TOKEN.toString(),
+                maxBuyIn: ONE_HUNDRED_TOKENS.toString(),
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: (ONE_TOKEN / 10n).toString(),
+                bigBlind: (ONE_TOKEN / 5n).toString(),
+                timeout: 30,
+                type: GameType.CASH,
+                rake: {
+                    rakeFreeThreshold: FIVE_TOKENS.toString(),
+                    rakePercentage: 150, // Invalid: over 100%
+                    rakeCap: ONE_TOKEN.toString()
+                },
+                owner: ownerAddress
+            };
+
+            expect(() => {
+                TexasHoldemGame.fromJson(gameConfig, invalidGameOptions);
+            }).toThrow("Rake percentage must be between 0 and 100");
+        });
+
+        it("should reject negative rake cap", () => {
+            const gameConfig = {
+                address: ethers.ZeroAddress,
+                dealer: 1,
+                handNumber: 1,
+                actionCount: 0,
+                round: TexasHoldemRound.ANTE,
+                communityCards: [],
+                pots: [0n],
+                previousActions: [],
+                players: [],
+                deck: "",
+                winners: [],
+                now: Date.now()
+            };
+
+            const invalidGameOptions = {
+                minBuyIn: ONE_TOKEN.toString(),
+                maxBuyIn: ONE_HUNDRED_TOKENS.toString(),
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: (ONE_TOKEN / 10n).toString(),
+                bigBlind: (ONE_TOKEN / 5n).toString(),
+                timeout: 30,
+                type: GameType.CASH,
+                rake: {
+                    rakeFreeThreshold: FIVE_TOKENS.toString(),
+                    rakePercentage: 5,
+                    rakeCap: (-1n).toString()
+                },
+                owner: ownerAddress
+            };
+
+            expect(() => {
+                TexasHoldemGame.fromJson(gameConfig, invalidGameOptions);
+            }).toThrow("Rake cap must be non-negative");
+        });
+    });
+
     describe("Rake allocation to owner", () => {
         it("should allocate rake to owner when winner is determined (single winner by fold)", () => {
             const gameConfig = {
