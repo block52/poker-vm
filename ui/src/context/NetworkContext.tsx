@@ -66,9 +66,10 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
     },
     // [2] ✅ PRODUCTION - Block52 official node (default for production builds)
     // Using HTTPS endpoints via NGINX reverse proxy to avoid mixed content errors
+    // NOTE: /rpc/ requires trailing slash due to nginx location block configuration
     {
         name: "Block52",
-        rpc: "https://node1.block52.xyz/rpc",
+        rpc: "https://node1.block52.xyz/rpc/",
         rest: "https://node1.block52.xyz",
         grpc: "grpcs://node1.block52.xyz:9443"
     }
