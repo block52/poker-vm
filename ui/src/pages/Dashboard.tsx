@@ -1039,7 +1039,7 @@ const Dashboard: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="flex justify-center items-center mb-6">
+                        <div className="flex justify-between items-center mb-6">
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
                         </div>
 
@@ -1057,40 +1057,39 @@ const Dashboard: React.FC = () => {
                                 e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
                             }}
                         >
-                            <div className="relative mb-4">
-                                <div className="flex justify-center items-center">
-                                    <div className="relative inline-block">
-                                        <div 
-                                            className="px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90 shadow-md"
-                                            style={{
-                                                background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-                                            }}
-                                        >
-                                            <h2 className="text-xl font-bold text-white text-center">Wallet</h2>
-                                        </div>
-                                        <div className="absolute -top-2 -right-8 group">
-                                            <div className="w-5 h-5 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center cursor-help transition-colors border-2 border-gray-500">
-                                                <span className="text-white text-xs font-bold">i</span>
-                                            </div>
-                                            <div
-                                                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
-                                                style={{
-                                                    backgroundColor: colors.ui.bgDark,
-                                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                                }}
-                                            >
-                                                <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
-                                                    External Web3 Wallet
-                                                </h3>
-                                                <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
-                                                <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
-                                                <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
-                                                <div
-                                                    className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
-                                                    style={{ borderTopColor: colors.ui.bgDark }}
-                                                ></div>
-                                            </div>
-                                        </div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <h2 className="text-xl font-bold text-white">Wallet</h2>
+                                <div className="relative group">
+                                    <svg
+                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
+                                        style={{
+                                            backgroundColor: colors.ui.bgDark,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
+                                    >
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
+                                            External Web3 Wallet
+                                        </h3>
+                                        <p className="mb-2">Connect your favorite Web3 wallet like MetaMask, WalletConnect, or Coinbase Wallet.</p>
+                                        <p className="mb-2">This is completely optional - you can play using only the Block52 Game Wallet.</p>
+                                        <p>Having a connected wallet provides additional features and easier withdrawals in the future.</p>
+                                        <div
+                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
+                                            style={{ borderTopColor: colors.ui.bgDark }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
@@ -1215,42 +1214,41 @@ const Dashboard: React.FC = () => {
                             onMouseEnter={handleWalletMouseEnter}
                             onMouseLeave={handleWalletMouseLeave}
                         >
-                            <div className="relative mb-4">
-                                <div className="flex justify-center items-center">
-                                    <div className="relative inline-block">
-                                        <div 
-                                            className="px-6 py-3 rounded-lg transition-all duration-300 hover:opacity-90 shadow-md"
-                                            style={{
-                                                background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-                                            }}
-                                        >
-                                            <h2 className="text-xl font-bold text-white text-center">Block52 Game Wallet</h2>
-                                        </div>
-                                        <div className="absolute -top-2 -right-8 group">
-                                            <div className="w-5 h-5 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center cursor-help transition-colors border-2 border-gray-500">
-                                                <span className="text-white text-xs font-bold">i</span>
-                                            </div>
-                                            <div
-                                                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
-                                                style={{
-                                                    backgroundColor: colors.ui.bgDark,
-                                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                                }}
-                                            >
-                                                <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
-                                                    Layer 2 Gaming Wallet
-                                                </h3>
-                                                <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you with no Web3 wallet required!</p>
-                                                <p className="mb-2">
-                                                    You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.
-                                                </p>
-                                                <p>All your in-game funds are secured on the blockchain and can be withdrawn at any time.</p>
-                                                <div
-                                                    className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
-                                                    style={{ borderTopColor: colors.ui.bgDark }}
-                                                ></div>
-                                            </div>
-                                        </div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
+                                <div className="relative group">
+                                    <svg
+                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
+                                        style={{
+                                            backgroundColor: colors.ui.bgDark,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
+                                    >
+                                        <h3 className="font-bold mb-2" style={{ color: colors.brand.primary }}>
+                                            Layer 2 Gaming Wallet
+                                        </h3>
+                                        <p className="mb-2">This is your Layer 2 gaming wallet, automatically created for you with no Web3 wallet required!</p>
+                                        <p className="mb-2">
+                                            You can deposit funds using ERC20 tokens, and the bridge will automatically credit your game wallet.
+                                        </p>
+                                        <p>All your in-game funds are secured on the blockchain and can be withdrawn at any time.</p>
+                                        <div
+                                            className="absolute left-1/2 -bottom-2 -translate-x-1/2 border-8 border-transparent"
+                                            style={{ borderTopColor: colors.ui.bgDark }}
+                                        ></div>
                                     </div>
                                 </div>
                             </div>
