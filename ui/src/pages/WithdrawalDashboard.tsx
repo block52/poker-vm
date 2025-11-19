@@ -8,6 +8,8 @@ import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
 import { useAccount } from "wagmi";
+import { BRIDGE_WITHDRAWAL_ABI } from "../utils/bridge/abis";
+import { base64ToHex } from "../utils/encodingUtils";
 
 /**
  * WithdrawalDashboard - Interface for managing USDC withdrawals to Base Chain
@@ -18,26 +20,6 @@ import { useAccount } from "wagmi";
  * - Complete signed withdrawals on Base chain
  * - 2-step withdrawal flow with automatic validator signing
  */
-
-// Bridge contract ABI for withdrawals
-const BRIDGE_ABI = [
-    "function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external"
-];
-
-// Helper function to format USDC amounts (6 decimals on Cosmos = micro)
-const formatUSDC = (microAmount: string | number): string => {
-    return formatMicroAsUsdc(microAmount, 6);
-};
-
-// Helper function to convert base64 signature to hex
-const base64ToHex = (base64: string): string => {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-    return "0x" + Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
-};
 
 interface Withdrawal {
     nonce: string;
@@ -118,7 +100,7 @@ export default function WithdrawalDashboard() {
                 cosmosAddress: wr.cosmos_address,
                 baseAddress: wr.base_address,
                 amount: wr.amount,
-                amountFormatted: formatUSDC(wr.amount),
+                amountFormatted: formatMicroAsUsdc(wr.amount, 6),
                 status: wr.status as "pending" | "signed" | "completed",
                 signature: wr.signature || undefined
             }));
@@ -234,7 +216,7 @@ export default function WithdrawalDashboard() {
             const signer = await provider.getSigner();
 
             // Create contract instance
-            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_ABI, signer);
+            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_WITHDRAWAL_ABI, signer);
 
             // Convert base64 signature to hex format for ethers
             const hexSignature = withdrawal.signature ? base64ToHex(withdrawal.signature) : "0x";

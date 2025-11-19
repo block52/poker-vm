@@ -256,7 +256,7 @@ const CosmosWalletPage = () => {
                             <button
                                 onClick={handleImportWallet}
                                 disabled={isGenerating || !importMnemonic.trim()}
-                                className="w-full text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+                                className="w-full text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all bg-blue-600 hover:bg-blue-700"
                             >
                                 {isGenerating ? "Importing..." : "Import Wallet"}
                             </button>
