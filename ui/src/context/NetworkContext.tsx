@@ -65,10 +65,10 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
         grpc: "grpcs://texashodl.net:9443"
     },
     // [2] ✅ PRODUCTION - Block52 official node (default for production builds)
-    // Using direct RPC port 26657 to avoid CORS issues with HTTPS redirects
+    // Using HTTPS endpoints via NGINX reverse proxy to avoid mixed content errors
     {
         name: "Block52",
-        rpc: "http://node1.block52.xyz:26657",
+        rpc: "https://node1.block52.xyz/rpc",
         rest: "https://node1.block52.xyz",
         grpc: "grpcs://node1.block52.xyz:9443"
     }
