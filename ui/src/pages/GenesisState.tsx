@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import useCosmosWallet from "../hooks/useCosmosWallet";
+import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 
@@ -52,8 +53,10 @@ export default function GenesisState() {
     const [loadingBridgeState, setLoadingBridgeState] = useState(false);
     const cosmosWallet = useCosmosWallet();
     const cosmosAddress = cosmosWallet.address;
+    const { currentNetwork } = useNetwork();
 
-    const COSMOS_REST_URL = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+    // Use REST endpoint from selected network (NetworkSelector dropdown)
+    const COSMOS_REST_URL = currentNetwork.rest;
 
     // Derive addresses from mnemonics on mount
     useEffect(() => {

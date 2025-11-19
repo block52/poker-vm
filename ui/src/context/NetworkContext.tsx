@@ -50,23 +50,22 @@ export interface NetworkEndpoints {
 //   curl -s https://node.texashodl.net/cosmos/base/tendermint/v1beta1/blocks/latest | jq '.block.header.height'
 //
 export const NETWORK_PRESETS: NetworkEndpoints[] = [
-    // ✅ WORKING - Default for local development with `ignite chain serve`
+    // [0] ✅ WORKING - Default for local development with `ignite chain serve`
     {
         name: "Localhost",
         rpc: "http://localhost:26657",
         rest: "http://localhost:1317",
         grpc: "http://localhost:9090"
     },
-    // ✅ WORKING - Recommended for production testing
+    // [1] ✅ WORKING - Recommended for production testing
     {
         name: "Texas Hodl",
         rpc: "https://texashodl.net/rpc",
         rest: "https://node.texashodl.net",
         grpc: "grpcs://texashodl.net:9443"
     },
-    // ⚠️ Block52 - Using direct ports to avoid CORS issues with HTTPS redirects
-    // HTTPS endpoints return 301 redirects which cause CORS errors
-    // Using direct RPC port 26657 and REST port 1317 instead
+    // [2] ✅ PRODUCTION - Block52 official node (default for production builds)
+    // Using direct RPC port 26657 to avoid CORS issues with HTTPS redirects
     {
         name: "Block52",
         rpc: "http://node1.block52.xyz:26657",
@@ -84,18 +83,20 @@ interface NetworkContextType {
 const NetworkContext = createContext<NetworkContextType | undefined>(undefined);
 
 export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Initialize with the first network (Node 1 Remote)
+    // Initialize network from localStorage or default to Block52
     const [currentNetwork, setCurrentNetwork] = useState<NetworkEndpoints>(() => {
-        // Try to load from localStorage
+        // Try to load user's saved network preference from localStorage
         const saved = localStorage.getItem("selectedNetwork");
         if (saved) {
             try {
                 return JSON.parse(saved);
             } catch {
-                return NETWORK_PRESETS[0];
+                // If localStorage is corrupted, default to Block52
+                return NETWORK_PRESETS[2]; // Block52
             }
         }
-        return NETWORK_PRESETS[0];
+        // First time user - default to Block52
+        return NETWORK_PRESETS[2]; // Block52
     });
 
     // Save to localStorage whenever network changes
