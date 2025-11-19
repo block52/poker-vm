@@ -1069,8 +1069,8 @@ const Dashboard: React.FC = () => {
                                             <h2 className="text-xl font-bold text-white text-center">Wallet</h2>
                                         </div>
                                         <div className="absolute -top-2 -right-8 group">
-                                            <div className="w-6 h-6 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center cursor-help transition-colors border-2 border-gray-500">
-                                                <span className="text-white text-sm font-bold">i</span>
+                                            <div className="w-5 h-5 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center cursor-help transition-colors border-2 border-gray-500">
+                                                <span className="text-white text-xs font-bold">i</span>
                                             </div>
                                             <div
                                                 className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
@@ -1227,8 +1227,8 @@ const Dashboard: React.FC = () => {
                                             <h2 className="text-xl font-bold text-white text-center">Block52 Game Wallet</h2>
                                         </div>
                                         <div className="absolute -top-2 -right-8 group">
-                                            <div className="w-6 h-6 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center cursor-help transition-colors border-2 border-gray-500">
-                                                <span className="text-white text-sm font-bold">i</span>
+                                            <div className="w-5 h-5 rounded-full bg-gray-600 hover:bg-gray-500 flex items-center justify-center cursor-help transition-colors border-2 border-gray-500">
+                                                <span className="text-white text-xs font-bold">i</span>
                                             </div>
                                             <div
                                                 className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
