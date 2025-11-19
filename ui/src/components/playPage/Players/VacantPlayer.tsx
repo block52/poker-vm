@@ -308,26 +308,26 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 Ready to join at seat {index}?
                             </p>
 
-                            <div className="flex justify-center space-x-3">
-                                <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 shadow-inner"
-                                    style={{
-                                        backgroundColor: colors.ui.textSecondary,
-                                        color: "white"
-                                    }}
-                                >
-                                    No
-                                </button>
+                            <div className="flex flex-col space-y-3">
                                 <button
                                     onClick={handleConfirmSeatYes}
-                                    className="px-4 py-2 text-sm rounded-lg transition duration-300 transform shadow-md"
+                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 transform shadow-md"
                                     style={{
                                         background: colors.brand.primary,
                                         color: "white"
                                     }}
                                 >
                                     Yes
+                                </button>
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 shadow-inner"
+                                    style={{
+                                        backgroundColor: colors.ui.textSecondary,
+                                        color: "white"
+                                    }}
+                                >
+                                    No
                                 </button>
                             </div>
                         </div>
@@ -467,22 +467,11 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             )}
 
                             {/* Action Buttons */}
-                            <div className="flex justify-center space-x-3">
-                                <button
-                                    onClick={() => setShowBuyInModal(false)}
-                                    className="px-6 py-3 text-sm rounded-lg transition duration-300"
-                                    style={{
-                                        backgroundColor: colors.ui.textSecondary,
-                                        color: "white"
-                                    }}
-                                    disabled={isJoining}
-                                >
-                                    Cancel
-                                </button>
+                            <div className="flex flex-col space-y-3">
                                 <button
                                     onClick={handleBuyInConfirm}
                                     disabled={isJoining}
-                                    className="px-6 py-3 text-sm rounded-lg transition duration-300 flex items-center"
+                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 flex items-center justify-center"
                                     style={{
                                         background: colors.brand.primary,
                                         color: "white"
@@ -508,6 +497,17 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                     ) : (
                                         "Confirm & Join"
                                     )}
+                                </button>
+                                <button
+                                    onClick={() => setShowBuyInModal(false)}
+                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300"
+                                    style={{
+                                        backgroundColor: colors.ui.textSecondary,
+                                        color: "white"
+                                    }}
+                                    disabled={isJoining}
+                                >
+                                    Cancel
                                 </button>
                             </div>
                         </div>
