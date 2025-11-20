@@ -3,6 +3,7 @@ import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 interface GenesisAccount {
     address: string;
@@ -197,8 +198,9 @@ export default function GenesisState() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen p-8 relative">
+                <AnimatedBackground />
+                <div className="max-w-7xl mx-auto relative z-10">
                     <div className="text-center text-white text-xl">
                         Loading genesis state...
                     </div>
@@ -209,8 +211,9 @@ export default function GenesisState() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen p-8 relative">
+                <AnimatedBackground />
+                <div className="max-w-7xl mx-auto relative z-10">
                     <div className="bg-red-900/30 border border-red-500 rounded-lg p-6">
                         <h2 className="text-red-400 text-xl font-bold mb-2">Error Loading Genesis State</h2>
                         <p className="text-red-300">{error}</p>
@@ -227,8 +230,9 @@ export default function GenesisState() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto space-y-8 relative z-10">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-lg p-8 border border-blue-500/30">
                     <h1 className="text-4xl font-bold text-white mb-2">🔷 Genesis State - Block 0</h1>

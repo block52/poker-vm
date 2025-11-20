@@ -10,6 +10,7 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
 import { useAccount } from "wagmi";
 import { BRIDGE_WITHDRAWAL_ABI } from "../utils/bridge/abis";
 import { base64ToHex } from "../utils/encodingUtils";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 /**
  * WithdrawalDashboard - Interface for managing USDC withdrawals to Base Chain
@@ -302,8 +303,9 @@ export default function WithdrawalDashboard() {
     const completedCount = withdrawals.filter(w => w.status === "completed").length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2">USDC Withdrawals</h1>
