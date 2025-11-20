@@ -9,7 +9,7 @@ export function getServerInstance(): Server {
 
 export class Server {
     private _started: boolean = false;
-    private readonly _port: number = parseInt(process.env.PORT || "3000");
+    private readonly _port: number = parseInt(process.env.PORT || "8545");
     private readonly _version: string = "1.0.3";
 
     constructor() {
