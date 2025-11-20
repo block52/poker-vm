@@ -3,11 +3,8 @@ import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { CosmosBlock } from "./types";
 import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
-<<<<<<< HEAD
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
-=======
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
->>>>>>> 4c27ebfa017372e4f9b618c61a9d10a7fc197d07
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);

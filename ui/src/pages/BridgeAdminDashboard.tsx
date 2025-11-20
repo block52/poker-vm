@@ -8,11 +8,8 @@ import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
 import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
-<<<<<<< HEAD
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
-=======
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
->>>>>>> 4c27ebfa017372e4f9b618c61a9d10a7fc197d07
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
