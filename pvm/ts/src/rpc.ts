@@ -9,7 +9,6 @@ import { PerformActionCommand } from "./commands/cosmos/performActionCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
 import { READ_METHODS, WRITE_METHODS } from "./types/rpc";
-import { getServerInstance } from "./core/server";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
