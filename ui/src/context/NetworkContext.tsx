@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+/**
+ * NetworkEndpoints describes all endpoints for a given network.
+ * - name: Display name for the network
+ * - rpc: Tendermint RPC endpoint (HTTP/S)
+ * - rest: Cosmos REST API endpoint
+ * - grpc: Cosmos gRPC endpoint
+ * - ws: WebSocket endpoint for real-time table/game updates (used by UI)
+ */
 export interface NetworkEndpoints {
     name: string;
     rpc: string;
     rest: string;
     grpc: string;
+    ws: string;
 }
 
 // TODO: Dynamic endpoint discovery from validators API
@@ -49,29 +58,42 @@ export interface NetworkEndpoints {
 //   curl -s https://node.texashodl.net/cosmos/base/tendermint/v1beta1/node_info | jq '.default_node_info.moniker'
 //   curl -s https://node.texashodl.net/cosmos/base/tendermint/v1beta1/blocks/latest | jq '.block.header.height'
 //
+/**
+ * NETWORK_PRESETS
+ *
+ * Each network entry includes endpoints for RPC, REST, gRPC, and WebSocket (ws).
+ * The ws property is used by the UI for real-time table/game updates.
+ *
+ * Example ws usage:
+ *   ws://localhost:26657/ws?tableAddress=...&playerId=...
+ *   wss://node1.block52.xyz/ws?tableAddress=...&playerId=...
+ */
 export const NETWORK_PRESETS: NetworkEndpoints[] = [
-    // [0] ✅ WORKING - Default for local development with `ignite chain serve`
+    // [0] ✅ Localhost - Default for local development with `ignite chain serve`
     {
         name: "Localhost",
         rpc: "http://localhost:26657",
         rest: "http://localhost:1317",
-        grpc: "http://localhost:9090"
+        grpc: "http://localhost:9090",
+        ws: "ws://localhost:26657/ws" // WebSocket endpoint for table/game updates
     },
-    // [1] ✅ WORKING - Recommended for production testing
+    // [1] ✅ Texas Hodl - Recommended for production testing
     {
         name: "Texas Hodl",
         rpc: "https://texashodl.net/rpc",
         rest: "https://node.texashodl.net",
-        grpc: "grpcs://texashodl.net:9443"
+        grpc: "grpcs://texashodl.net:9443",
+        ws: "wss://texashodl.net/ws" // WebSocket endpoint for table/game updates
     },
-    // [2] ✅ PRODUCTION - Block52 official node (default for production builds)
+    // [2] ✅ Block52 - Official node (default for production builds)
     // Using HTTPS endpoints via NGINX reverse proxy to avoid mixed content errors
     // NOTE: /rpc/ requires trailing slash due to nginx location block configuration
     {
         name: "Block52",
         rpc: "https://node1.block52.xyz/rpc/",
         rest: "https://node1.block52.xyz",
-        grpc: "grpcs://node1.block52.xyz:9443"
+        grpc: "grpcs://node1.block52.xyz:9443",
+        ws: "wss://node1.block52.xyz/ws" // WebSocket endpoint for table/game updates
     }
 ];
 
@@ -90,7 +112,13 @@ export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children })
         const saved = localStorage.getItem("selectedNetwork");
         if (saved) {
             try {
-                return JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                // Validate that the parsed object has the ws property (for backward compatibility)
+                if (!parsed.ws) {
+                    console.warn("[NetworkContext] Saved network missing 'ws' property, resetting to default");
+                    return NETWORK_PRESETS[2]; // Block52
+                }
+                return parsed;
             } catch {
                 // If localStorage is corrupted, default to Block52
                 return NETWORK_PRESETS[2]; // Block52

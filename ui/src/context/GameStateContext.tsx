@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useNetwork } from "./NetworkContext";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 /**
@@ -44,7 +45,6 @@ const debugLog = (eventType: string, data: any) => {
     // Store in array for easy export
     debugLogs.push(logEntry);
 
-    // Keep only last 100 entries to prevent memory issues
     if (debugLogs.length > 100) {
         debugLogs.shift();
     }
@@ -94,14 +94,11 @@ if (typeof window !== "undefined") {
     };
 }
 
-// ✅ STABILITY FIX: Define wsUrl outside component to prevent recreating on every render
-// This prevents subscribeToTable from changing, which prevents WebSocket disconnect/reconnect cycles
-const WS_URL = import.meta.env.VITE_NODE_WS_URL || "wss://node1.block52.xyz";
-
 export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }) => {
     const [gameState, setGameState] = useState<TexasHoldemStateDTO | undefined>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
+    const { currentNetwork } = useNetwork();
 
     // ✅ STABILITY FIX: Use ref instead of state for currentTableId to prevent re-renders
     // This ref is only used for duplicate checking, not for rendering
@@ -148,13 +145,32 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
             console.log(`[GameStateContext] Using player address: ${playerAddress} (type: ${cosmosAddress ? "Cosmos" : "Ethereum"})`);
 
-            // Create WebSocket connection with URL parameters for auto-subscription
-            const fullWsUrl = `${WS_URL}?tableAddress=${tableId}&playerId=${playerAddress}`;
+            // Validate that the network has a ws property
+            if (!currentNetwork.ws) {
+                console.error("[GameStateContext] Current network missing 'ws' property:", currentNetwork);
+                setError(new Error("Network configuration missing WebSocket endpoint"));
+                setIsLoading(false);
+                return;
+            }
+
+            // Create WebSocket connection using network context
+            const fullWsUrl = `${currentNetwork.ws}?tableAddress=${tableId}&playerId=${playerAddress}`;
+            console.log("[GameStateContext] 🔌 Attempting WebSocket connection:", {
+                wsBaseUrl: currentNetwork.ws,
+                tableId,
+                playerAddress: playerAddress.substring(0, 12) + "...",
+                fullUrl: fullWsUrl,
+                networkName: currentNetwork.name
+            });
+
             const ws = new WebSocket(fullWsUrl);
             wsRef.current = ws;
 
             ws.onopen = () => {
-                console.log(`[GameStateContext] WebSocket connected to table ${tableId}`);
+                console.log(`[GameStateContext] ✅ WebSocket connected to table ${tableId}`, {
+                    readyState: ws.readyState,
+                    url: fullWsUrl
+                });
                 setIsLoading(false);
             };
 
@@ -339,7 +355,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                 setIsLoading(false);
             };
         },
-        [gameState?.nextToAct, gameState?.players?.length] // Added missing dependencies
+        [currentNetwork, gameState?.nextToAct, gameState?.players?.length]
     );
 
     const unsubscribeFromTable = useCallback(() => {

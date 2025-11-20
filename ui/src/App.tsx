@@ -23,7 +23,6 @@ import TableAdminPage from "./pages/TableAdminPage";
 import GenesisState from "./pages/GenesisState";
 import { TestSdk } from "./test-sdk";
 import { GameStateProvider } from "./context/GameStateContext";
-import { NetworkProvider } from "./context/NetworkContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
 import FaviconSetter from "./components/FaviconSetter";
@@ -106,11 +105,9 @@ function App() {
         <Router>
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-                    <NetworkProvider>
-                        <GameStateProvider>
-                            <AppContent />
-                        </GameStateProvider>
-                    </NetworkProvider>
+                    <GameStateProvider>
+                        <AppContent />
+                    </GameStateProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </Router>
