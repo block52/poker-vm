@@ -64,7 +64,7 @@
     "dependencies": {
         "@bufbuild/protobuf": "^2.10.0",
         "@cosmjs/crypto": "^0.36.1",
-        "@cosmjs/encoding": "^0.36.1",
+        "@cosmjs/encoding": "^0.37.0",
         "@cosmjs/proto-signing": "^0.36.1",
         "@cosmjs/stargate": "^0.36.1",
         "@keplr-wallet/types": "^0.12.0",
