@@ -5,6 +5,7 @@ import { useNewTable } from "../hooks/useNewTable";
 import { useFindGames } from "../hooks/useFindGames";
 import { toast } from "react-toastify";
 import { formatMicroAsUsdc } from "../constants/currency";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 /**
  * TableAdminPage - Admin interface for creating and managing poker tables
@@ -153,8 +154,9 @@ export default function TableAdminPage() {
     const sitAndGoTables = tables.filter(t => t.maxPlayers <= 6).length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2">Table Admin Dashboard</h1>

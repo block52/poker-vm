@@ -8,6 +8,7 @@ import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
 import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
@@ -274,8 +275,9 @@ export default function BridgeAdminDashboard() {
     const hasPrevPage = currentPage > 1;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2">Bridge Admin Dashboard</h1>
