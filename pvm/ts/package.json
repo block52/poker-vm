@@ -14,7 +14,7 @@
     },
     "dependencies": {
         "@bitcoinbrisbane/block52": "^3.0.6",
-        "@cosmjs/amino": "^0.32.4",
+        "@cosmjs/amino": "^0.37.0",
         "@cosmjs/crypto": "^0.32.4",
         "@cosmjs/encoding": "^0.32.4",
         "@cosmjs/math": "^0.32.4",
