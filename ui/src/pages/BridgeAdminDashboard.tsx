@@ -8,6 +8,7 @@ import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
 import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
@@ -333,9 +334,16 @@ export default function BridgeAdminDashboard() {
                             <button
                                 onClick={loadDeposits}
                                 disabled={isLoading}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600"
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600 flex items-center gap-2"
                             >
-                                {isLoading ? "Loading..." : "Refresh"}
+                                {isLoading ? (
+                                    <>
+                                        <LoadingSpinner size="sm" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    "Refresh"
+                                )}
                             </button>
 
                             <div className="flex items-center gap-2">
@@ -467,7 +475,10 @@ export default function BridgeAdminDashboard() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 {deposit.status === "loading" && (
-                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">Loading...</span>
+                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300 flex items-center gap-2 justify-center">
+                                                        <LoadingSpinner size="xs" />
+                                                        Loading...
+                                                    </span>
                                                 )}
                                                 {deposit.status === "processed" && (
                                                     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-900/50 text-green-300 border border-green-700">
@@ -493,9 +504,16 @@ export default function BridgeAdminDashboard() {
                                                     <button
                                                         onClick={() => handleProcessDeposit(deposit.index)}
                                                         disabled={processingIndex === deposit.index || !cosmosWallet.address}
-                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 justify-center mx-auto"
                                                     >
-                                                        {processingIndex === deposit.index ? "Processing..." : "Process"}
+                                                        {processingIndex === deposit.index ? (
+                                                            <>
+                                                                <LoadingSpinner size="xs" />
+                                                                Processing...
+                                                            </>
+                                                        ) : (
+                                                            "Process"
+                                                        )}
                                                     </button>
                                                 ) : (
                                                     <span className="text-gray-500 text-sm">—</span>
