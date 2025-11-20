@@ -6,6 +6,7 @@ import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import defaultLogo from "../assets/YOUR_CLUB.png";
 import { useNetwork } from "../context/NetworkContext";
 import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 interface TestResult {
     functionName: string;
@@ -605,8 +606,9 @@ export default function TestSigningPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
-            <div className="w-full max-w-7xl">
+        <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
+            <AnimatedBackground />
+            <div className="w-full max-w-7xl relative z-10">
                 {/* Header */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                     <div className="flex items-center justify-end mb-4">

@@ -4,6 +4,7 @@ import { useNetwork } from "../../context/NetworkContext";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { CardDistribution } from "./types";
+import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -192,8 +193,10 @@ export default function DistributionPage() {
     };
 
     return (
-        <div className="container mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6 text-white">Card Distribution Analytics</h1>
+        <div className="min-h-screen relative">
+            <AnimatedBackground />
+            <div className="container mx-auto p-6 relative z-10">
+                <h1 className="text-3xl font-bold mb-6 text-white">Card Distribution Analytics</h1>
 
             {loading ? (
                 <div className="text-center py-12">
@@ -249,6 +252,7 @@ export default function DistributionPage() {
                     </div>
                 </>
             )}
+            </div>
         </div>
     );
 }

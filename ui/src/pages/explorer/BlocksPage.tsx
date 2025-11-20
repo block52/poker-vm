@@ -3,7 +3,11 @@ import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { CosmosBlock } from "./types";
 import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
+<<<<<<< HEAD
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+=======
+import { AnimatedBackground } from "../../components/common/AnimatedBackground";
+>>>>>>> 4c27ebfa017372e4f9b618c61a9d10a7fc197d07
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -92,8 +96,9 @@ export default function BlocksPage() {
 
     if (loading && blocks.length === 0) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-                <div className="bg-gray-800 border border-gray-700 p-8 rounded-lg shadow-2xl text-center">
+            <div className="min-h-screen flex items-center justify-center relative">
+                <AnimatedBackground />
+                <div className="bg-gray-800 border border-gray-700 p-8 rounded-lg shadow-2xl text-center relative z-10">
                     <div className="flex justify-center mb-4">
                         <LoadingSpinner size="xl" className="text-blue-500" />
                     </div>
@@ -105,8 +110,9 @@ export default function BlocksPage() {
 
     if (error && blocks.length === 0) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen p-8 relative">
+                <AnimatedBackground />
+                <div className="max-w-7xl mx-auto relative z-10">
                     {/* Header */}
                     <div className="mb-8">
                         <div>
@@ -143,8 +149,9 @@ export default function BlocksPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2 text-center">Block Explorer</h1>
