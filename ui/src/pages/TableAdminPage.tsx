@@ -290,7 +290,7 @@ export default function TableAdminPage() {
                         <button
                             onClick={refetch}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white rounded-lg transition-colors"
+                            className="px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
                             title="Refresh tables"
                         >
                             {isLoading ? (
