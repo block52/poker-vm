@@ -333,21 +333,6 @@ export default function BridgeAdminDashboard() {
                 <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <button
-                                onClick={loadDeposits}
-                                disabled={isLoading}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600 flex items-center gap-2"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <LoadingSpinner size="sm" />
-                                        Loading...
-                                    </>
-                                ) : (
-                                    "Refresh"
-                                )}
-                            </button>
-
                             <div className="flex items-center gap-2">
                                 <label className="text-white text-sm">Items per page:</label>
                                 <select
@@ -366,17 +351,34 @@ export default function BridgeAdminDashboard() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <label className="text-white text-sm">Filter:</label>
-                            <select
-                                value={filter}
-                                onChange={e => setFilter(e.target.value as any)}
-                                className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <label className="text-white text-sm">Filter:</label>
+                                <select
+                                    value={filter}
+                                    onChange={e => setFilter(e.target.value as any)}
+                                    className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                >
+                                    <option value="all">All</option>
+                                    <option value="processed">Processed</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+
+                            <button
+                                onClick={loadDeposits}
+                                disabled={isLoading}
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600 flex items-center gap-2"
                             >
-                                <option value="all">All</option>
-                                <option value="processed">Processed</option>
-                                <option value="pending">Pending</option>
-                            </select>
+                                {isLoading ? (
+                                    <>
+                                        <LoadingSpinner size="sm" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    "Refresh"
+                                )}
+                            </button>
                         </div>
                     </div>
 
