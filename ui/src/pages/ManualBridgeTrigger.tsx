@@ -204,7 +204,7 @@ export default function ManualBridgeTrigger() {
             <AnimatedBackground />
             <div className="max-w-2xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">Manual Bridge Trigger</h1>
                     <p className="text-gray-400">Process Ethereum deposits manually by deposit index</p>
                 </div>
@@ -253,7 +253,7 @@ export default function ManualBridgeTrigger() {
                             onClick={handleQueryDeposit}
                             disabled={isQuerying || isProcessing}
                             className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all ${
-                                isQuerying || isProcessing ? "bg-gray-600 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 active:scale-95"
+                                isQuerying || isProcessing ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:scale-95"
                             }`}
                         >
                             {isQuerying ? (
