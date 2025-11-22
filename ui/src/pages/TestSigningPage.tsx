@@ -3,7 +3,6 @@ import { SigningCosmosClient } from "@bitcoinbrisbane/block52";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
-import defaultLogo from "../assets/YOUR_CLUB.png";
 import { useNetwork } from "../context/NetworkContext";
 import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
@@ -48,9 +47,6 @@ export default function TestSigningPage() {
     const [buyInAmount, setBuyInAmount] = useState("10000000"); // 10 usdc - matches sit-and-go default
     const [action, setAction] = useState("fold");
     const [actionAmount, setActionAmount] = useState("0");
-
-    const clubName = import.meta.env.VITE_CLUB_NAME || "Block52 Poker";
-    const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
 
     // Test accounts from genesis - Static addresses from TEST_ACTORS.md
     const TEST_ACCOUNTS = [
@@ -611,13 +607,8 @@ export default function TestSigningPage() {
             <div className="w-full max-w-7xl relative z-10">
                 {/* Header */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <div className="flex items-center justify-end mb-4">
-                        <div className="flex items-center gap-4">
-                            <img src={clubLogo} alt={clubName} className="h-12" />
-                        </div>
-                    </div>
-                    <h1 className="text-4xl font-extrabold text-white mb-2">SigningCosmosClient Test Page</h1>
-                    <p className="text-gray-300">Test all SDK functions from Lucas's SigningCosmosClient</p>
+                    <h1 className="text-4xl font-extrabold text-white mb-2 text-center">SigningCosmosClient Test Page</h1>
+                    <p className="text-gray-300 text-center">Test all SDK functions from Lucas's SigningCosmosClient</p>
                 </div>
 
                 {/* Token Info Section */}
