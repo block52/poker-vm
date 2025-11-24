@@ -80,7 +80,7 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
     // [1] ✅ Texas Hodl - Recommended for production testing
     {
         name: "Texas Hodl",
-        rpc: "https://node.texashodl.net/rpc",
+        rpc: "https://node.texashodl.net/rpc/",
         rest: "https://node.texashodl.net",
         grpc: "grpcs://node.texashodl.net:9443",
         ws: "wss://node.texashodl.net/ws" // WebSocket endpoint for table/game updates
