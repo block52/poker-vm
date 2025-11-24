@@ -280,7 +280,7 @@ export default function BridgeAdminDashboard() {
             <AnimatedBackground />
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">Bridge Admin Dashboard</h1>
                     <p className="text-gray-400">
                         View and process Ethereum USDC bridge deposits
