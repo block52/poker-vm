@@ -5,6 +5,7 @@ import { useNewTable } from "../hooks/useNewTable";
 import { useFindGames } from "../hooks/useFindGames";
 import { toast } from "react-toastify";
 import { formatMicroAsUsdc } from "../constants/currency";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 /**
  * TableAdminPage - Admin interface for creating and managing poker tables
@@ -153,10 +154,11 @@ export default function TableAdminPage() {
     const sitAndGoTables = tables.filter(t => t.maxPlayers <= 6).length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">Table Admin Dashboard</h1>
                     <p className="text-gray-400">Create and manage poker tables</p>
                 </div>
@@ -288,9 +290,30 @@ export default function TableAdminPage() {
                         <button
                             onClick={refetch}
                             disabled={isLoading}
-                            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                            className="px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
+                            title="Refresh tables"
                         >
-                            {isLoading ? "Loading..." : "Refresh"}
+                            {isLoading ? (
+                                <span className="flex items-center justify-center">
+                                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                        />
+                                    </svg>
+                                </span>
+                            ) : (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                    />
+                                </svg>
+                            )}
                         </button>
                     </div>
 
@@ -483,6 +506,16 @@ export default function TableAdminPage() {
                     </div>
                 </div>
             )}
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-50 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain pointer-events-none" />
+                </div>
+            </div>
         </div>
     );
 }

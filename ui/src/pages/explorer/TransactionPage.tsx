@@ -5,6 +5,7 @@ import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { renderJSONWithClickableAddresses } from "../../components/explorer/ClickableAddress";
 import { CosmosTransaction } from "./types";
+import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 
 export default function TransactionPage() {
     // Check if hash is provided via URL params (for /explorer/tx/:hash route)
@@ -121,8 +122,9 @@ export default function TransactionPage() {
     );
 
     return (
-        <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
-            <div className="w-full max-w-4xl">
+        <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
+            <AnimatedBackground />
+            <div className="w-full max-w-4xl relative z-10">
                 {/* Header Card */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                     <h1 className="text-4xl font-extrabold text-white mb-2">Transaction Search</h1>

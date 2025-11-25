@@ -2,6 +2,7 @@ import { useState } from "react";
 import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
+import { AnimatedBackground } from "./common/AnimatedBackground";
 
 const CosmosWalletPage = () => {
     const [mnemonic, setMnemonic] = useState<string>("");
@@ -100,14 +101,17 @@ const CosmosWalletPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            {/* Header */}
-            <div className="max-w-4xl mx-auto mb-8">
+        <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden p-8 pb-24">
+            {/* Animated Background */}
+            <AnimatedBackground />
+            
+            {/* Content */}
+            <div className="relative z-10 w-full max-w-4xl mx-auto mb-8">
                 <h1 className="text-4xl font-bold text-white mb-2 text-center">Block52 Wallet Manager</h1>
                 <p className="text-center mb-8 text-gray-400">Generate or import a wallet to receive deposits and play poker</p>
             </div>
 
-            <div className="max-w-4xl mx-auto">
+            <div className="relative z-10 w-full max-w-4xl mx-auto">
                 {/* Existing Wallet Display */}
                 {existingAddress && (
                     <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
@@ -256,7 +260,7 @@ const CosmosWalletPage = () => {
                             <button
                                 onClick={handleImportWallet}
                                 disabled={isGenerating || !importMnemonic.trim()}
-                                className="w-full text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+                                className="w-full text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all bg-blue-600 hover:bg-blue-700"
                             >
                                 {isGenerating ? "Importing..." : "Import Wallet"}
                             </button>
@@ -270,6 +274,16 @@ const CosmosWalletPage = () => {
                         <p className="text-red-300">{error}</p>
                     </div>
                 )}
+            </div>
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-20 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
+                </div>
             </div>
         </div>
     );

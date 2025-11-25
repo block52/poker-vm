@@ -88,11 +88,6 @@ curl http://localhost:8545/health
 Key environment variables in `.env`:
 
 ```bash
-# PVM Configuration
-VALIDATOR_KEY=your_validator_key
-RPC_URL=https://mainnet.g.alchemy.com/v2/your_key
-PK=your_private_key
-
 # Frontend Configuration
 VITE_PROJECT_ID=your_project_id
 VITE_MAINNET_RPC_URL=https://mainnet.infura.io/v3/your_key

@@ -7,6 +7,9 @@ import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { getCosmosUrls } from "../utils/cosmos/urls";
+import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
@@ -17,14 +20,6 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
  * - Process individual deposits
  * - Filter by status (all/processed/pending)
  */
-
-// Bridge contract ABI for deposits mapping
-const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string memory account, uint256 amount)"];
-
-// Helper function to format USDC amounts (6 decimals)
-const formatUSDC = (microAmount: string | number): string => {
-    return formatMicroAsUsdc(microAmount, 6);
-};
 
 interface Deposit {
     index: number;
@@ -41,7 +36,9 @@ export default function BridgeAdminDashboard() {
     const { currentNetwork } = useNetwork();
     const [deposits, setDeposits] = useState<Deposit[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [maxIndex, setMaxIndex] = useState(10); // Query first 10 deposits by default
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalDepositsFound, setTotalDepositsFound] = useState(0);
     const [processingIndex, setProcessingIndex] = useState<number | null>(null);
     const [filter, setFilter] = useState<"all" | "processed" | "pending">("all");
     const [configError, setConfigError] = useState<string | null>(null);
@@ -126,16 +123,21 @@ export default function BridgeAdminDashboard() {
         try {
             // Connect to Ethereum
             const provider = new ethers.JsonRpcProvider(ethRpcUrl);
-            const contract = new ethers.Contract(bridgeContractAddress, DEPOSITS_ABI, provider);
+            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_DEPOSITS_ABI, provider);
 
-            // Query deposits by index
-            for (let i = 0; i < maxIndex; i++) {
+            // Calculate start and end indices based on current page
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            // Query deposits by index for current page
+            for (let i = startIndex; i < endIndex; i++) {
                 try {
                     const [account, amount] = await contract.deposits(i);
 
                     // If account is empty, deposit doesn't exist
                     if (!account || account === "") {
-                        console.log(`Deposit ${i} not found, stopping query`);
+                        console.log(`Deposit ${i} not found, reached end of deposits`);
+                        setTotalDepositsFound(i); // Set total to the last found index
                         break;
                     }
 
@@ -143,13 +145,29 @@ export default function BridgeAdminDashboard() {
                         index: i,
                         recipient: account,
                         amount: amount.toString(),
-                        amountFormatted: formatUSDC(amount.toString()),
+                        amountFormatted: formatMicroAsUsdc(amount.toString(), 6),
                         status: "loading" // Will check processing status next
                     });
                 } catch (err: any) {
                     console.error(`Failed to query deposit ${i}:`, err);
                     // If we get an error, likely reached the end
+                    setTotalDepositsFound(i);
                     break;
+                }
+            }
+
+            // If we got all items for this page, there might be more
+            if (newDeposits.length === itemsPerPage) {
+                // Check if next item exists to determine if there are more pages
+                try {
+                    const [account] = await contract.deposits(endIndex);
+                    if (account && account !== "") {
+                        setTotalDepositsFound(endIndex + 1); // At least one more exists
+                    } else {
+                        setTotalDepositsFound(endIndex); // This is the last page
+                    }
+                } catch {
+                    setTotalDepositsFound(endIndex); // Assume this is the last page
                 }
             }
 
@@ -163,7 +181,7 @@ export default function BridgeAdminDashboard() {
         } finally {
             setIsLoading(false);
         }
-    }, [maxIndex, ethRpcUrl, checkProcessingStatus]);
+    }, [currentPage, itemsPerPage, ethRpcUrl, checkProcessingStatus]);
 
     // Process a single deposit
     const handleProcessDeposit = async (depositIndex: number) => {
@@ -238,10 +256,10 @@ export default function BridgeAdminDashboard() {
         }
     };
 
-    // Load deposits on mount
+    // Load deposits on mount and when page changes
     useEffect(() => {
         loadDeposits();
-    }, [maxIndex, loadDeposits]);
+    }, [currentPage, itemsPerPage, loadDeposits]);
 
     // Filter deposits based on selected filter
     const filteredDeposits = deposits.filter(deposit => {
@@ -253,12 +271,16 @@ export default function BridgeAdminDashboard() {
     const totalDeposits = deposits.length;
     const processedCount = deposits.filter(d => d.status === "processed").length;
     const pendingCount = deposits.filter(d => d.status === "pending").length;
+    const totalPages = totalDepositsFound > 0 ? Math.ceil(totalDepositsFound / itemsPerPage) : 1;
+    const hasNextPage = currentPage < totalPages;
+    const hasPrevPage = currentPage > 1;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">Bridge Admin Dashboard</h1>
                     <p className="text-gray-400">
                         View and process Ethereum USDC bridge deposits
@@ -311,35 +333,94 @@ export default function BridgeAdminDashboard() {
                 <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <label className="text-white text-sm">Max Index to Query:</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="100"
-                                value={maxIndex}
-                                onChange={e => setMaxIndex(parseInt(e.target.value) || 10)}
-                                className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white w-24"
-                            />
+                            <div className="flex items-center gap-2">
+                                <label className="text-white text-sm">Items per page:</label>
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={e => {
+                                        setItemsPerPage(parseInt(e.target.value));
+                                        setCurrentPage(1); // Reset to first page when changing items per page
+                                    }}
+                                    className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                >
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <label className="text-white text-sm">Filter:</label>
+                                <select
+                                    value={filter}
+                                    onChange={e => setFilter(e.target.value as any)}
+                                    className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                >
+                                    <option value="all">All</option>
+                                    <option value="processed">Processed</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+
                             <button
                                 onClick={loadDeposits}
                                 disabled={isLoading}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600"
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600 flex items-center gap-2"
                             >
-                                {isLoading ? "Loading..." : "Refresh"}
+                                {isLoading ? (
+                                    <>
+                                        <LoadingSpinner size="sm" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    "Refresh"
+                                )}
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="mt-4 flex items-center justify-between border-t border-gray-700 pt-4">
+                        <div className="text-gray-400 text-sm">
+                            Page {currentPage} of {totalPages > 0 ? totalPages : 1} • Showing deposits {(currentPage - 1) * itemsPerPage} -{" "}
+                            {Math.min(currentPage * itemsPerPage, totalDepositsFound > 0 ? totalDepositsFound : totalDeposits)}
+                            {totalDepositsFound > 0 && ` of ${totalDepositsFound}`}
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <label className="text-white text-sm">Filter:</label>
-                            <select
-                                value={filter}
-                                onChange={e => setFilter(e.target.value as any)}
-                                className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={!hasPrevPage || isLoading}
+                                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-lg transition-colors text-sm"
+                                title="First page"
                             >
-                                <option value="all">All</option>
-                                <option value="processed">Processed</option>
-                                <option value="pending">Pending</option>
-                            </select>
+                                ««
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={!hasPrevPage || isLoading}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-lg transition-colors text-sm"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(p => p + 1)}
+                                disabled={!hasNextPage || isLoading}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-lg transition-colors text-sm"
+                            >
+                                Next
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={!hasNextPage || isLoading}
+                                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-lg transition-colors text-sm"
+                                title="Last page"
+                            >
+                                »»
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -398,7 +479,10 @@ export default function BridgeAdminDashboard() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 {deposit.status === "loading" && (
-                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">Loading...</span>
+                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300 flex items-center gap-2 justify-center">
+                                                        <LoadingSpinner size="xs" />
+                                                        Loading...
+                                                    </span>
                                                 )}
                                                 {deposit.status === "processed" && (
                                                     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-900/50 text-green-300 border border-green-700">
@@ -424,9 +508,16 @@ export default function BridgeAdminDashboard() {
                                                     <button
                                                         onClick={() => handleProcessDeposit(deposit.index)}
                                                         disabled={processingIndex === deposit.index || !cosmosWallet.address}
-                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 justify-center mx-auto"
                                                     >
-                                                        {processingIndex === deposit.index ? "Processing..." : "Process"}
+                                                        {processingIndex === deposit.index ? (
+                                                            <>
+                                                                <LoadingSpinner size="xs" />
+                                                                Processing...
+                                                            </>
+                                                        ) : (
+                                                            "Process"
+                                                        )}
                                                     </button>
                                                 ) : (
                                                     <span className="text-gray-500 text-sm">—</span>
@@ -450,6 +541,16 @@ export default function BridgeAdminDashboard() {
                         <li>Click "Process" to mint USDC on Cosmos for pending deposits</li>
                         <li>Processed deposits cannot be processed again (idempotency protection)</li>
                     </ul>
+                </div>
+
+                {/* Powered by Block52 Footer */}
+                <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                    <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                        <div className="text-left mb-1">
+                            <span className="text-xs text-white font-medium tracking-wide">POWERED BY</span>
+                        </div>
+                        <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain pointer-events-none" />
+                    </div>
                 </div>
             </div>
         </div>

@@ -67,7 +67,6 @@ import { colors, getTableHeaderGradient, getHexagonStroke, hexToRgba } from "../
 
 // Use environment variable for club logo with fallback to default
 const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
-const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
 const _randomSeat = import.meta.env.VITE_RANDOM_SEAT === "true" ? true : false;
 
 import { LuPanelLeftClose } from "react-icons/lu";
@@ -76,6 +75,7 @@ import { RxExit } from "react-icons/rx";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
+import { NetworkSelector } from "../NetworkSelector";
 
 import { ethers } from "ethers";
 
@@ -120,9 +120,6 @@ import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 import GameStartCountdown from "./common/GameStartCountdown";
 import SitAndGoAutoJoinModal from "./SitAndGoAutoJoinModal";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
-
-// Cosmos Integration
-import CosmosStatus from "../cosmos/CosmosStatus";
 
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
@@ -821,15 +818,15 @@ const Table = React.memo(() => {
                             ></div>
                         </div>
 
-                        {/* Left Section - Lobby button and Network display */}
-                        <div className="flex items-center space-x-2 sm:space-x-4 z-10">
+                        {/* Left Section - Table button and Network selector */}
+                        <div className="flex items-center space-x-2 sm:space-x-4 z-[9999] relative">
                             <span
                                 className="text-white text-sm sm:text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
                                 onClick={handleLobbyClick}
                             >
-                                Lobby
+                                Table {id ? id.slice(-5) : ""}
                             </span>
-                            <NetworkDisplay isMainnet={false} />
+                            <NetworkSelector />
                             {/* Game Type Display - Desktop Only */}
                             {gameOptions && (
                                 <div
@@ -980,7 +977,7 @@ const Table = React.memo(() => {
                                 onMouseEnter={handleLeaveTableMouseEnter}
                                 onMouseLeave={handleLeaveTableMouseLeave}
                                 onClick={handleLeaveTableClick}
-                                title="Return to Lobby"
+                                title="Return to Table"
                             >
                                 <span className="hidden sm:inline">Leave Table</span>
                                 <span className="sm:hidden">Leave</span>
@@ -997,7 +994,7 @@ const Table = React.memo(() => {
                     {/* Left: Essential Info */}
                     <div className="flex items-center gap-2 bg-black bg-opacity-70 px-2 py-1 rounded-lg">
                         <span className="text-white text-xs font-bold cursor-pointer" onClick={handleLobbyClick}>
-                            Lobby
+                            Table {id ? id.slice(-5) : ""}
                         </span>
                         <span className="text-gray-300 text-xs">|</span>
                         <span className="text-white text-xs">
@@ -1370,16 +1367,6 @@ const Table = React.memo(() => {
                 </div>
             )}
 
-            {/* Powered by Block52 */}
-            <div className="powered-by-block52">
-                <div className="powered-by-content">
-                    <div className="powered-by-text">
-                        <span className="text-xs text-white font-medium tracking-wide">POWERED BY</span>
-                    </div>
-                    <img src="/block52.png" alt="Block52 Logo" className="powered-by-logo" />
-                </div>
-            </div>
-
             {/* Game Start Countdown Modal */}
             {showCountdown && gameStartTime && (
                 <GameStartCountdown gameStartTime={gameStartTime} onCountdownComplete={handleCountdownComplete} onSkip={handleSkipCountdown} />
@@ -1395,18 +1382,6 @@ const Table = React.memo(() => {
                     }}
                 />
             )}
-
-            {/* Club Name at Bottom Center (or Bottom Right in mobile landscape) */}
-            <div className={`fixed z-40 ${isMobileLandscape ? "bottom-4 right-4 opacity-30" : "bottom-1 left-1/2 transform -translate-x-1/2 opacity-60"}`}>
-                <div className="text-xs" style={{ color: colors.ui.textSecondary, fontSize: isMobileLandscape ? "14px" : "20px" }}>
-                    {clubName}
-                </div>
-            </div>
-
-            {/* Cosmos Status in Bottom Left */}
-            <div className="fixed bottom-2 left-2 z-40 opacity-60">
-                <CosmosStatus />
-            </div>
 
             {/* Transaction Popup - Bottom Right */}
             <TransactionPopup txHash={recentTxHash} onClose={handleCloseTransactionPopup} />

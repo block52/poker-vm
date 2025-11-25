@@ -1,11 +1,11 @@
 // --- Types for explicit return values (from IClient.ts) ---
-export interface AccountResponse {
+export type CustomAccountResponse = {
   address: string;
   pub_key?: any;
   account_number: string;
   sequence: string;
   [key: string]: any;
-}
+};
 
 export interface TxResponse {
   height: string;
@@ -66,8 +66,6 @@ declare global {
     keplr: CustomKeplr;
   }
 }
-
-
 
 // Cosmos blockchain constants (matches pokerchain/x/poker/types/types.go)
 export const COSMOS_CONSTANTS = {
