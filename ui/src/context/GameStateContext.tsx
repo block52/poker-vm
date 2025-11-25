@@ -171,6 +171,15 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                     readyState: ws.readyState,
                     url: fullWsUrl
                 });
+
+                // Send subscription message to the server
+                const subscriptionMessage = {
+                    type: "subscribe",
+                    game_id: tableId
+                };
+                console.log(`[GameStateContext] 📤 Sending subscription message:`, subscriptionMessage);
+                ws.send(JSON.stringify(subscriptionMessage));
+
                 setIsLoading(false);
             };
 
@@ -188,19 +197,33 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                     // 🔍 DEBUG: Log parsed message structure
                     console.log("📨 [WebSocket PARSED MESSAGE]", {
                         timestamp: new Date().toISOString(),
+                        messageEvent: message.event,
                         messageType: message.type,
+                        gameId: message.game_id,
                         tableAddress: message.tableAddress,
-                        hasGameState: !!message.gameState,
+                        hasGameState: !!(message.gameState || message.data?.gameState),
                         expectedTableId: tableId,
-                        willProcess: message.type === "gameStateUpdate" && message.tableAddress === tableId
+                        fullMessage: message
                     });
 
-                    if (message.type === "gameStateUpdate" && message.tableAddress === tableId) {
+                    // Handle both old format (type: "gameStateUpdate") and new format (event: "state")
+                    const isStateUpdate =
+                        (message.type === "gameStateUpdate" && message.tableAddress === tableId) || (message.event === "state" && message.game_id === tableId);
+
+                    if (isStateUpdate) {
+                        // Extract game state from either format
+                        const gameStateData = message.gameState || message.data?.gameState;
+
+                        if (!gameStateData) {
+                            console.warn("⚠️ [WebSocket] Received state update but no gameState found:", message);
+                            return;
+                        }
+
                         // 🃏 DEBUG: Log hole cards received from WebSocket
                         console.log("🃏 [HOLE CARDS DEBUG - UI RECEIVED]", {
                             timestamp: new Date().toISOString(),
                             currentPlayerAddress: playerAddress,
-                            players: message.gameState?.players?.map((p: any) => ({
+                            players: gameStateData?.players?.map((p: any) => ({
                                 seat: p.seat,
                                 address: p.address?.substring(0, 12) + "...",
                                 holeCards: p.holeCards,
@@ -212,29 +235,30 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                         debugLog("GAME STATE UPDATE", {
                             timestamp: new Date().toISOString(),
                             tableId,
-                            newRound: message.gameState?.round,
+                            newRound: gameStateData?.round,
                             playerTurnInfo: {
-                                nextToAct: message.gameState?.nextToAct,
-                                currentActorSeat: message.gameState?.players?.find((p: any) => p.address?.toLowerCase() === playerAddress.toLowerCase())?.seat
+                                nextToAct: gameStateData?.nextToAct,
+                                currentActorSeat: gameStateData?.players?.find((p: any) => p.address?.toLowerCase() === playerAddress.toLowerCase())?.seat
                             },
-                            source: "WebSocket gameStateUpdate"
+                            source: "WebSocket state update"
                         });
 
                         console.log(`[GameStateContext] Received game state update for table ${tableId}`);
+                        console.log(`[GameStateContext] 📊 Game state has ${gameStateData?.players?.length || 0} players`);
 
                         // 🔍 DEBUG: Log before and after state to see if React state actually updates
                         debugLog("REACT STATE DEBUG - BEFORE", {
                             timestamp: new Date().toISOString(),
                             previousNextToAct: gameState?.nextToAct,
-                            newNextToAct: message.gameState?.nextToAct,
+                            newNextToAct: gameStateData?.nextToAct,
                             previousPlayerCount: gameState?.players?.length,
-                            newPlayerCount: message.gameState?.players?.length,
+                            newPlayerCount: gameStateData?.players?.length,
                             willUpdate: true,
                             source: "GameStateContext setState"
                         });
 
-                        // Update the React state
-                        setGameState(message.gameState);
+                        // Update the React state with the extracted game state
+                        setGameState(gameStateData);
                         setError(null);
 
                         // 🔍 DEBUG: Log immediately after state update (this may still show old state due to async nature)
@@ -242,22 +266,22 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                             debugLog("REACT STATE DEBUG - AFTER", {
                                 timestamp: new Date().toISOString(),
                                 currentNextToAct: gameState?.nextToAct,
-                                expectedNextToAct: message.gameState?.nextToAct,
-                                stateUpdated: gameState?.nextToAct === message.gameState?.nextToAct,
+                                expectedNextToAct: gameStateData?.nextToAct,
+                                stateUpdated: gameState?.nextToAct === gameStateData?.nextToAct,
                                 source: "GameStateContext setState verification"
                             });
                         }, 10); // Small delay to see if state updated
 
                         // DEBUG: Log hole card data for all players to detect if backend sends undefined/null cards
-                        if (message.gameState?.players) {
-                            const currentUser = message.gameState.players.find((player: any) => player.address?.toLowerCase() === playerAddress?.toLowerCase());
+                        if (gameStateData?.players) {
+                            const currentUser = gameStateData.players.find((player: any) => player.address?.toLowerCase() === playerAddress?.toLowerCase());
 
                             console.log("🃏 [GameStateContext] Hole Cards Debug:", {
                                 timestamp: new Date().toISOString(),
-                                totalPlayers: message.gameState.players.length,
-                                round: message.gameState.round,
-                                shouldHaveCards: ["preflop", "flop", "turn", "river", "showdown"].includes(message.gameState.round),
-                                source: "WebSocket gameStateUpdate message",
+                                totalPlayers: gameStateData.players.length,
+                                round: gameStateData.round,
+                                shouldHaveCards: ["preflop", "flop", "turn", "river", "showdown"].includes(gameStateData.round),
+                                source: "WebSocket state update message",
                                 note: "This shows raw backend data - compare with Player component logs",
                                 currentUserData: currentUser
                                     ? {
@@ -276,7 +300,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                             const roundsWithCards = ["preflop", "flop", "turn", "river", "showdown"];
                             if (
                                 currentUser &&
-                                roundsWithCards.includes(message.gameState.round) &&
+                                roundsWithCards.includes(gameStateData.round) &&
                                 (!currentUser.holeCards || currentUser.holeCards.length !== 2)
                             ) {
                                 console.warn("🚨 [WebSocket/Backend Data Issue] PVM backend sent invalid hole cards via WebSocket:", {
@@ -286,8 +310,8 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                                     issue: !currentUser.holeCards
                                         ? "Backend sent null/undefined cards"
                                         : `Backend sent wrong count: ${currentUser.holeCards.length}`,
-                                    round: message.gameState.round,
-                                    source: "WebSocket gameStateUpdate message",
+                                    round: gameStateData.round,
+                                    source: "WebSocket state update message",
                                     note: "This is NOT a frontend rendering issue - backend data is invalid"
                                 });
                             }
