@@ -84,17 +84,17 @@ export const GlobalHeader: React.FC = () => {
                 backdropFilter: "blur(10px)"
             }}
         >
-            <div className="container mx-auto px-4 py-3">
+            <div className="px-4 py-3 relative">
                 <div className="flex items-center justify-between">
-                    {/* Left side - Logo/Title */}
-                    <div className="flex items-center gap-6 flex-1">
+                    {/* Left side - Logo/Title (absolute positioned) */}
+                    <div className="flex items-center gap-6 absolute left-4">
                         <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity whitespace-nowrap" style={{ color: colors.brand.primary }}>
                             {import.meta.env.VITE_CLUB_NAME || "Block 52"}
                         </Link>
                     </div>
 
-                    {/* Center - Desktop Navigation */}
-                    <nav className="hidden lg:flex items-center gap-1 flex-shrink-0">
+                    {/* Center - Desktop Navigation (truly centered on screen) */}
+                    <nav className="hidden lg:flex items-center gap-1 mx-auto">
                         {menuItems.map(item => (
                             <Link
                                 key={item.path}
@@ -124,8 +124,8 @@ export const GlobalHeader: React.FC = () => {
                         ))}
                     </nav>
 
-                    {/* Right side - Network Selector & Mobile Menu */}
-                    <div className="flex items-center gap-4 flex-1 justify-end">
+                    {/* Right side - Network Selector & Mobile Menu (absolute positioned) */}
+                    <div className="flex items-center gap-4 absolute right-4">
                         {/* Block Height Indicator */}
                         {latestBlockHeight && (
                             <div
