@@ -125,7 +125,7 @@ export const GlobalHeader: React.FC = () => {
                     </nav>
 
                     {/* Right side - Network Selector & Mobile Menu (absolute positioned) */}
-                    <div className="flex items-center gap-4 absolute right-4">
+                    <div className="flex items-center gap-4 absolute right-0 pr-4">
                         {/* Block Height Indicator */}
                         {latestBlockHeight && (
                             <div
