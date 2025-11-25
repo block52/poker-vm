@@ -64,7 +64,7 @@ export default function ManualBridgeTrigger() {
 
             console.log("📦 Deposit data:", { recipient, amount: amount.toString() });
 
-            if (recipient === "0x0000000000000000000000000000000000000000" || recipient === "") {
+            if (recipient === ethers.ZeroAddress || recipient === "") {
                 setError(`Deposit ${index} not found or is empty`);
                 setQueryResult(null);
             } else {
