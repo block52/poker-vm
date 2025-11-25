@@ -182,10 +182,8 @@ export default function BlocksPage() {
                                         <td className="px-6 py-4">
                                             <a
                                                 href={`/explorer/block/${block.block.header.height}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
                                                 className="font-mono text-xs text-blue-400 hover:text-blue-300 cursor-pointer transition-colors break-all block"
-                                                title="Click to view block details in new tab"
+                                                title="Click to view block details"
                                             >
                                                 {block.block_id.hash}
                                             </a>
@@ -200,7 +198,7 @@ export default function BlocksPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="font-mono text-xs text-gray-300" title={block.block.header.proposer_address}>
+                                            <span className="font-mono text-xs text-white" title={block.block.header.proposer_address}>
                                                 {truncateHash(block.block.header.proposer_address)}
                                             </span>
                                         </td>

@@ -2,30 +2,47 @@
 
 [![PVM UnitTests](https://github.com/block52/poker-vm/actions/workflows/main.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/main.yml)
 
-The Layer 2 poker game virtual machine for the Block52 network.
+A stateless execution layer for poker game logic on the Block52 blockchain network.
 
 ![image](https://github.com/user-attachments/assets/29412b57-3419-4177-b265-1e74e7c7c2e9)
 
 ## Architecture
 
-### CVM (Card Virtual Machine)
+The Poker VM (PVM) is a **pure execution layer** that processes poker game logic without maintaining persistent state. All game state is stored on the blockchain, making the PVM stateless, horizontally scalable, and fault-tolerant.
 
-The CVM is a virtual card game machine that runs on the Block52 network, responsible for executing card game logic.
+### Key Principles
 
-### PVM (Poker Virtual Machine)
+-   **Stateless Execution**: PVM reads state from blockchain, executes game logic, returns results
+-   **No Database**: No MongoDB, Redis, or external storage - blockchain is the single source of truth
+-   **Pure Functions**: Game logic is deterministic and side-effect free
+-   **Horizontal Scaling**: Multiple PVM instances can run in parallel
+-   **Real-time Updates**: WebSocket connections for live game state synchronization
 
-The PVM runs inside the CVM and handles poker-specific game logic.
+### Components
+
+-   **PVM Core**: TypeScript-based poker game logic engine
+-   **RPC Interface**: JSON-RPC endpoint for transaction submission and queries
+-   **WebSocket Server**: Real-time game state updates for connected clients
+-   **REST API**: Health checks and utility endpoints
+
+### Benefits
+
+-   ✅ **No Data Migration**: Spin up new PVM instances without data sync
+-   ✅ **Instant Failover**: Any instance can handle any request
+-   ✅ **Global Distribution**: Deploy PVM nodes globally for low latency
+-   ✅ **Cost Efficient**: No database hosting or maintenance costs
+-   ✅ **Deterministic**: Same input always produces same output
+-   ✅ **Testable**: Pure functions make testing straightforward
 
 ## Quick Start
 
 ### Prerequisites
 
--   Docker and Docker Compose
--   Git
--   Node.js 20+ (for local development)
+-   Node.js 20+
 -   Yarn
+-   A running Block52 blockchain node (for production use)
 
-### Docker Setup (Recommended)
+### Local Development
 
 1. **Clone the repository:**
 
@@ -34,58 +51,70 @@ The PVM runs inside the CVM and handles poker-specific game logic.
     cd poker-vm
     ```
 
-2. **Start with Docker (one command):**
-
-    ```bash
-    ./start-docker.sh
-    ```
-
-    Or manually:
-
-    ```bash
-    # Copy environment template
-    cp .env.example .env
-
-    # Start all services
-    make up
-    # OR
-    docker compose up -d
-    ```
-
-3. **Access services:**
-    - 🎰 **Poker UI**: http://localhost:5173
-    - 🔧 **PVM API**: http://localhost:8545
-    - 🔧 **API Health**: http://localhost:8545/health
-    - 🗄️ **MongoDB**: mongodb://localhost:27017
-
-### Manual Setup (Development)
-
-## Development
-
-### Local PVM Development
-
-1. **Navigate to PVM directory:**
+2. **Start the PVM server:**
 
     ```bash
     cd pvm/ts
-    ```
-
-2. **Start local MongoDB:**
-
-    ```bash
-    docker compose up
-    ```
-
-3. **Start PVM application:**
-
-    ```bash
     yarn install
-    yarn run dev
+    yarn dev
     ```
 
-4. **Local services:**
-    - API: http://localhost:8545
-    - MongoDB: `mongodb://node1:Passw0rd123@localhost:27017`
+3. **Start the UI (optional):**
+
+    ```bash
+    cd ui
+    yarn install
+    yarn dev
+    ```
+
+4. **Access services:**
+    - 🔧 **PVM RPC**: http://localhost:8545
+    - 🔧 **Health Check**: http://localhost:8545/health
+    - 🎰 **Poker UI**: http://localhost:5173 (if running)
+    - � **WebSocket**: ws://localhost:8545/ws
+
+### Production Setup
+
+The PVM connects to a Block52 blockchain node for state storage:
+
+```bash
+# Set blockchain node endpoint (optional, defaults to localhost:26657)
+export BLOCKCHAIN_RPC=https://node1.block52.xyz/rpc/
+
+cd pvm/ts
+yarn build
+yarn start
+```
+
+### Network Endpoints
+
+| Network        | RPC                            | REST                       | gRPC                           | WebSocket                  |
+| -------------- | ------------------------------ | -------------------------- | ------------------------------ | -------------------------- |
+| **Localhost**  | http://localhost:26657         | http://localhost:1317      | http://localhost:9090          | ws://localhost:26657/ws    |
+| **Texas Hodl** | https://texashodl.net/rpc      | https://node.texashodl.net | grpcs://texashodl.net:9443     | wss://texashodl.net/ws     |
+| **Block52**    | https://node1.block52.xyz/rpc/ | https://node1.block52.xyz  | grpcs://node1.block52.xyz:9443 | wss://node1.block52.xyz/ws |
+
+## Development
+
+### PVM Architecture
+
+The PVM is a stateless execution layer with three main interfaces:
+
+1. **RPC Endpoint** (`http://localhost:8545`):
+
+    - Submit transactions
+    - Query game state
+    - JSON-RPC 2.0 compatible
+
+2. **WebSocket Server** (`ws://localhost:8545/ws`):
+
+    - Real-time game state updates
+    - Connect with `?tableAddress=<table_id>&playerId=<player_address>`
+    - Automatic reconnection handling
+
+3. **REST API** (`http://localhost:8545/health`):
+    - Health checks
+    - Metrics and diagnostics
 
 ### Testing
 
@@ -96,6 +125,13 @@ cd pvm/ts
 yarn test
 ```
 
+Run integration tests:
+
+```bash
+cd pvm/ts
+yarn test:integration
+```
+
 ### Building for Production
 
 ```bash
@@ -103,63 +139,66 @@ cd pvm/ts
 yarn build
 ```
 
-## Docker Deployment
-
-### Quick Docker Setup
-
-The easiest way to run the entire stack:
+The build outputs to `dist/` and can be run with:
 
 ```bash
-# One-command setup
-./start-docker.sh
-
-# Or step by step
-cp .env.example .env  # Configure as needed
-make up               # Start all services
-make health           # Check service health
+node dist/index.js
 ```
 
-### Docker Services
+## Deployment
 
-| Service      | Port  | Description                                  |
-| ------------ | ----- | -------------------------------------------- |
-| **PVM**      | 8545  | Poker Virtual Machine (Node.js + TypeScript) |
-| **Frontend** | 5173  | React UI with hot reload                     |
-| **MongoDB**  | 27017 | Game state database                          |
-| **Redis**    | 6379  | Caching and sessions                         |
+### Docker Deployment
 
-### Docker Commands
+Build and run the PVM in a container:
 
 ```bash
-# Service management
-make build          # Build all images
-make up             # Start services
-make down           # Stop services
-make logs           # View logs
-make restart        # Restart services
-
-# Environment-specific
-make dev            # Development mode
-make prod           # Production mode
-
-# Utilities
-make health         # Check service health
-make clean          # Clean up containers/volumes
-make mongo-shell    # Connect to MongoDB
-make redis-cli      # Connect to Redis
+cd pvm/ts
+docker build -t poker-vm .
+docker run -p 8545:8545 poker-vm
 ```
 
-### Production Deployment
+### Environment Variables
+
+| Variable         | Default                  | Description                            |
+| ---------------- | ------------------------ | -------------------------------------- |
+| `PORT`           | `8545`                   | HTTP server port (always used for PVM) |
+| `BLOCKCHAIN_RPC` | `http://localhost:26657` | Block52 blockchain RPC endpoint        |
+| `NODE_ENV`       | `development`            | Environment mode                       |
+
+### Horizontal Scaling
+
+Since the PVM is stateless, you can run multiple instances behind a load balancer:
 
 ```bash
-# Production mode with Nginx + optimized builds
-NODE_ENV=production make prod
+# Instance 1
+PORT=8545 node dist/index.js
 
-# Or manually
-docker-compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d
+# Instance 2
+PORT=8546 node dist/index.js
+
+# Instance 3
+PORT=8547 node dist/index.js
 ```
 
-For detailed Docker documentation, see [DOCKER.md](./DOCKER.md).
+Configure your load balancer (nginx, HAProxy, etc.) to distribute requests across instances.
+
+### Health Checks
+
+The PVM provides health check endpoints for monitoring:
+
+```bash
+curl http://localhost:8545/health
+```
+
+Response:
+
+```json
+{
+    "status": "healthy",
+    "uptime": 12345,
+    "version": "1.0.0"
+}
+```
 
 ## Game Features
 
@@ -189,38 +228,80 @@ The PVM tracks various player states throughout the game:
 -   `ACTIVE` → `SHOWING` (showdown phase)
 -   `ACTIVE` → `BUSTED` (lose all chips)
 
-### Countdown Timer
+### WebSocket Connection
 
-Coordinate synchronized game starts using the `gameStart` URL parameter:
+Connect to a live poker table for real-time updates:
 
+```javascript
+const ws = new WebSocket("ws://localhost:8545/ws?tableAddress=<table_id>&playerId=<player_address>");
+
+ws.onmessage = event => {
+    const message = JSON.parse(event.data);
+    if (message.type === "gameStateUpdate") {
+        console.log("Game state updated:", message.gameState);
+    }
+};
 ```
-http://localhost:8545/table/0x123abc?gameStart=2025-06-16T15:30:00Z
-```
 
-**Parameter formats:**
+**Message Types:**
 
--   ISO 8601: `2025-06-16T15:30:00Z`
--   With timezone: `2025-06-16T15:30:00%2B10:00` (URL encoded)
--   Unix timestamp: `1718524200000`
+-   `connected`: WebSocket connection established
+-   `gameStateUpdate`: Game state changed (player action, new round, etc.)
+-   `error`: Error occurred during processing
 
-**Features:**
+### RPC Interface
 
--   Screen lock until countdown completes
--   Live countdown display
--   Auto-cleanup when complete
--   Dev skip button (development mode only)
+Submit transactions via JSON-RPC:
 
-### Bitcoin Payments
-
-Enable Bitcoin payments by setting in `.env`:
-
-```
-BTC_PAY_SERVER_URL=http://localhost:3001
+```bash
+curl -X POST http://localhost:8545 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "poker.action",
+    "params": {
+      "tableId": "0x123...",
+      "playerId": "block52...",
+      "action": "bet",
+      "amount": 100
+    },
+    "id": 1
+  }'
 ```
 
 ## SDK
 
-### Publishing
+The Block52 SDK provides TypeScript/JavaScript interfaces for interacting with the PVM:
+
+```typescript
+import { Block52Client } from "@bitcoinbrisbane/block52";
+
+const client = new Block52Client({
+    rpc: "https://node1.block52.xyz/rpc/",
+    rest: "https://node1.block52.xyz",
+    grpc: "grpcs://node1.block52.xyz:9443"
+});
+
+// Submit a poker action
+await client.poker.bet({
+    tableId: "0x123...",
+    playerId: "block52...",
+    amount: 100
+});
+
+// Query table state
+const tableState = await client.poker.getTableState("0x123...");
+```
+
+### Installation
+
+```bash
+npm install @bitcoinbrisbane/block52
+# or
+yarn add @bitcoinbrisbane/block52
+```
+
+### Publishing (Maintainers)
 
 ```bash
 cd sdk
@@ -228,7 +309,40 @@ nvm use 20.18
 yarn prepare && yarn publish
 ```
 
+For detailed SDK documentation, see [sdk/README.md](./sdk/README.md).
+
 ## Blockchain Integration
+
+The PVM operates as a stateless execution layer on top of the Block52 blockchain:
+
+```text
+┌─────────────────────────────────┐
+│      Client (UI/Bot/SDK)        │
+│   (Submit transactions)         │
+└─────────────┬───────────────────┘
+              ↓
+┌─────────────────────────────────┐
+│   PVM (Execution Layer)         │  ← Stateless poker logic
+│   - Validate transactions       │
+│   - Execute game rules          │
+│   - Calculate outcomes          │
+└─────────────┬───────────────────┘
+              ↓
+┌─────────────────────────────────┐
+│   Block52 Blockchain            │  ← State storage
+│   - Store game state            │
+│   - Manage player accounts      │
+│   - Handle chip escrow          │
+└─────────────────────────────────┘
+```
+
+### Data Flow
+
+1. **Client → PVM**: Submit poker action (bet, fold, call, etc.)
+2. **PVM → Blockchain**: Read current game state
+3. **PVM**: Execute game logic, validate action
+4. **PVM → Blockchain**: Write updated state
+5. **PVM → Client**: Broadcast update via WebSocket
 
 ### Smart Contracts
 
@@ -237,80 +351,30 @@ yarn prepare && yarn publish
 | Bridge   | Deposit stables to poker VM | `0x092eEA7cE31C187Ff2DC26d0C250B011AEC1a97d` | mainnet |
 | Vault    | Validator staking           | `0x893c26846d7cE76445230B2b6285a663BF4C3BF5` | mainnet |
 
-### Test Accounts
+## Project Structure
 
--   Alice: `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
--   Bob: `0xd15df2C33Ed08041Efba88a3b13Afb47Ae0262A8`
-
-### Genesis Block
-
-Genesis account: `0x7f99ad0e59b90eab7e776cefcdae7a920ee1864c`
-
-```json
-{
-    "index": 0,
-    "hash": "24f7acd3b289b5dc7eaf96e9f119fecb7a24a3626c5b26602792d0d1ee8571b7",
-    "previousHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "merkleRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "signature": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "timestamp": 0,
-    "validator": "0x7f99aD0e59b90EAB7e776cefcdaE7a920ee1864c",
-    "transactions": []
-}
+```
+poker-vm/
+├── pvm/ts/              # PVM execution layer (TypeScript)
+│   ├── src/
+│   │   ├── core/        # Game logic engine
+│   │   ├── rpc.ts       # JSON-RPC interface
+│   │   ├── websocket.ts # Real-time connections
+│   │   └── index.ts     # Server entry point
+│   └── tests/           # Unit and integration tests
+├── sdk/                 # TypeScript SDK for clients
+├── ui/                  # React-based poker UI
+├── contracts/           # Solidity smart contracts
+├── bot/                 # Bot implementations
+│   ├── ts/              # TypeScript bots
+│   └── python/          # Python bot framework
+└── tests/               # End-to-end tests
 ```
 
-## Node Architecture
+## Contributing
 
-### Transaction Processing
-
-1. Transactions sent to node
-2. Node validates signature, nonce, and balance
-3. Transaction added to mempool
-
-### Block Creation
-
-1. Nodes selected in round-robin fashion
-2. Transactions pulled from mempool
-3. Transactions replayed by order and nonce
-4. Account state updated
-5. Block created and signed
-6. Block broadcast to network
-
-### Block Validation
-
-1. Block received by nodes
-2. Validated using public key, merkle root, and signature
-3. Block added to blockchain state
-
-## Docker
-
-### Building Image
-
-```bash
-cd pvm/ts
-docker build -t poker-vm .
-docker run -p 8545:8545 poker-vm
-```
-
-## Cosmos Notes
-
-```text
-┌─────────────────────────────────┐
-│   Your TypeScript Game Logic   │  ← Your existing TexasHoldemGame class
-│   (Validates, calculates)       │
-└─────────────┬───────────────────┘
-              ↓
-┌─────────────────────────────────┐
-│   GameStateManager (Bridge)     │  ← New: connects TS to chain
-│   (Load state, execute, submit) │
-└─────────────┬───────────────────┘
-              ↓
-┌─────────────────────────────────┐
-│   Cosmos Chain (Storage)        │  ← Simplified: just stores JSON
-│   (Store state, verify, escrow) │
-└─────────────────────────────────┘
-```
+Contributions are welcome! Please see our contributing guidelines for more information.
 
 ## License
 
-[License information needed]
+MIT License - see [LICENSE](./LICENSE) for details.
