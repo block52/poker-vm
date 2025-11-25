@@ -613,11 +613,7 @@ export default function TestSigningPage() {
 
                 {/* Token Info Section */}
                 <div
-                    className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
-                    style={{
-                        backgroundColor: hexToRgba(colors.accent.glow, 0.1),
-                        border: `1px solid ${hexToRgba(colors.accent.glow, 0.3)}`
-                    }}
+                    className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6 bg-blue-900/20 border border-blue-700"
                 >
                     <h2 className="text-xl font-bold text-white mb-3">
                         💡 Where Do Test Tokens Come From?
