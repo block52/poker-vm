@@ -10,8 +10,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient } from "../utils/cosmos/client";
 import { getCosmosMnemonic, setCosmosMnemonic } from "../utils/cosmos/storage";
-import { getAddressFromMnemonic, SigningCosmosClient } from "@bitcoinbrisbane/block52";
-import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { getAddressFromMnemonic, createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
 import { useNetwork } from "../context/NetworkContext";
 
 interface Balance {
@@ -26,7 +25,7 @@ interface UseCosmosWalletReturn {
     error: string | null;
     refreshBalance: () => Promise<void>;
     importSeedPhrase: (mnemonic: string) => Promise<void>;
-    sendTokens: (recipient: string, amount: bigint | string) => Promise<string>;
+    sendTokens: (recipient: string, amount: bigint | string, denom?: string) => Promise<string>;
 }
 
 export const useCosmosWallet = (): UseCosmosWalletReturn => {
@@ -111,7 +110,7 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
     }, []);
 
     // Send tokens using SigningCosmosClient
-    const sendTokens = useCallback(async (recipient: string, amount: bigint | string): Promise<string> => {
+    const sendTokens = useCallback(async (recipient: string, amount: bigint | string, denom: string = "usdc"): Promise<string> => {
         if (!address) {
             throw new Error("No wallet connected");
         }
@@ -122,43 +121,41 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
         }
 
         try {
-            // Create wallet from mnemonic
-            const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
-                prefix: "b52"
-            });
-
-            // Create SigningCosmosClient
-            const signingClient = new SigningCosmosClient({
-                rpcEndpoint: currentNetwork.rpc,
-                restEndpoint: currentNetwork.rest,
-                chainId: "pokerchain",
-                prefix: "b52",
-                denom: "stake", // Native gas token
-                gasPrice: "0stake", // Testnet has zero gas fees (minimum-gas-prices = "")
-                wallet: hdWallet
-            });
+            // Create signing client using SDK helper function
+            // This properly handles gas price and fee calculation
+            const signingClient = await createSigningClientFromMnemonic(
+                {
+                    rpcEndpoint: currentNetwork.rpc,
+                    restEndpoint: currentNetwork.rest,
+                    chainId: "pokerchain",
+                    prefix: "b52",
+                    denom: "stake", // Native gas token
+                    gasPrice: "0.025stake" // Chain requires minimum fees (matches joinTable.ts)
+                },
+                mnemonic
+            );
 
             // Convert amount to BigInt if it's a string
             const amountBigInt = typeof amount === "string" ? BigInt(amount) : amount;
 
-            // Send tokens - using "usdc" as default denom for poker transfers
+            // Send tokens - use the provided denom (usdc or stake)
             const txHash = await signingClient.sendTokens(
                 address,        // from address
                 recipient,      // to address
                 amountBigInt,   // amount in micro-units as BigInt
-                "usdc",         // denom
-                "Transfer via Dashboard"  // memo
+                denom,          // denom (usdc or stake)
+                `Transfer ${denom.toUpperCase()} via Dashboard`  // memo
             );
 
-            console.log("✅ Tokens sent successfully:", txHash);
+            console.log(`✅ ${denom.toUpperCase()} sent successfully:`, txHash);
 
             // Refresh balance after sending
             await refreshBalance();
 
             return txHash;
         } catch (err: any) {
-            console.error("❌ Failed to send tokens:", err);
-            throw new Error(err.message || "Failed to send tokens");
+            console.error(`❌ Failed to send ${denom}:`, err);
+            throw new Error(err.message || `Failed to send ${denom}`);
         }
     }, [address, currentNetwork, refreshBalance]);
 
