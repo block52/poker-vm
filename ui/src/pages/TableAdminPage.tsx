@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { GameType } from "@bitcoinbrisbane/block52";
+import { useState, useEffect, useCallback } from "react";
+import { GameType, CosmosClient, getDefaultCosmosConfig } from "@bitcoinbrisbane/block52";
 import useCosmosWallet from "../hooks/useCosmosWallet";
+import { isValidPlayerAddress } from "../utils/addressUtils";
 import { useNewTable } from "../hooks/useNewTable";
 import { useFindGames } from "../hooks/useFindGames";
 import { toast } from "react-toastify";
@@ -48,6 +49,10 @@ export default function TableAdminPage() {
     // Success modal state
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
+
+    // Player counts from game state
+    const [playerCounts, setPlayerCounts] = useState<Record<string, number>>({});
+    const [cosmosClient] = useState(() => new CosmosClient(getDefaultCosmosConfig()));
 
     // Transform fetched games to TableData format
     const tables: TableData[] = (fetchedGames || [])
@@ -129,6 +134,39 @@ export default function TableAdminPage() {
             toast.error(`Failed to create table: ${errorMessage}`);
         }
     };
+
+    // Fetch player counts for all tables
+    const fetchPlayerCounts = useCallback(async () => {
+        if (!tables.length) return;
+
+        const counts: Record<string, number> = {};
+
+        for (const table of tables) {
+            try {
+                const gameStateResponse = await cosmosClient.getGameState(table.gameId);
+                if (gameStateResponse && gameStateResponse.game_state) {
+                    const gameState = JSON.parse(gameStateResponse.game_state);
+                    // Count players with valid addresses (seated players)
+                    // Filter out empty seats using the utility function
+                    const seatedPlayers = gameState.players?.filter((p: any) =>
+                        isValidPlayerAddress(p.address) && p.status !== "empty"
+                    ).length || 0;
+                    counts[table.gameId] = seatedPlayers;
+                }
+            } catch (err) {
+                console.error(`Failed to fetch game state for ${table.gameId}:`, err);
+                // If we can't fetch game state, default to 0
+                counts[table.gameId] = 0;
+            }
+        }
+
+        setPlayerCounts(counts);
+    }, [tables, cosmosClient]);
+
+    // Fetch player counts when tables change
+    useEffect(() => {
+        fetchPlayerCounts();
+    }, [fetchPlayerCounts]);
 
     // Show error toast if createError or gamesError changes
     useEffect(() => {
@@ -323,17 +361,16 @@ export default function TableAdminPage() {
                 {/* Tables List */}
                 <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
                     <div className="px-6 py-4 bg-gray-900 border-b border-gray-700">
-                        <h2 className="text-xl font-bold text-white">Poker Tables</h2>
+                        <h2 className="text-xl font-bold text-white">Tables</h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-900">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Table ID</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Created</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Game Type</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Players</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Buy-In Range</th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Buy In</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Blinds</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Action</th>
@@ -342,7 +379,7 @@ export default function TableAdminPage() {
                             <tbody className="divide-y divide-gray-700">
                                 {tables.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="px-6 py-8 text-center text-gray-400">
+                                        <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
                                             {isLoading ? "Loading tables..." : "No tables found. Create your first table!"}
                                         </td>
                                     </tr>
@@ -373,23 +410,11 @@ export default function TableAdminPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {table.createdAt ? (
-                                                    <div className="text-xs">
-                                                        <div className="text-white font-medium">{new Date(table.createdAt).toLocaleDateString()}</div>
-                                                        <div className="text-gray-400">
-                                                            {new Date(table.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-gray-500 text-xs">-</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="text-white capitalize">{table.gameType.replace("-", " ")}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <span className="text-white font-semibold">
-                                                    {table.minPlayers}-{table.maxPlayers}
+                                                    {playerCounts[table.gameId] ?? "-"}/{table.maxPlayers}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">

@@ -2,6 +2,7 @@ import React from "react";
 import { useGameStateContext } from "../context/GameStateContext";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import { VacantSeatResponse } from "../types/index";
+import { isValidPlayerAddress } from "../utils/addressUtils";
 
 /**
  * Custom hook to manage data for vacant seats
@@ -34,8 +35,7 @@ export const useVacantSeatData = (): VacantSeatResponse => {
         (seatIndex: number) => {
             return !players.some(
                 (player: PlayerDTO) => player.seat === seatIndex &&
-                player.address &&
-                player.address.trim() !== ""
+                isValidPlayerAddress(player.address)
             );
         },
         [players]
@@ -50,7 +50,7 @@ export const useVacantSeatData = (): VacantSeatResponse => {
         
         const occupiedSeats = new Set(
             players
-                .filter(player => player.address && player.address.trim() !== "")
+                .filter(player => isValidPlayerAddress(player.address))
                 .map(player => player.seat)
         );
         

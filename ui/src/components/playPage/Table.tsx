@@ -77,7 +77,7 @@ import React from "react";
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { NetworkSelector } from "../NetworkSelector";
 
-import { ethers } from "ethers";
+import { isValidPlayerAddress } from "../../utils/addressUtils";
 
 import "./Table.css"; // Import the Table CSS file
 
@@ -435,7 +435,7 @@ const Table = React.memo(() => {
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
-        const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
+        const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => isValidPlayerAddress(player.address)) ?? [];
 
         return activePlayers;
     }, [tableDataValues.tableDataPlayers]);
@@ -774,7 +774,7 @@ const Table = React.memo(() => {
         console.log("🎲 TABLE - Full Game State from WebSocket:\n" + JSON.stringify(gameState, null, 2));
 
         // Also log active players mapping
-        const activePlayers = gameState?.players?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        const activePlayers = gameState?.players?.filter((player: any) => isValidPlayerAddress(player.address)) ?? [];
         console.log(
             "🎲 TABLE - Active Players Mapping: " +
                 JSON.stringify(
