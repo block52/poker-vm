@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { colors, hexToRgba } from "../../utils/colorConfig";
+import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 
 interface AdminMenuItem {
     path: string;
@@ -44,9 +45,11 @@ const adminMenuItems: AdminMenuItem[] = [
 
 const AdminDashboard: React.FC = () => {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2" style={{ color: colors.brand.primary }}>
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="container mx-auto px-4 py-8 relative z-10">
+            <div className="mb-8 text-center">
+                <h1 className="text-4xl font-bold text-white mb-2">
                     Admin Dashboard
                 </h1>
                 <p className="text-gray-400">
@@ -150,6 +153,7 @@ const AdminDashboard: React.FC = () => {
                         Dashboard
                     </Link>
                 </div>
+            </div>
             </div>
         </div>
     );
