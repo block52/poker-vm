@@ -134,14 +134,14 @@ export default function FaucetPage() {
     // Background styles (same as Dashboard)
     const backgroundStyle1 = useMemo(
         () => ({
-            background: `linear-gradient(135deg, ${hexToRgba(colors.ui.bgBase, 1)} 0%, ${hexToRgba(colors.ui.bgDark, 1)} 100%)`
+            background: `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 1)} 0%, ${hexToRgba(colors.ui.bgMedium, 1)} 100%)`
         }),
         []
     );
 
     const backgroundStyle2 = useMemo(
         () => ({
-            background: getAnimationGradient()
+            background: getAnimationGradient(0, 0)
         }),
         []
     );
@@ -293,11 +293,11 @@ export default function FaucetPage() {
                             <div
                                 className="rounded-lg p-3 mb-4"
                                 style={{
-                                    backgroundColor: hexToRgba(colors.accent.error, 0.1),
-                                    border: `1px solid ${hexToRgba(colors.accent.error, 0.3)}`
+                                    backgroundColor: hexToRgba(colors.accent.danger, 0.1),
+                                    border: `1px solid ${hexToRgba(colors.accent.danger, 0.3)}`
                                 }}
                             >
-                                <p className="text-sm" style={{ color: colors.accent.error }}>
+                                <p className="text-sm" style={{ color: colors.accent.danger }}>
                                     Faucet server not available. Please try again later or contact an administrator.
                                 </p>
                             </div>
@@ -357,11 +357,11 @@ export default function FaucetPage() {
                                     <div
                                         className="rounded-lg p-3 mb-4"
                                         style={{
-                                            backgroundColor: hexToRgba(colors.accent.error, 0.1),
-                                            border: `1px solid ${hexToRgba(colors.accent.error, 0.3)}`
+                                            backgroundColor: hexToRgba(colors.accent.danger, 0.1),
+                                            border: `1px solid ${hexToRgba(colors.accent.danger, 0.3)}`
                                         }}
                                     >
-                                        <p className="text-sm" style={{ color: colors.accent.error }}>
+                                        <p className="text-sm" style={{ color: colors.accent.danger }}>
                                             {error}
                                         </p>
                                     </div>
