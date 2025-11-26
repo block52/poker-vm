@@ -206,9 +206,14 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                         fullMessage: message
                     });
 
-                    // Handle both old format (type: "gameStateUpdate") and new format (event: "state")
+                    // Handle multiple message formats:
+                    // - Old PVM format: type: "gameStateUpdate"
+                    // - Cosmos initial state: event: "state"
+                    // - Cosmos events: event: "player_joined_game", "action_performed", "game_created"
+                    const cosmosEvents = ["state", "player_joined_game", "action_performed", "game_created"];
                     const isStateUpdate =
-                        (message.type === "gameStateUpdate" && message.tableAddress === tableId) || (message.event === "state" && message.game_id === tableId);
+                        (message.type === "gameStateUpdate" && message.tableAddress === tableId) ||
+                        (cosmosEvents.includes(message.event) && message.game_id === tableId);
 
                     if (isStateUpdate) {
                         // Extract game state from either format

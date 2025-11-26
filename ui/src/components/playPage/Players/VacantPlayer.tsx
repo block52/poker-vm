@@ -91,20 +91,31 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
 
         // Memoize handlers
         const handleJoinClick = useCallback(() => {
+            console.log("🪑 VacantPlayer - handleJoinClick called for seat:", index);
             if (!canJoinThisSeat) return;
             setShowConfirmModal(true);
             setJoinError(null);
             setJoinSuccess(false);
             setJoinResponse(null);
-        }, [canJoinThisSeat]);
+        }, [canJoinThisSeat, index]);
 
         const handleSeatClick = useCallback(() => {
+            console.log("🪑 VacantPlayer - handleSeatClick called:", {
+                index,
+                isUserAlreadyPlaying,
+                canJoinThisSeat,
+                gameOptions: gameOptions ? "present" : "null"
+            });
             if (isUserAlreadyPlaying) {
+                console.log("🪑 VacantPlayer - User already playing, showing card popup");
                 setIsCardVisible(true);
             } else if (canJoinThisSeat) {
+                console.log("🪑 VacantPlayer - Can join seat, calling handleJoinClick");
                 handleJoinClick();
+            } else {
+                console.log("🪑 VacantPlayer - Cannot join seat (canJoinThisSeat is false)");
             }
-        }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick]);
+        }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick, index, gameOptions]);
 
         // Step 1: Confirm seat selection
         const handleConfirmSeatYes = useCallback(() => {

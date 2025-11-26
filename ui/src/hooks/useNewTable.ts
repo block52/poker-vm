@@ -70,7 +70,7 @@ export const useNewTable = (): UseNewTableReturn => {
                     chainId: COSMOS_CONSTANTS.CHAIN_ID,
                     prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
                     denom: "stake", // Gas token (use "stake" for testnet, "b52Token" for production)
-                    gasPrice: "0.0stake"
+                    gasPrice: "0.01stake" // Chain requires minimum fees (200k gas * 0.01 = 2000 stake)
                 },
                 mnemonic
             );

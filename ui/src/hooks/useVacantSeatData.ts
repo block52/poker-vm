@@ -67,9 +67,19 @@ export const useVacantSeatData = (): VacantSeatResponse => {
     // Function to check if a user can join a specific seat
     const canJoinSeat = React.useCallback(
         (seatIndex: number) => {
-            return !isUserAlreadyPlaying && isSeatVacant(seatIndex);
+            const vacant = isSeatVacant(seatIndex);
+            const canJoin = !isUserAlreadyPlaying && vacant;
+            console.log("🔍 useVacantSeatData.canJoinSeat:", {
+                seatIndex,
+                isUserAlreadyPlaying,
+                isSeatVacant: vacant,
+                canJoin,
+                userAddress,
+                playersCount: players.length
+            });
+            return canJoin;
         },
-        [isSeatVacant, isUserAlreadyPlaying]
+        [isSeatVacant, isUserAlreadyPlaying, userAddress, players.length]
     );
 
     // Get array of all empty seat indexes that the user can join
