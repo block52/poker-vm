@@ -12,17 +12,22 @@ interface TransactionPopupProps {
  * Auto-closes after 5 seconds
  */
 const TransactionPopup: React.FC<TransactionPopupProps> = ({ txHash, onClose }) => {
+    // Only show in development mode
+    const isDevelopment = import.meta.env.VITE_NODE_ENV === "development";
+
     // Auto-close after 5 seconds
     useEffect(() => {
-        if (txHash) {
+        if (txHash && isDevelopment) {
             const timer = setTimeout(() => {
                 onClose();
             }, 5000);
 
             return () => clearTimeout(timer);
         }
-    }, [txHash, onClose]);
+    }, [txHash, onClose, isDevelopment]);
 
+    // Don't show popup in production
+    if (!isDevelopment) return null;
     if (!txHash) return null;
 
     return (
