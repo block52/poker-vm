@@ -2,7 +2,6 @@ import http from "http";
 import express, { Request, Response } from "express";
 import { RPC } from "./rpc";
 import cors from "cors";
-import { initSocketServer } from "./core/socketserver";
 
 const app = express();
 app.use(express.json());
@@ -13,9 +12,6 @@ const VERSION = "0.1.1";
 // Initialize Socket.IO server
 // Create HTTP server
 const server = http.createServer(app);
-
-// Initialize WebSocket server
-const socketService = initSocketServer(server);
 
 // Define a simple route
 app.get("/", (req: Request, res: Response) => {
@@ -29,14 +25,6 @@ app.get("/health", (req: Request, res: Response) => {
         version: VERSION,
         timestamp: new Date().toISOString(),
         service: "pvm-rpc-server"
-    });
-});
-
-// WebSocket status endpoint
-app.get("/socket-status", (req: Request, res: Response) => {
-    res.json({
-        websocket_server: "active",
-        subscriptions: socketService.getSubscriptionInfo()
     });
 });
 
@@ -54,6 +42,5 @@ app.post("/", async (req: Request, res: Response) => {
 // Start the HTTP server (instead of app.listen)
 server.listen(PORT, () => {
     console.log(`PVM RPC Server v${VERSION} running on http://localhost:${PORT}`);
-    console.log(`WebSocket server is running on ws://localhost:${PORT}`);
     console.log(`WebSocket test page available at http://localhost:${PORT}/ws-test`);
 });
