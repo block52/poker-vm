@@ -153,8 +153,8 @@ export default function TestSigningPage() {
                 restEndpoint: currentNetwork.rest,
                 chainId: "pokerchain",
                 prefix: "b52",
-                denom: "stake", // Native gas token for local testnet
-                gasPrice: "0stake", // Testnet has zero gas fees (minimum-gas-prices = "")
+                denom: "stake", // Native gas token
+                gasPrice: "0.025stake", // Chain requires minimum fees (see COSMOS_GAS_AND_FEES_EXPLAINED.md)
                 wallet: hdWallet
             });
 
@@ -968,7 +968,8 @@ export default function TestSigningPage() {
                                     <div className="ml-4 space-y-2">
                                         {balances.map((balance, idx) => {
                                             // Format balance with proper decimals (6 for micro-denominated tokens)
-                                            const isMicroDenom = balance.denom === "usdc";
+                                            // Both usdc and stake use 6 decimals (micro-units)
+                                            const isMicroDenom = balance.denom === "usdc" || balance.denom === "stake";
                                             const numericAmount = isMicroDenom ? microToUsdc(balance.amount) : Number(balance.amount);
 
                                             const displayAmount = numericAmount.toLocaleString("en-US", {
@@ -996,9 +997,11 @@ export default function TestSigningPage() {
                                                         <span className="text-white font-medium">{balance.denom}</span>
                                                         {usdValue && <span className="text-gray-400 text-sm">≈ {usdValue}</span>}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 ml-1">
-                                                        {Number(balance.amount).toLocaleString("en-US")} micro-units
-                                                    </div>
+                                                    {balance.denom !== "stake" && (
+                                                        <div className="text-xs text-gray-500 ml-1">
+                                                            {Number(balance.amount).toLocaleString("en-US")} micro-units
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
