@@ -34,3 +34,9 @@ export {
     isValidSeedPhrase,
     getTestAddresses
 } from "./helpers";
+
+// Signing utilities for authenticated WebSocket queries
+export {
+    signQueryMessage,
+    createAuthPayload
+} from "./signing";

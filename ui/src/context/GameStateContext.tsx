@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNetwork } from "./NetworkContext";
 import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { createAuthPayload } from "../utils/cosmos/signing";
 
 /**
  * GameStateContext - Centralized WebSocket state management
@@ -166,18 +167,29 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
             const ws = new WebSocket(fullWsUrl);
             wsRef.current = ws;
 
-            ws.onopen = () => {
+            ws.onopen = async () => {
                 console.log(`[GameStateContext] ✅ WebSocket connected to table ${tableId}`, {
                     readyState: ws.readyState,
                     url: fullWsUrl
                 });
 
-                // Send subscription message to the server
+                // Create authenticated subscription message with signature
+                // This allows the server to verify our identity and show us our hole cards
+                const authPayload = await createAuthPayload();
+
                 const subscriptionMessage = {
                     type: "subscribe",
-                    game_id: tableId
+                    game_id: tableId,
+                    // Include auth info for per-player card masking
+                    player_address: authPayload?.playerAddress || playerAddress,
+                    timestamp: authPayload?.timestamp,
+                    signature: authPayload?.signature
                 };
-                console.log(`[GameStateContext] 📤 Sending subscription message:`, subscriptionMessage);
+
+                console.log(`[GameStateContext] 📤 Sending subscription message:`, {
+                    ...subscriptionMessage,
+                    signature: subscriptionMessage.signature ? subscriptionMessage.signature.substring(0, 20) + "..." : undefined
+                });
                 ws.send(JSON.stringify(subscriptionMessage));
 
                 setIsLoading(false);
