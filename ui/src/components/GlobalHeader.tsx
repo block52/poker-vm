@@ -12,6 +12,26 @@ interface MenuItem {
     badge?: string;
 }
 
+// Reusable component for network status and selector (extracted to avoid recreation on every render)
+const NetworkStatusAndSelector: React.FC<{ latestBlockHeight: string | null; hasError: boolean }> = ({ latestBlockHeight, hasError }) => (
+    <>
+        {/* Block Height Indicator */}
+        {latestBlockHeight && (
+            <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
+            >
+                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
+                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
+                    #{latestBlockHeight}
+                </span>
+            </div>
+        )}
+
+        <NetworkSelector />
+    </>
+);
+
 export const GlobalHeader: React.FC = () => {
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -85,15 +105,16 @@ export const GlobalHeader: React.FC = () => {
             }}
         >
             <div className="container mx-auto px-4 py-3">
-                <div className="flex items-center justify-between">
-                    {/* Left side - Logo/Title */}
-                    <div className="flex items-center gap-6">
+                {/* Desktop Layout: Centered navigation group with right-aligned NetworkSelector */}
+                <div className="hidden lg:flex items-center justify-center relative">
+                    {/* Centered Navigation Group - max-w prevents overlap with right-aligned content */}
+                    <div className="flex items-center gap-6 max-w-[calc(100%-300px)]">
                         <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
                             {import.meta.env.VITE_CLUB_NAME || "Block 52"}
                         </Link>
 
                         {/* Desktop Navigation */}
-                        <nav className="hidden lg:flex items-center gap-1">
+                        <nav className="flex items-center gap-1">
                             {menuItems.map(item => (
                                 <Link
                                     key={item.path}
@@ -124,27 +145,32 @@ export const GlobalHeader: React.FC = () => {
                         </nav>
                     </div>
 
+                    {/* Right-aligned Network Selector - positioned absolutely */}
+                    <div className="absolute right-0 flex items-center gap-4">
+                        <NetworkStatusAndSelector latestBlockHeight={latestBlockHeight} hasError={hasError} />
+                    </div>
+                </div>
+
+                {/* Mobile/Tablet Layout: Keep original structure */}
+                <div className="flex lg:hidden items-center justify-between">
+                    {/* Left side - Logo/Title */}
+                    <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
+                        {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                    </Link>
+
                     {/* Right side - Network Selector & Mobile Menu */}
                     <div className="flex items-center gap-4">
-                        {/* Block Height Indicator */}
-                        {latestBlockHeight && (
-                            <div
-                                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
-                            >
-                                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
-                                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
-                                    #{latestBlockHeight}
-                                </span>
-                            </div>
-                        )}
-
-                        <NetworkSelector />
+                        <div className="hidden md:flex items-center gap-4">
+                            <NetworkStatusAndSelector latestBlockHeight={latestBlockHeight} hasError={hasError} />
+                        </div>
+                        <div className="md:hidden">
+                            <NetworkSelector />
+                        </div>
 
                         {/* Mobile Menu Button */}
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="lg:hidden p-2 rounded-lg hover:opacity-80 transition-opacity"
+                            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
                             style={{ color: colors.brand.primary }}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
