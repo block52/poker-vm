@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import LeaveAction from "./leaveAction";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
@@ -58,7 +58,10 @@ describe("LeaveAction", () => {
     });
 
     describe("verify", () => {
-        it("should return player's chip amount as range", () => {
+        it("should return player's chip amount as range when in ANTE round", () => {
+            // Mock game to be in ANTE round
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
+
             const result = action.verify(player);
 
             expect(result).toEqual({
@@ -67,13 +70,13 @@ describe("LeaveAction", () => {
             });
         });
 
-        it("should work with different chip amounts", () => {
+        it("should work with different chip amounts when FOLDED", () => {
             const playerWithDifferentChips = new Player(
                 "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 undefined,
                 TEN_TOKENS,
                 undefined,
-                PlayerStatus.ACTIVE
+                PlayerStatus.FOLDED
             );
 
             const result = action.verify(playerWithDifferentChips);
@@ -84,13 +87,13 @@ describe("LeaveAction", () => {
             });
         });
 
-        it("should work with zero chips", () => {
+        it("should work with zero chips when SITTING_OUT", () => {
             const playerWithZeroChips = new Player(
                 "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 undefined,
                 0n,
                 undefined,
-                PlayerStatus.ACTIVE
+                PlayerStatus.SITTING_OUT
             );
 
             const result = action.verify(playerWithZeroChips);
@@ -101,7 +104,7 @@ describe("LeaveAction", () => {
             });
         });
 
-        it("should allow leaving regardless of player status", () => {
+        it("should allow leaving when player is FOLDED", () => {
             const foldedPlayer = new Player(
                 "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 undefined,
@@ -117,9 +120,56 @@ describe("LeaveAction", () => {
             });
         });
 
-        it("should allow leaving regardless of turn order", () => {
-            // Unlike other actions, leave should work anytime
-            expect(() => action.verify(player)).not.toThrow();
+        it("should allow leaving when player is SITTING_OUT", () => {
+            const sittingOutPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                ONE_THOUSAND_TOKENS,
+                undefined,
+                PlayerStatus.SITTING_OUT
+            );
+
+            expect(() => action.verify(sittingOutPlayer)).not.toThrow();
+            expect(action.verify(sittingOutPlayer)).toEqual({
+                minAmount: ONE_THOUSAND_TOKENS,
+                maxAmount: ONE_THOUSAND_TOKENS
+            });
+        });
+
+        it("should NOT allow leaving when player is ACTIVE in hand", () => {
+            const activePlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                ONE_THOUSAND_TOKENS,
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+
+            // Mock game to be in preflop round (active hand)
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
+
+            expect(() => action.verify(activePlayer)).toThrow(
+                "Cannot leave during active hand"
+            );
+        });
+
+        it("should allow leaving in ANTE round even if status is ACTIVE", () => {
+            const activePlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                ONE_THOUSAND_TOKENS,
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+
+            // Mock game to be in ANTE round (no hand in progress)
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
+
+            expect(() => action.verify(activePlayer)).not.toThrow();
+            expect(action.verify(activePlayer)).toEqual({
+                minAmount: ONE_THOUSAND_TOKENS,
+                maxAmount: ONE_THOUSAND_TOKENS
+            });
         });
     });
 
@@ -129,6 +179,8 @@ describe("LeaveAction", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(1);
             jest.spyOn(game, "removePlayer").mockImplementation();
             jest.spyOn(game, "addNonPlayerAction").mockImplementation();
+            // Allow leaving by setting game to ANTE round
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
 
             // Mock dealer manager
             const mockDealerManager = {
@@ -255,6 +307,7 @@ describe("LeaveAction", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(2);
             jest.spyOn(game, "removePlayer").mockImplementation();
             jest.spyOn(game, "addNonPlayerAction").mockImplementation();
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
 
             const mockDealerManager = {
                 handlePlayerLeave: jest.fn()
@@ -314,13 +367,13 @@ describe("LeaveAction", () => {
             }, "3");
         });
 
-        it("should handle leave with all-in player", () => {
+        it("should handle leave with all-in player who has folded", () => {
             const allInPlayer = new Player(
                 "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 undefined,
                 0n, // All-in players typically have 0 chips
                 undefined,
-                PlayerStatus.ALL_IN
+                PlayerStatus.FOLDED // All-in player who folded can leave
             );
 
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(4);
