@@ -61,9 +61,10 @@ export default function AddressPage() {
                     const recipientQuery = `transfer.recipient='${searchAddress.trim()}'`;
 
                     // Fetch both sent and received transactions
+                    // Note: Cosmos SDK uses 'query=' parameter, not 'events='
                     const [sentResponse, receivedResponse] = await Promise.all([
-                        fetch(`${restEndpoint}/cosmos/tx/v1beta1/txs?events=${encodeURIComponent(senderQuery)}&order_by=2&limit=50`),
-                        fetch(`${restEndpoint}/cosmos/tx/v1beta1/txs?events=${encodeURIComponent(recipientQuery)}&order_by=2&limit=50`)
+                        fetch(`${restEndpoint}/cosmos/tx/v1beta1/txs?query=${encodeURIComponent(senderQuery)}&order_by=2&limit=50`),
+                        fetch(`${restEndpoint}/cosmos/tx/v1beta1/txs?query=${encodeURIComponent(recipientQuery)}&order_by=2&limit=50`)
                     ]);
 
                     const sentData = sentResponse.ok ? await sentResponse.json() : { tx_responses: [] };

@@ -60,22 +60,33 @@ New users joining the poker platform face friction:
 ### All Accounts Page
 
 Added `/explorer/accounts` page that shows all accounts on the chain, similar to Etherscan:
-- Lists all accounts with their addresses and types
+- Lists all accounts with their full addresses (no truncation)
 - Shows USDC balances for each account
 - Sortable by balance or address
 - Search/filter functionality
 - Click through to detailed address page
+- **Validator Detection**: Shows validator badge with moniker and status (BONDED/UNBONDED)
+- Uses `@cosmjs/encoding` for proper bech32 address conversion (valoper → account)
+- Stats cards show: Total Accounts, Accounts With Balance, Validators, Total USDC
 
 ### Transaction History
 
-The `/explorer/address/:address` page already includes transaction history:
+The `/explorer/address/:address` page includes transaction history:
 - Shows both sent and received transactions
 - Sorted by block height (newest first)
 - Click through to transaction details
+- Fixed: Uses `query=` parameter instead of `events=` for Cosmos SDK compatibility
+
+### Denom Display Fix
+
+Fixed denomination display to show "USDC" instead of "SDC":
+- Added proper denom mapping (usdc → USDC, stake → STAKE)
+- Applied to both AllAccountsPage and AddressPage
 
 ### Files Created/Modified
 
-- `src/pages/explorer/AllAccountsPage.tsx` - New all accounts page
+- `src/pages/explorer/AllAccountsPage.tsx` - New all accounts page with validator detection
+- `src/pages/explorer/AddressPage.tsx` - Fixed tx query parameter and denom display
 - `src/pages/explorer/BlocksPage.tsx` - Added navigation links
 - `src/App.tsx` - Added route for `/explorer/accounts`
 

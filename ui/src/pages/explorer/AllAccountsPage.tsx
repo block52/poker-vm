@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { useNetwork } from "../../context/NetworkContext";
@@ -7,11 +8,21 @@ import { NetworkSelector } from "../../components/NetworkSelector";
 import { microToUsdc } from "../../constants/currency";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 
+interface ValidatorInfo {
+    operatorAddress: string;
+    accountAddress: string;
+    moniker: string;
+    status: string;
+}
+
 interface AccountInfo {
     address: string;
     type: string;
     balances: { denom: string; amount: string }[];
     totalUsdcValue: number;
+    isValidator?: boolean;
+    validatorMoniker?: string;
+    validatorStatus?: string;
 }
 
 export default function AllAccountsPage() {
@@ -24,6 +35,24 @@ export default function AllAccountsPage() {
     const [sortBy, setSortBy] = useState<"balance" | "address">("balance");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
     const [searchFilter, setSearchFilter] = useState("");
+
+    // Convert validator operator address (b52valoper...) to account address (b521...)
+    const valoperToAccount = (valoperAddr: string): string => {
+        // Both addresses are derived from the same pubkey, just different prefixes
+        // Use proper bech32 decode/encode to handle the checksum correctly
+        try {
+            const decoded = fromBech32(valoperAddr);
+            // Get the base prefix (e.g., "b52" from "b52valoper")
+            // The "1" in "b521..." is the bech32 separator, not part of the prefix
+            const basePrefix = decoded.prefix.replace("valoper", "");
+            // Re-encode with the account prefix
+            const accountAddr = toBech32(basePrefix, decoded.data);
+            return accountAddr;
+        } catch (e) {
+            console.error("Error converting valoper address:", e);
+        }
+        return "";
+    };
 
     const fetchAllAccounts = useCallback(async () => {
         try {
@@ -38,6 +67,43 @@ export default function AllAccountsPage() {
 
             if (!cosmosClient) {
                 throw new Error("Cosmos client not initialized");
+            }
+
+            // Fetch validators first to identify validator accounts
+            const validatorMap = new Map<string, ValidatorInfo>();
+            try {
+                const validatorsResponse = await fetch(`${restEndpoint}/cosmos/staking/v1beta1/validators?pagination.limit=100`);
+                if (validatorsResponse.ok) {
+                    const validatorsData = await validatorsResponse.json();
+                    const validators = validatorsData.validators || [];
+
+                    validators.forEach((v: any) => {
+                        const operatorAddress = v.operator_address;
+                        const accountAddress = valoperToAccount(operatorAddress);
+                        const moniker = v.description?.moniker || "Unknown";
+                        // Status: BOND_STATUS_BONDED, BOND_STATUS_UNBONDING, BOND_STATUS_UNBONDED
+                        const status = v.status?.replace("BOND_STATUS_", "") || "Unknown";
+
+                        console.log("Validator found:", {
+                            operatorAddress,
+                            accountAddress,
+                            moniker,
+                            status
+                        });
+
+                        if (accountAddress) {
+                            validatorMap.set(accountAddress, {
+                                operatorAddress,
+                                accountAddress,
+                                moniker,
+                                status
+                            });
+                        }
+                    });
+                    console.log("Validator map:", Array.from(validatorMap.entries()));
+                }
+            } catch (e) {
+                console.error("Error fetching validators:", e);
             }
 
             // Fetch all accounts from the auth module
@@ -91,11 +157,17 @@ export default function AllAccountsPage() {
                         }
                     }
 
+                    // Check if this account is a validator
+                    const validatorInfo = validatorMap.get(address);
+
                     return {
                         address,
                         type,
                         balances,
-                        totalUsdcValue
+                        totalUsdcValue,
+                        isValidator: !!validatorInfo,
+                        validatorMoniker: validatorInfo?.moniker,
+                        validatorStatus: validatorInfo?.status
                     };
                 })
             );
@@ -166,8 +238,9 @@ export default function AllAccountsPage() {
         const totalAccounts = accounts.length;
         const totalUsdc = accounts.reduce((sum, a) => sum + a.totalUsdcValue, 0);
         const accountsWithBalance = accounts.filter(a => a.totalUsdcValue > 0).length;
+        const validatorCount = accounts.filter(a => a.isValidator).length;
 
-        return { totalAccounts, totalUsdc, accountsWithBalance };
+        return { totalAccounts, totalUsdc, accountsWithBalance, validatorCount };
     }, [accounts]);
 
     const containerStyle = useMemo(
@@ -180,9 +253,15 @@ export default function AllAccountsPage() {
 
     const formatBalance = (amount: string, denom: string) => {
         const value = microToUsdc(amount);
-        // Remove "u" prefix only if it's a micro-denomination (starts with "u")
-        const displayDenom = denom.startsWith("u") ? denom.slice(1) : denom;
-        return `${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${displayDenom.toUpperCase()}`;
+        // Map known denoms to display names
+        const denomMap: Record<string, string> = {
+            "usdc": "USDC",
+            "uusdc": "USDC",
+            "stake": "STAKE",
+            "ustake": "STAKE"
+        };
+        const displayDenom = denomMap[denom.toLowerCase()] || denom.toUpperCase();
+        return `${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${displayDenom}`;
     };
 
     const truncateAddress = (addr: string) => {
@@ -231,7 +310,7 @@ export default function AllAccountsPage() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl" style={containerStyle}>
                         <p className="text-gray-400 text-sm mb-1">Total Accounts</p>
                         <p className="text-3xl font-bold text-white">{stats.totalAccounts.toLocaleString()}</p>
@@ -239,6 +318,10 @@ export default function AllAccountsPage() {
                     <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl" style={containerStyle}>
                         <p className="text-gray-400 text-sm mb-1">Accounts With Balance</p>
                         <p className="text-3xl font-bold text-white">{stats.accountsWithBalance.toLocaleString()}</p>
+                    </div>
+                    <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl" style={containerStyle}>
+                        <p className="text-gray-400 text-sm mb-1">Validators</p>
+                        <p className="text-3xl font-bold text-purple-400">{stats.validatorCount.toLocaleString()}</p>
                     </div>
                     <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl" style={containerStyle}>
                         <p className="text-gray-400 text-sm mb-1">Total USDC</p>
@@ -327,9 +410,25 @@ export default function AllAccountsPage() {
                                             >
                                                 <td className="px-6 py-4 text-gray-500">{index + 1}</td>
                                                 <td className="px-6 py-4">
-                                                    <span className="text-white font-mono hover:underline" style={{ color: colors.brand.primary }}>
-                                                        {truncateAddress(account.address)}
-                                                    </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-white font-mono text-sm hover:underline break-all" style={{ color: colors.brand.primary }}>
+                                                            {account.address}
+                                                        </span>
+                                                        {account.isValidator && (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="px-2 py-0.5 rounded text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                                                    Validator: {account.validatorMoniker}
+                                                                </span>
+                                                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                                                    account.validatorStatus === "BONDED"
+                                                                        ? "bg-green-500/20 text-green-400"
+                                                                        : "bg-yellow-500/20 text-yellow-400"
+                                                                }`}>
+                                                                    {account.validatorStatus}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
