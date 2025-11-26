@@ -27,7 +27,7 @@ import { useUserWalletConnect, useFindGames, useNewTable, useTablePlayerCounts, 
 import type { CreateTableOptions } from "../hooks/useNewTable"; // Import type separately
 
 // Cosmos wallet utils
-import { isValidSeedPhrase, setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic } from "../utils/cosmos";
+import { isValidSeedPhrase, getCosmosMnemonic } from "../utils/cosmos";
 
 // Password protection utils
 import {
@@ -247,12 +247,11 @@ const Dashboard: React.FC = () => {
                 try {
                     console.log("🔐 No Block52 wallet found, auto-generating...");
                     const walletInfo = await generateWalletSDK("b52", 24);
-                    setCosmosMnemonic(walletInfo.mnemonic);
-                    setCosmosAddress(walletInfo.address);
+                    // Use importSeedPhrase to properly update the hook's state
+                    // This saves to localStorage AND updates the address state
+                    await cosmosWallet.importSeedPhrase(walletInfo.mnemonic);
                     console.log("✅ Block52 wallet auto-generated:", walletInfo.address);
                     setShowWalletGeneratedNotification(true);
-                    // Refresh the cosmos wallet hook
-                    cosmosWallet.refreshBalance();
                     // Auto-hide notification after 10 seconds
                     setTimeout(() => setShowWalletGeneratedNotification(false), 10000);
                 } catch (err) {

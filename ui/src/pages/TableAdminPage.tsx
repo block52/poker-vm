@@ -217,145 +217,129 @@ export default function TableAdminPage() {
                     </div>
                 </div>
 
-                {/* Create Table Form */}
-                <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
-                    <h2 className="text-2xl font-bold text-white mb-4">Create New Table</h2>
+                {/* Create Table Form - constrained width for better UX */}
+                <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700 max-w-2xl">
+                    <h2 className="text-xl font-bold text-white mb-4">Create New Table</h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
-                            <label className="text-white text-sm mb-2 block">Game Type</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Game Type</label>
                             <select
                                 value={gameType}
                                 onChange={e => setGameType(e.target.value as GameType)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             >
-                                <option value={GameType.SIT_AND_GO}>Sit & Go (Texas Hold'em)</option>
+                                <option value={GameType.SIT_AND_GO}>Sit & Go</option>
                                 <option value={GameType.TOURNAMENT}>Tournament</option>
                                 <option value={GameType.CASH}>Cash Game</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-white text-sm mb-2 block">Max Players</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Max Players</label>
                             <select
                                 value={maxPlayers}
                                 onChange={e => setMaxPlayers(parseInt(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             >
-                                <option value={2}>2 Players (Heads-Up)</option>
-                                <option value={4}>4 Players (Sit & Go)</option>
-                                <option value={6}>6 Players (Sit & Go)</option>
-                                <option value={9}>9 Players (Full Ring)</option>
+                                <option value={2}>2 (Heads-Up)</option>
+                                <option value={4}>4 (Sit & Go)</option>
+                                <option value={6}>6 (Sit & Go)</option>
+                                <option value={9}>9 (Full Ring)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-2 gap-3 mb-3">
                         {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
-                            // For Sit & Go and Tournament: Single buy-in field (fixed amount)
-                            <div className="md:col-span-2">
-                                <label className="text-white text-sm mb-2 block">Buy-In (USDC) - Fixed Amount</label>
+                            <div className="col-span-2">
+                                <label className="text-gray-300 text-xs mb-1 block">Buy-In (USDC)</label>
                                 <input
                                     type="number"
                                     step="0.01"
                                     value={minBuyIn}
                                     onChange={e => {
                                         setMinBuyIn(e.target.value);
-                                        setMaxBuyIn(e.target.value); // Keep them equal
+                                        setMaxBuyIn(e.target.value);
                                     }}
-                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                                     placeholder="e.g., 1.00"
                                 />
-                                <p className="text-gray-400 text-xs mt-1">All players must buy in for this exact amount</p>
                             </div>
                         ) : (
-                            // For Cash Game: Separate min/max fields
                             <>
                                 <div>
-                                    <label className="text-white text-sm mb-2 block">Min Buy-In (USDC)</label>
+                                    <label className="text-gray-300 text-xs mb-1 block">Min Buy-In (USDC)</label>
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={minBuyIn}
                                         onChange={e => setMinBuyIn(e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-white text-sm mb-2 block">Max Buy-In (USDC)</label>
+                                    <label className="text-gray-300 text-xs mb-1 block">Max Buy-In (USDC)</label>
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={maxBuyIn}
                                         onChange={e => setMaxBuyIn(e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                                     />
                                 </div>
                             </>
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label className="text-white text-sm mb-2 block">Small Blind (USDC)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Small Blind (USDC)</label>
                             <input
                                 type="number"
                                 step="0.01"
                                 value={smallBlind}
                                 onChange={e => setSmallBlind(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
                         <div>
-                            <label className="text-white text-sm mb-2 block">Big Blind (USDC)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Big Blind (USDC)</label>
                             <input
                                 type="number"
                                 step="0.01"
                                 value={bigBlind}
                                 onChange={e => setBigBlind(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-3">
                         <button
                             onClick={handleCreateTable}
                             disabled={isCreating || !cosmosWallet.address}
-                            className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold rounded-lg transition-colors"
+                            className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-semibold rounded-lg transition-colors text-sm"
                         >
-                            {isCreating ? "Creating Table..." : "🎮 Create Table"}
+                            {isCreating ? "Creating..." : "Create Table"}
                         </button>
                         <button
                             onClick={refetch}
                             disabled={isLoading}
-                            className="px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
+                            className="px-3 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white rounded-lg transition-colors"
                             title="Refresh tables"
                         >
-                            {isLoading ? (
-                                <span className="flex items-center justify-center">
-                                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                        />
-                                    </svg>
-                                </span>
-                            ) : (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                    />
-                                </svg>
-                            )}
+                            <svg className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                            </svg>
                         </button>
                     </div>
 
-                    {!cosmosWallet.address && <p className="mt-3 text-yellow-400 text-sm">⚠️ Please connect your Block52 wallet first</p>}
+                    {!cosmosWallet.address && <p className="mt-2 text-yellow-400 text-xs">Connect your Block52 wallet to create tables</p>}
                 </div>
 
                 {/* Tables List */}

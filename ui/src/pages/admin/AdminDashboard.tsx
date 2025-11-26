@@ -24,18 +24,6 @@ const adminMenuItems: AdminMenuItem[] = [
         icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
     },
     {
-        path: "/admin/bridge-manual",
-        label: "Manual Bridge Trigger",
-        description: "Manually trigger bridge deposit processing",
-        icon: "M13 10V3L4 14h7v7l9-11h-7z"
-    },
-    {
-        path: "/admin/tables",
-        label: "Table Admin",
-        description: "Create and manage poker tables",
-        icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-    },
-    {
         path: "/admin/test-signing",
         label: "Test Signing",
         description: "Test message signing and verification",
