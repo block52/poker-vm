@@ -111,7 +111,7 @@ interface NetworkContextType {
 const NetworkContext = createContext<NetworkContextType | undefined>(undefined);
 
 export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Initialize network from localStorage or default to Block52
+    // Initialize network from localStorage or default to Texas Hodl
     const [currentNetwork, setCurrentNetwork] = useState<NetworkEndpoints>(() => {
         // Try to load user's saved network preference from localStorage
         const saved = localStorage.getItem("selectedNetwork");
@@ -121,16 +121,16 @@ export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children })
                 // Validate that the parsed object has the ws property (for backward compatibility)
                 if (!parsed.ws) {
                     console.warn("[NetworkContext] Saved network missing 'ws' property, resetting to default");
-                    return NETWORK_PRESETS[2]; // Block52
+                    return NETWORK_PRESETS[1]; // Texas Hodl
                 }
                 return parsed;
             } catch {
-                // If localStorage is corrupted, default to Block52
-                return NETWORK_PRESETS[2]; // Block52
+                // If localStorage is corrupted, default to Texas Hodl
+                return NETWORK_PRESETS[1]; // Texas Hodl
             }
         }
-        // First time user - default to Block52
-        return NETWORK_PRESETS[2]; // Block52
+        // First time user - default to Texas Hodl
+        return NETWORK_PRESETS[1]; // Texas Hodl
     });
 
     // Save to localStorage whenever network changes
