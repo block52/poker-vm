@@ -42,5 +42,4 @@ app.post("/", async (req: Request, res: Response) => {
 // Start the HTTP server (instead of app.listen)
 server.listen(PORT, () => {
     console.log(`PVM RPC Server v${VERSION} running on http://localhost:${PORT}`);
-    console.log(`WebSocket test page available at http://localhost:${PORT}/ws-test`);
 });
