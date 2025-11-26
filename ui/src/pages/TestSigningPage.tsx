@@ -604,11 +604,11 @@ export default function TestSigningPage() {
     return (
         <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
             <AnimatedBackground />
-            <div className="w-full max-w-7xl relative z-10">
+            <div className="w-full max-w-5xl relative z-10">
                 {/* Header */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <h1 className="text-4xl font-extrabold text-white mb-2 text-center">SigningCosmosClient Test Page</h1>
-                    <p className="text-gray-300 text-center">Test all SDK functions from Lucas's SigningCosmosClient</p>
+                <div className="mb-6">
+                    <h1 className="text-4xl font-extrabold text-white mb-2 text-center">Signing Cosmos Client Test Page</h1>
+                    <p className="text-gray-300 text-center">Test all SDK functions from Lucas's Signing Cosmos Client</p>
                 </div>
 
                 {/* Token Info Section */}
