@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { colors, getAnimationGradient, hexToRgba } from "../utils/colorConfig";
 import { useCosmosWallet } from "../hooks";
 
-// Faucet API endpoint - can be overridden via environment variable
-const FAUCET_API_URL = import.meta.env.VITE_FAUCET_API_URL || "http://localhost:3001";
+// Faucet API endpoint - production Digital Ocean server
+const FAUCET_API_URL = "https://seahorse-app-m6569.ondigitalocean.app";
 
 // Hexagon pattern overlay (same as Dashboard)
 const HexagonPattern = () => {
