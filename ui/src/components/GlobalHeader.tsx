@@ -75,6 +75,26 @@ export const GlobalHeader: React.FC = () => {
         }
     ];
 
+    // Reusable component for network status and selector
+    const NetworkStatusAndSelector = () => (
+        <>
+            {/* Block Height Indicator */}
+            {latestBlockHeight && (
+                <div
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                    style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
+                >
+                    <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
+                    <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
+                        #{latestBlockHeight}
+                    </span>
+                </div>
+            )}
+
+            <NetworkSelector />
+        </>
+    );
+
     return (
         <header
             className="sticky top-0 z-40 w-full"
@@ -127,20 +147,7 @@ export const GlobalHeader: React.FC = () => {
 
                     {/* Right-aligned Network Selector - positioned absolutely */}
                     <div className="absolute right-0 flex items-center gap-4">
-                        {/* Block Height Indicator */}
-                        {latestBlockHeight && (
-                            <div
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
-                            >
-                                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
-                                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
-                                    #{latestBlockHeight}
-                                </span>
-                            </div>
-                        )}
-
-                        <NetworkSelector />
+                        <NetworkStatusAndSelector />
                     </div>
                 </div>
 
@@ -153,20 +160,12 @@ export const GlobalHeader: React.FC = () => {
 
                     {/* Right side - Network Selector & Mobile Menu */}
                     <div className="flex items-center gap-4">
-                        {/* Block Height Indicator */}
-                        {latestBlockHeight && (
-                            <div
-                                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
-                            >
-                                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
-                                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
-                                    #{latestBlockHeight}
-                                </span>
-                            </div>
-                        )}
-
-                        <NetworkSelector />
+                        <div className="hidden md:flex items-center gap-4">
+                            <NetworkStatusAndSelector />
+                        </div>
+                        <div className="md:hidden">
+                            <NetworkSelector />
+                        </div>
 
                         {/* Mobile Menu Button */}
                         <button
