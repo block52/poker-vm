@@ -85,15 +85,16 @@ export const GlobalHeader: React.FC = () => {
             }}
         >
             <div className="container mx-auto px-4 py-3">
-                <div className="flex items-center justify-between">
-                    {/* Left side - Logo/Title */}
+                {/* Desktop Layout: Centered navigation group with right-aligned NetworkSelector */}
+                <div className="hidden lg:flex items-center justify-center relative">
+                    {/* Centered Navigation Group */}
                     <div className="flex items-center gap-6">
                         <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
                             {import.meta.env.VITE_CLUB_NAME || "Block 52"}
                         </Link>
 
                         {/* Desktop Navigation */}
-                        <nav className="hidden lg:flex items-center gap-1">
+                        <nav className="flex items-center gap-1">
                             {menuItems.map(item => (
                                 <Link
                                     key={item.path}
@@ -124,6 +125,32 @@ export const GlobalHeader: React.FC = () => {
                         </nav>
                     </div>
 
+                    {/* Right-aligned Network Selector - positioned absolutely */}
+                    <div className="absolute right-0 flex items-center gap-4">
+                        {/* Block Height Indicator */}
+                        {latestBlockHeight && (
+                            <div
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
+                            >
+                                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
+                                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
+                                    #{latestBlockHeight}
+                                </span>
+                            </div>
+                        )}
+
+                        <NetworkSelector />
+                    </div>
+                </div>
+
+                {/* Mobile/Tablet Layout: Keep original structure */}
+                <div className="flex lg:hidden items-center justify-between">
+                    {/* Left side - Logo/Title */}
+                    <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
+                        {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                    </Link>
+
                     {/* Right side - Network Selector & Mobile Menu */}
                     <div className="flex items-center gap-4">
                         {/* Block Height Indicator */}
@@ -144,7 +171,7 @@ export const GlobalHeader: React.FC = () => {
                         {/* Mobile Menu Button */}
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="lg:hidden p-2 rounded-lg hover:opacity-80 transition-opacity"
+                            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
                             style={{ color: colors.brand.primary }}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
