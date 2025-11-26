@@ -42,7 +42,7 @@ export async function joinTable(tableId: string, options: JoinTableOptions, netw
             chainId: COSMOS_CONSTANTS.CHAIN_ID,
             prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
             denom: "stake", // Gas token (use "stake" for testnet)
-            gasPrice: "0.025stake"
+            gasPrice: "0stake" // Chain has zero gas fees
         },
         mnemonic
     );
