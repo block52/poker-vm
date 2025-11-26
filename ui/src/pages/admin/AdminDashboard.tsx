@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { colors, hexToRgba } from "../../utils/colorConfig";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 
 interface AdminMenuItem {
@@ -35,76 +34,75 @@ const AdminDashboard: React.FC = () => {
     return (
         <div className="min-h-screen p-8 relative">
             <AnimatedBackground />
-            <div className="container mx-auto relative z-10">
-            <div className="mb-8 text-center">
-                <h1 className="text-4xl font-bold text-white mb-2">
-                    Admin Dashboard
-                </h1>
-                <p className="text-gray-400">
-                    Development and administrative tools for managing the poker platform
-                </p>
-            </div>
+            <div className="max-w-7xl mx-auto relative z-10">
+                {/* Header */}
+                <div className="mb-8 text-center">
+                    <h1 className="text-4xl font-bold text-white mb-2">
+                        Admin Dashboard
+                    </h1>
+                    <p className="text-gray-400">
+                        Development and administrative tools for managing the poker platform
+                    </p>
+                </div>
 
-            {/* Warning Banner */}
-            <div className="mb-8 flex justify-center">
-                <div
-                    className="inline-flex items-center gap-3 p-4 rounded-lg border"
-                    style={{
-                        backgroundColor: hexToRgba("#FCD34D", 0.1),
-                        borderColor: hexToRgba("#FCD34D", 0.3)
-                    }}
-                >
-                    <svg className="w-6 h-6 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div>
-                        <p className="text-yellow-400 font-semibold">Development Mode Only</p>
-                        <p className="text-yellow-400/70 text-sm">
-                            These tools are only available in development environments.
-                        </p>
+                {/* Warning Banner */}
+                <div className="mb-8 bg-yellow-900/30 rounded-lg p-4 border border-yellow-700">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-0.5">
+                            <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-yellow-200 font-semibold mb-1">Development Mode Only</h3>
+                            <p className="text-yellow-300 text-sm">
+                                These tools are only available in development environments.
+                            </p>
+                        </div>
                     </div>
+                </div>
+
+                {/* Admin Menu Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {adminMenuItems.map((item) => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className="bg-gray-800 rounded-lg p-6 border border-gray-700 transition-all duration-200 hover:bg-gray-700/50 hover:border-gray-600"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 rounded-lg bg-blue-900/30 border border-blue-700">
+                                    <svg
+                                        className="w-6 h-6 text-blue-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white mb-1">
+                                        {item.label}
+                                    </h3>
+                                    <p className="text-gray-400 text-sm">
+                                        {item.description}
+                                    </p>
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
                 </div>
             </div>
 
-            {/* Admin Menu Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {adminMenuItems.map((item) => (
-                    <Link
-                        key={item.path}
-                        to={item.path}
-                        className="p-6 rounded-lg border transition-all duration-200 hover:scale-[1.02]"
-                        style={{
-                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                            borderColor: hexToRgba(colors.brand.primary, 0.2)
-                        }}
-                    >
-                        <div className="flex items-start gap-4">
-                            <div
-                                className="p-3 rounded-lg"
-                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.1) }}
-                            >
-                                <svg
-                                    className="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    style={{ color: colors.brand.primary }}
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white mb-1">
-                                    {item.label}
-                                </h3>
-                                <p className="text-gray-400 text-sm">
-                                    {item.description}
-                                </p>
-                            </div>
-                        </div>
-                    </Link>
-                ))}
-            </div>
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain pointer-events-none" />
+                </div>
             </div>
         </div>
     );
