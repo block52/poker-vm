@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { colors, hexToRgba } from "../../utils/colorConfig";
+import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 
 interface AdminMenuItem {
     path: string;
@@ -44,9 +45,11 @@ const adminMenuItems: AdminMenuItem[] = [
 
 const AdminDashboard: React.FC = () => {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2" style={{ color: colors.brand.primary }}>
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="container mx-auto relative z-10">
+            <div className="mb-8 text-center">
+                <h1 className="text-4xl font-bold text-white mb-2">
                     Admin Dashboard
                 </h1>
                 <p className="text-gray-400">
@@ -55,14 +58,14 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Warning Banner */}
-            <div
-                className="mb-8 p-4 rounded-lg border"
-                style={{
-                    backgroundColor: hexToRgba("#FCD34D", 0.1),
-                    borderColor: hexToRgba("#FCD34D", 0.3)
-                }}
-            >
-                <div className="flex items-center gap-3">
+            <div className="mb-8 flex justify-center">
+                <div
+                    className="inline-flex items-center gap-3 p-4 rounded-lg border"
+                    style={{
+                        backgroundColor: hexToRgba("#FCD34D", 0.1),
+                        borderColor: hexToRgba("#FCD34D", 0.3)
+                    }}
+                >
                     <svg className="w-6 h-6 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -114,42 +117,6 @@ const AdminDashboard: React.FC = () => {
                     </Link>
                 ))}
             </div>
-
-            {/* Quick Links */}
-            <div className="mt-8 pt-8 border-t" style={{ borderColor: hexToRgba(colors.brand.primary, 0.2) }}>
-                <h2 className="text-xl font-semibold text-white mb-4">Quick Links</h2>
-                <div className="flex flex-wrap gap-4">
-                    <Link
-                        to="/explorer"
-                        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        style={{
-                            backgroundColor: hexToRgba(colors.brand.primary, 0.1),
-                            color: colors.brand.primary
-                        }}
-                    >
-                        Block Explorer
-                    </Link>
-                    <Link
-                        to="/wallet"
-                        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        style={{
-                            backgroundColor: hexToRgba(colors.brand.primary, 0.1),
-                            color: colors.brand.primary
-                        }}
-                    >
-                        Wallet
-                    </Link>
-                    <Link
-                        to="/"
-                        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        style={{
-                            backgroundColor: hexToRgba(colors.brand.primary, 0.1),
-                            color: colors.brand.primary
-                        }}
-                    >
-                        Dashboard
-                    </Link>
-                </div>
             </div>
         </div>
     );
