@@ -19,7 +19,7 @@ import USDCDepositModal from "../components/USDCDepositModal";
 
 // Game wallet and SDK imports
 // ...existing code...
-import { GameType } from "@bitcoinbrisbane/block52";
+import { GameType, generateWallet as generateWalletSDK } from "@bitcoinbrisbane/block52";
 import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
@@ -27,7 +27,7 @@ import { useUserWalletConnect, useFindGames, useNewTable, useTablePlayerCounts, 
 import type { CreateTableOptions } from "../hooks/useNewTable"; // Import type separately
 
 // Cosmos wallet utils
-import { isValidSeedPhrase } from "../utils/cosmos";
+import { isValidSeedPhrase, setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic } from "../utils/cosmos";
 
 // Password protection utils
 import {
@@ -215,6 +215,31 @@ const Dashboard: React.FC = () => {
     const cosmosWallet = useCosmosWallet();
     const [showCosmosImportModal, setShowCosmosImportModal] = useState(false);
     const [showCosmosTransferModal, setShowCosmosTransferModal] = useState(false);
+    const [showWalletGeneratedNotification, setShowWalletGeneratedNotification] = useState(false);
+
+    // Auto-create Block52 wallet if none exists
+    useEffect(() => {
+        const autoCreateWallet = async () => {
+            const existingMnemonic = getCosmosMnemonic();
+            if (!existingMnemonic) {
+                try {
+                    console.log("🔐 No Block52 wallet found, auto-generating...");
+                    const walletInfo = await generateWalletSDK("b52", 24);
+                    setCosmosMnemonic(walletInfo.mnemonic);
+                    setCosmosAddress(walletInfo.address);
+                    console.log("✅ Block52 wallet auto-generated:", walletInfo.address);
+                    setShowWalletGeneratedNotification(true);
+                    // Refresh the cosmos wallet hook
+                    cosmosWallet.refreshBalance();
+                    // Auto-hide notification after 10 seconds
+                    setTimeout(() => setShowWalletGeneratedNotification(false), 10000);
+                } catch (err) {
+                    console.error("❌ Failed to auto-generate wallet:", err);
+                }
+            }
+        };
+        autoCreateWallet();
+    }, []); // Run once on mount
     const [cosmosSeedPhrase, setCosmosSeedPhrase] = useState("");
     const [cosmosImportError, setCosmosImportError] = useState("");
     const [transferRecipient, setTransferRecipient] = useState("");
@@ -622,6 +647,33 @@ const Dashboard: React.FC = () => {
 
             {/* Add hexagon pattern overlay */}
             <HexagonPattern />
+
+            {/* Wallet Generated Notification */}
+            {showWalletGeneratedNotification && (
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+                    <div
+                        className="px-6 py-4 rounded-xl shadow-2xl border flex items-center gap-4"
+                        style={{
+                            backgroundColor: hexToRgba(colors.accent.success, 0.95),
+                            borderColor: colors.accent.success
+                        }}
+                    >
+                        <span className="text-2xl">🎉</span>
+                        <div>
+                            <p className="text-white font-bold">Block52 Wallet Created!</p>
+                            <p className="text-white/80 text-sm">
+                                Visit <a href="/wallet" className="underline font-semibold hover:text-white">/wallet</a> to view your seed phrase and manage your wallet.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setShowWalletGeneratedNotification(false)}
+                            className="text-white/80 hover:text-white ml-2"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Animated pattern overlay */}
             <div className="fixed inset-0 z-0 opacity-20" style={backgroundStyle2} />
@@ -1364,22 +1416,23 @@ const Dashboard: React.FC = () => {
                             onMouseEnter={handleWalletMouseEnter}
                             onMouseLeave={handleWalletMouseLeave}
                         >
-                            <div className="flex items-center gap-2 mb-2">
-                                <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
-                                <div className="relative group">
-                                    <svg
-                                        className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-xl font-bold text-white">Block52 Game Wallet</h2>
+                                    <div className="relative group">
+                                        <svg
+                                            className="w-5 h-5 text-gray-400 hover:text-white cursor-help transition-colors"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            />
+                                        </svg>
                                     <div
                                         className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 text-white text-sm rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20"
                                         style={{
@@ -1400,7 +1453,34 @@ const Dashboard: React.FC = () => {
                                             style={{ borderTopColor: colors.ui.bgDark }}
                                         ></div>
                                     </div>
+                                    </div>
                                 </div>
+                                {/* Settings/Manage Wallet Button */}
+                                <button
+                                    onClick={() => navigate("/wallet")}
+                                    className="p-2 rounded-lg transition-all hover:bg-gray-700/50"
+                                    title="Manage Wallet"
+                                >
+                                    <svg
+                                        className="w-5 h-5 text-gray-400 hover:text-white transition-colors"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                        />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                    </svg>
+                                </button>
                             </div>
 
                             {cosmosWallet.address && (

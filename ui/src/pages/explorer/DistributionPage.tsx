@@ -5,6 +5,7 @@ import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { CardDistribution } from "./types";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
+import { ExplorerHeader } from "../../components/explorer/ExplorerHeader";
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -193,10 +194,11 @@ export default function DistributionPage() {
     };
 
     return (
-        <div className="min-h-screen relative">
+        <div className="min-h-screen p-8 relative">
             <AnimatedBackground />
-            <div className="container mx-auto p-6 relative z-10">
-                <h1 className="text-3xl font-bold mb-6 text-white">Card Distribution Analytics</h1>
+            <div className="max-w-7xl mx-auto relative z-10">
+                {/* Explorer Navigation Header */}
+                <ExplorerHeader title="Block Explorer" subtitle="Card distribution analytics on Pokerchain" />
 
             {loading ? (
                 <div className="text-center py-12">

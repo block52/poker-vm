@@ -5,6 +5,7 @@ import { CosmosBlock } from "./types";
 import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
+import { ExplorerHeader } from "../../components/explorer/ExplorerHeader";
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -150,21 +151,7 @@ export default function BlocksPage() {
             <AnimatedBackground />
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-white mb-2 text-center">Block Explorer</h1>
-                    <p className="text-gray-400 text-center">Latest blocks on Pokerchain</p>
-                    <div className="mt-3 flex gap-4 justify-center flex-wrap">
-                        <a href="/explorer/accounts" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                            All Accounts
-                        </a>
-                        <a href="/explorer/address/" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                            Address Lookup
-                        </a>
-                        <a href="/explorer/distribution" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                            Card Distribution Analytics
-                        </a>
-                    </div>
-                </div>
+                <ExplorerHeader />
 
                 {/* Blocks Table */}
                 <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">

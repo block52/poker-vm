@@ -91,6 +91,7 @@ function AppContent() {
                 <Route path="/explorer" element={<BlocksPage />} />
                 <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
+                <Route path="/explorer/address" element={<AddressPage />} />
                 <Route path="/explorer/address/:address" element={<AddressPage />} />
                 <Route path="/explorer/accounts" element={<AllAccountsPage />} />
                 <Route path="/explorer/distribution" element={<DistributionPage />} />

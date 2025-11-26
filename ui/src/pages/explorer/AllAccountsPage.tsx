@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { fromBech32, toBech32 } from "@cosmjs/encoding";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { useNetwork } from "../../context/NetworkContext";
-import { NetworkSelector } from "../../components/NetworkSelector";
 import { microToUsdc } from "../../constants/currency";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
+import { ExplorerHeader } from "../../components/explorer/ExplorerHeader";
 
 interface ValidatorInfo {
     operatorAddress: string;
@@ -279,35 +279,12 @@ export default function AllAccountsPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
+        <div className="min-h-screen p-8 relative">
             <AnimatedBackground />
 
-            {/* Network Selector */}
-            <div className="absolute top-6 right-6 z-50">
-                <NetworkSelector />
-            </div>
-
-            <div className="w-full max-w-7xl mt-12 relative z-10">
-                {/* Header */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                            <h1 className="text-4xl font-extrabold text-white mb-2">All Accounts</h1>
-                            <p className="text-gray-300">View all accounts on {currentNetwork.name}</p>
-                        </div>
-                        <Link
-                            to="/explorer"
-                            className="px-4 py-2 rounded-lg transition-all text-center"
-                            style={{
-                                backgroundColor: hexToRgba(colors.brand.primary, 0.2),
-                                border: `1px solid ${colors.brand.primary}`,
-                                color: colors.brand.primary
-                            }}
-                        >
-                            Back to Explorer
-                        </Link>
-                    </div>
-                </div>
+            <div className="max-w-7xl mx-auto relative z-10">
+                {/* Explorer Navigation Header */}
+                <ExplorerHeader title="Block Explorer" subtitle="All accounts on Pokerchain" />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

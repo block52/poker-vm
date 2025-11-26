@@ -3,11 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { useNetwork } from "../../context/NetworkContext";
-import { NetworkSelector } from "../../components/NetworkSelector";
 import { microToUsdc } from "../../constants/currency";
 import { Coin } from "./types";
 import { formatTimestampRelative } from "../../utils/formatUtils";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
+import { ExplorerHeader } from "../../components/explorer/ExplorerHeader";
 
 export default function AddressPage() {
     const { address: urlAddress } = useParams<{ address: string }>();
@@ -172,19 +172,12 @@ export default function AddressPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
+        <div className="min-h-screen p-8 relative">
             <AnimatedBackground />
-            {/* Network Selector */}
-            <div className="absolute top-6 right-6 z-50">
-                <NetworkSelector />
-            </div>
 
-            <div className="w-full max-w-6xl mt-12 relative z-10">
-                {/* Header Card */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <h1 className="text-4xl font-extrabold text-white mb-2">Address Search</h1>
-                    <p className="text-gray-300">Enter a Cosmos address to view balances and transaction history</p>
-                </div>
+            <div className="max-w-7xl mx-auto relative z-10">
+                {/* Explorer Navigation Header */}
+                <ExplorerHeader title="Block Explorer" subtitle="Address lookup on Pokerchain" />
 
                 {/* Search Card */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
