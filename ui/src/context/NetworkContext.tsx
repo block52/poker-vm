@@ -64,9 +64,14 @@ export interface NetworkEndpoints {
  * Each network entry includes endpoints for RPC, REST, gRPC, and WebSocket (ws).
  * The ws property is used by the UI for real-time table/game updates.
  *
+ * WebSocket Server Architecture:
+ *   - Runs on port 8585 (separate from Tendermint RPC on 26657)
+ *   - Subscribes to Tendermint events and broadcasts to UI clients
+ *   - Production: nginx proxies /ws path to localhost:8585
+ *
  * Example ws usage:
- *   ws://localhost:26657/ws?tableAddress=...&playerId=...
- *   wss://node1.block52.xyz/ws?tableAddress=...&playerId=...
+ *   ws://localhost:8585/ws (local development)
+ *   wss://node.texashodl.net/ws (production via nginx proxy)
  */
 export const NETWORK_PRESETS: NetworkEndpoints[] = [
     // [0] ✅ Localhost - Default for local development with `ignite chain serve`
@@ -75,7 +80,7 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
         rpc: "http://localhost:26657",
         rest: "http://localhost:1317",
         grpc: "http://localhost:9090",
-        ws: "ws://localhost:26657/ws" // WebSocket endpoint for table/game updates
+        ws: "ws://localhost:8585/ws" // WebSocket server for real-time game updates (port 8585)
     },
     // [1] ✅ Texas Hodl - Recommended for production testing
     {

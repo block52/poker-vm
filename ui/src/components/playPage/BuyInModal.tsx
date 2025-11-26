@@ -274,9 +274,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             console.log("  joinOptions.amount:", joinOptions.amount);
             console.log("  tableId:", tableId);
 
-            joinTable(tableId || "default-game-id", joinOptions, currentNetwork);
+            const result = await joinTable(tableId || "default-game-id", joinOptions, currentNetwork);
+            console.log("✅ BuyInModal - Join successful:", result);
 
-            // Navigate to table
+            // Navigate to table after successful join
             navigate(`/table/${tableId}`);
         } catch (error) {
             console.error("❌ Error joining random seat:", error);
