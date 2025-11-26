@@ -180,7 +180,9 @@ export default function AllAccountsPage() {
 
     const formatBalance = (amount: string, denom: string) => {
         const value = microToUsdc(amount);
-        return `${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${denom.replace("u", "").toUpperCase()}`;
+        // Remove "u" prefix only if it's a micro-denomination (starts with "u")
+        const displayDenom = denom.startsWith("u") ? denom.slice(1) : denom;
+        return `${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${displayDenom.toUpperCase()}`;
     };
 
     const truncateAddress = (addr: string) => {

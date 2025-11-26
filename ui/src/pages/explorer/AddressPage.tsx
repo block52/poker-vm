@@ -160,7 +160,9 @@ export default function AddressPage() {
     const formatAmount = (amount: string, denom: string) => {
         // Assuming micro-denominations (6 decimals)
         const value = microToUsdc(amount);
-        return `${value.toFixed(6)} ${denom.replace("u", "").toUpperCase()}`;
+        // Remove "u" prefix only if it's a micro-denomination (starts with "u")
+        const displayDenom = denom.startsWith("u") ? denom.slice(1) : denom;
+        return `${value.toFixed(6)} ${displayDenom.toUpperCase()}`;
     };
 
     const copyToClipboard = (text: string) => {
