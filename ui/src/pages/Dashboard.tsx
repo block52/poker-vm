@@ -216,6 +216,28 @@ const Dashboard: React.FC = () => {
     const [showCosmosImportModal, setShowCosmosImportModal] = useState(false);
     const [showCosmosTransferModal, setShowCosmosTransferModal] = useState(false);
     const [showWalletGeneratedNotification, setShowWalletGeneratedNotification] = useState(false);
+    const [showNoStakeNotification, setShowNoStakeNotification] = useState(false);
+
+    // Check if user has STAKE for gas fees
+    const hasStakeBalance = useMemo(() => {
+        const stakeBalance = cosmosWallet.balance.find(b => b.denom === "stake");
+        return stakeBalance && parseInt(stakeBalance.amount) > 0;
+    }, [cosmosWallet.balance]);
+
+    // Show notification when wallet exists but no STAKE (and not loading)
+    useEffect(() => {
+        if (cosmosWallet.address && !cosmosWallet.isLoading && !hasStakeBalance && cosmosWallet.balance.length >= 0) {
+            // Small delay to avoid showing during initial load
+            const timer = setTimeout(() => {
+                if (!hasStakeBalance) {
+                    setShowNoStakeNotification(true);
+                }
+            }, 2000);
+            return () => clearTimeout(timer);
+        } else if (hasStakeBalance) {
+            setShowNoStakeNotification(false);
+        }
+    }, [cosmosWallet.address, cosmosWallet.isLoading, cosmosWallet.balance, hasStakeBalance]);
 
     // Auto-create Block52 wallet if none exists
     useEffect(() => {
@@ -667,6 +689,37 @@ const Dashboard: React.FC = () => {
                         </div>
                         <button
                             onClick={() => setShowWalletGeneratedNotification(false)}
+                            className="text-white/80 hover:text-white ml-2"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* No STAKE Notification */}
+            {showNoStakeNotification && !showWalletGeneratedNotification && (
+                <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+                    <div
+                        className="px-6 py-4 rounded-xl shadow-2xl border flex items-center gap-4"
+                        style={{
+                            backgroundColor: hexToRgba(colors.accent.warning, 0.95),
+                            borderColor: colors.accent.warning
+                        }}
+                    >
+                        <span className="text-2xl">⛽</span>
+                        <div>
+                            <p className="text-white font-bold">No STAKE for Gas Fees</p>
+                            <p className="text-white/80 text-sm">
+                                You need STAKE tokens for transactions.{" "}
+                                <a href="/faucet" className="underline font-semibold hover:text-white">
+                                    Visit the faucet
+                                </a>{" "}
+                                to request free test tokens.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setShowNoStakeNotification(false)}
                             className="text-white/80 hover:text-white ml-2"
                         >
                             ✕

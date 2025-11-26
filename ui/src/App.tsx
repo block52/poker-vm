@@ -23,6 +23,7 @@ import WithdrawalDashboard from "./pages/WithdrawalDashboard";
 import TableAdminPage from "./pages/TableAdminPage";
 import GenesisState from "./pages/GenesisState";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import FaucetPage from "./pages/FaucetPage";
 import { TestSdk } from "./test-sdk";
 import { GameStateProvider } from "./context/GameStateContext";
 import { generateCSSVariables } from "./utils/colorConfig";
@@ -95,6 +96,7 @@ function AppContent() {
                 <Route path="/explorer/address/:address" element={<AddressPage />} />
                 <Route path="/explorer/accounts" element={<AllAccountsPage />} />
                 <Route path="/explorer/distribution" element={<DistributionPage />} />
+                <Route path="/faucet" element={<FaucetPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer
