@@ -497,8 +497,17 @@
                     ws = new WebSocket(subscriptionUrl);
 
                     ws.onopen = () => {
-                        log('✅ WebSocket connected and subscribed to table!', 'success');
+                        log('✅ WebSocket connected!', 'success');
                         updateStatus('CONNECTED');
+
+                        // Send subscription message (required by server)
+                        const subscriptionMessage = {
+                            type: 'subscribe',
+                            game_id: tableAddress
+                        };
+                        log(`📤 Sending subscription message: ${JSON.stringify(subscriptionMessage)}`, 'info');
+                        ws.send(JSON.stringify(subscriptionMessage));
+
                         log(`Listening for updates on table: ${tableAddress}`, 'success');
                     };
 
