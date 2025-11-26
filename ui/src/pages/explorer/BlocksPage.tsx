@@ -153,9 +153,15 @@ export default function BlocksPage() {
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-white mb-2 text-center">Block Explorer</h1>
                     <p className="text-gray-400 text-center">Latest blocks on Pokerchain</p>
-                    <div className="mt-3 flex gap-4 justify-center">
+                    <div className="mt-3 flex gap-4 justify-center flex-wrap">
+                        <a href="/explorer/accounts" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                            All Accounts
+                        </a>
+                        <a href="/explorer/address/" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                            Address Lookup
+                        </a>
                         <a href="/explorer/distribution" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                            📊 Card Distribution Analytics
+                            Card Distribution Analytics
                         </a>
                     </div>
                 </div>
