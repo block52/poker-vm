@@ -753,14 +753,11 @@ const Table = React.memo(() => {
         if (id && playerData) {
             leaveTable(id, playerData.stack || "0", currentNetwork)
                 .then(() => {
-                    window.location.href = "/";
+                    console.log("Successfully left table");
                 })
                 .catch((err: any) => {
                     console.error("Error leaving table:", err);
-                    window.location.href = "/";
                 });
-        } else {
-            window.location.href = "/";
         }
     }, [tableDataValues.tableDataPlayers, userWalletAddress, id, currentNetwork]);
 
