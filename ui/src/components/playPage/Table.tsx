@@ -78,6 +78,7 @@ import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { NetworkSelector } from "../NetworkSelector";
 
 import { isValidPlayerAddress } from "../../utils/addressUtils";
+import { getCardImageUrl, getCardBackUrl } from "../../utils/cardImages";
 
 import "./Table.css"; // Import the Table CSS file
 
@@ -580,7 +581,7 @@ const Table = React.memo(() => {
                 const card = communityCards[idx];
                 return (
                     <div key={idx} className="card animate-fall">
-                        <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped />
+                        <OppositePlayerCards frontSrc={getCardImageUrl(card)} backSrc={getCardBackUrl()} flipped />
                     </div>
                 );
             } else {

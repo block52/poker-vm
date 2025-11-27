@@ -1,5 +1,6 @@
 import React from "react";
 import { formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
+import { getChipImageUrl } from "../../../utils/cardImages";
 
 type ChipProps = {
     amount: string | bigint;
@@ -39,8 +40,8 @@ const Chip: React.FC<ChipProps> = React.memo(({ amount }) => {
                 ? "h-[36px] pl-[18px] pr-[18px]"  // Larger padding for mobile
                 : "h-[32px] pl-[16px] pr-[16px]"  // Larger padding for desktop too
         }`}>
-            <img 
-                src={"/cards/chip.svg"} 
+            <img
+                src={getChipImageUrl()}
                 alt="Chip Icon" 
                 className={`absolute ${
                     isMobile
