@@ -105,6 +105,16 @@ const AdminDashboard: React.FC = () => {
                     </Link>
                 ))}
             </div>
+
+            {/* Powered by Block52 Footer */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain pointer-events-none" />
+                </div>
+            </div>
             </div>
         </div>
     );
