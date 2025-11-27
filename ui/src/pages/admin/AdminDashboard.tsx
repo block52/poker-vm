@@ -35,7 +35,7 @@ const AdminDashboard: React.FC = () => {
     return (
         <div className="min-h-screen p-8 relative">
             <AnimatedBackground />
-            <div className="container mx-auto relative z-10">
+            <div className="max-w-7xl mx-auto relative z-10">
             <div className="mb-8 text-center">
                 <h1 className="text-4xl font-bold text-white mb-2">
                     Admin Dashboard
