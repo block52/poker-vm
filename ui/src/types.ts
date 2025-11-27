@@ -32,3 +32,23 @@ export interface PlayerActionResult {
     /** The amount involved in the action (in micro-units as string), if applicable */
     amount?: string;
 }
+
+/**
+ * Result returned from joinTable hook
+ * Extends PlayerActionResult with join-specific properties
+ */
+export interface JoinTableResult extends Omit<PlayerActionResult, "action"> {
+    /** The seat number the player joined at */
+    seat: number;
+    /** The buy-in amount (in micro-units as string) */
+    buyInAmount: string;
+}
+
+/**
+ * Result returned from leaveTable hook
+ * Extends PlayerActionResult with leave-specific properties
+ */
+export interface LeaveTableResult extends PlayerActionResult {
+    /** The value associated with leaving (in micro-units as string) */
+    value: string;
+}
