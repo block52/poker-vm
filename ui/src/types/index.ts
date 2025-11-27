@@ -321,3 +321,4 @@ export interface WinnerInfoReturn {
     winnerInfo: WinnerInfo[] | null;
     error: Error | null;
 }
+

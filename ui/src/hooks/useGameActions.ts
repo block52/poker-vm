@@ -42,7 +42,7 @@ export const useGameActions = (): GameActionHook => {
             throw new Error("Cosmos backend not yet implemented - use proxy mode");
         } else {
             // Map actions to existing proxy functions
-            const amountStr = amount.toString();
+            // All amount-based functions now accept bigint directly
 
             switch (action.toLowerCase()) {
                 case "fold": {
@@ -51,17 +51,17 @@ export const useGameActions = (): GameActionHook => {
                 }
 
                 case "call": {
-                    const callResult = await callHand(gameId, amountStr, currentNetwork);
+                    const callResult = await callHand(gameId, amount, currentNetwork);
                     return callResult?.hash || "proxy-call-" + Date.now();
                 }
 
                 case "bet": {
-                    const betResult = await betHand(gameId, amountStr, currentNetwork);
+                    const betResult = await betHand(gameId, amount, currentNetwork);
                     return betResult?.hash || "proxy-bet-" + Date.now();
                 }
 
                 case "raise": {
-                    const raiseResult = await raiseHand(gameId, amountStr, currentNetwork);
+                    const raiseResult = await raiseHand(gameId, amount, currentNetwork);
                     return raiseResult?.hash || "proxy-raise-" + Date.now();
                 }
 
