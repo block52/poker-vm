@@ -7,12 +7,12 @@ import type { NetworkEndpoints } from "../../context/NetworkContext";
  * Post big blind in a poker game using Cosmos SDK SigningCosmosClient.
  *
  * @param tableId - The ID of the table (game ID on Cosmos) where the action will be performed
- * @param bigBlindAmount - The big blind amount in microunits (usdc)
+ * @param amount - The big blind amount in micro-units as bigint (10^6 precision)
  * @param network - The current network configuration from NetworkContext
  * @returns Promise with transaction hash
  * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function postBigBlind(tableId: string, bigBlindAmount: string, network: NetworkEndpoints): Promise<any> {
+export async function postBigBlind(tableId: string, amount: bigint, network: NetworkEndpoints): Promise<any> {
     // Get user's Cosmos address and mnemonic
     const userAddress = getCosmosAddress();
     const mnemonic = getCosmosMnemonic();
@@ -24,7 +24,7 @@ export async function postBigBlind(tableId: string, bigBlindAmount: string, netw
     console.log("🎰 Post big blind on Cosmos blockchain");
     console.log("  Player:", userAddress);
     console.log("  Game ID:", tableId);
-    console.log("  Big blind amount:", bigBlindAmount);
+    console.log("  Big blind amount:", amount.toString());
 
     // Create signing client from mnemonic using the selected network
     const { rpcEndpoint, restEndpoint } = getCosmosUrls(network);
@@ -45,7 +45,7 @@ export async function postBigBlind(tableId: string, bigBlindAmount: string, netw
     const transactionHash = await signingClient.performAction(
         tableId,
         "post-big-blind",
-        BigInt(bigBlindAmount)
+        amount
     );
 
     console.log("✅ Post big blind transaction submitted:", transactionHash);
@@ -54,6 +54,6 @@ export async function postBigBlind(tableId: string, bigBlindAmount: string, netw
         hash: transactionHash,
         gameId: tableId,
         action: "post-big-blind",
-        amount: bigBlindAmount
+        amount: amount.toString()
     };
 }

@@ -7,12 +7,12 @@ import type { NetworkEndpoints } from "../../context/NetworkContext";
  * Call in a poker game using Cosmos SDK SigningCosmosClient.
  *
  * @param tableId - The ID of the table (game ID on Cosmos) where the action will be performed
- * @param amount - The amount to call in microunits (usdc)
+ * @param amount - The amount to call in micro-units as bigint (10^6 precision)
  * @param network - The current network configuration from NetworkContext
  * @returns Promise with transaction hash
  * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function callHand(tableId: string, amount: string, network: NetworkEndpoints): Promise<any> {
+export async function callHand(tableId: string, amount: bigint, network: NetworkEndpoints): Promise<any> {
     // Get user's Cosmos address and mnemonic
     const userAddress = getCosmosAddress();
     const mnemonic = getCosmosMnemonic();
@@ -24,7 +24,7 @@ export async function callHand(tableId: string, amount: string, network: Network
     console.log("📞 Call on Cosmos blockchain");
     console.log("  Player:", userAddress);
     console.log("  Game ID:", tableId);
-    console.log("  Amount:", amount);
+    console.log("  Amount:", amount.toString());
 
     // Create signing client from mnemonic using the selected network
     const { rpcEndpoint, restEndpoint } = getCosmosUrls(network);
@@ -45,7 +45,7 @@ export async function callHand(tableId: string, amount: string, network: Network
     const transactionHash = await signingClient.performAction(
         tableId,
         "call",
-        BigInt(amount)
+        amount
     );
 
     console.log("✅ Call transaction submitted:", transactionHash);
@@ -54,6 +54,6 @@ export async function callHand(tableId: string, amount: string, network: Network
         hash: transactionHash,
         gameId: tableId,
         action: "call",
-        amount
+        amount: amount.toString()
     };
 }

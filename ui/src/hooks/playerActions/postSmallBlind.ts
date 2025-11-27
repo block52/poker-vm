@@ -7,12 +7,12 @@ import type { NetworkEndpoints } from "../../context/NetworkContext";
  * Post small blind in a poker game using Cosmos SDK SigningCosmosClient.
  *
  * @param tableId - The ID of the table (game ID on Cosmos) where the action will be performed
- * @param smallBlindAmount - The small blind amount in microunits (usdc)
+ * @param amount - The small blind amount in micro-units as bigint (10^6 precision)
  * @param network - The current network configuration from NetworkContext
  * @returns Promise with transaction hash
  * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function postSmallBlind(tableId: string, smallBlindAmount: string, network: NetworkEndpoints): Promise<any> {
+export async function postSmallBlind(tableId: string, amount: bigint, network: NetworkEndpoints): Promise<any> {
     // Get user's Cosmos address and mnemonic
     const userAddress = getCosmosAddress();
     const mnemonic = getCosmosMnemonic();
@@ -24,7 +24,7 @@ export async function postSmallBlind(tableId: string, smallBlindAmount: string, 
     console.log("🎰 Post small blind on Cosmos blockchain");
     console.log("  Player:", userAddress);
     console.log("  Game ID:", tableId);
-    console.log("  Small blind amount:", smallBlindAmount);
+    console.log("  Small blind amount:", amount.toString());
 
     // Create signing client from mnemonic using the selected network
     const { rpcEndpoint, restEndpoint } = getCosmosUrls(network);
@@ -45,7 +45,7 @@ export async function postSmallBlind(tableId: string, smallBlindAmount: string, 
     const transactionHash = await signingClient.performAction(
         tableId,
         "post-small-blind",
-        BigInt(smallBlindAmount)
+        amount
     );
 
     console.log("✅ Post small blind transaction submitted:", transactionHash);
@@ -54,6 +54,6 @@ export async function postSmallBlind(tableId: string, smallBlindAmount: string, 
         hash: transactionHash,
         gameId: tableId,
         action: "post-small-blind",
-        amount: smallBlindAmount
+        amount: amount.toString()
     };
 }
