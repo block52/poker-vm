@@ -10,18 +10,35 @@ interface AdminMenuItem {
     icon: string;
 }
 
-const adminMenuItems: AdminMenuItem[] = [
+// Bridge Management section
+const bridgeMenuItems: AdminMenuItem[] = [
+    {
+        path: "/admin/bridge",
+        label: "Deposit",
+        description: "Deposit USDC from Base Chain",
+        icon: "M12 4v16m0-16l-4 4m4-4l4 4"
+    },
+    {
+        path: "/bridge/withdrawals",
+        label: "Withdrawals",
+        description: "Withdraw USDC to Base Chain",
+        icon: "M12 20V4m0 16l-4-4m4 4l4-4"
+    }
+];
+
+// Developer Tools section
+const devToolsMenuItems: AdminMenuItem[] = [
+    {
+        path: "/faucet",
+        label: "Faucet",
+        description: "Get test tokens for development",
+        icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    },
     {
         path: "/admin/genesis",
         label: "Genesis State",
         description: "View and debug genesis configuration",
         icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-    },
-    {
-        path: "/admin/bridge",
-        label: "Bridge Admin",
-        description: "Monitor and manage the USDC bridge",
-        icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
     },
     {
         path: "/admin/test-signing",
@@ -31,11 +48,48 @@ const adminMenuItems: AdminMenuItem[] = [
     }
 ];
 
+// Reusable card component
+const MenuCard: React.FC<{ item: AdminMenuItem }> = ({ item }) => (
+    <Link
+        to={item.path}
+        className="p-6 rounded-lg border transition-all duration-200 hover:scale-[1.02]"
+        style={{
+            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+            borderColor: hexToRgba(colors.brand.primary, 0.2)
+        }}
+    >
+        <div className="flex items-start gap-4">
+            <div
+                className="p-3 rounded-lg"
+                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.1) }}
+            >
+                <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    style={{ color: colors.brand.primary }}
+                >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                </svg>
+            </div>
+            <div>
+                <h3 className="text-lg font-semibold text-white mb-1">
+                    {item.label}
+                </h3>
+                <p className="text-gray-400 text-sm">
+                    {item.description}
+                </p>
+            </div>
+        </div>
+    </Link>
+);
+
 const AdminDashboard: React.FC = () => {
     return (
         <div className="min-h-screen p-8 relative">
             <AnimatedBackground />
-            <div className="container mx-auto relative z-10">
+            <div className="max-w-7xl mx-auto relative z-10">
             <div className="mb-8 text-center">
                 <h1 className="text-4xl font-bold text-white mb-2">
                     Admin Dashboard
@@ -66,44 +120,44 @@ const AdminDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Admin Menu Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {adminMenuItems.map((item) => (
-                    <Link
-                        key={item.path}
-                        to={item.path}
-                        className="p-6 rounded-lg border transition-all duration-200 hover:scale-[1.02]"
-                        style={{
-                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                            borderColor: hexToRgba(colors.brand.primary, 0.2)
-                        }}
-                    >
-                        <div className="flex items-start gap-4">
-                            <div
-                                className="p-3 rounded-lg"
-                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.1) }}
-                            >
-                                <svg
-                                    className="w-6 h-6"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    style={{ color: colors.brand.primary }}
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white mb-1">
-                                    {item.label}
-                                </h3>
-                                <p className="text-gray-400 text-sm">
-                                    {item.description}
-                                </p>
-                            </div>
-                        </div>
-                    </Link>
-                ))}
+            {/* Bridge Management Section */}
+            <div className="mb-10">
+                <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    Bridge Management
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {bridgeMenuItems.map((item) => (
+                        <MenuCard key={item.path} item={item} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Developer Tools Section */}
+            <div>
+                <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    </svg>
+                    Developer Tools
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {devToolsMenuItems.map((item) => (
+                        <MenuCard key={item.path} item={item} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Powered by Block52 Footer */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain pointer-events-none" />
+                </div>
             </div>
             </div>
         </div>
