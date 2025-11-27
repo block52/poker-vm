@@ -79,10 +79,10 @@ export const GlobalHeader: React.FC = () => {
 
     // User-facing menu items (always visible)
     // Note: Wallet removed - accessible via settings button in Dashboard
+    // Note: Withdrawals moved to Admin > Bridge Management section
     const userMenuItems: MenuItem[] = [
-        { path: "/bridge/withdrawals", label: "Withdrawals", icon: "M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" },
-        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" },
-        { path: "/admin/tables", label: "Tables", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" }
+        { path: "/admin/tables", label: "Tables", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" },
+        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" }
     ];
 
     // Admin/dev menu items - icon only for discreet access
