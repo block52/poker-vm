@@ -63,14 +63,14 @@ const CosmosWalletPage = () => {
     // Background styles (same as Dashboard)
     const backgroundStyle1 = useMemo(
         () => ({
-            background: `linear-gradient(135deg, ${hexToRgba(colors.ui.bgBase, 1)} 0%, ${hexToRgba(colors.ui.bgDark, 1)} 100%)`
+            background: `linear-gradient(135deg, ${hexToRgba(colors.table.bgBase, 1)} 0%, ${hexToRgba(colors.ui.bgDark, 1)} 100%)`
         }),
         []
     );
 
     const backgroundStyle2 = useMemo(
         () => ({
-            background: getAnimationGradient()
+            background: getAnimationGradient(50, 50)
         }),
         []
     );
@@ -278,7 +278,7 @@ const CosmosWalletPage = () => {
                             <button
                                 onClick={handleClearWallet}
                                 className="w-full text-white px-6 py-3 rounded-xl font-semibold mt-4 transition-all hover:opacity-80"
-                                style={{ backgroundColor: colors.accent.error }}
+                                style={{ backgroundColor: colors.accent.danger }}
                             >
                                 Clear Wallet
                             </button>
@@ -398,11 +398,11 @@ const CosmosWalletPage = () => {
                     <div
                         className="mt-6 rounded-xl p-4"
                         style={{
-                            backgroundColor: hexToRgba(colors.accent.error, 0.1),
-                            border: `1px solid ${hexToRgba(colors.accent.error, 0.3)}`
+                            backgroundColor: hexToRgba(colors.accent.danger, 0.1),
+                            border: `1px solid ${hexToRgba(colors.accent.danger, 0.3)}`
                         }}
                     >
-                        <p style={{ color: colors.accent.error }}>{error}</p>
+                        <p style={{ color: colors.accent.danger }}>{error}</p>
                     </div>
                 )}
             </div>
