@@ -2,16 +2,17 @@ import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisb
 import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
 import { getCosmosUrls } from "../../utils/cosmos/urls";
 import type { NetworkEndpoints } from "../../context/NetworkContext";
+import type { PlayerActionResult } from "../../types";
 
 /**
  * Start a new hand at a poker table using Cosmos SDK SigningCosmosClient.
  *
  * @param tableId - The ID of the table (game ID on Cosmos) where to start a new hand
  * @param network - The current network configuration from NetworkContext
- * @returns Promise with transaction hash
+ * @returns Promise with PlayerActionResult containing transaction details
  * @throws Error if Cosmos wallet is not initialized or if the action fails
  */
-export async function startNewHand(tableId: string, network: NetworkEndpoints): Promise<any> {
+export async function startNewHand(tableId: string, network: NetworkEndpoints): Promise<PlayerActionResult> {
     // Get user's Cosmos address and mnemonic
     const userAddress = getCosmosAddress();
     const mnemonic = getCosmosMnemonic();
