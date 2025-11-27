@@ -13,6 +13,7 @@ export {
     getCosmosClient,
     clearCosmosClient,
     getDefaultCosmosConfig,
+    getSigningClient,
     COSMOS_CONSTANTS,
     type CosmosClient
 } from "./client";
