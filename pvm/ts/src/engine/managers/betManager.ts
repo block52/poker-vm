@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { Turn } from "../types";
 import { IBetManager } from "../../types/interfaces";
 

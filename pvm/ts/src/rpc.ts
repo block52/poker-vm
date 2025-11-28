@@ -1,4 +1,4 @@
-import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCResponse, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 import {
     ISignedResponse,

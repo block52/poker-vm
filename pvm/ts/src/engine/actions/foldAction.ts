@@ -46,7 +46,7 @@ class FoldAction extends BaseAction implements IAction {
      * @param index The sequential action index for this game
      * @param amount Optional amount parameter (unused for fold)
      */
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number, _amount?: bigint): void {
         // First verify the action
         this.verify(player);
 

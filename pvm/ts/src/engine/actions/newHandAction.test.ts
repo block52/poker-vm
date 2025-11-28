@@ -4,7 +4,6 @@ import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate } from "../types";
 import { getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
-import { Deck } from "../../models";
 
 describe("NewHandAction", () => {
     let action: NewHandAction;

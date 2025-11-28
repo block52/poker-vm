@@ -1,10 +1,10 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import CallAction from "./callAction";
 import { Player } from "../../models/player";
-import { IUpdate, Turn, TurnWithSeat } from "../types";
+import { IUpdate } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 // Assuming you have a constants file, otherwise define TEN_TOKENS in this file
-import { getDefaultGame, MockBetManager, ONE_THOUSAND_TOKENS, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS, TEN_TOKENS } from "../testConstants";
+import { getDefaultGame, MockBetManager, ONE_THOUSAND_TOKENS, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS } from "../testConstants";
 import { BetManager } from "../managers/betManager";
 
 // Updated test file using the mock BetManager

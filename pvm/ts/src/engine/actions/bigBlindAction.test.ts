@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
@@ -24,7 +24,7 @@ describe("BigBlindAction", () => {
 
         game = getDefaultGame(playerStates);
         updateMock = {
-            addAction: jest.fn(action => { })
+            addAction: jest.fn(_action => { })
         };
 
         action = new BigBlindAction(game, updateMock);

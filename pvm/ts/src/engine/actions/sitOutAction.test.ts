@@ -2,8 +2,8 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import SitOutAction from "./sitOutAction";
-import { IUpdate, TurnWithSeat } from "../types";
-import { gameOptions, getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { IUpdate } from "../types";
+import { getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
 
 describe("SitOutAction", () => {
     let action: SitOutAction;

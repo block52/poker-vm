@@ -2,7 +2,7 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
-import { getDefaultGame, mnemonic } from "../testConstants";
+import { getDefaultGame } from "../testConstants";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;

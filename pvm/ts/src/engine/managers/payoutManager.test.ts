@@ -1,7 +1,7 @@
 import { PayoutManager } from "./payoutManager";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
-import { ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "../testConstants";
+import { ONE_HUNDRED_TOKENS } from "../testConstants";
 
 describe("PayoutManager", () => {
     let payoutManager: PayoutManager;
