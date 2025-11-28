@@ -50,22 +50,6 @@ export class RPC {
                     break;
                 }
 
-                // All blockchain/state management methods are handled by Cosmos
-                case RPCMethods.FIND_CONTRACT:
-                case RPCMethods.GET_ACCOUNT:
-                case RPCMethods.GET_BLOCK:
-                case RPCMethods.GET_BLOCK_BY_HASH:
-                case RPCMethods.GET_BLOCK_HEIGHT:
-                case RPCMethods.GET_LAST_BLOCK:
-                case RPCMethods.GET_BLOCKS:
-                case RPCMethods.GET_MEMPOOL:
-                case RPCMethods.GET_TRANSACTION:
-                case RPCMethods.GET_TRANSACTIONS:
-                case RPCMethods.GET_GAME_STATE:
-                case RPCMethods.GET_NODES:
-                case RPCMethods.GET_SHARED_SECRET:
-                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`);
-
                 default:
                     return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
             }

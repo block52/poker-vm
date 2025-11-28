@@ -275,8 +275,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitcoinbrisbane/block52@file:../../sdk":
-  version "3.0.10"
+"@bitcoinbrisbane/block52@^3.0.11":
+  version "3.0.11"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.0.11.tgz#1816499e141f0e20009e086e9c01ee9a87680bb2"
+  integrity sha512-Cq1ITe3N9nc8cLUzc3ffUjy6ui/3tMpeU1Fr4vUok3Hk0ukjvSHDGO98ozrV/Tb0MIoacq/kBkhTkwde/dzDuQ==
   dependencies:
     "@bufbuild/protobuf" "^2.10.0"
     "@cosmjs/crypto" "^0.36.1"
