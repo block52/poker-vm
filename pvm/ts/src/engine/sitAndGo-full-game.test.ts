@@ -250,28 +250,30 @@ describe.skip("Sit and Go - Full Game", () => {
 
                     // Get next player to act
                     const nextPlayer = game.getNextPlayerToAct();
+                    if (!nextPlayer) throw new Error("nextPlayer is null");
 
                     // Get their legal actions
-                    const legalActions = game.getLegalActions(nextPlayer!.address);
+                    const legalActions = game.getLegalActions(nextPlayer.address);
 
                     for (const action of legalActions) {
                         if (action.action === PlayerActionType.BET) {
                             const betAmount = BigInt(action.max || 0n);
-                            game.performAction(nextPlayer!.address, PlayerActionType.BET, index, betAmount);
+                            game.performAction(nextPlayer.address, PlayerActionType.BET, index, betAmount);
                             index++;
                         }
                     }
 
                     // Now get the next player to act
                     const nextPlayer2 = game.getNextPlayerToAct();
+                    if (!nextPlayer2) throw new Error("nextPlayer2 is null");
 
                     // Get their legal actions
-                    const legalActions2 = game.getLegalActions(nextPlayer2!.address);
+                    const legalActions2 = game.getLegalActions(nextPlayer2.address);
 
                     for (const action of legalActions2) {
                         if (action.action === PlayerActionType.CALL) {
                             const betAmount = BigInt(action.max || 0n);
-                            game.performAction(nextPlayer2!.address, PlayerActionType.CALL, index, betAmount);
+                            game.performAction(nextPlayer2.address, PlayerActionType.CALL, index, betAmount);
                             index++;
                         }
                     }
