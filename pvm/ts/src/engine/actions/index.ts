@@ -5,6 +5,7 @@ import CallAction from "./callAction";
 import CheckAction from "./checkAction";
 import DealAction from "./dealAction";
 import FoldAction from "./foldAction";
+import ForfeitAndLeaveAction from "./forfeitAndLeaveAction";
 import JoinAction from "./joinAction";
 import LeaveAction from "./leaveAction";
 import MuckAction from "./muckAction";
@@ -24,6 +25,7 @@ export {
     CheckAction,
     DealAction,
     FoldAction,
+    ForfeitAndLeaveAction,
     JoinAction,
     LeaveAction,
     MuckAction,

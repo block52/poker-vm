@@ -27,8 +27,8 @@ import {
     CheckAction,
     DealAction,
     FoldAction,
+    ForfeitAndLeaveAction,
     JoinAction,
-    LeaveAction,
     MuckAction,
     NewHandAction,
     RaiseAction,
@@ -1068,7 +1068,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 }
                 return;
             case NonPlayerActionType.LEAVE:
-                new LeaveAction(this, this._update).execute(this.getPlayer(address), index);
+                // Use ForfeitAndLeaveAction to allow leaving at any time (folds if in active hand)
+                new ForfeitAndLeaveAction(this, this._update).execute(this.getPlayer(address), index);
                 return;
             case NonPlayerActionType.DEAL:
                 new DealAction(this, this._update).execute(this.getPlayer(address), index);
