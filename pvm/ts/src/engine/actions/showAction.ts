@@ -1,7 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { IAction, Range, Turn } from "../types";
+import { IAction, Range } from "../types";
 
 class ShowAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.SHOW }

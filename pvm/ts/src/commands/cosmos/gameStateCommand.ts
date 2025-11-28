@@ -26,13 +26,17 @@ export class GameStateCommand {
 
             return game.toJson(this.caller);
         } catch (error) {
+            // Type guard for HTTP errors with response
+            type HttpError = { response?: { data?: { message?: string }, status?: number }, status?: number };
+            const httpError = error as HttpError;
+
             // Only log the error message, not the full error object
-            const errorMessage = (error as any)?.response?.data?.message ||
+            const errorMessage = httpError?.response?.data?.message ||
                                (error as Error).message ||
                                String(error);
 
             // Don't log stack trace for 404s (game not found is normal)
-            if ((error as any)?.response?.status === 404 || (error as any)?.status === 404) {
+            if (httpError?.response?.status === 404 || httpError?.status === 404) {
                 // Silent for 404s - handled gracefully by caller
             } else {
                 console.error(`Error executing GameStateCommand: ${errorMessage}`);

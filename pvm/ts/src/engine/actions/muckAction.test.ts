@@ -3,7 +3,7 @@ import MuckAction from "./muckAction";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, TurnWithSeat } from "../types";
-import { gameOptions, getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS } from "../testConstants";
 
 describe("MuckAction", () => {
     let action: MuckAction;

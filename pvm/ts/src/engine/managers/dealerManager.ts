@@ -144,7 +144,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     /**
      * Handles dealer position when a new player joins
      */
-    public handlePlayerJoin(seat: number): void {
+    public handlePlayerJoin(_seat: number): void {
         // const activePlayers = this.game.findActivePlayers();
 
         // if (activePlayers.length === 1) {

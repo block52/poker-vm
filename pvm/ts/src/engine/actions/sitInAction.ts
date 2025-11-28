@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { IAction, Range } from "../types";
@@ -31,7 +31,7 @@ class SitInAction extends BaseAction implements IAction {
      * @param index The sequential action index for this game
      * @param amount Amount parameter (unused for sit-in)
      */
-    execute(player: Player, index: number, amount: bigint): void {
+    execute(player: Player, index: number, _amount: bigint): void {
         // First verify the action
         this.verify(player);
 

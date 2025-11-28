@@ -119,7 +119,6 @@ describe("JoinAction", () => {
         });
 
         it("should handle joining when table is full by overwriting seats", () => {
-            const index = 1;
             const amount = ONE_HUNDRED_TOKENS;
 
             // Fill all available seats (maxPlayers is 9)

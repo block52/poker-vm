@@ -1,9 +1,8 @@
 import { KEYS, NonPlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { IAction, IUpdate, Range, Turn } from "../types";
+import { IAction, IUpdate, Range } from "../types";
 import TexasHoldemGame from "../texasHoldem";
-import { Deck } from "../../models";
 
 class NewHandAction extends BaseAction implements IAction {
     get type(): NonPlayerActionType { return NonPlayerActionType.NEW_HAND }
@@ -13,7 +12,7 @@ class NewHandAction extends BaseAction implements IAction {
         this.data = data;
     }
 
-    verify(player: Player): Range {
+    verify(_player: Player): Range {
         if (this.game.currentRound !== TexasHoldemRound.END) {
             throw new Error("Hand has not finished.");
         }
@@ -24,9 +23,9 @@ class NewHandAction extends BaseAction implements IAction {
     // Create new hand
     // NOTE: Deck shuffling is now handled by Cosmos blockchain
     // This action expects a pre-shuffled deck string from Cosmos
-    execute(player: Player, index: number): void {
+    execute(_player: Player, _index: number): void {
         // First verify the action
-        this.verify(player);
+        this.verify(_player);
 
         if (!this.data || this.data.trim() === "") {
             throw new Error("Deck data is required to create a new hand.");

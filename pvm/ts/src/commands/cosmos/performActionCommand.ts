@@ -13,7 +13,7 @@ export class PerformActionCommand implements ICommand<TexasHoldemStateDTO> {
         protected readonly index: number, // Allow array for join actions with seat number
         protected readonly value: bigint,
         protected readonly action: PlayerActionType | NonPlayerActionType,
-        gameState: any,
+        gameState: Record<string, unknown>,
         gameOptions: GameOptions,
         protected readonly data?: string,
         protected readonly timestamp?: number, // Cosmos block timestamp for determinism

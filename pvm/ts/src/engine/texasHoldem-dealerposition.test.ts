@@ -38,8 +38,8 @@ describe("Texas Holdem Game - Dealer Position", () => {
             }
 
             // Use reflection to access private field
-            const gameAsAny = game as any;
-            gameAsAny._playersMap = players;
+            const gameWithPrivates = game as unknown as { _playersMap: Map<number, Player | null> };
+            gameWithPrivates._playersMap = players;
 
             // Should find seat 1 as available
             expect(game.findNextEmptySeat()).toBe(1);

@@ -1,4 +1,4 @@
-import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCResponse, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 import {
     ISignedResponse,
@@ -9,9 +9,10 @@ import { PerformActionCommand } from "./commands/cosmos/performActionCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
 import { READ_METHODS, WRITE_METHODS } from "./types/rpc";
+import { LoggerFactory } from "./utils/logger";
 
 export class RPC {
-    static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
+    static async handle(request: RPCRequest): Promise<RPCResponse<unknown>> {
         if (!request) {
             throw new Error("Null request");
         }
@@ -37,9 +38,9 @@ export class RPC {
     }
 
     // Return a JSONModel
-    static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
+    static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<unknown>>> {
         const id = request.id;
-        let result: ISignedResponse<any>;
+        let result: ISignedResponse<unknown>;
 
         try {
             switch (method) {
@@ -63,18 +64,18 @@ export class RPC {
                 case RPCMethods.GET_GAME_STATE:
                 case RPCMethods.GET_NODES:
                 case RPCMethods.GET_SHARED_SECRET:
-                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`);
+                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`) as RPCResponse<ISignedResponse<unknown>>;
 
                 default:
-                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
+                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`) as RPCResponse<ISignedResponse<unknown>>;
             }
         } catch (e) {
-            console.error(e);
-            return makeErrorRPCResponse(id, "Operation failed");
+            LoggerFactory.getInstance().log(String(e), "error");
+            return makeErrorRPCResponse(id, "Operation failed") as RPCResponse<ISignedResponse<unknown>>;
         }
 
         if (result === null) {
-            return makeErrorRPCResponse(id, "Operation failed");
+            return makeErrorRPCResponse(id, "Operation failed") as RPCResponse<ISignedResponse<unknown>>;
         }
 
         return {
@@ -87,9 +88,9 @@ export class RPC {
     }
 
     // These always return a transaction hash
-    static async handleWriteMethod(method: RPCMethods, request: RPCRequest): Promise<any> {
+    static async handleWriteMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<unknown>> {
         const id = request.id;
-        console.log("handleWriteMethod", method, request);
+        LoggerFactory.getInstance().log(`handleWriteMethod ${method} ${JSON.stringify(request)}`, "debug");
 
         try {
             switch (method) {
@@ -98,7 +99,8 @@ export class RPC {
                     // [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string, string, string, number?];
                     // params: [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp?]
                     // timestamp (9th param) should be Cosmos block timestamp for deterministic gameplay
-                    const [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp] = request.params as any;
+                    const params = request.params as [string, string, string, string | null, string, number, string, string, string, number?];
+                    const [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp] = params;
                     const gameState: TexasHoldemStateDTO = gameStateJson ? JSON.parse(gameStateJson) : null;
                     const gameOptions: GameOptions = gameOptionsJson ? JSON.parse(gameOptionsJson) : null;
                     const _action = action as PlayerActionType | NonPlayerActionType;
@@ -119,7 +121,7 @@ export class RPC {
                     return makeErrorRPCResponse(id, "Method not found");
             }
         } catch (e) {
-            console.error(e);
+            LoggerFactory.getInstance().log(String(e), "error");
             return makeErrorRPCResponse(id, "Operation failed");
         }
     }

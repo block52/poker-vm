@@ -1,10 +1,9 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
 describe("Texas Holdem Game", () => {
 
-    const TEN_TOKENS = 10000000000000000000n;
     const FIFTY_TOKENS = 50000000000000000000n;
 
     describe("Player Turn Validation", () => {
@@ -261,8 +260,8 @@ describe("Texas Holdem Game", () => {
 
             // Force round to FLOP (normally would happen automatically)
             // This is a workaround since we can't easily access the private setNextRound method
-            const gameAsAny = game as any;
-            gameAsAny._currentRound = TexasHoldemRound.FLOP;
+            const gameWithPrivates = game as unknown as { _currentRound: TexasHoldemRound };
+            gameWithPrivates._currentRound = TexasHoldemRound.FLOP;
 
             // At start of new round, no actions taken yet
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);

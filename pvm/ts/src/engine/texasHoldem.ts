@@ -45,6 +45,7 @@ import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager, CashGameBlindsManager } from "./managers/index";
 import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager";
 import { PayoutManager } from "./managers/payoutManager";
+import { LoggerFactory } from "../utils/logger";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
@@ -956,9 +957,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
             // Debug logging for PREFLOP
             if (round === TexasHoldemRound.PREFLOP) {
-                console.log(`Player ${player.address} PREFLOP total bet: ${totalBet}`);
-                console.log(`  - ANTE bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE)}`);
-                console.log(`  - PREFLOP bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP)}`);
+                LoggerFactory.getInstance().log(`Player ${player.address} PREFLOP total bet: ${totalBet}`, "debug");
+                LoggerFactory.getInstance().log(`  - ANTE bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE)}`, "debug");
+                LoggerFactory.getInstance().log(`  - PREFLOP bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP)}`, "debug");
             }
         }
 
@@ -966,7 +967,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
 
         if (round === TexasHoldemRound.PREFLOP) {
-            console.log(`PREFLOP bet equality check: ${allBetsEqual}, bets: [${playerBets.join(", ")}]`);
+            LoggerFactory.getInstance().log(`PREFLOP bet equality check: ${allBetsEqual}, bets: [${playerBets.join(", ")}]`, "debug");
         }
 
         return allBetsEqual;
@@ -1044,7 +1045,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     /**
      * Performs a poker action for a specific player
      */
-    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any, timestamp?: number): void {
+    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: string, timestamp?: number): void {
         // Check action index for replay protection
         // const actionIndex = this.getActionIndex();
         // if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
@@ -1076,7 +1077,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 this.setNextRound();
                 return;
             case NonPlayerActionType.NEW_HAND:
-                new NewHandAction(this, this._update, data).execute(this.getPlayer(address), index);
+                new NewHandAction(this, this._update, data || "").execute(this.getPlayer(address), index);
                 return;
         }
 
@@ -1400,23 +1401,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const heroHandStr = cards.join(',');
         let heroPlayerIndex = -1;
 
-        console.log(`Debug: Hero cards: ${heroHandStr}`);
+        LoggerFactory.getInstance().log(`Debug: Hero cards: ${heroHandStr}`, "debug");
 
         for (let i = 0; i < players.length; i++) {
             const playerHandStr = players[i].holeCards?.map(c => c.mnemonic).join(',');
-            console.log(`Debug: Player ${i} cards: ${playerHandStr}`);
+            LoggerFactory.getInstance().log(`Debug: Player ${i} cards: ${playerHandStr}`, "debug");
             if (playerHandStr === heroHandStr) {
                 heroPlayerIndex = i;
                 break;
             }
         }
 
-        console.log(`Debug: Hero player index: ${heroPlayerIndex}`);
+        LoggerFactory.getInstance().log(`Debug: Hero player index: ${heroPlayerIndex}`, "debug");
 
         // If hero is one of the current players, just use that index
         if (heroPlayerIndex >= 0) {
             const showdownResult = PokerGameIntegration.exampleShowdown(allPlayerHands);
-            console.log(`Debug: Showdown result: ${JSON.stringify(showdownResult.winners)}, checking index ${heroPlayerIndex}`);
+            LoggerFactory.getInstance().log(`Debug: Showdown result: ${JSON.stringify(showdownResult.winners)}, checking index ${heroPlayerIndex}`, "debug");
             return showdownResult.winners.includes(heroPlayerIndex);
         } else {
             // Hero is not currently in the game, compare as additional hand
@@ -1465,7 +1466,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (communityCards.length < 5) {
             // When showdown happens early (like preflop all-in), we need all 5 community cards
             // Deal the remaining community cards for proper hand evaluation
-            console.log(`Dealing remaining community cards for showdown (currently have ${communityCards.length})`);
+            LoggerFactory.getInstance().log(`Dealing remaining community cards for showdown (currently have ${communityCards.length})`, "debug");
 
             // Use the actual community cards from _communityCards if available, fall back to _communityCards2  
             const actualCommunityCards = this._communityCards.length >= 5 ?
@@ -1547,7 +1548,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     const payout = payoutManager.calculatePayout(place);
 
                     // Need to do transfer back to player here
-                    console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
+                    LoggerFactory.getInstance().log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`, "info");
                     this._results.push({ place, playerId: player.id, payout });
 
                     player.updateStatus(PlayerStatus.BUSTED);
@@ -1690,7 +1691,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     /**
      * Creates a game instance from a JSON object
      */
-    public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
+    public static fromJson(json: Record<string, unknown>, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
         // Parse game options
@@ -1707,8 +1708,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Parse players
         if (json.players && Array.isArray(json.players) && json.players.length > 0) {
-            json?.players.map((p: any) => {
-                const stack: bigint = BigInt(p.stack);
+            json?.players.map((p: Record<string, unknown>) => {
+                const stack: bigint = BigInt(p.stack as string | number | bigint);
 
                 // Create hole cards if they exist in the JSON
                 let holeCards: [Card, Card] | undefined = undefined;
@@ -1718,17 +1719,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     // with opponent cards hidden
                     if (p.holeCards[0] !== "??" && p.holeCards[1] !== "??") {
                         try {
-                            const card1 = Deck.fromString(p.holeCards[0]);
-                            const card2 = Deck.fromString(p.holeCards[1]);
+                            const card1 = Deck.fromString(p.holeCards[0] as string);
+                            const card2 = Deck.fromString(p.holeCards[1] as string);
                             holeCards = [card1, card2] as [Card, Card];
                         } catch (e) {
-                            console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                            LoggerFactory.getInstance().log(`Failed to parse hole cards: ${p.holeCards} - ${String(e)}`, "error");
                         }
                     }
                 }
 
-                const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
-                players.set(p.seat, player);
+                const player: Player = new Player(p.address as string, p.lastAction as Turn | undefined, stack, holeCards, p.status as PlayerStatus);
+                players.set(p.seat as number, player);
             });
         }
 
@@ -1738,29 +1739,29 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Create winners array
-        const winners: WinnerDTO[] = json.winners || [];
+        const winners: WinnerDTO[] = (json.winners as WinnerDTO[]) || [];
 
-        const results: Result[] = json.results?.map((r: any) => ({
+        const results: Result[] = (json.results as Record<string, unknown>[] | undefined)?.map((r: Record<string, unknown>) => ({
             place: r.place as number,
-            playerId: r.playerId,
-            payout: BigInt(r.payout) as bigint || 0n
+            playerId: r.playerId as string,
+            payout: BigInt(r.payout as string | number | bigint) || 0n
         })) || [];
 
         // Create and return new game instance
         const response: TexasHoldemGame = new TexasHoldemGame(
-            json.address,
+            json.address as string,
             gameOptions,
             dealer,
-            json.previousActions,
-            json.handNumber,
-            json.actionCount,
-            json.round,
-            json.communityCards,
-            json.pots,
+            json.previousActions as ActionDTO[] | undefined,
+            json.handNumber as number | undefined,
+            json.actionCount as number | undefined,
+            json.round as TexasHoldemRound,
+            json.communityCards as string[],
+            json.pots as bigint[],
             players,
-            json.deck,
+            json.deck as string,
             winners,
-            json.now ? json.now : Date.now(),
+            json.now ? (json.now as number) : Date.now(),
             undefined,
             results
         );

@@ -1,7 +1,7 @@
 import crypto from "../utils/crypto";
 import { RPCResponse } from "@bitcoinbrisbane/block52";
 
-export function makeErrorRPCResponse(id: string, message: string): RPCResponse<any> {
+export function makeErrorRPCResponse(id: string, message: string): RPCResponse<unknown> {
     return {
         id,
         error: message,
@@ -12,7 +12,7 @@ export function makeErrorRPCResponse(id: string, message: string): RPCResponse<a
     };
 }
 
-export async function makeGenericRPCResponse(id: string, data: any, privateKey: string): Promise<RPCResponse<any>> {
+export async function makeGenericRPCResponse(id: string, data: unknown, privateKey: string): Promise<RPCResponse<unknown>> {
     return {
         id,
         result: {
