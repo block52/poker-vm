@@ -38,7 +38,7 @@ export class RPC {
     }
 
     // Return a JSONModel
-    static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<unknown>>> {
+    static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<unknown>> {
         const id = request.id;
         let result: ISignedResponse<unknown>;
 
@@ -64,25 +64,29 @@ export class RPC {
                 case RPCMethods.GET_GAME_STATE:
                 case RPCMethods.GET_NODES:
                 case RPCMethods.GET_SHARED_SECRET:
-                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`) as RPCResponse<ISignedResponse<unknown>>;
+                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`);
 
                 default:
-                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`) as RPCResponse<ISignedResponse<unknown>>;
+                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
             }
         } catch (e) {
             LoggerFactory.getInstance().log(String(e), "error");
-            return makeErrorRPCResponse(id, "Operation failed") as RPCResponse<ISignedResponse<unknown>>;
+            return makeErrorRPCResponse(id, "Operation failed");
         }
 
         if (result === null) {
-            return makeErrorRPCResponse(id, "Operation failed") as RPCResponse<ISignedResponse<unknown>>;
+            return makeErrorRPCResponse(id, "Operation failed");
         }
+
+        const processedData = result.data && typeof result.data === 'object' && 'toJson' in result.data && typeof (result.data as { toJson: () => unknown }).toJson === 'function'
+            ? (result.data as { toJson: () => unknown }).toJson()
+            : result.data;
 
         return {
             id,
             result: {
-                ...result,
-                data: result.data?.toJson ? result.data.toJson() : result.data
+                data: processedData,
+                signature: result.signature
             }
         };
     }
@@ -99,7 +103,7 @@ export class RPC {
                     // [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string, string, string, number?];
                     // params: [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp?]
                     // timestamp (9th param) should be Cosmos block timestamp for deterministic gameplay
-                    const params = request.params as [string, string, string, string | null, string, number, string, string, string, number?];
+                    const params = request.params as unknown as [string, string, string, string | null, string, string, string, string, string, number?];
                     const [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp] = params;
                     const gameState: TexasHoldemStateDTO = gameStateJson ? JSON.parse(gameStateJson) : null;
                     const gameOptions: GameOptions = gameOptionsJson ? JSON.parse(gameOptionsJson) : null;
@@ -112,7 +116,7 @@ export class RPC {
                         id: request.id,
                         result: {
                             data: _result,
-                            signature: null
+                            signature: ""
                         }
                     };
                 }

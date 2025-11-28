@@ -1,4 +1,13 @@
-import { CosmosConfig } from "@bitcoinbrisbane/block52";
+// CosmosConfig interface - defined locally as SDK export is not bundled correctly
+export interface CosmosConfig {
+    rpcEndpoint: string;
+    restEndpoint: string;
+    chainId: string;
+    prefix: string;
+    denom: string;
+    gasPrice: string;
+    mnemonic?: string;
+}
 
 /**
  * Default Cosmos SDK configuration for poker VM

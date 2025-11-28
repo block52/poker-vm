@@ -13,7 +13,7 @@
         "lint:fix": "eslint src/**/*.ts --fix"
     },
     "dependencies": {
-        "@bitcoinbrisbane/block52": "^3.0.6",
+        "@bitcoinbrisbane/block52": "file:../../sdk",
         "@cosmjs/amino": "^0.37.0",
         "@cosmjs/crypto": "^0.32.4",
         "@cosmjs/encoding": "^0.32.4",

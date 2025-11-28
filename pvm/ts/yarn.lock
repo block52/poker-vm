@@ -275,19 +275,18 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitcoinbrisbane/block52@^3.0.6":
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.0.6.tgz#5ff9064156d55f2b9ab3640f30bb3a87124e4dcc"
-  integrity sha512-sm241w+qgDztnKCTyMZhNRg24eC0R8zDKtdiVXJ6hSX11C+a9ozLkTLBunE0GNJSPFbgUj8GVf//KQgBZezz8A==
+"@bitcoinbrisbane/block52@file:../../sdk":
+  version "3.0.10"
   dependencies:
     "@bufbuild/protobuf" "^2.10.0"
     "@cosmjs/crypto" "^0.36.1"
-    "@cosmjs/encoding" "^0.36.1"
+    "@cosmjs/encoding" "^0.37.0"
     "@cosmjs/proto-signing" "^0.36.1"
     "@cosmjs/stargate" "^0.36.1"
     "@keplr-wallet/types" "^0.12.0"
     axios "^1.12.2"
     ethers "^6.15.0"
+    events "^3.3.0"
     long "^5.3.2"
     tslib "^2.6.0"
 
@@ -383,7 +382,7 @@
     bech32 "^1.1.4"
     readonly-date "^1.0.0"
 
-"@cosmjs/encoding@^0.36.1", "@cosmjs/encoding@^0.36.2":
+"@cosmjs/encoding@^0.36.2":
   version "0.36.2"
   resolved "https://registry.yarnpkg.com/@cosmjs/encoding/-/encoding-0.36.2.tgz#9f2ca496f7027b6652b1e4cce8b5707815454186"
   integrity sha512-i3+P1EKYoLcONAsmpJPhDAc3Wh3ajZNRHt/hczi/JEQXmleTJLVzv2mXUyllM6Qa+B6ybbr3Z2lnEFa8L3yLqg==
@@ -2224,6 +2223,11 @@ ethers@^6.14.0, ethers@^6.15.0:
     aes-js "4.0.0-beta.5"
     tslib "2.7.0"
     ws "8.17.1"
+
+events@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
+  integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
 
 execa@^5.0.0:
   version "5.1.1"

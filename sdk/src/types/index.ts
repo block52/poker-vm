@@ -1,5 +1,8 @@
 import { TexasHoldemRound, Card } from "./game";
 
+// Re-export RPC types
+export * from "./rpc";
+
 export interface CosmosConfig {
     rpcEndpoint: string;
     restEndpoint: string;
