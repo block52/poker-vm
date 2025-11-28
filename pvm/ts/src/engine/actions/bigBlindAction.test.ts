@@ -3,10 +3,11 @@ import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { getDefaultGame, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
+import { IUpdate } from "../types";
 
 describe("BigBlindAction", () => {
     let game: TexasHoldemGame;
-    let updateMock: any;
+    let updateMock: IUpdate;
     let action: BigBlindAction;
     let player: Player;
 
@@ -51,7 +52,7 @@ describe("BigBlindAction", () => {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
 
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as Player);
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(2);
 
             // Mock current round
@@ -117,7 +118,7 @@ describe("BigBlindAction", () => {
             const mockNextPlayer = {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as Player);
 
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);

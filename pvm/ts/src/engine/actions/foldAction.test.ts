@@ -3,10 +3,11 @@ import { Player } from "../../models/player";
 import FoldAction from "./foldAction";
 import TexasHoldemGame from "../texasHoldem";
 import { getDefaultGame, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS } from "../testConstants";
+import { IUpdate } from "../types";
 
 describe("FoldAction", () => {
     let game: TexasHoldemGame;
-    let updateMock: any;
+    let updateMock: IUpdate;
     let action: FoldAction;
     let player: Player;
     let mockNextPlayer: Player;

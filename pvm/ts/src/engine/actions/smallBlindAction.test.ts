@@ -3,10 +3,11 @@ import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
 import { getDefaultGame } from "../testConstants";
+import { IUpdate } from "../types";
 
 describe("SmallBlindAction", () => {
     let game: TexasHoldemGame;
-    let updateMock: any;
+    let updateMock: IUpdate;
     let action: SmallBlindAction;
     let player: Player;
 
@@ -54,7 +55,7 @@ describe("SmallBlindAction", () => {
             const mockNextPlayer = {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as Player);
 
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
@@ -100,7 +101,7 @@ describe("SmallBlindAction", () => {
             const mockNextPlayer = {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as Player);
 
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
