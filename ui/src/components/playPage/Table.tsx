@@ -100,6 +100,7 @@ import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGame
 //todo wire up to use the sdk instead of the proxy
 // 4. Player Actions
 import { leaveTable } from "../../hooks/playerActions/leaveTable";
+import LeaveTableModal from "./LeaveTableModal";
 
 // 5. Winner Info
 import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner information for animations
@@ -231,6 +232,9 @@ const Table = React.memo(() => {
     // Zoom is now managed by useTableLayout hook
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+
+    // Leave table modal state
+    const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
 
     // Transaction popup state
     const [recentTxHash, setRecentTxHash] = useState<string | null>(null);
@@ -747,20 +751,45 @@ const Table = React.memo(() => {
         e.currentTarget.style.color = colors.ui.textSecondary;
     }, []);
 
+    // Open leave table modal
     const handleLeaveTableClick = useCallback(() => {
-        // Get player's current stack if they are seated
-        const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
+        console.log("🚪 LEAVE TABLE - Opening modal...");
+        setIsLeaveModalOpen(true);
+    }, []);
 
-        if (id && playerData) {
-            leaveTable(id, playerData.stack || "0", currentNetwork)
-                .then(() => {
-                    console.log("Successfully left table");
-                })
-                .catch((err: any) => {
-                    console.error("Error leaving table:", err);
-                });
+    // Close leave table modal
+    const handleLeaveModalClose = useCallback(() => {
+        setIsLeaveModalOpen(false);
+    }, []);
+
+    // Get current player data for leave modal
+    const currentPlayerData = useMemo(() => {
+        return tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress?.toLowerCase());
+    }, [tableDataValues.tableDataPlayers, userWalletAddress]);
+
+    // Confirm leave table action
+    const handleLeaveTableConfirm = useCallback(async () => {
+        console.log("🚪 LEAVE TABLE - Confirming leave...");
+        console.log("🚪 LEAVE TABLE - Table ID:", id);
+        console.log("🚪 LEAVE TABLE - User wallet address:", userWalletAddress);
+        console.log("🚪 LEAVE TABLE - Player data:", JSON.stringify(currentPlayerData, null, 2));
+
+        if (!id || !currentPlayerData) {
+            throw new Error("Cannot leave: missing table ID or player data");
         }
-    }, [tableDataValues.tableDataPlayers, userWalletAddress, id, currentNetwork]);
+
+        console.log("🚪 LEAVE TABLE - Calling leaveTable API with:", {
+            tableId: id,
+            stack: currentPlayerData.stack || "0",
+            network: currentNetwork
+        });
+
+        await leaveTable(id, currentPlayerData.stack || "0", currentNetwork);
+        console.log("🚪 LEAVE TABLE - Successfully left table");
+
+        // Refresh balance after leaving
+        fetchAccountBalance();
+    }, [id, userWalletAddress, currentPlayerData, currentNetwork, fetchAccountBalance]);
 
     if (tableDataValues.error) {
         console.error("Error loading table data:", tableDataValues.error);
@@ -969,18 +998,21 @@ const Table = React.memo(() => {
                                 {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                             </span>
 
-                            <span
-                                className="text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 transition-colors duration-300 ml-2 sm:ml-3"
-                                style={{ color: colors.ui.textSecondary }}
-                                onMouseEnter={handleLeaveTableMouseEnter}
-                                onMouseLeave={handleLeaveTableMouseLeave}
-                                onClick={handleLeaveTableClick}
-                                title="Return to Table"
-                            >
-                                <span className="hidden sm:inline">Leave Table</span>
-                                <span className="sm:hidden">Leave</span>
-                                <RxExit size={12} />
-                            </span>
+                            {/* Only show Leave Table button if user is seated */}
+                            {currentPlayerData && (
+                                <span
+                                    className="text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 transition-colors duration-300 ml-2 sm:ml-3"
+                                    style={{ color: colors.ui.textSecondary }}
+                                    onMouseEnter={handleLeaveTableMouseEnter}
+                                    onMouseLeave={handleLeaveTableMouseLeave}
+                                    onClick={handleLeaveTableClick}
+                                    title="Leave Table"
+                                >
+                                    <span className="hidden sm:inline">Leave Table</span>
+                                    <span className="sm:hidden">Leave</span>
+                                    <RxExit size={12} />
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1003,10 +1035,14 @@ const Table = React.memo(() => {
                     {/* Right: Balance & Leave */}
                     <div className="flex items-center gap-2 bg-black bg-opacity-70 px-2 py-1 rounded-lg">
                         <span className="text-white text-xs font-mono">${balanceFormatted}</span>
-                        <span className="text-gray-300 text-xs">|</span>
-                        <span className="text-white text-xs cursor-pointer flex items-center gap-1" onClick={handleLeaveTableClick}>
-                            Leave <RxExit size={10} />
-                        </span>
+                        {currentPlayerData && (
+                            <>
+                                <span className="text-gray-300 text-xs">|</span>
+                                <span className="text-white text-xs cursor-pointer flex items-center gap-1" onClick={handleLeaveTableClick}>
+                                    Leave <RxExit size={10} />
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -1383,6 +1419,15 @@ const Table = React.memo(() => {
 
             {/* Transaction Popup - Bottom Right */}
             <TransactionPopup txHash={recentTxHash} onClose={handleCloseTransactionPopup} />
+
+            {/* Leave Table Modal */}
+            <LeaveTableModal
+                isOpen={isLeaveModalOpen}
+                onClose={handleLeaveModalClose}
+                onConfirm={handleLeaveTableConfirm}
+                playerStack={currentPlayerData?.stack || "0"}
+                isInActiveHand={isGameInProgress && currentUserSeat > 0}
+            />
         </div>
     );
 });

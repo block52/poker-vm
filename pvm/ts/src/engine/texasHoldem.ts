@@ -1267,8 +1267,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         for (const action of actions) {
-            // Skip actions without an amount or JOIN actions
-            if (action.amount === undefined || action.action === NonPlayerActionType.JOIN) {
+            // Skip actions without an amount, JOIN actions, or LEAVE actions
+            // JOIN/LEAVE amounts represent buy-in/stack values, not bets
+            if (action.amount === undefined ||
+                action.action === NonPlayerActionType.JOIN ||
+                action.action === NonPlayerActionType.LEAVE) {
                 continue;
             }
 
