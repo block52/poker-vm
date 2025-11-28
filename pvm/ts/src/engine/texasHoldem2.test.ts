@@ -1,10 +1,9 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
 describe("Texas Holdem Game", () => {
 
-    const TEN_TOKENS = 10000000000000000000n;
     const FIFTY_TOKENS = 50000000000000000000n;
 
     describe("Player Turn Validation", () => {

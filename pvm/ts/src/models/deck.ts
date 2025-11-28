@@ -89,7 +89,7 @@ export class Deck implements IDeck, IJSONModel {
         return Array.from({ length: amount }, () => this.getNext());
     }
 
-    public toJson(): any {
+    public toJson(): unknown {
         return {
             cards: this.cards
         };

@@ -320,7 +320,7 @@ describe.skip("Sit and Go - Full Game", () => {
                     // }
 
                     handsPlayed++;
-                } catch (_error) {
+                } catch {
                     // Handle any game state issues gracefully
                     handsPlayed++;
                 }

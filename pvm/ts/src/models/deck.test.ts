@@ -20,7 +20,7 @@ describe("Deck", () => {
                 "AS-2S-3S-4S-5S-6S-7S-8S-9S-TS-JS-QS-KS";
 
             const deck = new Deck(mnemonic);
-            const json = deck.toJson();
+            const json = deck.toJson() as { cards: unknown[] };
             expect(json.cards).toHaveLength(52);
         });
 
@@ -36,23 +36,23 @@ describe("Deck", () => {
 
         it("should treat empty string as undefined (create standard deck)", () => {
             const emptyDeck = new Deck("");
-            expect(emptyDeck.toJson().cards).toHaveLength(52);
+            expect((emptyDeck.toJson() as { cards: unknown[] }).cards).toHaveLength(52);
         });
 
         it("should treat whitespace-only string as undefined (create standard deck)", () => {
             const whitespaceDeck = new Deck("   ");
-            expect(whitespaceDeck.toJson().cards).toHaveLength(52);
+            expect((whitespaceDeck.toJson() as { cards: unknown[] }).cards).toHaveLength(52);
         });
 
         it("should initialize standard deck if no parameter provided", () => {
             const standardDeck = new Deck();
-            const json = standardDeck.toJson();
+            const json = standardDeck.toJson() as { cards: unknown[] };
             expect(json.cards).toHaveLength(52);
         });
 
         it("should initialize standard deck if undefined parameter provided", () => {
             const standardDeck = new Deck(undefined);
-            const json = standardDeck.toJson();
+            const json = standardDeck.toJson() as { cards: unknown[] };
             expect(json.cards).toHaveLength(52);
         });
     });
@@ -108,7 +108,7 @@ describe("Deck", () => {
 
     describe("toJson", () => {
         it("should serialize deck state", () => {
-            const json = deck.toJson();
+            const json = deck.toJson() as { cards: unknown[] };
             expect(json).toHaveProperty("cards");
             expect(Array.isArray(json.cards)).toBeTruthy();
         });
@@ -116,11 +116,11 @@ describe("Deck", () => {
 
     describe("initStandard52", () => {
         it("should create a standard 52-card deck", () => {
-            const json = deck.toJson();
+            const json = deck.toJson() as { cards: unknown[] };
             expect(json.cards).toHaveLength(52);
 
             // Check for Ace of Spades (rank 1)
-            const hasAceOfSpades = json.cards.some((card: Card) => card.suit === SUIT.SPADES && card.rank === 1);
+            const hasAceOfSpades = (json.cards as Card[]).some((card: Card) => card.suit === SUIT.SPADES && card.rank === 1);
             expect(hasAceOfSpades).toBeTruthy();
         });
     });

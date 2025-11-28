@@ -64,18 +64,18 @@ export class RPC {
                 case RPCMethods.GET_GAME_STATE:
                 case RPCMethods.GET_NODES:
                 case RPCMethods.GET_SHARED_SECRET:
-                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`);
+                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`) as RPCResponse<ISignedResponse<any>>;
 
                 default:
-                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
+                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`) as RPCResponse<ISignedResponse<any>>;
             }
         } catch (e) {
             LoggerFactory.getInstance().log(String(e), "error");
-            return makeErrorRPCResponse(id, "Operation failed");
+            return makeErrorRPCResponse(id, "Operation failed") as RPCResponse<ISignedResponse<any>>;
         }
 
         if (result === null) {
-            return makeErrorRPCResponse(id, "Operation failed");
+            return makeErrorRPCResponse(id, "Operation failed") as RPCResponse<ISignedResponse<any>>;
         }
 
         return {

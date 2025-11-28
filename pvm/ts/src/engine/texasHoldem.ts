@@ -1045,7 +1045,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     /**
      * Performs a poker action for a specific player
      */
-    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: any, timestamp?: number): void {
+    performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: string, timestamp?: number): void {
         // Check action index for replay protection
         // const actionIndex = this.getActionIndex();
         // if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
@@ -1077,7 +1077,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 this.setNextRound();
                 return;
             case NonPlayerActionType.NEW_HAND:
-                new NewHandAction(this, this._update, data).execute(this.getPlayer(address), index);
+                new NewHandAction(this, this._update, data || "").execute(this.getPlayer(address), index);
                 return;
         }
 
@@ -1688,7 +1688,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     /**
      * Creates a game instance from a JSON object
      */
-    public static fromJson(json: any, gameOptions: GameOptions): TexasHoldemGame {
+    public static fromJson(json: Record<string, unknown>, gameOptions: GameOptions): TexasHoldemGame {
         const players = new Map<number, Player | null>();
 
         // Parse game options
@@ -1705,8 +1705,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Parse players
         if (json.players && Array.isArray(json.players) && json.players.length > 0) {
-            json?.players.map((p: any) => {
-                const stack: bigint = BigInt(p.stack);
+            json?.players.map((p: Record<string, unknown>) => {
+                const stack: bigint = BigInt(p.stack as string | number | bigint);
 
                 // Create hole cards if they exist in the JSON
                 let holeCards: [Card, Card] | undefined = undefined;
@@ -1716,8 +1716,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     // with opponent cards hidden
                     if (p.holeCards[0] !== "??" && p.holeCards[1] !== "??") {
                         try {
-                            const card1 = Deck.fromString(p.holeCards[0]);
-                            const card2 = Deck.fromString(p.holeCards[1]);
+                            const card1 = Deck.fromString(p.holeCards[0] as string);
+                            const card2 = Deck.fromString(p.holeCards[1] as string);
                             holeCards = [card1, card2] as [Card, Card];
                         } catch (e) {
                             LoggerFactory.getInstance().log(`Failed to parse hole cards: ${p.holeCards} - ${String(e)}`, "error");
@@ -1725,8 +1725,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     }
                 }
 
-                const player: Player = new Player(p.address, p.lastAction, stack, holeCards, p.status);
-                players.set(p.seat, player);
+                const player: Player = new Player(p.address as string, p.lastAction as Turn | undefined, stack, holeCards, p.status as PlayerStatus);
+                players.set(p.seat as number, player);
             });
         }
 
@@ -1736,29 +1736,29 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Create winners array
-        const winners: WinnerDTO[] = json.winners || [];
+        const winners: WinnerDTO[] = (json.winners as WinnerDTO[]) || [];
 
-        const results: Result[] = json.results?.map((r: any) => ({
+        const results: Result[] = (json.results as Record<string, unknown>[] | undefined)?.map((r: Record<string, unknown>) => ({
             place: r.place as number,
-            playerId: r.playerId,
-            payout: BigInt(r.payout) as bigint || 0n
+            playerId: r.playerId as string,
+            payout: BigInt(r.payout as string | number | bigint) || 0n
         })) || [];
 
         // Create and return new game instance
         const response: TexasHoldemGame = new TexasHoldemGame(
-            json.address,
+            json.address as string,
             gameOptions,
             dealer,
-            json.previousActions,
-            json.handNumber,
-            json.actionCount,
-            json.round,
-            json.communityCards,
-            json.pots,
+            json.previousActions as ActionDTO[] | undefined,
+            json.handNumber as number | undefined,
+            json.actionCount as number | undefined,
+            json.round as TexasHoldemRound,
+            json.communityCards as string[],
+            json.pots as bigint[],
             players,
-            json.deck,
+            json.deck as string,
             winners,
-            json.now ? json.now : Date.now(),
+            json.now ? (json.now as number) : Date.now(),
             undefined,
             results
         );

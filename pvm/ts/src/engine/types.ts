@@ -1,5 +1,6 @@
 import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
+import { Deck } from "../models/deck";
 
 export interface IAction {
     readonly type: PlayerActionType | NonPlayerActionType;
@@ -85,7 +86,7 @@ export interface IUpdate {
 }
 
 export interface IGame extends IUpdate {
-    reinit(deck: any): void;
+    reinit(deck: Deck): void;
     getPlayers(): Player[];
     getPlayerStatus(): PlayerStatus;
     join(player: Player, chips: bigint): void;
@@ -98,7 +99,7 @@ export type OrderedTransaction = {
     value: bigint;
     type: PlayerActionType | NonPlayerActionType;
     index: number;
-    data?: any;
+    data?: string;
 };
 
 export type Winner = {

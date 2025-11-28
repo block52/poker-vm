@@ -1,7 +1,7 @@
 import { GameOptions } from "@bitcoinbrisbane/block52";
 
 export interface IJSONModel {
-    toJson(): any;
+    toJson(): unknown;
 }
 
 export interface IModel extends IJSONModel {
@@ -35,7 +35,7 @@ export interface IBlockDocument {
 export interface IGameStateDocument {
     address: string;
     gameOptions: GameOptions;
-    state: any;
+    state: unknown;
 }
 
 export interface ITransaction {
@@ -62,6 +62,6 @@ export interface IContractSchemaDocument {
     address: string;
     category: string;
     name: string;
-    schema: any;
+    schema: unknown;
     hash: string;
 }
