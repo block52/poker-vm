@@ -45,6 +45,7 @@ import { DealerPositionManager } from "./managers/dealerManager";
 import { BetManager, CashGameBlindsManager } from "./managers/index";
 import { IBlindsManager, SitAndGoBlindsManager } from "./managers/blindsManager";
 import { PayoutManager } from "./managers/payoutManager";
+import { LoggerFactory } from "../utils/logger";
 
 class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     // Private fields
@@ -956,9 +957,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
             // Debug logging for PREFLOP
             if (round === TexasHoldemRound.PREFLOP) {
-                console.log(`Player ${player.address} PREFLOP total bet: ${totalBet}`);
-                console.log(`  - ANTE bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE)}`);
-                console.log(`  - PREFLOP bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP)}`);
+                LoggerFactory.getInstance().log(`Player ${player.address} PREFLOP total bet: ${totalBet}`, "debug");
+                LoggerFactory.getInstance().log(`  - ANTE bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.ANTE)}`, "debug");
+                LoggerFactory.getInstance().log(`  - PREFLOP bets: ${this.getPlayerTotalBets(player.address, TexasHoldemRound.PREFLOP)}`, "debug");
             }
         }
 
@@ -966,7 +967,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const allBetsEqual = playerBets.every(bet => bet === playerBets[0]);
 
         if (round === TexasHoldemRound.PREFLOP) {
-            console.log(`PREFLOP bet equality check: ${allBetsEqual}, bets: [${playerBets.join(", ")}]`);
+            LoggerFactory.getInstance().log(`PREFLOP bet equality check: ${allBetsEqual}, bets: [${playerBets.join(", ")}]`, "debug");
         }
 
         return allBetsEqual;
@@ -1397,23 +1398,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const heroHandStr = cards.join(',');
         let heroPlayerIndex = -1;
 
-        console.log(`Debug: Hero cards: ${heroHandStr}`);
+        LoggerFactory.getInstance().log(`Debug: Hero cards: ${heroHandStr}`, "debug");
 
         for (let i = 0; i < players.length; i++) {
             const playerHandStr = players[i].holeCards?.map(c => c.mnemonic).join(',');
-            console.log(`Debug: Player ${i} cards: ${playerHandStr}`);
+            LoggerFactory.getInstance().log(`Debug: Player ${i} cards: ${playerHandStr}`, "debug");
             if (playerHandStr === heroHandStr) {
                 heroPlayerIndex = i;
                 break;
             }
         }
 
-        console.log(`Debug: Hero player index: ${heroPlayerIndex}`);
+        LoggerFactory.getInstance().log(`Debug: Hero player index: ${heroPlayerIndex}`, "debug");
 
         // If hero is one of the current players, just use that index
         if (heroPlayerIndex >= 0) {
             const showdownResult = PokerGameIntegration.exampleShowdown(allPlayerHands);
-            console.log(`Debug: Showdown result: ${JSON.stringify(showdownResult.winners)}, checking index ${heroPlayerIndex}`);
+            LoggerFactory.getInstance().log(`Debug: Showdown result: ${JSON.stringify(showdownResult.winners)}, checking index ${heroPlayerIndex}`, "debug");
             return showdownResult.winners.includes(heroPlayerIndex);
         } else {
             // Hero is not currently in the game, compare as additional hand
@@ -1462,7 +1463,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         if (communityCards.length < 5) {
             // When showdown happens early (like preflop all-in), we need all 5 community cards
             // Deal the remaining community cards for proper hand evaluation
-            console.log(`Dealing remaining community cards for showdown (currently have ${communityCards.length})`);
+            LoggerFactory.getInstance().log(`Dealing remaining community cards for showdown (currently have ${communityCards.length})`, "debug");
 
             // Use the actual community cards from _communityCards if available, fall back to _communityCards2  
             const actualCommunityCards = this._communityCards.length >= 5 ?
@@ -1544,7 +1545,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     const payout = payoutManager.calculatePayout(place);
 
                     // Need to do transfer back to player here
-                    console.log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`);
+                    LoggerFactory.getInstance().log(`Player ${player.address} is busted but has a payout of ${payout}. Transfer needed.`, "info");
                     this._results.push({ place, playerId: player.id, payout });
 
                     player.updateStatus(PlayerStatus.BUSTED);
@@ -1719,7 +1720,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                             const card2 = Deck.fromString(p.holeCards[1]);
                             holeCards = [card1, card2] as [Card, Card];
                         } catch (e) {
-                            console.error(`Failed to parse hole cards: ${p.holeCards}`, e);
+                            LoggerFactory.getInstance().log(`Failed to parse hole cards: ${p.holeCards} - ${String(e)}`, "error");
                         }
                     }
                 }

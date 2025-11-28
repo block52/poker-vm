@@ -9,6 +9,7 @@ import { PerformActionCommand } from "./commands/cosmos/performActionCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
 import { READ_METHODS, WRITE_METHODS } from "./types/rpc";
+import { LoggerFactory } from "./utils/logger";
 
 export class RPC {
     static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
@@ -69,7 +70,7 @@ export class RPC {
                     return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
             }
         } catch (e) {
-            console.error(e);
+            LoggerFactory.getInstance().log(String(e), "error");
             return makeErrorRPCResponse(id, "Operation failed");
         }
 
@@ -89,7 +90,7 @@ export class RPC {
     // These always return a transaction hash
     static async handleWriteMethod(method: RPCMethods, request: RPCRequest): Promise<any> {
         const id = request.id;
-        console.log("handleWriteMethod", method, request);
+        LoggerFactory.getInstance().log(`handleWriteMethod ${method} ${JSON.stringify(request)}`, "debug");
 
         try {
             switch (method) {
@@ -119,7 +120,7 @@ export class RPC {
                     return makeErrorRPCResponse(id, "Method not found");
             }
         } catch (e) {
-            console.error(e);
+            LoggerFactory.getInstance().log(String(e), "error");
             return makeErrorRPCResponse(id, "Operation failed");
         }
     }
