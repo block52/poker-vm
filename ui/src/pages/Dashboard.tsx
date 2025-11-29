@@ -20,10 +20,9 @@ import USDCDepositModal from "../components/USDCDepositModal";
 // Game wallet and SDK imports
 // ...existing code...
 import { GameType, generateWallet as generateWalletSDK } from "@bitcoinbrisbane/block52";
-import { FindGamesReturn } from "../types/index"; // Import FindGamesReturn type
 
 // Hook imports from barrel file
-import { useUserWalletConnect, useFindGames, useNewTable, useTablePlayerCounts, useCosmosWallet } from "../hooks";
+import { useUserWalletConnect, useNewTable, useCosmosWallet } from "../hooks";
 import type { CreateTableOptions } from "../hooks/useNewTable"; // Import type separately
 
 // Cosmos wallet utils
@@ -159,13 +158,6 @@ const Dashboard: React.FC = () => {
     // Wagmi hooks for Base Chain (USDC deposit bridge only)
     const { chain } = useWagmiAccount();
     const { switchChain } = useSwitchChain();
-
-    // Use the findGames hook
-    const { games, refetch: refetchGames }: FindGamesReturn = useFindGames();
-
-    // Get player counts for all games
-    const gameAddresses = useMemo(() => games.map(g => g.address), [games]);
-    useTablePlayerCounts(gameAddresses);
 
     // Removed: Ethereum account hook - now using Cosmos wallet only
 
@@ -429,9 +421,6 @@ const Dashboard: React.FC = () => {
             if (txHash) {
                 console.log("✅ Game created! Transaction hash:", txHash);
                 setShowCreateGameModal(false);
-
-                // Refresh the games list
-                await refetchGames();
             }
         } catch (error: any) {
             console.error("Error creating game:", error);
