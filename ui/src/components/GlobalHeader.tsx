@@ -16,17 +16,18 @@ interface MenuItem {
 // Reusable component for network status and selector (extracted to avoid recreation on every render)
 const NetworkStatusAndSelector: React.FC<{ latestBlockHeight: string | null; hasError: boolean }> = ({ latestBlockHeight, hasError }) => (
     <>
-        {/* Block Height Indicator */}
+        {/* Block Height Indicator - clickable link to block explorer */}
         {latestBlockHeight && (
-            <div
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+            <Link
+                to={`/explorer/block/${latestBlockHeight}`}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity"
                 style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
             >
                 <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
                 <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
                     #{latestBlockHeight}
                 </span>
-            </div>
+            </Link>
         )}
 
         <NetworkSelector />
