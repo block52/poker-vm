@@ -1289,7 +1289,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     getPlayerTotalBets(playerId: string, round: TexasHoldemRound = this.currentRound, includeBlinds: boolean = false): bigint {
         const actions = this.getActionsForRound(round);
         let newActions = [...actions];
-        if (includeBlinds) {
+        // Only add ante actions if includeBlinds is true AND we're not already in the ANTE round
+        // to avoid double-counting
+        if (includeBlinds && round !== TexasHoldemRound.ANTE) {
             const anteActions = this.getActionsForRound(TexasHoldemRound.ANTE);
             newActions.push(...anteActions);
         }

@@ -1,6 +1,6 @@
 import { BetManager } from "./betManager";
 import { Turn } from "../types";
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 
 describe("Bet Manager Tests", () => {
     const mockGame = {
@@ -335,6 +335,118 @@ describe("Bet Manager Tests", () => {
             const betManager = new BetManager(smallRaiseTurns, mockGame);
 
             expect(betManager.getRaisedAmount()).toBe(20n); // Should return bigBlind as minimum
+        });
+    });
+
+    describe("JOIN and LEAVE action handling", () => {
+        it("should skip JOIN actions and not count them as bets", () => {
+            const turnsWithJoin: Turn[] = [
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: NonPlayerActionType.JOIN,
+                    amount: 1000000n, // Buy-in amount
+                    index: 1
+                },
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: PlayerActionType.SMALL_BLIND,
+                    amount: 10n,
+                    index: 2
+                }
+            ];
+            const betManager = new BetManager(turnsWithJoin, mockGame);
+
+            // JOIN amount should not be counted, only the small blind
+            expect(betManager.getTotalBetsForPlayer("0x1234567890123456789012345678901234567890")).toBe(10n);
+            expect(betManager.count()).toBe(1);
+        });
+
+        it("should skip LEAVE actions and not count them as bets", () => {
+            const turnsWithLeave: Turn[] = [
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: PlayerActionType.SMALL_BLIND,
+                    amount: 10n,
+                    index: 1
+                },
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: NonPlayerActionType.LEAVE,
+                    amount: 1000000n, // Stack amount when leaving
+                    index: 2
+                }
+            ];
+            const betManager = new BetManager(turnsWithLeave, mockGame);
+
+            // LEAVE amount should not be counted, only the small blind
+            expect(betManager.getTotalBetsForPlayer("0x1234567890123456789012345678901234567890")).toBe(10n);
+            expect(betManager.count()).toBe(1);
+        });
+
+        it("should handle join/leave/rejoin scenario correctly", () => {
+            // Simulates the bug scenario: player joins, leaves, rejoins
+            const turnsWithJoinLeaveRejoin: Turn[] = [
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: NonPlayerActionType.JOIN,
+                    amount: 1000000n, // First join buy-in
+                    index: 1
+                },
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: NonPlayerActionType.LEAVE,
+                    amount: 1000000n, // Leave with stack
+                    index: 2
+                },
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: NonPlayerActionType.JOIN,
+                    amount: 1000000n, // Rejoin buy-in
+                    index: 3
+                }
+            ];
+            const betManager = new BetManager(turnsWithJoinLeaveRejoin, mockGame);
+
+            // All JOIN/LEAVE amounts should be skipped - no bets counted
+            expect(betManager.getTotalBetsForPlayer("0x1234567890123456789012345678901234567890")).toBe(0n);
+            expect(betManager.count()).toBe(0);
+            expect(betManager.getLargestBet()).toBe(0n);
+        });
+
+        it("should correctly count bets mixed with join/leave actions", () => {
+            const mixedTurns: Turn[] = [
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: NonPlayerActionType.JOIN,
+                    amount: 1000000n,
+                    index: 1
+                },
+                {
+                    playerId: "0x0987654321098765432109876543210987654321",
+                    action: NonPlayerActionType.JOIN,
+                    amount: 1000000n,
+                    index: 2
+                },
+                {
+                    playerId: "0x1234567890123456789012345678901234567890",
+                    action: PlayerActionType.SMALL_BLIND,
+                    amount: 10n,
+                    index: 3
+                },
+                {
+                    playerId: "0x0987654321098765432109876543210987654321",
+                    action: PlayerActionType.BIG_BLIND,
+                    amount: 20n,
+                    index: 4
+                }
+            ];
+            const betManager = new BetManager(mixedTurns, mockGame);
+
+            // Only blinds should be counted, not JOINs
+            expect(betManager.getTotalBetsForPlayer("0x1234567890123456789012345678901234567890")).toBe(10n);
+            expect(betManager.getTotalBetsForPlayer("0x0987654321098765432109876543210987654321")).toBe(20n);
+            expect(betManager.count()).toBe(2);
+            expect(betManager.getLargestBet()).toBe(20n);
         });
     });
 });
