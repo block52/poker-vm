@@ -1,5 +1,4 @@
-import { ethers } from "ethers";
-import { verifySignature, signData, recoverPublicKey, castPemToHex, hexToPem, createAddress } from "./crypto";
+import { verifySignature, castPemToHex, hexToPem, createAddress } from "./crypto";
 
 // Mock crypto modules
 jest.mock("crypto", () => {
@@ -15,19 +14,6 @@ jest.mock("crypto", () => {
     return {
         ...originalModule,
         createVerify: jest.fn().mockReturnValue(mockVerify)
-    };
-});
-
-// Mock ethers
-jest.mock("ethers", () => {
-    const mockSignMessage = jest.fn().mockResolvedValue("mockedSignature");
-    const mockWallet = jest.fn().mockImplementation(() => ({
-        signMessage: mockSignMessage
-    }));
-
-    return {
-        Wallet: mockWallet,
-        recoverAddress: jest.fn().mockReturnValue("0x1234mockAddress")
     };
 });
 
@@ -58,25 +44,6 @@ describe("Crypto Utils", () => {
         it("should return the result of verify", () => {
             const result = verifySignature("publicKey", "message", "signature");
             expect(result).toBe(true);
-        });
-    });
-
-    describe("signData", () => {
-        it.skip("should create a wallet with the private key", async () => {
-            await signData("privateKey", "message");
-            expect(ethers.Wallet).toHaveBeenCalledWith("privateKey");
-        });
-    });
-
-    describe.skip("recoverPublicKey", () => {
-        it("should call ethers.recoverAddress with correct params", () => {
-            recoverPublicKey("signature", "data");
-            expect(ethers.recoverAddress).toHaveBeenCalledWith("data", "signature");
-        });
-
-        it("should return the recovered address", () => {
-            const result = recoverPublicKey("signature", "data");
-            expect(result).toBe("0x1234mockAddress");
         });
     });
 

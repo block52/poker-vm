@@ -136,38 +136,9 @@ describe("NewHandAction", () => {
             expect(() => noSeedAction.execute(player, 1)).toThrow("Either 'deck' or 'seed' parameter is required in the data.");
         });
 
-        // SKIPPED: This test is for legacy seed-based validation which is deprecated
-        // The newHandAction now accepts pre-shuffled deck strings from Cosmos
-        it.skip("should throw error if seed has wrong number of elements", () => {
-            const shortSeedData = `${KEYS.SEED}=1-2-3-4-5`;
-            const shortSeedAction = new NewHandAction(game, updateMock, shortSeedData);
-
-            expect(() => shortSeedAction.execute(player, 1)).toThrow("Seed must contain exactly 52 numbers separated by dashes");
-        });
-
         it("should handle deck with exactly 52 cards", () => {
             action.execute(player, 1);
 
-            expect(game.reInit).toHaveBeenCalled();
-        });
-
-        // SKIPPED: This test is for legacy seed-based behavior which is deprecated
-        it.skip("should parse seed numbers correctly", () => {
-            const customSeed = Array.from({ length: 52 }, (_, i) => (i + 10).toString());
-            const customSeedData = `${KEYS.SEED}=${customSeed.join("-")}`;
-            const customAction = new NewHandAction(game, updateMock, customSeedData);
-
-            expect(() => customAction.execute(player, 1)).not.toThrow();
-            expect(game.reInit).toHaveBeenCalled();
-        });
-
-        // SKIPPED: This test is for legacy seed-based behavior which is deprecated
-        it.skip("should handle non-numeric values in seed by converting to 0", () => {
-            const mixedSeed = Array.from({ length: 52 }, (_, i) => i < 5 ? "invalid" : i.toString());
-            const mixedSeedData = `${KEYS.SEED}=${mixedSeed.join("-")}`;
-            const mixedAction = new NewHandAction(game, updateMock, mixedSeedData);
-
-            expect(() => mixedAction.execute(player, 1)).not.toThrow();
             expect(game.reInit).toHaveBeenCalled();
         });
 
@@ -192,14 +163,6 @@ describe("NewHandAction", () => {
             expect(() => action.execute(player, 1)).toThrow("Hand has not finished.");
         });
 
-        // SKIPPED: This test is for legacy seed-based behavior which is deprecated
-        it.skip("should handle empty seed parameter", () => {
-            const emptySeedData = `${KEYS.SEED}=`;
-            const emptySeedAction = new NewHandAction(game, updateMock, emptySeedData);
-
-            expect(() => emptySeedAction.execute(player, 1)).toThrow("Seed must contain exactly 52 numbers separated by dashes");
-        });
-
         it("should handle malformed URL parameters", () => {
             const malformedAction = new NewHandAction(game, updateMock, "malformed-data-without-equals");
 
@@ -222,22 +185,6 @@ describe("NewHandAction", () => {
                 expect.stringContaining("New hand action with pre-shuffled deck from Cosmos")
             );
             expect(game.reInit).toHaveBeenCalledWith(expect.any(String));
-        });
-
-        // SKIPPED: This test is for legacy seed-based behavior which is deprecated
-        it.skip("should handle new hand with custom seed values", () => {
-            // Test with a specific seed pattern
-            const customSeed = Array.from({ length: 52 }, (_, i) => (i * 2).toString());
-            const customSeedData = `${KEYS.SEED}=${customSeed.join("-")}`;
-            const customAction = new NewHandAction(game, updateMock, customSeedData);
-
-            jest.spyOn(game, "reInit").mockImplementation();
-
-            const result = customAction.verify(player);
-            customAction.execute(player, 3);
-
-            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
-            expect(game.reInit).toHaveBeenCalled();
         });
 
         it("should handle new hand with mixed valid/invalid seed numbers", () => {
