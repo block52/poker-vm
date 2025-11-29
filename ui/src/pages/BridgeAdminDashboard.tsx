@@ -261,11 +261,13 @@ export default function BridgeAdminDashboard() {
         loadDeposits();
     }, [currentPage, itemsPerPage, loadDeposits]);
 
-    // Filter deposits based on selected filter
-    const filteredDeposits = deposits.filter(deposit => {
-        if (filter === "all") return true;
-        return deposit.status === filter;
-    });
+    // Filter deposits based on selected filter and sort by index descending (newest first)
+    const filteredDeposits = deposits
+        .filter(deposit => {
+            if (filter === "all") return true;
+            return deposit.status === filter;
+        })
+        .sort((a, b) => b.index - a.index);
 
     // Stats
     const totalDeposits = deposits.length;

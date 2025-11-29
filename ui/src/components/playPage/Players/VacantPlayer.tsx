@@ -48,6 +48,7 @@
 
 import * as React from "react";
 import { memo, useState, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "react-router-dom";
 import PokerProfile from "../../../assets/PokerProfile.svg";
 
@@ -300,16 +301,19 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                     </div>
                 )}
 
-                {/* Step 1: Simple confirmation modal */}
-                {showConfirmModal && (
-                    <div className="fixed inset-0 flex items-center justify-center z-50" onClick={() => !isJoining && setShowConfirmModal(false)}>
+                {/* Step 1: Simple confirmation modal - using portal to render at document body */}
+                {showConfirmModal && createPortal(
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                        {/* Backdrop */}
+                        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => !isJoining && setShowConfirmModal(false)} />
+
+                        {/* Modal */}
                         <div
-                            className="p-6 rounded-xl w-96 shadow-2xl"
+                            className="relative p-6 rounded-xl w-96 shadow-2xl"
                             style={{
                                 backgroundColor: colors.ui.bgDark,
                                 border: `1px solid ${colors.ui.borderColor}`
                             }}
-                            onClick={e => e.stopPropagation()}
                         >
                             <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>
                                 Join Seat {index}
@@ -342,22 +346,23 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
 
-                {/* Step 2: Sit & Go Buy-in modal */}
-                {showBuyInModal && gameOptions && (
-                    <div
-                        className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
-                        onClick={() => !isJoining && setShowBuyInModal(false)}
-                    >
+                {/* Step 2: Sit & Go Buy-in modal - using portal to render at document body */}
+                {showBuyInModal && gameOptions && createPortal(
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                        {/* Backdrop */}
+                        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => !isJoining && setShowBuyInModal(false)} />
+
+                        {/* Modal */}
                         <div
-                            className="p-8 rounded-xl w-96 shadow-2xl"
+                            className="relative p-8 rounded-xl w-96 shadow-2xl"
                             style={{
                                 backgroundColor: colors.ui.bgDark,
                                 border: `1px solid ${colors.ui.borderColor}`
                             }}
-                            onClick={e => e.stopPropagation()}
                         >
                             <h3 className="text-2xl font-bold mb-4 text-white text-center">{isSitAndGo ? "Sit & Go Buy-In" : "Cash Game Buy-In"}</h3>
 
@@ -522,7 +527,8 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
 
                 {/* Placeholder div for potential future loading animation */}

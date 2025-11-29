@@ -83,7 +83,7 @@ const LeaveTableModal: React.FC<LeaveTableModalProps> = React.memo(({ isOpen, on
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black bg-opacity-70" onClick={!isLeaving ? onClose : undefined} />
+            <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={!isLeaving ? onClose : undefined} />
 
             {/* Modal */}
             <div className="relative p-8 rounded-xl shadow-2xl w-96 overflow-hidden" style={STATIC_STYLES.modal}>
@@ -149,21 +149,11 @@ const LeaveTableModal: React.FC<LeaveTableModalProps> = React.memo(({ isOpen, on
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex justify-between space-x-4">
-                    <button
-                        onClick={onClose}
-                        disabled={isLeaving}
-                        className="px-5 py-3 rounded-lg text-white font-medium flex-1 transition-all duration-200 disabled:opacity-50"
-                        style={{ backgroundColor: colors.ui.textSecondary }}
-                        onMouseEnter={!isLeaving ? handleCancelMouseEnter : undefined}
-                        onMouseLeave={!isLeaving ? handleCancelMouseLeave : undefined}
-                    >
-                        Cancel
-                    </button>
+                <div className="flex flex-col space-y-3">
                     <button
                         onClick={handleConfirm}
                         disabled={isLeaving}
-                        className="px-5 py-3 rounded-lg font-medium flex-1 text-white shadow-md transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-80"
+                        className="w-full px-5 py-3 rounded-lg font-medium text-white shadow-md transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-80"
                         style={{
                             backgroundColor: colors.accent.danger,
                             cursor: isLeaving ? "not-allowed" : "pointer"
@@ -179,6 +169,16 @@ const LeaveTableModal: React.FC<LeaveTableModalProps> = React.memo(({ isOpen, on
                                 <span>Leave Table</span>
                             </>
                         )}
+                    </button>
+                    <button
+                        onClick={onClose}
+                        disabled={isLeaving}
+                        className="w-full px-5 py-3 rounded-lg text-white font-medium transition-all duration-200 disabled:opacity-50"
+                        style={{ backgroundColor: colors.ui.textSecondary }}
+                        onMouseEnter={!isLeaving ? handleCancelMouseEnter : undefined}
+                        onMouseLeave={!isLeaving ? handleCancelMouseLeave : undefined}
+                    >
+                        Cancel
                     </button>
                 </div>
 
