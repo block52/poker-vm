@@ -11,6 +11,7 @@ interface MenuItem {
     icon: string;
     badge?: string;
     iconOnly?: boolean; // Show only icon, hide label (for discreet menu items)
+    newTab?: boolean; // Open link in new tab
 }
 
 // Reusable component for network status and selector (extracted to avoid recreation on every render)
@@ -83,7 +84,7 @@ export const GlobalHeader: React.FC = () => {
     // Note: Withdrawals moved to Admin > Bridge Management section
     const userMenuItems: MenuItem[] = [
         { path: "/admin/tables", label: "Tables", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" },
-        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" }
+        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14", newTab: true }
     ];
 
     // Admin/dev menu items - icon only for discreet access
@@ -118,6 +119,8 @@ export const GlobalHeader: React.FC = () => {
                                 <Link
                                     key={item.path}
                                     to={item.path}
+                                    target={item.newTab ? "_blank" : undefined}
+                                    rel={item.newTab ? "noopener noreferrer" : undefined}
                                     className={`${item.iconOnly ? "px-2" : "px-3"} py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80 flex items-center gap-1.5`}
                                     style={{
                                         color: location.pathname === item.path ? colors.brand.primary : colors.ui.textSecondary,
@@ -206,6 +209,8 @@ export const GlobalHeader: React.FC = () => {
                                 <Link
                                     key={item.path}
                                     to={item.path}
+                                    target={item.newTab ? "_blank" : undefined}
+                                    rel={item.newTab ? "noopener noreferrer" : undefined}
                                     onClick={() => setIsMenuOpen(false)}
                                     className="px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80 flex items-center gap-2"
                                     style={{
