@@ -217,8 +217,8 @@ export default function TableAdminPage() {
                     </div>
                 </div>
 
-                {/* Create Table Form - constrained width for better UX */}
-                <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700 max-w-2xl">
+                {/* Create Table Form */}
+                <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
                     <h2 className="text-xl font-bold text-white mb-4">Create New Table</h2>
 
                     <div className="grid grid-cols-2 gap-3 mb-3">
