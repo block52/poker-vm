@@ -58,6 +58,7 @@ describe("Parsers", () => {
         const baseTx: ITransaction = {
             from: "0x1234567890123456789012345678901234567890",
             to: "0x0987654321098765432109876543210987654321",
+            value: 0n,
             data: ""
         };
 
@@ -65,6 +66,7 @@ describe("Parsers", () => {
             const tx: ITransaction = {
                 from: baseTx.from,
                 to: baseTx.to,
+                value: 0n,
                 data: undefined as unknown as string
             };
             expect(() => toOrderedTransaction(tx)).toThrow("Transaction data is undefined");
