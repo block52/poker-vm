@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { GameType, CosmosClient, getDefaultCosmosConfig } from "@bitcoinbrisbane/block52";
 import { Link } from "react-router-dom";
 import useCosmosWallet from "../hooks/useCosmosWallet";
@@ -70,27 +70,29 @@ export default function TableAdminPage() {
     const hasEnoughUsdc = usdcBalance >= GAME_CREATION_FEE_BASE;
     const usdcBalanceFormatted = (usdcBalance / Math.pow(10, USDC_DECIMALS)).toFixed(6);
 
-    // Transform fetched games to TableData format
-    const tables: TableData[] = (fetchedGames || [])
-        .map((game: any) => ({
-            gameId: game.address || game.gameId || game.game_id,
-            gameType: game.gameType || game.game_type || "texas-holdem",
-            minPlayers: game.minPlayers || game.min_players || 2,
-            maxPlayers: game.maxPlayers || game.max_players || 6,
-            minBuyIn: game.minBuyIn || game.min_buy_in || "0",
-            maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
-            smallBlind: game.smallBlind || game.small_blind || "0",
-            bigBlind: game.bigBlind || game.big_blind || "0",
-            timeout: game.timeout || 60,
-            status: game.status || "waiting",
-            creator: game.creator || "unknown",
-            createdAt: game.createdAt || game.created_at
-        }))
-        // Sort by creation date (newest first)
-        .sort((a, b) => {
-            if (!a.createdAt || !b.createdAt) return 0;
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
+    // Transform fetched games to TableData format - memoized to prevent infinite loops
+    const tables: TableData[] = useMemo(() => {
+        return (fetchedGames || [])
+            .map((game: any) => ({
+                gameId: game.address || game.gameId || game.game_id,
+                gameType: game.gameType || game.game_type || "texas-holdem",
+                minPlayers: game.minPlayers || game.min_players || 2,
+                maxPlayers: game.maxPlayers || game.max_players || 6,
+                minBuyIn: game.minBuyIn || game.min_buy_in || "0",
+                maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
+                smallBlind: game.smallBlind || game.small_blind || "0",
+                bigBlind: game.bigBlind || game.big_blind || "0",
+                timeout: game.timeout || 60,
+                status: game.status || "waiting",
+                creator: game.creator || "unknown",
+                createdAt: game.createdAt || game.created_at
+            }))
+            // Sort by creation date (newest first)
+            .sort((a, b) => {
+                if (!a.createdAt || !b.createdAt) return 0;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+    }, [fetchedGames]);
 
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
@@ -151,38 +153,48 @@ export default function TableAdminPage() {
         }
     };
 
-    // Fetch player counts for all tables
-    const fetchPlayerCounts = useCallback(async () => {
-        if (!tables.length) return;
+    // Fetch player counts for all tables - only runs once when tables are first loaded
+    // Use a ref to track table IDs to prevent duplicate requests
+    const tableIdsRef = useRef<string>("");
 
-        const counts: Record<string, number> = {};
+    useEffect(() => {
+        // Create a stable key from table IDs to detect actual changes
+        const currentTableIds = tables.map(t => t.gameId).join(",");
 
-        for (const table of tables) {
-            try {
-                const gameStateResponse = await cosmosClient.getGameState(table.gameId);
-                if (gameStateResponse && gameStateResponse.game_state) {
-                    const gameState = JSON.parse(gameStateResponse.game_state);
-                    // Count players with valid addresses (seated players)
-                    // Filter out empty seats using the utility function
-                    const seatedPlayers = gameState.players?.filter((p: any) =>
-                        isValidPlayerAddress(p.address) && p.status !== "empty"
-                    ).length || 0;
-                    counts[table.gameId] = seatedPlayers;
-                }
-            } catch (err) {
-                console.error(`Failed to fetch game state for ${table.gameId}:`, err);
-                // If we can't fetch game state, default to 0
-                counts[table.gameId] = 0;
-            }
+        // Only fetch if tables changed (not just reference equality)
+        if (tables.length === 0 || currentTableIds === tableIdsRef.current) {
+            return;
         }
 
-        setPlayerCounts(counts);
-    }, [tables, cosmosClient]);
+        tableIdsRef.current = currentTableIds;
 
-    // Fetch player counts when tables change
-    useEffect(() => {
+        const fetchPlayerCounts = async () => {
+            const counts: Record<string, number> = {};
+
+            for (const table of tables) {
+                try {
+                    const gameStateResponse = await cosmosClient.getGameState(table.gameId);
+                    if (gameStateResponse && gameStateResponse.game_state) {
+                        const gameState = JSON.parse(gameStateResponse.game_state);
+                        // Count players with valid addresses (seated players)
+                        // Filter out empty seats using the utility function
+                        const seatedPlayers = gameState.players?.filter((p: any) =>
+                            isValidPlayerAddress(p.address) && p.status !== "empty"
+                        ).length || 0;
+                        counts[table.gameId] = seatedPlayers;
+                    }
+                } catch (err) {
+                    console.error(`Failed to fetch game state for ${table.gameId}:`, err);
+                    // If we can't fetch game state, default to 0
+                    counts[table.gameId] = 0;
+                }
+            }
+
+            setPlayerCounts(counts);
+        };
+
         fetchPlayerCounts();
-    }, [fetchPlayerCounts]);
+    }, [tables, cosmosClient]);
 
     // Show error toast if createError or gamesError changes
     useEffect(() => {
