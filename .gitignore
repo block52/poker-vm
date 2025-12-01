@@ -471,3 +471,4 @@ pvm/ts/.DS_Store
 sdk/package-lock.json
 ui/node_modules/
 sdk/node_modules/
+ui/package-lock.json
