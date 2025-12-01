@@ -24,15 +24,13 @@ export class RPC {
         return await this.handleMethod(method, request);
     }
 
-    static async handleGetLogs(request: RPCRequest): Promise<RPCResponse<unknown>> {
+    private static async handleGetLogs(id: string, lines: number): Promise<RPCResponse<unknown>> {
         try {
-            const params = request.params as [number?] | undefined;
-            const lines = params?.[0] ?? 100;
             const logger = LoggerFactory.getInstance();
             const logs = await logger.getLogs(lines);
 
             return {
-                id: request.id,
+                id,
                 result: {
                     data: {
                         logs
@@ -42,7 +40,7 @@ export class RPC {
             };
         } catch (e) {
             LoggerFactory.getInstance().log(String(e), "error");
-            return makeErrorRPCResponse(request.id, "Failed to retrieve logs");
+            return makeErrorRPCResponse(id, "Failed to retrieve logs");
         }
     }
 
@@ -57,6 +55,12 @@ export class RPC {
                     const command = new MeCommand();
                     result = await command.execute();
                     break;
+                }
+
+                case "get_logs": {
+                    const params = request.params as [number?] | undefined;
+                    const lines = params?.[0] ?? 100;
+                    return await this.handleGetLogs(id, lines);
                 }
 
                 case RPCMethods.PERFORM_ACTION: {
@@ -82,7 +86,7 @@ export class RPC {
                 }
 
                 default:
-                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
+                    return makeErrorRPCResponse(id, `Unknown method: ${method}`);
             }
         } catch (e) {
             LoggerFactory.getInstance().log(String(e), "error");
