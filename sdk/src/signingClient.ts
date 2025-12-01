@@ -1,10 +1,21 @@
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
-import { SigningStargateClient, GasPrice, calculateFee } from "@cosmjs/stargate";
+import { SigningStargateClient, GasPrice, StdFee } from "@cosmjs/stargate";
 import { Registry, EncodeObject } from "@cosmjs/proto-signing";
 import { CosmosClient, COSMOS_CONSTANTS } from "./cosmosClient";
 import type { CosmosConfig } from "./cosmosClient";
 import { msgTypes } from "./pokerchain.poker.v1/registry";
 import Long from "long";
+
+/**
+ * Create a gasless fee object with specified gas limit
+ * For use with chains that have zero gas price (gasless transactions)
+ */
+function gaslessFee(gasLimit: number): StdFee {
+    return {
+        amount: [],  // No fee tokens required
+        gas: gasLimit.toString()
+    };
+}
 
 /**
  * Extended configuration for signing client
@@ -125,7 +136,7 @@ export class SigningCosmosClient extends CosmosClient {
         }
 
         const coins = [{ denom: denom as string, amount: amount.toString() }] as any;
-        const fee = calculateFee(200_000, this.gasPrice); // Estimate gas
+        const fee = gaslessFee(200_000);
 
         const result = await this.signingClient.sendTokens(
             fromAddress,
@@ -191,7 +202,7 @@ export class SigningCosmosClient extends CosmosClient {
             value: msgCreateGame
         };
 
-        const fee = calculateFee(200_000, this.gasPrice); // Higher gas for game creation
+        const fee = gaslessFee(200_000);
         const memo = "Create poker game via SDK";
 
         console.log("🎮 Creating game transaction:", {
@@ -251,8 +262,7 @@ export class SigningCosmosClient extends CosmosClient {
 
         // Use 400k gas limit to safely accommodate join transactions
         // Observed usage: 141k-184k, so 400k provides 2x+ buffer for edge cases
-        // Better to overestimate than risk "out of gas" failures
-        const fee = calculateFee(400_000, this.gasPrice);
+        const fee = gaslessFee(400_000);
         const memo = "Join poker game via SDK";
 
         console.log("🪑 Joining game:", { gameId, seat, buyInAmount: buyInAmount.toString() });
@@ -301,7 +311,7 @@ export class SigningCosmosClient extends CosmosClient {
             value: msgPerformAction
         };
 
-        const fee = calculateFee(200_000, this.gasPrice);
+        const fee = gaslessFee(200_000);
         const memo = `Poker action: ${action}`;
 
         console.log("🃏 Performing action:", {
@@ -352,7 +362,7 @@ export class SigningCosmosClient extends CosmosClient {
             value: msgProcessDeposit
         };
 
-        const fee = calculateFee(300_000, this.gasPrice); // Higher gas for Ethereum RPC call
+        const fee = gaslessFee(300_000); // Higher gas for Ethereum RPC call
         const memo = `Process bridge deposit index ${depositIndex}`;
 
         console.log("🌉 Processing deposit:", {
@@ -403,7 +413,7 @@ export class SigningCosmosClient extends CosmosClient {
             value: msgInitiateWithdrawal
         };
 
-        const fee = calculateFee(200_000, this.gasPrice);
+        const fee = gaslessFee(200_000);
         const memo = "Initiate USDC withdrawal to Base chain";
 
         console.log("🌉 Initiating withdrawal:", {
