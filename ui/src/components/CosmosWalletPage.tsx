@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
-import { colors, getAnimationGradient, hexToRgba } from "../utils/colorConfig";
+import { colors, hexToRgba } from "../utils/colorConfig";
+import { AnimatedBackground } from "./common/AnimatedBackground";
 
 // Seed phrase word grid component
 const SeedPhraseGrid = ({ mnemonic, hidden = false }: { mnemonic: string; hidden?: boolean }) => {
@@ -26,29 +26,7 @@ const SeedPhraseGrid = ({ mnemonic, hidden = false }: { mnemonic: string; hidden
     );
 };
 
-// Hexagon pattern overlay (same as Dashboard)
-const HexagonPattern = () => {
-    return (
-        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <pattern id="hexagons-wallet" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
-                        <polygon
-                            points="25,0 50,14.4 50,43.4 25,57.7 0,43.4 0,14.4"
-                            fill="none"
-                            stroke={colors.brand.primary}
-                            strokeWidth="0.5"
-                        />
-                    </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#hexagons-wallet)" />
-            </svg>
-        </div>
-    );
-};
-
 const CosmosWalletPage = () => {
-    const navigate = useNavigate();
     const [mnemonic, setMnemonic] = useState<string>("");
     const [address, setAddress] = useState<string>("");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -59,21 +37,6 @@ const CosmosWalletPage = () => {
     // Check if wallet already exists
     const existingMnemonic = getCosmosMnemonic();
     const existingAddress = getCosmosAddress();
-
-    // Background styles (same as Dashboard)
-    const backgroundStyle1 = useMemo(
-        () => ({
-            background: `linear-gradient(135deg, ${hexToRgba(colors.table.bgBase, 1)} 0%, ${hexToRgba(colors.ui.bgDark, 1)} 100%)`
-        }),
-        []
-    );
-
-    const backgroundStyle2 = useMemo(
-        () => ({
-            background: getAnimationGradient(50, 50)
-        }),
-        []
-    );
 
     // Card style matching Dashboard
     const cardStyle = useMemo(
@@ -179,39 +142,9 @@ const CosmosWalletPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden p-8 pb-24">
-            {/* Background animations (same as Dashboard) */}
-            <div className="fixed inset-0 z-0" style={backgroundStyle1} />
-            <HexagonPattern />
-            <div className="fixed inset-0 z-0 opacity-20" style={backgroundStyle2} />
-
-            {/* Back Button */}
-            <div className="fixed top-6 left-6 z-20">
-                <button
-                    onClick={() => navigate("/")}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all hover:opacity-80 backdrop-blur-sm"
-                    style={{
-                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.8),
-                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                    }}
-                    title="Back to Dashboard"
-                >
-                    <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                        />
-                    </svg>
-                    <span className="text-white text-sm font-medium">Dashboard</span>
-                </button>
-            </div>
+        <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden p-8 pt-24 pb-24">
+            {/* Animated background (same as other pages) */}
+            <AnimatedBackground />
 
             {/* Content */}
             <div className="relative z-10 w-full max-w-xl mx-auto mb-6">
@@ -385,7 +318,7 @@ const CosmosWalletPage = () => {
                                 onClick={handleImportWallet}
                                 disabled={isGenerating || !importMnemonic.trim()}
                                 className="w-full text-white px-6 py-3 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:opacity-80"
-                                style={{ backgroundColor: colors.accent.success }}
+                                style={{ backgroundColor: colors.brand.primary }}
                             >
                                 {isGenerating ? "Importing..." : "Import Wallet"}
                             </button>
