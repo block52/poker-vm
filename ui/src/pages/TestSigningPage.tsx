@@ -153,8 +153,8 @@ export default function TestSigningPage() {
                 restEndpoint: currentNetwork.rest,
                 chainId: "pokerchain",
                 prefix: "b52",
-                denom: "stake", // Native gas token
-                gasPrice: "0.025stake", // Chain requires minimum fees (see COSMOS_GAS_AND_FEES_EXPLAINED.md)
+                denom: "stake",
+                gasPrice: "0stake", // Gasless
                 wallet: hdWallet
             });
 

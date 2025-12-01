@@ -1,6 +1,5 @@
-import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
-import { getCosmosAddress, getCosmosMnemonic } from "../../utils/cosmos/storage";
-import { getCosmosUrls } from "../../utils/cosmos/urls";
+import { COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getSigningClient } from "../../utils/cosmos/client";
 import type { JoinTableOptions } from "./types";
 import type { NetworkEndpoints } from "../../context/NetworkContext";
 import type { JoinTableResult } from "../../types";
@@ -19,34 +18,13 @@ export async function joinTable(tableId: string, options: JoinTableOptions, netw
         throw new Error("Table ID is required to join a table");
     }
 
-    // Get user's Cosmos address and mnemonic
-    const userAddress = getCosmosAddress();
-    const mnemonic = getCosmosMnemonic();
-
-    if (!userAddress || !mnemonic) {
-        throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
-    }
+    const { signingClient, userAddress } = await getSigningClient(network);
 
     console.log("🪑 joinTable - Joining game on Cosmos blockchain:");
     console.log("  Player:", userAddress);
     console.log("  Game ID:", tableId);
     console.log("  Buy-in amount (string):", options.amount);
     console.log("  Seat number:", options.seatNumber);
-
-    // Create signing client from mnemonic using the selected network
-    const { rpcEndpoint, restEndpoint } = getCosmosUrls(network);
-
-    const signingClient = await createSigningClientFromMnemonic(
-        {
-            rpcEndpoint,
-            restEndpoint,
-            chainId: COSMOS_CONSTANTS.CHAIN_ID,
-            prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-            denom: "stake", // Gas token (use "stake" for testnet)
-            gasPrice: "0.025stake" // Chain requires minimum fees
-        },
-        mnemonic
-    );
 
     // Convert buy-in amount from USDC to micro-USDC (b52usdc)
     // options.amount is in USDC (e.g., "5.00"), need to convert to micro-units (e.g., 5000000)

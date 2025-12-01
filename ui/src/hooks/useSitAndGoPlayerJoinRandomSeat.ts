@@ -1,8 +1,6 @@
 import { useState, useCallback } from "react";
-import { createSigningClientFromMnemonic, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
-import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
+import { getSigningClient } from "../utils/cosmos/client";
 import { USDC_TO_MICRO } from "../constants/currency";
-import { getCosmosUrls } from "../utils/cosmos/urls";
 import { useNetwork } from "../context/NetworkContext";
 
 interface SitAndGoJoinOptions {
@@ -39,36 +37,16 @@ export const useSitAndGoPlayerJoinRandomSeat = (): UseSitAndGoPlayerJoinRandomSe
         setError(null);
 
         try {
-            // Get user's Cosmos address and mnemonic
-            const userAddress = getCosmosAddress();
-            const mnemonic = getCosmosMnemonic();
-
-            if (!userAddress || !mnemonic) {
-                throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
-            }
+            const { signingClient, userAddress } = await getSigningClient(currentNetwork);
 
             console.log("🎮 [SIT & GO JOIN] Starting join process with random seat");
             console.log(`📍 Game ID: ${options.tableId}`);
             console.log(`💰 Amount (USDC): $${options.amount}`);
+            console.log(`👤 Player: ${userAddress}`);
 
             // Convert USDC to microunits (1 USDC = 1,000,000 microunits)
             const amountInMicrounits = options.amount * USDC_TO_MICRO;
             console.log(`📊 Amount in microunits: ${amountInMicrounits}`);
-
-            // Create signing client from mnemonic
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: COSMOS_CONSTANTS.CHAIN_ID,
-                    prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-                    denom: "stake", // Gas token
-                    gasPrice: "0.025stake"
-                },
-                mnemonic
-            );
 
             // Join game with seat = 0 to indicate random seat selection
             // The blockchain/PVM will automatically assign an available seat

@@ -13,6 +13,9 @@ import { getCosmosUrls, type NetworkEndpoints } from "./urls";
 export type { CosmosClient };
 export { COSMOS_CONSTANTS };
 
+// Re-export getCosmosUrls for REST endpoint queries
+export { getCosmosUrls };
+
 /**
  * Get default cosmos configuration with environment variable overrides
  * Uses SDK's getDefaultCosmosConfig() and overrides with env vars if present
@@ -126,7 +129,7 @@ export async function getSigningClient(network: NetworkEndpoints) {
             chainId: COSMOS_CONSTANTS.CHAIN_ID,
             prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
             denom: "stake",
-            gasPrice: "0.025stake"
+            gasPrice: "0stake" // Gasless
         },
         mnemonic
     );
