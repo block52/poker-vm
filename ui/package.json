@@ -4,7 +4,7 @@
   "private": true,
   "proxy": "=https://paymentservice.texashodl.net",
   "dependencies": {
-    "@bitcoinbrisbane/block52": "3.0.12",
+    "@bitcoinbrisbane/block52": "file:../sdk",
     "@reown/appkit": "1.6.7",
     "@reown/appkit-adapter-ethers": "1.6.7",
     "@reown/appkit-adapter-wagmi": "1.6.7",
@@ -95,8 +95,6 @@
     "yarn": "1.22"
   },
   "resolutions": {
-    "rollup": "^4.34.9",
-    "@noble/curves": "1.6.0",
-    "@noble/hashes": "1.6.1"
+    "rollup": "^4.34.9"
   }
 }
