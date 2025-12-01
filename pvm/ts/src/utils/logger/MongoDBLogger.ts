@@ -34,6 +34,27 @@ export class MongoDBLogger implements ILogger {
     }
   }
 
+  async getLogs(lines: number = 100): Promise<string[]> {
+    try {
+      await this.ensureConnected();
+      const docs = await this.collection
+        ?.find({})
+        .sort({ timestamp: -1 })
+        .limit(lines)
+        .toArray();
+
+      if (!docs) return [];
+
+      // Reverse to get chronological order and format as log strings
+      return docs.reverse().map(doc =>
+        `[${doc.timestamp.toISOString()}] [${doc.level.toUpperCase()}] ${doc.message}`
+      );
+    } catch (error) {
+      console.error("Error reading MongoDB logs:", error);
+      return [];
+    }
+  }
+
   async log(message: string, level: "info" | "warn" | "error" | "debug" = "info"): Promise<void> {
     try {
       await this.ensureConnected();

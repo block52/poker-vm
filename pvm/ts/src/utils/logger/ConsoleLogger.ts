@@ -1,9 +1,22 @@
 import { ILogger } from "./ILogger";
 
 export class ConsoleLogger implements ILogger {
+  private logBuffer: string[] = [];
+  private readonly maxBufferSize: number = 1000;
+
+  getLogs(lines: number = 100): string[] {
+    return this.logBuffer.slice(-lines);
+  }
+
   log(message: string, level: "info" | "warn" | "error" | "debug" = "info"): void {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+
+    // Store in buffer
+    this.logBuffer.push(logMessage);
+    if (this.logBuffer.length > this.maxBufferSize) {
+      this.logBuffer.shift();
+    }
 
     switch (level) {
       case "error":
@@ -23,6 +36,7 @@ export class ConsoleLogger implements ILogger {
   }
 
   purge(): void {
+    this.logBuffer = [];
     console.clear();
   }
 }
