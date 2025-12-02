@@ -1022,6 +1022,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Gets legal actions for a specific player
      */
     getLegalActions(address: string): LegalActionDTO[] {
+        // Handle non-players who want to join
+        if (!this.exists(address)) {
+            return this.getLegalActionsForNonPlayer();
+        }
+
         const player = this.getPlayer(address);
 
         const verifyAction = (action: IAction): LegalActionDTO | undefined => {
@@ -1041,6 +1046,26 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Get all valid actions for this player
         const actions = this._actions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
         return actions;
+    }
+
+    /**
+     * Gets legal actions for a non-player (viewer who hasn't joined yet)
+     * Returns JOIN action if table has available seats
+     */
+    private getLegalActionsForNonPlayer(): LegalActionDTO[] {
+        // Check if table has available seats
+        const availableSeats = this.getAvailableSeats();
+        if (availableSeats.length === 0) {
+            return []; // Table full, no actions available
+        }
+
+        // Return JOIN action with buy-in range
+        return [{
+            action: NonPlayerActionType.JOIN,
+            min: this.minBuyIn.toString(),
+            max: this.maxBuyIn.toString(),
+            index: this.getActionIndex()
+        }];
     }
 
     /**
@@ -1762,6 +1787,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         const nextPlayerToAct = this.findNextPlayerToActForRound(this.currentRound);
 
+        // Get legal actions for non-player viewers (for JOIN action)
+        // If caller is not in the game, they can see JOIN action if seats are available
+        const viewerLegalActions: LegalActionDTO[] | undefined =
+            _caller && !this.exists(_caller)
+                ? this.getLegalActionsForNonPlayer()
+                : undefined;
+
         // Return the complete state DTO
         const state: TexasHoldemStateDTO = {
             type: this.type, // Todo remove this duplication
@@ -1782,6 +1814,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             round: this.currentRound,
             winners: winners,
             results: this._results.map(r => ({ place: r.place, playerId: r.playerId, payout: r.payout.toString() })),
+            viewerLegalActions: viewerLegalActions,
             signature: ethers.ZeroHash
         };
 

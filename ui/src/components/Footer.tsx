@@ -93,6 +93,10 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const hasMuckAction = hasAction(legalActions, PlayerActionType.MUCK);
     const hasShowAction = hasAction(legalActions, PlayerActionType.SHOW);
     const hasDealAction = hasAction(legalActions, NonPlayerActionType.DEAL);
+    const hasJoinAction = hasAction(legalActions, NonPlayerActionType.JOIN);
+
+    // Get JOIN action details for buy-in range
+    const joinAction = getActionByType(legalActions, NonPlayerActionType.JOIN);
 
     // Show deal button if player has the deal action
     const shouldShowDealButton = hasDealAction && isUsersTurn;
@@ -344,6 +348,29 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                         onClose={() => setShowDealModal(false)}
                         onDeal={handleDealWithEntropy}
                     />
+                )}
+
+                {/* JOIN Button - Show when user is not in the table and can join */}
+                {hasJoinAction && !isUserInTable && joinAction && (
+                    <div className="flex flex-col items-center justify-center gap-2 mb-2 lg:mb-3">
+                        <div className="text-sm text-gray-400 mb-1">
+                            Buy-in: ${(Number(joinAction.min) / 1000000).toFixed(2)} - ${(Number(joinAction.max) / 1000000).toFixed(2)}
+                        </div>
+                        <button
+                            onClick={() => {
+                                // Navigate to a vacant seat or show seat selection
+                                // For now, just scroll to table to show vacant seats
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className="btn-join text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-lg text-sm lg:text-base border-2 transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 border-green-600"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                            JOIN TABLE
+                        </button>
+                        <p className="text-xs text-gray-500">Click a vacant seat above to join</p>
+                    </div>
                 )}
 
                 {/* Deal Button - Show above other buttons when available */}
