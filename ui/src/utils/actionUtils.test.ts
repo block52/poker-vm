@@ -4,9 +4,9 @@ import { hasAction, getActionByType } from "./actionUtils";
 describe("actionUtils", () => {
     describe("hasAction", () => {
         const mockLegalActions: LegalActionDTO[] = [
-            { action: PlayerActionType.FOLD } as LegalActionDTO,
-            { action: PlayerActionType.CALL } as LegalActionDTO,
-            { action: PlayerActionType.RAISE } as LegalActionDTO,
+            { action: PlayerActionType.FOLD, min: undefined, max: undefined, index: 0 },
+            { action: PlayerActionType.CALL, min: undefined, max: undefined, index: 1 },
+            { action: PlayerActionType.RAISE, min: undefined, max: undefined, index: 2 },
         ];
 
         it("should return true when action exists", () => {
@@ -26,18 +26,18 @@ describe("actionUtils", () => {
 
         it("should work with NonPlayerActionType", () => {
             const actionsWithNonPlayer: LegalActionDTO[] = [
-                { action: NonPlayerActionType.DEAL } as LegalActionDTO,
+                { action: NonPlayerActionType.DEAL, min: undefined, max: undefined, index: 0 } as LegalActionDTO,
             ];
             expect(hasAction(actionsWithNonPlayer, NonPlayerActionType.DEAL)).toBe(true);
-            expect(hasAction(actionsWithNonPlayer, NonPlayerActionType.SHOWDOWN)).toBe(false);
+            expect(hasAction(actionsWithNonPlayer, NonPlayerActionType.NEW_HAND)).toBe(false);
         });
     });
 
     describe("getActionByType", () => {
         const mockLegalActions: LegalActionDTO[] = [
-            { action: PlayerActionType.FOLD, minAmount: "0" } as LegalActionDTO,
-            { action: PlayerActionType.CALL, minAmount: "100" } as LegalActionDTO,
-            { action: PlayerActionType.RAISE, minAmount: "200", maxAmount: "1000" } as LegalActionDTO,
+            { action: PlayerActionType.FOLD, min: "0", max: undefined, index: 0 },
+            { action: PlayerActionType.CALL, min: "100", max: undefined, index: 1 },
+            { action: PlayerActionType.RAISE, min: "200", max: "1000", index: 2 },
         ];
 
         it("should return the action when it exists", () => {
@@ -49,8 +49,8 @@ describe("actionUtils", () => {
         it("should return action with correct properties", () => {
             const raiseAction = getActionByType(mockLegalActions, PlayerActionType.RAISE);
             expect(raiseAction).toBeDefined();
-            expect(raiseAction?.minAmount).toBe("200");
-            expect(raiseAction?.maxAmount).toBe("1000");
+            expect(raiseAction?.min).toBe("200");
+            expect(raiseAction?.max).toBe("1000");
         });
 
         it("should return undefined when action does not exist", () => {
@@ -65,7 +65,7 @@ describe("actionUtils", () => {
 
         it("should work with NonPlayerActionType", () => {
             const actionsWithNonPlayer: LegalActionDTO[] = [
-                { action: NonPlayerActionType.DEAL } as LegalActionDTO,
+                { action: NonPlayerActionType.DEAL, min: undefined, max: undefined, index: 0 },
             ];
             const dealAction = getActionByType(actionsWithNonPlayer, NonPlayerActionType.DEAL);
             expect(dealAction).toBeDefined();
@@ -74,11 +74,11 @@ describe("actionUtils", () => {
 
         it("should return first match if multiple actions of same type exist", () => {
             const duplicateActions: LegalActionDTO[] = [
-                { action: PlayerActionType.CALL, minAmount: "100" } as LegalActionDTO,
-                { action: PlayerActionType.CALL, minAmount: "200" } as LegalActionDTO,
+                { action: PlayerActionType.CALL, min: "100", max: undefined, index: 0 },
+                { action: PlayerActionType.CALL, min: "200", max: undefined, index: 1 },
             ];
             const result = getActionByType(duplicateActions, PlayerActionType.CALL);
-            expect(result?.minAmount).toBe("100");
+            expect(result?.min).toBe("100");
         });
     });
 });
