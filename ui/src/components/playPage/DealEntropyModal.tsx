@@ -297,10 +297,6 @@ const DealEntropyModal: React.FC<DealEntropyModalProps> = React.memo(({ tableId,
                     </button>
                 </div>
 
-                {/* Footer note */}
-                <div style={{ color: colors.ui.textSecondary }} className="text-xs mt-4 text-center">
-                    Press <kbd className="px-1.5 py-0.5 rounded bg-gray-700 text-gray-300">Enter</kbd> to deal or <kbd className="px-1.5 py-0.5 rounded bg-gray-700 text-gray-300">Esc</kbd> to cancel
-                </div>
             </div>
         </div>
     );
