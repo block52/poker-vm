@@ -5,7 +5,7 @@ import { IUpdate, Range } from "../types";
 import { BetManager } from "../managers/betManager";
 
 abstract class BaseAction {
-    private readonly zeroChipsAllowed = [PlayerActionType.SIT_OUT, PlayerActionType.FOLD, NonPlayerActionType.DEAL, PlayerActionType.ALL_IN, PlayerActionType.SHOW, PlayerActionType.MUCK];
+    private readonly zeroChipsAllowed = [NonPlayerActionType.SIT_OUT, PlayerActionType.FOLD, NonPlayerActionType.DEAL, PlayerActionType.ALL_IN, PlayerActionType.SHOW, PlayerActionType.MUCK];
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
     abstract get type(): PlayerActionType | NonPlayerActionType;

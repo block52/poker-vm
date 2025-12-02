@@ -43,10 +43,10 @@ describe("Texas Holdem - Multiplayer", () => {
             // Get legal actions for the next player
             let actual = game.getLegalActions(PLAYER_2);
 
-            expect(actual.length).toEqual(3);
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
+            expect(actual.length).toEqual(2);
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
-            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
 
             let nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();

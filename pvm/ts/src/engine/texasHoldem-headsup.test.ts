@@ -59,10 +59,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         it("should have correct legal actions after posting the small blind", () => {
             // Get legal actions for the next player
             let actual = game.getLegalActions(SMALL_BLIND_PLAYER);
-            expect(actual.length).toEqual(3);
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
+            expect(actual.length).toEqual(2);
             expect(actual[0].action).toEqual(PlayerActionType.SMALL_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
-            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
 
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
@@ -70,10 +70,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             actual = game.getLegalActions(BIG_BLIND_PLAYER);
 
-            expect(actual.length).toEqual(3);
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
+            expect(actual.length).toEqual(2);
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
-            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
@@ -87,10 +87,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             const actual = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
 
-            expect(actual.length).toEqual(3);
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
+            expect(actual.length).toEqual(2);
             expect(actual[0].action).toEqual(NonPlayerActionType.DEAL);
             expect(actual[1].action).toEqual(PlayerActionType.FOLD);
-            expect(actual[2].action).toEqual(PlayerActionType.SIT_OUT);
         });
 
         it("should have correct legal actions after posting blinds", () => {
@@ -291,16 +291,16 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // expect(game.dealerPosition).toEqual(9);
             expect(game.handNumber).toEqual(1);
 
-            // Do the small blind
+            // Do the small blind (SIT_OUT is now a non-player action, not in legal actions)
             let actions = game.getLegalActions(SMALL_BLIND_PLAYER);
-            expect(actions.length).toEqual(3);
+            expect(actions.length).toEqual(2);
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(ONE_TOKEN);
 
-            // Do the big blind
+            // Do the big blind (SIT_OUT is now a non-player action, not in legal actions)
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
-            expect(actions.length).toEqual(3);
+            expect(actions.length).toEqual(2);
             game.performAction(BIG_BLIND_PLAYER, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(THREE_TOKENS);
@@ -311,11 +311,11 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             // Call from the small blind
             actions = game.getLegalActions(SMALL_BLIND_PLAYER);
-            expect(actions.length).toEqual(3);
+            expect(actions.length).toEqual(3); // Fold, Call, Raise
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.CALL, 6, ONE_TOKEN);
 
             actions = game.getLegalActions(BIG_BLIND_PLAYER);
-            expect(actions.length).toEqual(3);
+            expect(actions.length).toEqual(3); // Fold, Check, Raise
             expect(actions[0].action).toEqual(PlayerActionType.FOLD); // Check, raise or fold
             expect(actions[1].action).toEqual(PlayerActionType.CHECK); // Check, raise or fold
             expect(actions[2].action).toEqual(PlayerActionType.RAISE); // Check, raise or fold
