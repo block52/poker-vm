@@ -56,6 +56,18 @@ export enum TexasHoldemRound {
     END = "end"
 }
 
+export type RakeConfig = {
+    rakeFreeThreshold: bigint; // Absolute value below which the hand is rake-free
+    rakePercentage: number; // Percentage of the pot that is the rake (e.g., 5 for 5%)
+    rakeCap: bigint; // Maximum rake amount (absolute cap)
+};
+
+export type RakeConfigDTO = {
+    rakeFreeThreshold: string; // Absolute value below which the hand is rake-free
+    rakePercentage: number; // Percentage of the pot that is the rake (e.g., 5 for 5%)
+    rakeCap: string; // Maximum rake amount (absolute cap)
+};
+
 export type GameOptions = {
     minBuyIn: bigint;
     maxBuyIn: bigint;
@@ -65,6 +77,8 @@ export type GameOptions = {
     bigBlind: bigint;
     timeout: number;
     type: GameType; // Optional for cash games
+    rake?: RakeConfig; // Optional rake configuration
+    owner?: string; // Table owner who collects rake fees
     otherOptions?: Record<string, any>; // Placeholder for future options
 };
 
@@ -77,6 +91,8 @@ export type GameOptionsDTO = {
     bigBlind?: string;
     timeout?: number;
     type?: GameType; // Optional for cash games
+    rake?: RakeConfigDTO; // Optional rake configuration
+    owner?: string; // Table owner who collects rake fees
     otherOptions?: Record<string, any>; // Placeholder for future options
 };
 
