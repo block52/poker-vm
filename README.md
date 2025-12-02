@@ -2,6 +2,7 @@
 
 [![PVM UnitTests](https://github.com/block52/poker-vm/actions/workflows/main.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/main.yml)
 [![UI Build](https://github.com/block52/poker-vm/actions/workflows/ui-build.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/ui-build.yml)
+[![UI Tests](https://github.com/block52/poker-vm/actions/workflows/ui-test.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/ui-test.yml)
 
 A stateless execution layer for poker game logic on the Block52 blockchain network.
 
