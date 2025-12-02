@@ -103,7 +103,7 @@ export { PokerGameIntegration } from './pokerGameIntegration'
 
 // Re-export cosmos client and config
 export { CosmosClient, getDefaultCosmosConfig, COSMOS_CONSTANTS } from './cosmosClient'
-export { SigningCosmosClient, createSigningClientFromMnemonic } from './signingClient'
+export { SigningCosmosClient, createSigningClientFromMnemonic, type RakeConfig } from './signingClient'
 
 // Re-export generated client and helpers
 export {

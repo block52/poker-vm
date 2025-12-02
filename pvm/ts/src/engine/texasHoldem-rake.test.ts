@@ -416,4 +416,352 @@ describe("Texas Holdem - Rake Tests", () => {
             expect(owner.chips).toBe(ownerExpectedChips);
         });
     });
+
+    describe("Rake across different betting rounds", () => {
+        const player3Address = ethers.Wallet.createRandom().address;
+
+        const createGameWithRake = () => {
+            const gameConfig = {
+                address: ethers.ZeroAddress,
+                dealer: 1,
+                handNumber: 1,
+                actionCount: 0,
+                round: TexasHoldemRound.ANTE,
+                communityCards: [],
+                pots: [0n],
+                previousActions: [],
+                players: [],
+                deck: "",
+                winners: [],
+                now: Date.now()
+            };
+
+            const gameOptions = {
+                minBuyIn: ONE_TOKEN.toString(),
+                maxBuyIn: ONE_HUNDRED_TOKENS.toString(),
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: (ONE_TOKEN / 10n).toString(), // 0.1 token
+                bigBlind: (ONE_TOKEN / 5n).toString(),   // 0.2 token
+                timeout: 30,
+                type: GameType.CASH,
+                rake: {
+                    rakeFreeThreshold: ONE_TOKEN.toString(), // 1 token threshold
+                    rakePercentage: 5, // 5% rake
+                    rakeCap: (ONE_TOKEN / 2n).toString() // 0.5 token max
+                },
+                owner: ownerAddress
+            };
+
+            return TexasHoldemGame.fromJson(gameConfig, gameOptions);
+        };
+
+        it("should charge rake when winner determined on flop", () => {
+            const game = createGameWithRake();
+
+            // Setup
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, TEN_TOKENS, "seat=3");
+
+            const ownerInitialChips = game.getPlayer(ownerAddress).chips;
+
+            // Blinds
+            game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n);
+            game.performAction(player2Address, PlayerActionType.BIG_BLIND, 5, ONE_TOKEN / 5n);
+
+            // Deal
+            game.performAction(player1Address, NonPlayerActionType.DEAL, 6);
+
+            // Preflop: Raise and call to build pot above threshold
+            game.performAction(player1Address, PlayerActionType.RAISE, 7, 2n * ONE_TOKEN);
+            game.performAction(player2Address, PlayerActionType.CALL, 8, 2n * ONE_TOKEN);
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 9);
+
+            const potOnFlop = game.getPot();
+            expect(potOnFlop).toBeGreaterThan(ONE_TOKEN);
+
+            // Flop: Player 2 folds - Player 1 wins
+            game.performAction(player1Address, PlayerActionType.CHECK, 10);
+            game.performAction(player2Address, PlayerActionType.FOLD, 11);
+
+            // Verify rake was charged
+            const expectedRake = (potOnFlop * 5n) / 100n;
+            const owner = game.getPlayer(ownerAddress);
+            expect(owner.chips).toBe(ownerInitialChips + expectedRake);
+        });
+
+        it("should charge rake when winner determined on turn", () => {
+            const game = createGameWithRake();
+
+            // Setup
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, TEN_TOKENS, "seat=3");
+
+            const ownerInitialChips = game.getPlayer(ownerAddress).chips;
+
+            // Blinds
+            game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n);
+            game.performAction(player2Address, PlayerActionType.BIG_BLIND, 5, ONE_TOKEN / 5n);
+
+            // Deal
+            game.performAction(player1Address, NonPlayerActionType.DEAL, 6);
+
+            // Preflop
+            game.performAction(player1Address, PlayerActionType.RAISE, 7, ONE_TOKEN);
+            game.performAction(player2Address, PlayerActionType.CALL, 8, ONE_TOKEN);
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 9);
+
+            // Flop: Check through
+            game.performAction(player1Address, PlayerActionType.CHECK, 10);
+            game.performAction(player2Address, PlayerActionType.CHECK, 11);
+
+            // Turn: Bet and fold
+            game.performAction(player1Address, PlayerActionType.BET, 12, ONE_TOKEN);
+
+            const potOnTurn = game.getPot();
+
+            game.performAction(player2Address, PlayerActionType.FOLD, 13);
+
+            // Verify rake was charged
+            const expectedRake = (potOnTurn * 5n) / 100n;
+            const owner = game.getPlayer(ownerAddress);
+            expect(owner.chips).toBe(ownerInitialChips + expectedRake);
+        });
+
+        it("should charge rake when winner determined on river", () => {
+            const game = createGameWithRake();
+
+            // Setup
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, TEN_TOKENS, "seat=3");
+
+            const ownerInitialChips = game.getPlayer(ownerAddress).chips;
+
+            // Blinds
+            game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n);
+            game.performAction(player2Address, PlayerActionType.BIG_BLIND, 5, ONE_TOKEN / 5n);
+
+            // Deal
+            game.performAction(player1Address, NonPlayerActionType.DEAL, 6);
+
+            // Preflop
+            game.performAction(player1Address, PlayerActionType.RAISE, 7, ONE_TOKEN);
+            game.performAction(player2Address, PlayerActionType.CALL, 8, ONE_TOKEN);
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 9);
+
+            // Flop: Check through
+            game.performAction(player1Address, PlayerActionType.CHECK, 10);
+            game.performAction(player2Address, PlayerActionType.CHECK, 11);
+
+            // Turn: Check through
+            game.performAction(player1Address, PlayerActionType.CHECK, 12);
+            game.performAction(player2Address, PlayerActionType.CHECK, 13);
+
+            // River: Bet and fold
+            game.performAction(player1Address, PlayerActionType.BET, 14, ONE_TOKEN);
+
+            const potOnRiver = game.getPot();
+
+            game.performAction(player2Address, PlayerActionType.FOLD, 15);
+
+            // Verify rake was charged
+            const expectedRake = (potOnRiver * 5n) / 100n;
+            const owner = game.getPlayer(ownerAddress);
+            expect(owner.chips).toBe(ownerInitialChips + expectedRake);
+        });
+
+        it("should correctly cap rake on large pots", () => {
+            const game = createGameWithRake();
+
+            // Setup with more chips
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, 50n * ONE_TOKEN, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, 50n * ONE_TOKEN, "seat=2");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, 50n * ONE_TOKEN, "seat=3");
+
+            const ownerInitialChips = game.getPlayer(ownerAddress).chips;
+
+            // Blinds
+            game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n);
+            game.performAction(player2Address, PlayerActionType.BIG_BLIND, 5, ONE_TOKEN / 5n);
+
+            // Deal
+            game.performAction(player1Address, NonPlayerActionType.DEAL, 6);
+
+            // Preflop: Large raise to create big pot
+            game.performAction(player1Address, PlayerActionType.RAISE, 7, 20n * ONE_TOKEN);
+            game.performAction(player2Address, PlayerActionType.CALL, 8, 20n * ONE_TOKEN);
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 9);
+
+            const pot = game.getPot();
+            // 5% of 40 tokens = 2 tokens, but cap is 0.5 token
+            const calculatedRake = (pot * 5n) / 100n;
+            const rakeCap = ONE_TOKEN / 2n;
+            expect(calculatedRake).toBeGreaterThan(rakeCap);
+
+            // Flop: Fold to determine winner
+            game.performAction(player1Address, PlayerActionType.CHECK, 10);
+            game.performAction(player2Address, PlayerActionType.FOLD, 11);
+
+            // Verify rake was capped
+            const owner = game.getPlayer(ownerAddress);
+            expect(owner.chips).toBe(ownerInitialChips + rakeCap);
+        });
+
+        it("should not charge rake when pot stays below threshold through all rounds", () => {
+            const game = createGameWithRake();
+
+            // Setup
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
+
+            // Blinds only (0.3 tokens total, below 1 token threshold)
+            game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN / 10n);
+            game.performAction(player2Address, PlayerActionType.BIG_BLIND, 4, ONE_TOKEN / 5n);
+
+            // Deal
+            game.performAction(player1Address, NonPlayerActionType.DEAL, 5);
+
+            // Everyone folds preflop
+            game.performAction(player1Address, PlayerActionType.FOLD, 6);
+
+            const pot = game.getPot();
+            expect(pot).toBeLessThan(ONE_TOKEN);
+
+            // Player 2 should get full pot (no rake)
+            const player2 = game.getPlayer(player2Address);
+            const expectedChips = TEN_TOKENS + (ONE_TOKEN / 10n); // Got SB back
+            expect(player2.chips).toBe(expectedChips);
+        });
+
+        it("should handle rake with 0% percentage (no rake)", () => {
+            const gameConfig = {
+                address: ethers.ZeroAddress,
+                dealer: 1,
+                handNumber: 1,
+                actionCount: 0,
+                round: TexasHoldemRound.ANTE,
+                communityCards: [],
+                pots: [0n],
+                previousActions: [],
+                players: [],
+                deck: "",
+                winners: [],
+                now: Date.now()
+            };
+
+            const gameOptions = {
+                minBuyIn: ONE_TOKEN.toString(),
+                maxBuyIn: ONE_HUNDRED_TOKENS.toString(),
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: (ONE_TOKEN / 10n).toString(),
+                bigBlind: (ONE_TOKEN / 5n).toString(),
+                timeout: 30,
+                type: GameType.CASH,
+                rake: {
+                    rakeFreeThreshold: "0", // Always rake
+                    rakePercentage: 0, // But 0% rake
+                    rakeCap: ONE_TOKEN.toString()
+                },
+                owner: ownerAddress
+            };
+
+            const game = TexasHoldemGame.fromJson(gameConfig, gameOptions);
+
+            // Setup
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, TEN_TOKENS, "seat=3");
+
+            const ownerInitialChips = game.getPlayer(ownerAddress).chips;
+
+            // Blinds
+            game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n);
+            game.performAction(player2Address, PlayerActionType.BIG_BLIND, 5, ONE_TOKEN / 5n);
+
+            // Deal
+            game.performAction(player1Address, NonPlayerActionType.DEAL, 6);
+
+            // Raise and fold
+            game.performAction(player1Address, PlayerActionType.RAISE, 7, 2n * ONE_TOKEN);
+            game.performAction(player2Address, PlayerActionType.FOLD, 8);
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 9);
+
+            // Owner should not have received any rake (0%)
+            const owner = game.getPlayer(ownerAddress);
+            expect(owner.chips).toBe(ownerInitialChips);
+        });
+
+        it("should handle rake at exactly the threshold", () => {
+            const gameConfig = {
+                address: ethers.ZeroAddress,
+                dealer: 1,
+                handNumber: 1,
+                actionCount: 0,
+                round: TexasHoldemRound.ANTE,
+                communityCards: [],
+                pots: [0n],
+                previousActions: [],
+                players: [],
+                deck: "",
+                winners: [],
+                now: Date.now()
+            };
+
+            // Set threshold to exactly 1 token - use 2 player game for simpler action order
+            const gameOptions = {
+                minBuyIn: ONE_TOKEN.toString(),
+                maxBuyIn: ONE_HUNDRED_TOKENS.toString(),
+                minPlayers: 2,
+                maxPlayers: 9,
+                smallBlind: (ONE_TOKEN / 2n).toString(), // 0.5 token
+                bigBlind: (ONE_TOKEN / 2n).toString(),   // 0.5 token (total 1 token = threshold)
+                timeout: 30,
+                type: GameType.CASH,
+                rake: {
+                    rakeFreeThreshold: ONE_TOKEN.toString(), // 1 token threshold
+                    rakePercentage: 5,
+                    rakeCap: ONE_TOKEN.toString()
+                },
+                owner: ownerAddress
+            };
+
+            const game = TexasHoldemGame.fromJson(gameConfig, gameOptions);
+
+            // Setup - owner also plays so they can receive rake
+            game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1");
+            game.performAction(ownerAddress, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2");
+
+            const ownerInitialChips = game.getPlayer(ownerAddress).chips;
+
+            // Blinds (total = 1 token = threshold)
+            game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN / 2n);
+            game.performAction(ownerAddress, PlayerActionType.BIG_BLIND, 4, ONE_TOKEN / 2n);
+
+            // Deal
+            game.performAction(player1Address, NonPlayerActionType.DEAL, 5);
+
+            // In heads-up, SB acts first preflop - Player 1 folds
+            game.performAction(player1Address, PlayerActionType.FOLD, 6);
+
+            // At exactly threshold, pot < threshold is false, so rake should apply
+            // pot = threshold means pot is NOT less than threshold
+            // So rake should be: 1 token * 5% = 0.05 tokens
+            const expectedRake = (ONE_TOKEN * 5n) / 100n;
+
+            // Owner (player2) wins the pot minus rake, but also receives rake
+            // Net effect: owner gets full pot
+            const owner = game.getPlayer(ownerAddress);
+            // Owner started with 10 tokens, paid 0.5 BB, won pot of 1 token
+            // Pot = 1 token, rake = 0.05 tokens
+            // Owner wins: 1 token - 0.05 = 0.95 tokens
+            // Owner receives rake: 0.05 tokens
+            // Net: owner has 10 - 0.5 + 0.95 + 0.05 = 10.5 tokens
+            const ownerExpectedChips = TEN_TOKENS - (ONE_TOKEN / 2n) + ONE_TOKEN;
+            expect(owner.chips).toBe(ownerExpectedChips);
+        });
+    });
 });

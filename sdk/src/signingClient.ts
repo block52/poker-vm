@@ -31,6 +31,16 @@ export interface SigningCosmosConfig extends Omit<CosmosConfig, 'gasPrice'> {
 }
 
 /**
+ * Rake configuration for a game
+ */
+export interface RakeConfig {
+    rakeFreeThreshold: bigint;  // Pot threshold below which no rake is taken
+    rakePercentage: number;     // Percentage of pot taken as rake (0-100)
+    rakeCap: bigint;            // Maximum rake amount per hand
+    owner: string;              // Address that receives the rake
+}
+
+/**
  * Message type for creating a game
  * This should match your blockchain's message structure
  */
@@ -44,6 +54,11 @@ export interface MsgCreateGame {
     smallBlind: string;
     bigBlind: string;
     timeout: number;
+    // Optional rake configuration
+    rakeFreeThreshold?: string;
+    rakePercentage?: number;
+    rakeCap?: string;
+    owner?: string;
 }
 
 /**
@@ -177,7 +192,8 @@ export class SigningCosmosClient extends CosmosClient {
         maxBuyInB52USDC: bigint,
         smallBlindB52USDC: bigint,
         bigBlindB52USDC: bigint,
-        timeout: number
+        timeout: number,
+        rakeConfig?: RakeConfig
     ): Promise<string> {
         await this.initializeSigningClient();
 
@@ -201,6 +217,14 @@ export class SigningCosmosClient extends CosmosClient {
             timeout
         };
 
+        // Add rake configuration if provided
+        if (rakeConfig) {
+            msgCreateGame.rakeFreeThreshold = rakeConfig.rakeFreeThreshold.toString();
+            msgCreateGame.rakePercentage = rakeConfig.rakePercentage;
+            msgCreateGame.rakeCap = rakeConfig.rakeCap.toString();
+            msgCreateGame.owner = rakeConfig.owner;
+        }
+
         // Create the transaction message
         const msg: EncodeObject = {
             typeUrl: "/pokerchain.poker.v1.MsgCreateGame",
@@ -219,7 +243,13 @@ export class SigningCosmosClient extends CosmosClient {
             maxBuyIn: maxBuyInB52USDC.toString(),
             smallBlind: smallBlindB52USDC.toString(),
             bigBlind: bigBlindB52USDC.toString(),
-            timeout
+            timeout,
+            ...(rakeConfig && {
+                rakeFreeThreshold: rakeConfig.rakeFreeThreshold.toString(),
+                rakePercentage: rakeConfig.rakePercentage,
+                rakeCap: rakeConfig.rakeCap.toString(),
+                owner: rakeConfig.owner
+            })
         });
 
         try {

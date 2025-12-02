@@ -52,6 +52,13 @@ export default function TableAdminPage() {
     const [smallBlind, setSmallBlind] = useState("0.01");
     const [bigBlind, setBigBlind] = useState("0.02");
 
+    // Rake settings (optional)
+    const [enableRake, setEnableRake] = useState(false);
+    const [rakeFreeThreshold, setRakeFreeThreshold] = useState("0");
+    const [rakePercentage, setRakePercentage] = useState("5");
+    const [rakeCap, setRakeCap] = useState("0.10");
+    const [rakeOwner, setRakeOwner] = useState("");
+
     // Success modal state
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
@@ -104,6 +111,14 @@ export default function TableAdminPage() {
             return;
         }
 
+        // Build rake config if enabled
+        const rakeConfig = enableRake ? {
+            rakeFreeThreshold: parseFloat(rakeFreeThreshold),
+            rakePercentage: parseFloat(rakePercentage),
+            rakeCap: parseFloat(rakeCap),
+            owner: rakeOwner || cosmosWallet.address || ""
+        } : undefined;
+
         console.log("📋 Table configuration:", {
             type: gameType,
             minBuyIn: parseFloat(minBuyIn),
@@ -111,7 +126,8 @@ export default function TableAdminPage() {
             minPlayers,
             maxPlayers,
             smallBlind: parseFloat(smallBlind),
-            bigBlind: parseFloat(bigBlind)
+            bigBlind: parseFloat(bigBlind),
+            ...(rakeConfig && { rake: rakeConfig })
         });
 
         try {
@@ -123,7 +139,8 @@ export default function TableAdminPage() {
                 minPlayers,
                 maxPlayers,
                 smallBlind: parseFloat(smallBlind),
-                bigBlind: parseFloat(bigBlind)
+                bigBlind: parseFloat(bigBlind),
+                ...(rakeConfig && { rake: rakeConfig })
             });
 
             console.log("✅ createTable returned:", txHash);
@@ -388,6 +405,82 @@ export default function TableAdminPage() {
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
+                    </div>
+
+                    {/* Rake Configuration Section */}
+                    <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <input
+                                type="checkbox"
+                                id="enableRake"
+                                checked={enableRake}
+                                onChange={e => setEnableRake(e.target.checked)}
+                                className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                            />
+                            <label htmlFor="enableRake" className="text-gray-300 text-sm font-medium">
+                                Enable Rake Collection
+                            </label>
+                        </div>
+
+                        {enableRake && (
+                            <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <label className="text-gray-300 text-xs mb-1 block">Rake-Free Threshold (USDC)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={rakeFreeThreshold}
+                                            onChange={e => setRakeFreeThreshold(e.target.value)}
+                                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                            placeholder="0 = rake all pots"
+                                        />
+                                        <p className="text-gray-500 text-xs mt-1">Pots below this amount are rake-free</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-300 text-xs mb-1 block">Rake Percentage (%)</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            min="0"
+                                            max="100"
+                                            value={rakePercentage}
+                                            onChange={e => setRakePercentage(e.target.value)}
+                                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                            placeholder="e.g., 5"
+                                        />
+                                        <p className="text-gray-500 text-xs mt-1">Typically 2.5% - 5%</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-gray-300 text-xs mb-1 block">Rake Cap (USDC)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value={rakeCap}
+                                            onChange={e => setRakeCap(e.target.value)}
+                                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                            placeholder="e.g., 0.10"
+                                        />
+                                        <p className="text-gray-500 text-xs mt-1">Maximum rake per hand</p>
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-300 text-xs mb-1 block">Rake Owner Address</label>
+                                        <input
+                                            type="text"
+                                            value={rakeOwner}
+                                            onChange={e => setRakeOwner(e.target.value)}
+                                            placeholder={cosmosWallet.address || "b52..."}
+                                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm font-mono"
+                                        />
+                                        <p className="text-gray-500 text-xs mt-1">Defaults to your address</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex gap-3">

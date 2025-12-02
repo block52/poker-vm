@@ -3,6 +3,14 @@ import { GameType, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
 import { getSigningClient } from "../utils/cosmos/client";
 import { useNetwork } from "../context/NetworkContext";
 
+// Type for rake configuration options
+export interface RakeOptions {
+    rakeFreeThreshold: number;  // Pot threshold in USDC below which no rake is taken
+    rakePercentage: number;     // Percentage of pot taken as rake (0-100)
+    rakeCap: number;            // Maximum rake amount in USDC per hand
+    owner: string;              // Address that receives the rake
+}
+
 // Type for creating new table options
 export interface CreateTableOptions {
     type: GameType;
@@ -12,6 +20,7 @@ export interface CreateTableOptions {
     maxPlayers: number;
     smallBlind: number;
     bigBlind: number;
+    rake?: RakeOptions;         // Optional rake configuration
 }
 
 // Type for useNewTable hook return
@@ -68,6 +77,26 @@ export const useNewTable = (): UseNewTableReturn => {
             console.log(`  Small Blind: ${smallBlindB52USDC} usdc`);
             console.log(`  Big Blind: ${bigBlindB52USDC} usdc`);
 
+            // Convert rake options if provided
+            let rakeConfig = undefined;
+            if (gameOptions.rake) {
+                const rakeFreeThresholdB52USDC = BigInt(Math.floor(gameOptions.rake.rakeFreeThreshold * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
+                const rakeCapB52USDC = BigInt(Math.floor(gameOptions.rake.rakeCap * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
+
+                rakeConfig = {
+                    rakeFreeThreshold: rakeFreeThresholdB52USDC,
+                    rakePercentage: gameOptions.rake.rakePercentage,
+                    rakeCap: rakeCapB52USDC,
+                    owner: gameOptions.rake.owner
+                };
+
+                console.log("💰 Rake Configuration:");
+                console.log(`  Rake Free Threshold: ${rakeFreeThresholdB52USDC} usdc ($${gameOptions.rake.rakeFreeThreshold})`);
+                console.log(`  Rake Percentage: ${gameOptions.rake.rakePercentage}%`);
+                console.log(`  Rake Cap: ${rakeCapB52USDC} usdc ($${gameOptions.rake.rakeCap})`);
+                console.log(`  Owner: ${gameOptions.rake.owner}`);
+            }
+
             console.log("🚀 Creating New Game on Cosmos Blockchain:");
             console.log(`Creator: ${userAddress}`);
 
@@ -90,7 +119,8 @@ export const useNewTable = (): UseNewTableReturn => {
                 maxBuyInB52USDC,
                 smallBlindB52USDC,
                 bigBlindB52USDC,
-                timeoutSeconds
+                timeoutSeconds,
+                rakeConfig
             );
 
             if (txHash) {
