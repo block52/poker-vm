@@ -244,12 +244,12 @@ describe("Texas Holdem - Data driven", () => {
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct?.address).toEqual("0x4260E88e81E60113146092Fb9474b61C59f7552e");
 
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
             const legalActions = game.getLegalActions("0x4260E88e81E60113146092Fb9474b61C59f7552e");
             expect(legalActions).toBeDefined();
-            expect(legalActions.length).toEqual(3);
+            expect(legalActions.length).toEqual(2);
             expect(legalActions[0].action).toEqual("deal");
             expect(legalActions[1].action).toEqual("fold");
-            expect(legalActions[2].action).toEqual("sit-out");
         });
 
         it.skip("should test bug 1103", () => {
