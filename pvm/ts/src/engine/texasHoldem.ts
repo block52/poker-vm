@@ -170,6 +170,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         })(this);
 
         // Initialize action handlers
+        // Note: SitOutAction is NOT included here as it's now a NonPlayerActionType
+        // and is handled separately in performAction()
         this._actions = [
             new DealAction(this, this._update),
             new SmallBlindAction(this, this._update),
@@ -182,7 +184,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new MuckAction(this, this._update),
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, ""),
-            new SitOutAction(this, this._update),
             new SitInAction(this, this._update)
         ];
 
@@ -1139,6 +1140,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             case NonPlayerActionType.NEW_HAND:
                 new NewHandAction(this, this._update, data || "").execute(this.getPlayer(address), index);
                 return;
+            case NonPlayerActionType.SIT_OUT:
+                if (!this.exists(address)) {
+                    throw new Error("Player not found.");
+                }
+                new SitOutAction(this, this._update).execute(this.getPlayer(address), index);
+                return;
         }
 
         if (amount !== undefined && amount < 0n) {
@@ -1185,9 +1192,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 break;
             case PlayerActionType.SHOW:
                 new ShowAction(this, this._update).execute(player, index);
-                break;
-            case PlayerActionType.SIT_OUT:
-                player.updateStatus(PlayerStatus.SITTING_OUT);
                 break;
             case PlayerActionType.SIT_IN:
                 player.updateStatus(PlayerStatus.ACTIVE);

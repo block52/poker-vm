@@ -9,7 +9,6 @@ export enum PlayerActionType {
     ALL_IN = "all-in",
     MUCK = "muck",
     SIT_IN = "sit-in",
-    SIT_OUT = "sit-out",
     SHOW = "show"
 }
 
@@ -18,6 +17,7 @@ export enum NonPlayerActionType {
     JOIN = "join",
     LEAVE = "leave",
     NEW_HAND = "new-hand",
+    SIT_OUT = "sit-out",
 }
 
 export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
