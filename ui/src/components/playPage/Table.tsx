@@ -78,7 +78,7 @@ import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { NetworkSelector } from "../NetworkSelector";
 
 import { isValidPlayerAddress } from "../../utils/addressUtils";
-import { getCardImageUrl, getCardBackUrl } from "../../utils/cardImages";
+import { getCardImageUrl, getCardBackUrl, CardBackStyle } from "../../utils/cardImages";
 
 import "./Table.css"; // Import the Table CSS file
 
@@ -177,6 +177,10 @@ const Table = React.memo(() => {
             subscribeToTable(id);
         }
     }, [id, subscribeToTable]);
+
+    // Card back style configuration - can be customized per club/table
+    // Options: "default", "block52", "custom", or a custom URL
+    const cardBackStyle: CardBackStyle = "default";
 
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
@@ -585,14 +589,14 @@ const Table = React.memo(() => {
                 const card = communityCards[idx];
                 return (
                     <div key={idx} className="card animate-fall">
-                        <OppositePlayerCards frontSrc={getCardImageUrl(card)} backSrc={getCardBackUrl()} flipped />
+                        <OppositePlayerCards frontSrc={getCardImageUrl(card)} backSrc={getCardBackUrl(cardBackStyle)} flipped />
                     </div>
                 );
             } else {
                 return <div key={idx} className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]" />;
             }
         });
-    }, [tableDataValues.tableDataCommunityCards]);
+    }, [tableDataValues.tableDataCommunityCards, cardBackStyle]);
 
     // Memoize the component renderer
     const getComponentToRender = useCallback(
@@ -699,6 +703,7 @@ const Table = React.memo(() => {
                     setStartIndex={setStartIndex}
                     isCardVisible={isCardVisible}
                     setCardVisible={setCardVisible}
+                    cardBackStyle={cardBackStyle}
                 />
             );
         },

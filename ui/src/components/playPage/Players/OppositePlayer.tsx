@@ -53,7 +53,7 @@ import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
 import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
-import { getCardImageUrl, getCardBackUrl } from "../../../utils/cardImages";
+import { getCardImageUrl, getCardBackUrl, CardBackStyle } from "../../../utils/cardImages";
 
 type OppositePlayerProps = {
     left?: string;
@@ -66,9 +66,10 @@ type OppositePlayerProps = {
     setCardVisible: (index: number) => void;
     setStartIndex: (index: number) => void;
     uiPosition?: number;
+    cardBackStyle?: CardBackStyle;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition }) => {
+const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition, cardBackStyle }) => {
     const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
 
@@ -172,8 +173,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                         ) : (
                             // Show card backs for opponents (they shouldn't see actual cards)
                             <>
-                                <img src={getCardBackUrl()} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
-                                <img src={getCardBackUrl()} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src={getCardBackUrl(cardBackStyle)} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src={getCardBackUrl(cardBackStyle)} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
                             </>
                         )
                     ) : (
