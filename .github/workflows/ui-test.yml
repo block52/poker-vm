@@ -1,4 +1,4 @@
-name: PVM UnitTests
+name: UI Tests
 
 on:
   push:
@@ -9,8 +9,7 @@ on:
       - main
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,9 +21,12 @@ jobs:
       - name: Install SDK dependencies
         working-directory: ./sdk
         run: yarn install
-      - name: Install PVM dependencies
-        working-directory: ./pvm/ts
+      - name: Build SDK
+        working-directory: ./sdk
+        run: yarn build
+      - name: Install UI dependencies
+        working-directory: ./ui
         run: yarn install
-      - name: Run PVM tests
-        working-directory: ./pvm/ts
+      - name: Run UI tests
+        working-directory: ./ui
         run: yarn test

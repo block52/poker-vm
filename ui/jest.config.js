@@ -3,10 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  moduleNameMapper: {
-    '^@bitcoinbrisbane/block52$': '<rootDir>/../../sdk/src/index.ts'
-  },
-  moduleDirectories: ['node_modules', '<rootDir>/../../sdk/node_modules'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: {
