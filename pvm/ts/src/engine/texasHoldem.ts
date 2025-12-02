@@ -853,7 +853,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const livePlayers = this.findLivePlayers();
 
         // Step 2: If only one live player remains, they win - move to showdown
-        if (livePlayers.length <= 1) {
+        // IMPORTANT: In ANTE round, we must wait for both blinds to be posted even if only one player is live
+        // This prevents the game from advancing to PREFLOP prematurely in heads-up scenarios
+        if (livePlayers.length <= 1 && round !== TexasHoldemRound.ANTE) {
             if (this.currentRound !== TexasHoldemRound.ANTE && livePlayers.length === 1) {
                 // Check community cards, deal the remaining
                 this._currentRound = TexasHoldemRound.SHOWDOWN;
