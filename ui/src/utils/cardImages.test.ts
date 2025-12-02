@@ -23,8 +23,30 @@ describe("cardImages", () => {
     });
 
     describe("getCardBackUrl", () => {
-        it("should return correct card back URL", () => {
+        it("should return default card back when no style specified", () => {
             expect(getCardBackUrl()).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+        });
+
+        it("should return default card back when style is 'default'", () => {
+            expect(getCardBackUrl("default")).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+        });
+
+        it("should return Block52 branded card back when style is 'block52'", () => {
+            expect(getCardBackUrl("block52")).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
+        });
+
+        it("should return custom card back when style is 'custom'", () => {
+            expect(getCardBackUrl("custom")).toBe(`${GITHUB_CDN_BASE}/BackCustom.svg`);
+        });
+
+        it("should return custom URL when provided", () => {
+            const customUrl = "https://example.com/my-card-back.svg";
+            expect(getCardBackUrl(customUrl)).toBe(customUrl);
+        });
+
+        it("should handle club-specific branded URLs", () => {
+            const clubUrl = "https://texashodl.net/brand/card-back.svg";
+            expect(getCardBackUrl(clubUrl)).toBe(clubUrl);
         });
     });
 
