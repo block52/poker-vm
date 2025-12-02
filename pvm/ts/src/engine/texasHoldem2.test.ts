@@ -18,9 +18,10 @@ describe("Texas Holdem Game", () => {
 
         it("should allow correct player to act", () => {
 
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
             const sbLegalActions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
             expect(sbLegalActions).toBeDefined();
-            expect(sbLegalActions.length).toEqual(3); // Small blind, Fold, Sit Out
+            expect(sbLegalActions.length).toEqual(2); // Small blind, Fold
 
             // Small blind position should act first
             expect(() => {
@@ -31,9 +32,10 @@ describe("Texas Holdem Game", () => {
             const nextPlayer = game.getNextPlayerToAct();
             expect(nextPlayer?.address).toEqual("0x980b8D8A16f5891F41871d878a479d81Da52334c");
 
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
             const bbLegalActions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             expect(bbLegalActions).toBeDefined();
-            expect(bbLegalActions.length).toEqual(3); // Big blind, Fold, Sit Out
+            expect(bbLegalActions.length).toEqual(2); // Big blind, Fold
 
             // Big blind should be able to act now
             expect(() => {
@@ -200,20 +202,17 @@ describe("Texas Holdem Game", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 0);
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 1);
 
-            // After blinds, before dealing, the legal actions should be DEAL, FOLD, SIT-OUT
+            // After blinds, before dealing, the legal actions should be DEAL, FOLD
+            // SIT_OUT is now a non-player action (always available), not included in legal actions
             const legalActions1 = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
 
-            expect(legalActions1.length).toEqual(3);
+            expect(legalActions1.length).toEqual(2);
             expect(legalActions1).toContainEqual(expect.objectContaining({
                 action: NonPlayerActionType.DEAL
             }));
 
             expect(legalActions1).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.FOLD
-            }));
-
-            expect(legalActions1).toContainEqual(expect.objectContaining({
-                action: PlayerActionType.SIT_OUT
             }));
         });
     });

@@ -44,7 +44,7 @@
  */
 
 import { useEffect, useState, useMemo, useCallback, memo } from "react";
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 // Position arrays now come from useTableLayout hook
 // // Position arrays now come from useTableLayout hook
 // import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
@@ -260,7 +260,7 @@ const Table = React.memo(() => {
     const { legalActions: playerLegalActions } = usePlayerLegalActions();
 
     // Check if sit out/sit in actions are available
-    const hasSitOutAction = hasAction(playerLegalActions, PlayerActionType.SIT_OUT);
+    const hasSitOutAction = hasAction(playerLegalActions, NonPlayerActionType.SIT_OUT);
     const hasSitInAction = hasAction(playerLegalActions, PlayerActionType.SIT_IN);
 
     // Add the usePlayerSeatInfo hook
