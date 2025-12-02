@@ -1,10 +1,18 @@
-import { useState, useEffect } from "react";
-import { GameType } from "@bitcoinbrisbane/block52";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { GameType, CosmosClient, getDefaultCosmosConfig } from "@bitcoinbrisbane/block52";
+import { Link } from "react-router-dom";
 import useCosmosWallet from "../hooks/useCosmosWallet";
+import { isValidPlayerAddress } from "../utils/addressUtils";
 import { useNewTable } from "../hooks/useNewTable";
 import { useFindGames } from "../hooks/useFindGames";
 import { toast } from "react-toastify";
-import { formatMicroAsUsdc } from "../constants/currency";
+import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
+
+// Game creation fee in base units (1 usdc = 0.000001 USDC)
+// This matches GameCreationCost in pokerchain/x/poker/types/types.go
+const GAME_CREATION_FEE_BASE = 1;
+const GAME_CREATION_FEE_USDC = GAME_CREATION_FEE_BASE / Math.pow(10, USDC_DECIMALS);
 
 /**
  * TableAdminPage - Admin interface for creating and managing poker tables
@@ -48,27 +56,43 @@ export default function TableAdminPage() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
 
-    // Transform fetched games to TableData format
-    const tables: TableData[] = (fetchedGames || [])
-        .map((game: any) => ({
-            gameId: game.address || game.gameId || game.game_id,
-            gameType: game.gameType || game.game_type || "texas-holdem",
-            minPlayers: game.minPlayers || game.min_players || 2,
-            maxPlayers: game.maxPlayers || game.max_players || 6,
-            minBuyIn: game.minBuyIn || game.min_buy_in || "0",
-            maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
-            smallBlind: game.smallBlind || game.small_blind || "0",
-            bigBlind: game.bigBlind || game.big_blind || "0",
-            timeout: game.timeout || 60,
-            status: game.status || "waiting",
-            creator: game.creator || "unknown",
-            createdAt: game.createdAt || game.created_at
-        }))
-        // Sort by creation date (newest first)
-        .sort((a, b) => {
-            if (!a.createdAt || !b.createdAt) return 0;
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
+    // Player counts from game state
+    const [playerCounts, setPlayerCounts] = useState<Record<string, number>>({});
+    const [cosmosClient] = useState(() => new CosmosClient(getDefaultCosmosConfig()));
+
+    // Get USDC balance from wallet
+    const usdcBalance = useMemo(() => {
+        const balance = cosmosWallet.balance.find(b => b.denom === "usdc");
+        return balance ? parseInt(balance.amount) : 0;
+    }, [cosmosWallet.balance]);
+
+    // Check if user has enough USDC for game creation
+    const hasEnoughUsdc = usdcBalance >= GAME_CREATION_FEE_BASE;
+    const usdcBalanceFormatted = (usdcBalance / Math.pow(10, USDC_DECIMALS)).toFixed(6);
+
+    // Transform fetched games to TableData format - memoized to prevent infinite loops
+    const tables: TableData[] = useMemo(() => {
+        return (fetchedGames || [])
+            .map((game: any) => ({
+                gameId: game.address || game.gameId || game.game_id,
+                gameType: game.gameType || game.game_type || "texas-holdem",
+                minPlayers: game.minPlayers || game.min_players || 2,
+                maxPlayers: game.maxPlayers || game.max_players || 6,
+                minBuyIn: game.minBuyIn || game.min_buy_in || "0",
+                maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
+                smallBlind: game.smallBlind || game.small_blind || "0",
+                bigBlind: game.bigBlind || game.big_blind || "0",
+                timeout: game.timeout || 60,
+                status: game.status || "waiting",
+                creator: game.creator || "unknown",
+                createdAt: game.createdAt || game.created_at
+            }))
+            // Sort by creation date (newest first)
+            .sort((a, b) => {
+                if (!a.createdAt || !b.createdAt) return 0;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+    }, [fetchedGames]);
 
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
@@ -129,6 +153,49 @@ export default function TableAdminPage() {
         }
     };
 
+    // Fetch player counts for all tables - only runs once when tables are first loaded
+    // Use a ref to track table IDs to prevent duplicate requests
+    const tableIdsRef = useRef<string>("");
+
+    useEffect(() => {
+        // Create a stable key from table IDs to detect actual changes
+        const currentTableIds = tables.map(t => t.gameId).join(",");
+
+        // Only fetch if tables changed (not just reference equality)
+        if (tables.length === 0 || currentTableIds === tableIdsRef.current) {
+            return;
+        }
+
+        tableIdsRef.current = currentTableIds;
+
+        const fetchPlayerCounts = async () => {
+            const counts: Record<string, number> = {};
+
+            for (const table of tables) {
+                try {
+                    const gameStateResponse = await cosmosClient.getGameState(table.gameId);
+                    if (gameStateResponse && gameStateResponse.game_state) {
+                        const gameState = JSON.parse(gameStateResponse.game_state);
+                        // Count players with valid addresses (seated players)
+                        // Filter out empty seats using the utility function
+                        const seatedPlayers = gameState.players?.filter((p: any) =>
+                            isValidPlayerAddress(p.address) && p.status !== "empty"
+                        ).length || 0;
+                        counts[table.gameId] = seatedPlayers;
+                    }
+                } catch (err) {
+                    console.error(`Failed to fetch game state for ${table.gameId}:`, err);
+                    // If we can't fetch game state, default to 0
+                    counts[table.gameId] = 0;
+                }
+            }
+
+            setPlayerCounts(counts);
+        };
+
+        fetchPlayerCounts();
+    }, [tables, cosmosClient]);
+
     // Show error toast if createError or gamesError changes
     useEffect(() => {
         if (createError) {
@@ -153,10 +220,11 @@ export default function TableAdminPage() {
     const sitAndGoTables = tables.filter(t => t.maxPlayers <= 6).length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">Table Admin Dashboard</h1>
                     <p className="text-gray-400">Create and manage poker tables</p>
                 </div>
@@ -179,138 +247,195 @@ export default function TableAdminPage() {
 
                 {/* Create Table Form */}
                 <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
-                    <h2 className="text-2xl font-bold text-white mb-4">Create New Table</h2>
+                    <div className="flex justify-between items-start mb-4">
+                        <h2 className="text-xl font-bold text-white">Create New Table</h2>
+                        {cosmosWallet.address && (
+                            <div className="text-right">
+                                <p className="text-gray-400 text-xs">Your USDC Balance</p>
+                                <p className={`text-lg font-bold ${hasEnoughUsdc ? "text-green-400" : "text-red-400"}`}>
+                                    ${usdcBalanceFormatted} USDC
+                                </p>
+                            </div>
+                        )}
+                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {/* Creation Fee Info */}
+                    <div className="bg-gray-900 rounded-lg p-3 mb-4 border border-gray-700">
+                        <div className="flex items-center justify-between">
+                            <span className="text-gray-400 text-sm">Table Creation Fee:</span>
+                            <span className="text-white font-mono text-sm">{GAME_CREATION_FEE_USDC.toFixed(6)} USDC</span>
+                        </div>
+                    </div>
+
+                    {/* Insufficient USDC Warning */}
+                    {cosmosWallet.address && !hasEnoughUsdc && (
+                        <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 mb-4">
+                            <div className="flex items-start gap-3">
+                                <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div>
+                                    <p className="text-red-300 font-semibold mb-1">Insufficient USDC Balance</p>
+                                    <p className="text-red-400/80 text-sm mb-3">
+                                        You need at least {GAME_CREATION_FEE_USDC.toFixed(6)} USDC to create a table.
+                                        Your current balance is ${usdcBalanceFormatted} USDC.
+                                    </p>
+                                    <Link
+                                        to="/"
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m0-16l-4 4m4-4l4 4" />
+                                        </svg>
+                                        Deposit USDC from Base Chain
+                                    </Link>
+                                    <p className="text-gray-500 text-xs mt-2">
+                                        Go to Dashboard → Bridge Deposit to transfer USDC from Base Chain to your poker account
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
-                            <label className="text-white text-sm mb-2 block">Game Type</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Game Type</label>
                             <select
                                 value={gameType}
                                 onChange={e => setGameType(e.target.value as GameType)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             >
-                                <option value={GameType.SIT_AND_GO}>Sit & Go (Texas Hold'em)</option>
+                                <option value={GameType.SIT_AND_GO}>Sit & Go</option>
                                 <option value={GameType.TOURNAMENT}>Tournament</option>
                                 <option value={GameType.CASH}>Cash Game</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-white text-sm mb-2 block">Max Players</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Max Players</label>
                             <select
                                 value={maxPlayers}
                                 onChange={e => setMaxPlayers(parseInt(e.target.value))}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             >
-                                <option value={2}>2 Players (Heads-Up)</option>
-                                <option value={4}>4 Players (Sit & Go)</option>
-                                <option value={6}>6 Players (Sit & Go)</option>
-                                <option value={9}>9 Players (Full Ring)</option>
+                                <option value={2}>2 (Heads-Up)</option>
+                                <option value={4}>4 (Sit & Go)</option>
+                                <option value={6}>6 (Sit & Go)</option>
+                                <option value={9}>9 (Full Ring)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-2 gap-3 mb-3">
                         {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
-                            // For Sit & Go and Tournament: Single buy-in field (fixed amount)
-                            <div className="md:col-span-2">
-                                <label className="text-white text-sm mb-2 block">Buy-In (USDC) - Fixed Amount</label>
+                            <div className="col-span-2">
+                                <label className="text-gray-300 text-xs mb-1 block">Buy-In (USDC)</label>
                                 <input
                                     type="number"
                                     step="0.01"
                                     value={minBuyIn}
                                     onChange={e => {
                                         setMinBuyIn(e.target.value);
-                                        setMaxBuyIn(e.target.value); // Keep them equal
+                                        setMaxBuyIn(e.target.value);
                                     }}
-                                    className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                                     placeholder="e.g., 1.00"
                                 />
-                                <p className="text-gray-400 text-xs mt-1">All players must buy in for this exact amount</p>
                             </div>
                         ) : (
-                            // For Cash Game: Separate min/max fields
                             <>
                                 <div>
-                                    <label className="text-white text-sm mb-2 block">Min Buy-In (USDC)</label>
+                                    <label className="text-gray-300 text-xs mb-1 block">Min Buy-In (USDC)</label>
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={minBuyIn}
                                         onChange={e => setMinBuyIn(e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-white text-sm mb-2 block">Max Buy-In (USDC)</label>
+                                    <label className="text-gray-300 text-xs mb-1 block">Max Buy-In (USDC)</label>
                                     <input
                                         type="number"
                                         step="0.01"
                                         value={maxBuyIn}
                                         onChange={e => setMaxBuyIn(e.target.value)}
-                                        className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                                     />
                                 </div>
                             </>
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label className="text-white text-sm mb-2 block">Small Blind (USDC)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Small Blind (USDC)</label>
                             <input
                                 type="number"
                                 step="0.01"
                                 value={smallBlind}
                                 onChange={e => setSmallBlind(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
                         <div>
-                            <label className="text-white text-sm mb-2 block">Big Blind (USDC)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Big Blind (USDC)</label>
                             <input
                                 type="number"
                                 step="0.01"
                                 value={bigBlind}
                                 onChange={e => setBigBlind(e.target.value)}
-                                className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-3">
                         <button
                             onClick={handleCreateTable}
-                            disabled={isCreating || !cosmosWallet.address}
-                            className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold rounded-lg transition-colors"
+                            disabled={isCreating || !cosmosWallet.address || !hasEnoughUsdc}
+                            className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-sm"
                         >
-                            {isCreating ? "Creating Table..." : "🎮 Create Table"}
+                            {isCreating ? "Creating..." : !hasEnoughUsdc ? "Insufficient USDC" : "Create Table"}
                         </button>
                         <button
                             onClick={refetch}
                             disabled={isLoading}
-                            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                            className="px-3 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white rounded-lg transition-colors"
+                            title="Refresh tables"
                         >
-                            {isLoading ? "Loading..." : "Refresh"}
+                            <svg className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                            </svg>
                         </button>
                     </div>
 
-                    {!cosmosWallet.address && <p className="mt-3 text-yellow-400 text-sm">⚠️ Please connect your Block52 wallet first</p>}
+                    {!cosmosWallet.address && <p className="mt-2 text-yellow-400 text-xs">Connect your Block52 wallet to create tables</p>}
+                    {cosmosWallet.address && hasEnoughUsdc && (
+                        <p className="mt-2 text-green-400 text-xs">
+                            ✓ You have enough USDC to create a table
+                        </p>
+                    )}
                 </div>
 
                 {/* Tables List */}
                 <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
                     <div className="px-6 py-4 bg-gray-900 border-b border-gray-700">
-                        <h2 className="text-xl font-bold text-white">Poker Tables</h2>
+                        <h2 className="text-xl font-bold text-white">Tables</h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-900">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Table ID</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Created</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Game Type</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Players</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Buy-In Range</th>
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Buy In</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Blinds</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Action</th>
@@ -319,7 +444,7 @@ export default function TableAdminPage() {
                             <tbody className="divide-y divide-gray-700">
                                 {tables.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="px-6 py-8 text-center text-gray-400">
+                                        <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
                                             {isLoading ? "Loading tables..." : "No tables found. Create your first table!"}
                                         </td>
                                     </tr>
@@ -350,23 +475,11 @@ export default function TableAdminPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {table.createdAt ? (
-                                                    <div className="text-xs">
-                                                        <div className="text-white font-medium">{new Date(table.createdAt).toLocaleDateString()}</div>
-                                                        <div className="text-gray-400">
-                                                            {new Date(table.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-gray-500 text-xs">-</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="text-white capitalize">{table.gameType.replace("-", " ")}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <span className="text-white font-semibold">
-                                                    {table.minPlayers}-{table.maxPlayers}
+                                                    {playerCounts[table.gameId] ?? "-"}/{table.maxPlayers}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -483,6 +596,16 @@ export default function TableAdminPage() {
                     </div>
                 </div>
             )}
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-50 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain pointer-events-none" />
+                </div>
+            </div>
         </div>
     );
 }

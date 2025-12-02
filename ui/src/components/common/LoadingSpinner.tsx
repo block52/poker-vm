@@ -1,14 +1,14 @@
 import React from "react";
 
 interface LoadingSpinnerProps {
-    size?: "xs" | "sm" | "md" | "lg";
+    size?: "xs" | "sm" | "md" | "lg" | "xl";
     className?: string;
 }
 
 /**
  * Reusable loading spinner component for indicating pending operations
  *
- * @param size - Size of the spinner (xs: 3x3, sm: 4x4, md: 5x5, lg: 6x6)
+ * @param size - Size of the spinner (xs: 3x3, sm: 4x4, md: 5x5, lg: 6x6, xl: 10x10)
  * @param className - Additional CSS classes to apply
  */
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = "sm", className = "" }) => {
@@ -16,7 +16,8 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = "sm", cla
         xs: "h-3 w-3",
         sm: "h-4 w-4",
         md: "h-5 w-5",
-        lg: "h-6 w-6"
+        lg: "h-6 w-6",
+        xl: "h-10 w-10"
     };
 
     return (

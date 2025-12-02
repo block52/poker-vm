@@ -18,7 +18,6 @@ describe("Raise Action", () => {
     let player2: Player; // Big blind player
     let player3: Player; // Player who made the bet
 
-    const SEVEN_TOKENS = 700000000000000000n;
     const THREE_TOKENS = 300000000000000000n;
 
     beforeEach(() => {

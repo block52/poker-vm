@@ -29,7 +29,6 @@ export { useWinnerInfo } from "./useWinnerInfo";
 
 // Cosmos hooks
 export { useCosmosGameState } from "./useCosmosGameState";
-export { useGameActions } from "./useGameActions";
 export { useSitAndGoPlayerResults } from "./useSitAndGoPlayerResults";
 
 // Default export hooks

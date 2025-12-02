@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
 import { calculatePotBetAmount } from "../utils/calculatePotBetAmount";
 import { LoadingSpinner } from "./common";
-import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
+import { parseMicroToBigInt, microBigIntToUsdc, usdcToMicroBigInt } from "../constants/currency";
 
 // Import hooks from barrel file
 import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
@@ -99,12 +99,19 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const betAction = getActionByType(legalActions, PlayerActionType.BET);
     const raiseAction = getActionByType(legalActions, PlayerActionType.RAISE);
 
-    // Convert values from microunits (6 decimals) to USDC for display
-    const minBet = useMemo(() => (betAction ? microToUsdc(betAction.min || "0") : 0), [betAction]);
-    const maxBet = useMemo(() => (betAction ? microToUsdc(betAction.max || "0") : 0), [betAction]);
-    const minRaise = useMemo(() => (raiseAction ? microToUsdc(raiseAction.min || "0") : 0), [raiseAction]);
-    const maxRaise = useMemo(() => (raiseAction ? microToUsdc(raiseAction.max || "0") : 0), [raiseAction]);
-    const callAmount = useMemo(() => (callAction ? microToUsdc(callAction.min || "0") : 0), [callAction]);
+    // Store amounts as bigint internally (in micro-units, 10^6 precision)
+    const minBetMicro = useMemo(() => parseMicroToBigInt(betAction?.min), [betAction]);
+    const maxBetMicro = useMemo(() => parseMicroToBigInt(betAction?.max), [betAction]);
+    const minRaiseMicro = useMemo(() => parseMicroToBigInt(raiseAction?.min), [raiseAction]);
+    const maxRaiseMicro = useMemo(() => parseMicroToBigInt(raiseAction?.max), [raiseAction]);
+    const callAmountMicro = useMemo(() => parseMicroToBigInt(callAction?.min), [callAction]);
+
+    // Convert to USDC (number) for display and slider (HTML range inputs need numbers)
+    const minBet = useMemo(() => microBigIntToUsdc(minBetMicro), [minBetMicro]);
+    const maxBet = useMemo(() => microBigIntToUsdc(maxBetMicro), [maxBetMicro]);
+    const minRaise = useMemo(() => microBigIntToUsdc(minRaiseMicro), [minRaiseMicro]);
+    const maxRaise = useMemo(() => microBigIntToUsdc(maxRaiseMicro), [maxRaiseMicro]);
+    const callAmount = useMemo(() => microBigIntToUsdc(callAmountMicro), [callAmountMicro]);
 
     // Helper function to wrap action handlers with loading state and transaction tracking
     const handleActionWithTransaction = async (actionName: string, actionFn: () => Promise<string | null>) => {
@@ -122,20 +129,9 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         }
     };
 
-    // // Do as bigint
-    // const bigintMinBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.min || "0", 18)) : 0n), [betAction]);
-    // const bigintMaxBet = useMemo(() => (betAction ? BigInt(ethers.formatUnits(betAction.max || "0", 18)) : 0n), [betAction]);
-    // const bigintMinRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.min || "0", 18)) : 0n), [raiseAction]);
-    // const bigintMaxRaise = useMemo(() => (raiseAction ? BigInt(ethers.formatUnits(raiseAction.max || "0", 18)) : 0n), [raiseAction]);
-    // const bigintCallAmount = useMemo(() => (callAction ? BigInt(ethers.formatUnits(callAction.min || "0", 18)) : 0n), [callAction]);
-
     const getStep = (): number => {
         return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
     };
-
-    // const getStep = (): bigint => {
-    //     return hasBetAction ? bigintMinBet : hasRaiseAction ? bigintMinRaise : 0n;
-    // };
 
     // These are the default amounts - initialize with proper minimum
     const initialAmount = hasBetAction ? (minBet > 0 ? minBet : 0) : minRaise > 0 ? minRaise : 0;
@@ -153,16 +149,20 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         ? raiseAmount < minBet || raiseAmount > maxBet
         : false;
 
-    // Get total pot for percentage calculations
+    // Get total pot for percentage calculations (in USDC for display)
     const totalPot = Number(formattedTotalPot) || 0;
+    // Also store pot in micro-units as bigint for calculations
+    const totalPotMicro = useMemo(() => usdcToMicroBigInt(totalPot), [totalPot]);
 
     // Dynamic class names based on validation state
     const inputFieldClassName = useMemo(() => `input-field ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
     const minMaxTextClassName = useMemo(() => `min-max-text ${isRaiseAmountInvalid ? "invalid" : ""}`, [isRaiseAmountInvalid]);
 
-    // Memoize expensive computations - convert from microunits (6 decimals) to USDC
-    const formattedSmallBlindAmount = useMemo(() => microToUsdc(smallBlindAction?.min || "0").toFixed(2), [smallBlindAction?.min]);
-    const formattedBigBlindAmount = useMemo(() => microToUsdc(bigBlindAction?.min || "0").toFixed(2), [bigBlindAction?.min]);
+    // Memoize expensive computations - convert from microunits (6 decimals) to USDC for display
+    const smallBlindMicro = useMemo(() => parseMicroToBigInt(smallBlindAction?.min), [smallBlindAction?.min]);
+    const bigBlindMicro = useMemo(() => parseMicroToBigInt(bigBlindAction?.min), [bigBlindAction?.min]);
+    const formattedSmallBlindAmount = useMemo(() => microBigIntToUsdc(smallBlindMicro).toFixed(2), [smallBlindMicro]);
+    const formattedBigBlindAmount = useMemo(() => microBigIntToUsdc(bigBlindMicro).toFixed(2), [bigBlindMicro]);
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
     const formattedMaxBetAmount = useMemo(() => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)), [hasBetAction, maxBet, maxRaise]);
 
@@ -213,16 +213,18 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     }, [hasRaiseAction, hasBetAction, minRaise, minBet]);
 
     // Handler functions for different actions - simplified
+    // All amounts are passed as bigint (micro-units) to the action hooks
     const handlePostSmallBlind = async () => {
         if (!tableId) return;
 
-        const smallBlindAmount = smallBlindAction?.min || gameOptions?.smallBlind;
-        if (!smallBlindAmount) return;
+        // Use the bigint amount directly, fallback to gameOptions if action not available
+        const sbAmount = smallBlindMicro > 0n ? smallBlindMicro : parseMicroToBigInt(gameOptions?.smallBlind);
+        if (sbAmount === 0n) return;
 
         await handleActionWithTransaction("small-blind", async () => {
             try {
-                console.log("🎰 Attempting to post small blind:", smallBlindAmount);
-                const result = await postSmallBlind(tableId, smallBlindAmount, currentNetwork);
+                console.log("🎰 Attempting to post small blind:", sbAmount.toString());
+                const result = await postSmallBlind(tableId, sbAmount, currentNetwork);
                 console.log("✅ Small blind posted successfully");
                 return result?.hash || null;
             } catch (error: any) {
@@ -236,12 +238,13 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const handlePostBigBlind = async () => {
         if (!tableId) return;
 
-        const bigBlindAmount = bigBlindAction?.min || gameOptions?.bigBlind;
-        if (!bigBlindAmount) return;
+        // Use the bigint amount directly, fallback to gameOptions if action not available
+        const bbAmount = bigBlindMicro > 0n ? bigBlindMicro : parseMicroToBigInt(gameOptions?.bigBlind);
+        if (bbAmount === 0n) return;
 
         await handleActionWithTransaction("big-blind", async () => {
             try {
-                const result = await postBigBlind(tableId, bigBlindAmount, currentNetwork);
+                const result = await postBigBlind(tableId, bbAmount, currentNetwork);
                 return result?.hash || null;
             } catch (error: any) {
                 console.error("❌ Failed to post big blind:", error);
@@ -253,12 +256,12 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const handleBet = async () => {
         if (!tableId) return;
 
-        // Convert amount to microunits (6 decimals for USDC on Cosmos)
-        const amountMicrounits = (raiseAmount * USDC_TO_MICRO).toString();
+        // Convert USDC display amount to micro-units (bigint)
+        const amountMicro = usdcToMicroBigInt(raiseAmount);
 
         await handleActionWithTransaction("bet", async () => {
             try {
-                const result = await betHand(tableId, amountMicrounits, currentNetwork);
+                const result = await betHand(tableId, amountMicro, currentNetwork);
                 return result?.hash || null;
             } catch (error: any) {
                 console.error("Failed to bet:", error);
@@ -270,12 +273,12 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
     const handleRaise = async () => {
         if (!tableId) return;
 
-        // Convert amount to microunits (6 decimals for USDC on Cosmos)
-        const amountMicrounits = (raiseAmount * USDC_TO_MICRO).toString();
+        // Convert USDC display amount to micro-units (bigint)
+        const amountMicro = usdcToMicroBigInt(raiseAmount);
 
         await handleActionWithTransaction("raise", async () => {
             try {
-                const result = await raiseHand(tableId, amountMicrounits, currentNetwork);
+                const result = await raiseHand(tableId, amountMicro, currentNetwork);
                 return result?.hash || null;
             } catch (error: any) {
                 console.error("Failed to raise:", error);
@@ -511,7 +514,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                                             }`}
                                             onClick={() =>
-                                                handleActionWithTransaction("call", () => handleCall(callAmount, tableId, currentNetwork))
+                                                handleActionWithTransaction("call", () => handleCall(callAmountMicro, tableId, currentNetwork))
                                             }
                                             disabled={loadingAction !== null}
                                         >
@@ -730,14 +733,15 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                                     className="btn-pot px-1 lg:px-2 py-1 lg:py-1.5 rounded-lg w-full border shadow-md text-[10px] lg:text-xs
                                                     transition-all duration-200 transform hover:scale-105"
                                                     onClick={() => {
-                                                        const potBet: bigint = calculatePotBetAmount({
+                                                        const potBetMicro: bigint = calculatePotBetAmount({
                                                             currentRound: gameState?.round || TexasHoldemRound.ANTE,
                                                             previousActions: gameState?.previousActions || [],
-                                                            callAmount: BigInt(callAmount || 0),
-                                                            pot: BigInt(totalPot || 0)
+                                                            callAmount: callAmountMicro,
+                                                            pot: totalPotMicro
                                                         });
 
-                                                        setRaiseAmountAbsolute(Number(potBet), "button");
+                                                        // Convert bigint micro-units to USDC for display
+                                                        setRaiseAmountAbsolute(microBigIntToUsdc(potBetMicro), "button");
                                                     }}
                                                     disabled={!isPlayerTurn}
                                                 >

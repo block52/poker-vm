@@ -3,9 +3,9 @@ import { SigningCosmosClient } from "@bitcoinbrisbane/block52";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
-import defaultLogo from "../assets/YOUR_CLUB.png";
 import { useNetwork } from "../context/NetworkContext";
 import { USDC_TO_MICRO, microToUsdc } from "../constants/currency";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 interface TestResult {
     functionName: string;
@@ -47,9 +47,6 @@ export default function TestSigningPage() {
     const [buyInAmount, setBuyInAmount] = useState("10000000"); // 10 usdc - matches sit-and-go default
     const [action, setAction] = useState("fold");
     const [actionAmount, setActionAmount] = useState("0");
-
-    const clubName = import.meta.env.VITE_CLUB_NAME || "Block52 Poker";
-    const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
 
     // Test accounts from genesis - Static addresses from TEST_ACTORS.md
     const TEST_ACCOUNTS = [
@@ -156,8 +153,8 @@ export default function TestSigningPage() {
                 restEndpoint: currentNetwork.rest,
                 chainId: "pokerchain",
                 prefix: "b52",
-                denom: "stake", // Native gas token for local testnet
-                gasPrice: "0stake", // Testnet has zero gas fees (minimum-gas-prices = "")
+                denom: "stake",
+                gasPrice: "0stake", // Gasless
                 wallet: hdWallet
             });
 
@@ -605,26 +602,18 @@ export default function TestSigningPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
-            <div className="w-full max-w-7xl">
+        <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
+            <AnimatedBackground />
+            <div className="w-full max-w-5xl relative z-10">
                 {/* Header */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <div className="flex items-center justify-end mb-4">
-                        <div className="flex items-center gap-4">
-                            <img src={clubLogo} alt={clubName} className="h-12" />
-                        </div>
-                    </div>
-                    <h1 className="text-4xl font-extrabold text-white mb-2">SigningCosmosClient Test Page</h1>
-                    <p className="text-gray-300">Test all SDK functions from Lucas's SigningCosmosClient</p>
+                <div className="mb-6">
+                    <h1 className="text-4xl font-extrabold text-white mb-2 text-center">Signing Cosmos Client Test Page</h1>
+                    <p className="text-gray-300 text-center">Test all SDK functions from Lucas's Signing Cosmos Client</p>
                 </div>
 
                 {/* Token Info Section */}
                 <div
-                    className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6"
-                    style={{
-                        backgroundColor: hexToRgba(colors.accent.glow, 0.1),
-                        border: `1px solid ${hexToRgba(colors.accent.glow, 0.3)}`
-                    }}
+                    className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6 bg-blue-900/20 border border-blue-700"
                 >
                     <h2 className="text-xl font-bold text-white mb-3">
                         💡 Where Do Test Tokens Come From?
@@ -979,7 +968,8 @@ export default function TestSigningPage() {
                                     <div className="ml-4 space-y-2">
                                         {balances.map((balance, idx) => {
                                             // Format balance with proper decimals (6 for micro-denominated tokens)
-                                            const isMicroDenom = balance.denom === "usdc";
+                                            // Both usdc and stake use 6 decimals (micro-units)
+                                            const isMicroDenom = balance.denom === "usdc" || balance.denom === "stake";
                                             const numericAmount = isMicroDenom ? microToUsdc(balance.amount) : Number(balance.amount);
 
                                             const displayAmount = numericAmount.toLocaleString("en-US", {
@@ -1007,9 +997,11 @@ export default function TestSigningPage() {
                                                         <span className="text-white font-medium">{balance.denom}</span>
                                                         {usdValue && <span className="text-gray-400 text-sm">≈ {usdValue}</span>}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 ml-1">
-                                                        {Number(balance.amount).toLocaleString("en-US")} micro-units
-                                                    </div>
+                                                    {balance.denom !== "stake" && (
+                                                        <div className="text-xs text-gray-500 ml-1">
+                                                            {Number(balance.amount).toLocaleString("en-US")} micro-units
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
@@ -1494,6 +1486,16 @@ export default function TestSigningPage() {
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
+                </div>
             </div>
         </div>
     );

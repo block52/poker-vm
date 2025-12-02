@@ -16,7 +16,8 @@ export class DealerPositionManager implements IDealerPositionManager {
      * Rotates dealer position to the next active player after each hand
      */
     private rotateDealer(): number {
-        const currentDealer = this.getCurrentDealerSeat();
+        // Use effective dealer position (the actual player who was dealer)
+        const currentDealer = this.getEffectiveDealerPosition();
         const activePlayers = this.game.findActivePlayers();
 
         // Find the next active player after the current dealer
@@ -144,7 +145,7 @@ export class DealerPositionManager implements IDealerPositionManager {
     /**
      * Handles dealer position when a new player joins
      */
-    public handlePlayerJoin(seat: number): void {
+    public handlePlayerJoin(_seat: number): void {
         // const activePlayers = this.game.findActivePlayers();
 
         // if (activePlayers.length === 1) {
@@ -179,18 +180,35 @@ export class DealerPositionManager implements IDealerPositionManager {
      */
     public getSmallBlindPosition(): number {
         const dealerSeat = this.getDealerPosition();
+        const activePlayers = this.game.findActivePlayers();
+
+        // Heads-up: effective dealer is the small blind
+        if (activePlayers.length === 2) {
+            return this.getEffectiveDealerPosition();
+        }
+
+        // 3+ players: small blind is next active player after dealer
         const sbPlayer = this.findNextActivePlayer(dealerSeat);
-        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : (this.game.maxPlayers % dealerSeat) + 1;
+        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : (dealerSeat % this.game.maxPlayers) + 1;
     }
 
     /**
      * Gets big blind position based on dealer and small blind
      */
     public getBigBlindPosition(): number {
+        const activePlayers = this.game.findActivePlayers();
+
+        // Heads-up: big blind is the non-dealer (next player after effective dealer)
+        if (activePlayers.length === 2) {
+            const effectiveDealer = this.getEffectiveDealerPosition();
+            const bbPlayer = this.findNextActivePlayer(effectiveDealer);
+            return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (effectiveDealer % this.game.maxPlayers) + 1;
+        }
+
+        // 3+ players: big blind is next active player after small blind
         const sbSeat = this.getSmallBlindPosition();
-        // Multi-player: big blind is next active player after small blind
         const bbPlayer = this.findNextActivePlayer(sbSeat);
-        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (this.game.maxPlayers % sbSeat) + 1;
+        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (sbSeat % this.game.maxPlayers) + 1;
     }
 
     /**
@@ -210,6 +228,24 @@ export class DealerPositionManager implements IDealerPositionManager {
     getCurrentDealerSeat(): number {
         // Access the dealer position from the game's positions object
         return this.game.dealerPosition;
+    }
+
+    /**
+     * Gets the effective dealer position (the actual player holding the button)
+     * If dealer seat is empty, finds the next active player after dealer button
+     */
+    private getEffectiveDealerPosition(): number {
+        const dealerSeat = this.getDealerPosition();
+        const dealerPlayer = this.game.getPlayerAtSeat(dealerSeat);
+
+        // If there's an active player at the dealer seat, they're the dealer
+        if (dealerPlayer && this.isPlayerActive(dealerPlayer)) {
+            return dealerSeat;
+        }
+
+        // Otherwise, find the next active player after the dealer button
+        const nextPlayer = this.findNextActivePlayer(dealerSeat);
+        return nextPlayer ? this.game.getPlayerSeatNumber(nextPlayer.address) : dealerSeat;
     }
 
     /**

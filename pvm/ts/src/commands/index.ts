@@ -1,12 +1,8 @@
 import { MeCommand } from "./meCommand";
-import { GameStateCommand } from "./cosmos/gameStateCommand";
-import { PerformActionCommand } from "./cosmos/performActionCommand";
 import { ISignedResponse } from "./interfaces";
 
 export {
-    GameStateCommand,
     MeCommand,
-    PerformActionCommand
 };
 
 // TypeScript's isolatedModules flag requires type-only exports to use 'export type'

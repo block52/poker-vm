@@ -11,6 +11,7 @@ import { useGameStateContext } from "../../../context/GameStateContext";
 import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
+import { getCardImageUrl } from "../../../utils/cardImages";
 import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
 
 const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
@@ -111,20 +112,18 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
             return (
                 <>
                     <img
-                        src={`/cards/${holeCards[0]}.svg`}
+                        src={getCardImageUrl(holeCards[0])}
                         width={60}
                         height={80}
                         className="mb-[11px]"
-                        onError={_e => console.error(`❌ Player ${index} card1 failed to load:`, `/cards/${holeCards[0]}.svg`)}
-                        // onLoad={() => console.log(`✅ Player ${index} card1 loaded:`, `/cards/${holeCards[0]}.svg`)}
+                        onError={_e => console.error(`❌ Player ${index} card1 failed to load:`, getCardImageUrl(holeCards[0]))}
                     />
                     <img
-                        src={`/cards/${holeCards[1]}.svg`}
+                        src={getCardImageUrl(holeCards[1])}
                         width={60}
                         height={80}
                         className="mb-[11px]"
-                        onError={_e => console.error(`❌ Player ${index} card2 failed to load:`, `/cards/${holeCards[1]}.svg`)}
-                        // onLoad={() => console.log(`✅ Player ${index} card2 loaded:`, `/cards/${holeCards[1]}.svg`)}
+                        onError={_e => console.error(`❌ Player ${index} card2 failed to load:`, getCardImageUrl(holeCards[1]))}
                     />
                 </>
             );

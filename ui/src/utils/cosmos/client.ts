@@ -5,13 +5,16 @@
  * with singleton pattern for the frontend.
  */
 
-import { CosmosClient, getDefaultCosmosConfig as getDefaultCosmosConfigSDK, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
-import { getCosmosMnemonic } from "./storage";
+import { CosmosClient, createSigningClientFromMnemonic, getDefaultCosmosConfig as getDefaultCosmosConfigSDK, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getCosmosAddress, getCosmosMnemonic } from "./storage";
 import { getCosmosUrls, type NetworkEndpoints } from "./urls";
 
 // Re-export types and constants from SDK
 export type { CosmosClient };
 export { COSMOS_CONSTANTS };
+
+// Re-export getCosmosUrls for REST endpoint queries
+export { getCosmosUrls };
 
 /**
  * Get default cosmos configuration with environment variable overrides
@@ -96,3 +99,40 @@ export const clearCosmosClient = (): void => {
     clientInstance = null;
     currentEndpoints = null;
 };
+
+/**
+ * Creates a signing client for performing player actions on the Cosmos blockchain.
+ *
+ * This is a wrapper around createSigningClientFromMnemonic that:
+ * - Retrieves the mnemonic from storage
+ * - Configures the client with the correct network endpoints
+ * - Uses consistent chain configuration (chainId, prefix, denom, gasPrice)
+ *
+ * @param network - The network configuration to use
+ * @returns Promise with the signing client
+ * @throws Error if Cosmos wallet is not initialized (no mnemonic or address)
+ */
+export async function getSigningClient(network: NetworkEndpoints) {
+    const userAddress = getCosmosAddress();
+    const mnemonic = getCosmosMnemonic();
+
+    if (!userAddress || !mnemonic) {
+        throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
+    }
+
+    const { rpcEndpoint, restEndpoint } = getCosmosUrls(network);
+
+    const signingClient = await createSigningClientFromMnemonic(
+        {
+            rpcEndpoint,
+            restEndpoint,
+            chainId: COSMOS_CONSTANTS.CHAIN_ID,
+            prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
+            denom: "stake",
+            gasPrice: "0stake" // Gasless
+        },
+        mnemonic
+    );
+
+    return { signingClient, userAddress };
+}

@@ -13,6 +13,7 @@ export {
     getCosmosClient,
     clearCosmosClient,
     getDefaultCosmosConfig,
+    getSigningClient,
     COSMOS_CONSTANTS,
     type CosmosClient
 } from "./client";
@@ -34,3 +35,9 @@ export {
     isValidSeedPhrase,
     getTestAddresses
 } from "./helpers";
+
+// Signing utilities for authenticated WebSocket queries
+export {
+    signQueryMessage,
+    createAuthPayload
+} from "./signing";

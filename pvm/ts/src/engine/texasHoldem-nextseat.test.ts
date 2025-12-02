@@ -38,8 +38,8 @@ describe("Texas Holdem Game - Next seat", () => {
             }
 
             // Use reflection to access private field
-            const gameAsAny = game as any;
-            gameAsAny._playersMap = players;
+            const gameWithPrivates = game as unknown as { _playersMap: Map<number, Player | null> };
+            gameWithPrivates._playersMap = players;
 
             // Should find seat 1 as available
             expect(game.findNextEmptySeat()).toBe(1);
@@ -56,8 +56,8 @@ describe("Texas Holdem Game - Next seat", () => {
             customPlayers.set(5, new Player("0x5000000000000000000000000000000000000000", undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE));
 
             // Use reflection to access private field
-            const gameAsAny = game as any;
-            gameAsAny._playersMap = customPlayers;
+            const gameWithPrivates = game as unknown as { _playersMap: Map<number, Player | null> };
+            gameWithPrivates._playersMap = customPlayers;
 
             // Next available seat should be 3
             expect(game.findNextEmptySeat()).toBe(3);
@@ -74,8 +74,8 @@ describe("Texas Holdem Game - Next seat", () => {
             }
 
             // Use reflection to access private field
-            const gameAsAny = game as any;
-            gameAsAny._playersMap = customPlayers;
+            const gameWithPrivates = game as unknown as { _playersMap: Map<number, Player | null> };
+            gameWithPrivates._playersMap = customPlayers;
 
             // Should return -1 when no seats are available
             expect(game.findNextEmptySeat()).toBe(-1);
@@ -92,8 +92,8 @@ describe("Texas Holdem Game - Next seat", () => {
             customPlayers.set(4, new Player("0x4000000000000000000000000000000000000000", undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE));
 
             // Use reflection to access private field
-            const gameAsAny = game as any;
-            gameAsAny._playersMap = customPlayers;
+            const gameWithPrivates = game as unknown as { _playersMap: Map<number, Player | null> };
+            gameWithPrivates._playersMap = customPlayers;
 
             // Should find seat 3 as available even though it's explicitly null
             expect(game.findNextEmptySeat()).toBe(3);

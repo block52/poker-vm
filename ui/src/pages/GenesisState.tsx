@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import useCosmosWallet from "../hooks/useCosmosWallet";
+import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 interface GenesisAccount {
     address: string;
@@ -52,8 +54,10 @@ export default function GenesisState() {
     const [loadingBridgeState, setLoadingBridgeState] = useState(false);
     const cosmosWallet = useCosmosWallet();
     const cosmosAddress = cosmosWallet.address;
+    const { currentNetwork } = useNetwork();
 
-    const COSMOS_REST_URL = import.meta.env.VITE_COSMOS_REST_URL || "http://localhost:1317";
+    // Use REST endpoint from selected network (NetworkSelector dropdown)
+    const COSMOS_REST_URL = currentNetwork.rest;
 
     // Derive addresses from mnemonics on mount
     useEffect(() => {
@@ -194,8 +198,9 @@ export default function GenesisState() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen p-8 relative">
+                <AnimatedBackground />
+                <div className="max-w-7xl mx-auto relative z-10">
                     <div className="text-center text-white text-xl">
                         Loading genesis state...
                     </div>
@@ -206,8 +211,9 @@ export default function GenesisState() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen p-8 relative">
+                <AnimatedBackground />
+                <div className="max-w-7xl mx-auto relative z-10">
                     <div className="bg-red-900/30 border border-red-500 rounded-lg p-6">
                         <h2 className="text-red-400 text-xl font-bold mb-2">Error Loading Genesis State</h2>
                         <p className="text-red-300">{error}</p>
@@ -224,8 +230,9 @@ export default function GenesisState() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto space-y-8 relative z-10">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-lg p-8 border border-blue-500/30">
                     <h1 className="text-4xl font-bold text-white mb-2">🔷 Genesis State - Block 0</h1>
@@ -609,6 +616,16 @@ export default function GenesisState() {
                     >
                         🔄 Refresh Genesis State
                     </button>
+                </div>
+            </div>
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                 </div>
             </div>
         </div>

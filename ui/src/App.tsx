@@ -14,6 +14,7 @@ import BlocksPage from "./pages/explorer/BlocksPage";
 import BlockDetailPage from "./pages/explorer/BlockDetailPage";
 import TransactionPage from "./pages/explorer/TransactionPage";
 import AddressPage from "./pages/explorer/AddressPage";
+import AllAccountsPage from "./pages/explorer/AllAccountsPage";
 import DistributionPage from "./pages/explorer/DistributionPage";
 import TestSigningPage from "./pages/TestSigningPage";
 import ManualBridgeTrigger from "./pages/ManualBridgeTrigger";
@@ -21,9 +22,10 @@ import BridgeAdminDashboard from "./pages/BridgeAdminDashboard";
 import WithdrawalDashboard from "./pages/WithdrawalDashboard";
 import TableAdminPage from "./pages/TableAdminPage";
 import GenesisState from "./pages/GenesisState";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import FaucetPage from "./pages/FaucetPage";
 import { TestSdk } from "./test-sdk";
 import { GameStateProvider } from "./context/GameStateContext";
-import { NetworkProvider } from "./context/NetworkContext";
 import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
 import FaviconSetter from "./components/FaviconSetter";
@@ -67,20 +69,34 @@ function AppContent() {
             <Routes>
                 <Route path="/test-sdk" element={<TestSdk />} />
                 <Route path="/table/:id" element={<Table />} />
-                <Route path="/table/admin" element={<TableAdminPage />} />
+                <Route path="/table/admin" element={<TableAdminPage />} /> {/* Legacy - keep for backwards compat */}
                 <Route path="/deposit" element={<Deposit />} />
                 <Route path="/qr-deposit" element={<QRDeposit />} />
                 <Route path="/wallet" element={<CosmosWalletPage />} />
+                {/* User-facing routes */}
+                <Route path="/bridge/withdrawals" element={<WithdrawalDashboard />} />
+
+                {/* Admin routes - consolidated under /admin */}
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/genesis" element={<GenesisState />} />
+                <Route path="/admin/bridge" element={<BridgeAdminDashboard />} />
+                <Route path="/admin/bridge-manual" element={<ManualBridgeTrigger />} />
+                <Route path="/admin/tables" element={<TableAdminPage />} />
+                <Route path="/admin/test-signing" element={<TestSigningPage />} />
+
+                {/* Legacy routes - redirect to new admin paths */}
                 <Route path="/test-signing" element={<TestSigningPage />} />
                 <Route path="/bridge/manual" element={<ManualBridgeTrigger />} />
                 <Route path="/bridge/admin" element={<BridgeAdminDashboard />} />
-                <Route path="/bridge/withdrawals" element={<WithdrawalDashboard />} />
                 <Route path="/genesis" element={<GenesisState />} />
                 <Route path="/explorer" element={<BlocksPage />} />
                 <Route path="/explorer/block/:height" element={<BlockDetailPage />} />
                 <Route path="/explorer/tx/:hash" element={<TransactionPage />} />
+                <Route path="/explorer/address" element={<AddressPage />} />
                 <Route path="/explorer/address/:address" element={<AddressPage />} />
+                <Route path="/explorer/accounts" element={<AllAccountsPage />} />
                 <Route path="/explorer/distribution" element={<DistributionPage />} />
+                <Route path="/faucet" element={<FaucetPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer
@@ -106,11 +122,9 @@ function App() {
         <Router>
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-                    <NetworkProvider>
-                        <GameStateProvider>
-                            <AppContent />
-                        </GameStateProvider>
-                    </NetworkProvider>
+                    <GameStateProvider>
+                        <AppContent />
+                    </GameStateProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </Router>

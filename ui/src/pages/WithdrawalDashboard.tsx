@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { createSigningClientFromMnemonic, SigningCosmosClient } from "@bitcoinbrisbane/block52";
-import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
-import { getCosmosUrls } from "../utils/cosmos/urls";
+import { getSigningClient } from "../utils/cosmos/client";
 import { useAccount } from "wagmi";
+import { BRIDGE_WITHDRAWAL_ABI } from "../utils/bridge/abis";
+import { base64ToHex } from "../utils/encodingUtils";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 /**
  * WithdrawalDashboard - Interface for managing USDC withdrawals to Base Chain
@@ -18,26 +19,6 @@ import { useAccount } from "wagmi";
  * - Complete signed withdrawals on Base chain
  * - 2-step withdrawal flow with automatic validator signing
  */
-
-// Bridge contract ABI for withdrawals
-const BRIDGE_ABI = [
-    "function withdraw(uint256 amount, address receiver, bytes32 nonce, bytes calldata signature) external"
-];
-
-// Helper function to format USDC amounts (6 decimals on Cosmos = micro)
-const formatUSDC = (microAmount: string | number): string => {
-    return formatMicroAsUsdc(microAmount, 6);
-};
-
-// Helper function to convert base64 signature to hex
-const base64ToHex = (base64: string): string => {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-    return "0x" + Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
-};
 
 interface Withdrawal {
     nonce: string;
@@ -86,26 +67,7 @@ export default function WithdrawalDashboard() {
         setIsLoading(true);
 
         try {
-            // Get mnemonic from storage
-            const mnemonic = getCosmosMnemonic();
-            if (!mnemonic) {
-                throw new Error("No mnemonic found in storage");
-            }
-
-            // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
-            const signingClient: SigningCosmosClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "usdc",
-                    gasPrice: "0.025stake"
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             // Fetch withdrawal requests for this user
             const withdrawalRequests = await signingClient.listWithdrawalRequests(cosmosWallet.address);
@@ -118,7 +80,7 @@ export default function WithdrawalDashboard() {
                 cosmosAddress: wr.cosmos_address,
                 baseAddress: wr.base_address,
                 amount: wr.amount,
-                amountFormatted: formatUSDC(wr.amount),
+                amountFormatted: formatMicroAsUsdc(wr.amount, 6),
                 status: wr.status as "pending" | "signed" | "completed",
                 signature: wr.signature || undefined
             }));
@@ -158,26 +120,7 @@ export default function WithdrawalDashboard() {
         setIsInitiating(true);
 
         try {
-            // Get mnemonic from storage
-            const mnemonic = getCosmosMnemonic();
-            if (!mnemonic) {
-                throw new Error("No mnemonic found in storage");
-            }
-
-            // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "usdc",
-                    gasPrice: "0.025stake"
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             console.log("🌉 Initiating withdrawal:", {
                 baseAddress: withdrawalBaseAddress,
@@ -234,7 +177,7 @@ export default function WithdrawalDashboard() {
             const signer = await provider.getSigner();
 
             // Create contract instance
-            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_ABI, signer);
+            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_WITHDRAWAL_ABI, signer);
 
             // Convert base64 signature to hex format for ethers
             const hexSignature = withdrawal.signature ? base64ToHex(withdrawal.signature) : "0x";
@@ -320,10 +263,11 @@ export default function WithdrawalDashboard() {
     const completedCount = withdrawals.filter(w => w.status === "completed").length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">USDC Withdrawals</h1>
                     <p className="text-gray-400">
                         Withdraw USDC from Cosmos to Base Chain
@@ -531,6 +475,16 @@ export default function WithdrawalDashboard() {
                         <li>Make sure your Base wallet is connected before completing withdrawals</li>
                         <li>Each withdrawal requires two transactions: one on Cosmos, one on Base</li>
                     </ul>
+                </div>
+            </div>
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                 </div>
             </div>
 

@@ -40,22 +40,26 @@ export const useGameOptions = (): GameOptionsReturn => {
                 console.error("⚠️ Missing game options fields from server:", missingFields);
             }
             
-            // Only return options if we have the critical required fields
-            if (!options.smallBlind || !options.bigBlind || options.timeout === undefined || options.timeout === null) {
-                console.error("⚠️ Cannot display game options: missing critical fields (smallBlind, bigBlind, or timeout)");
+            // Only return options if we have the critical required fields (smallBlind and bigBlind)
+            // timeout is optional - use default of 30 seconds if not provided
+            if (!options.smallBlind || !options.bigBlind) {
+                console.error("⚠️ Cannot display game options: missing critical fields (smallBlind or bigBlind)");
                 return null; // Return null during loading or when data is incomplete
             }
+
+            // Use default timeout of 30 seconds if not provided
+            const timeout = options.timeout ?? 30;
             
-            // Return the actual game options from the server without defaults
+            // Return the actual game options from the server with defaults for optional fields
             // Cast as Required<GameOptionsDTO> since we've already checked critical fields exist
             return {
                 minBuyIn: options.minBuyIn!,
-                maxBuyIn: options.maxBuyIn!, 
+                maxBuyIn: options.maxBuyIn!,
                 maxPlayers: options.maxPlayers!,
                 minPlayers: options.minPlayers!,
                 smallBlind: options.smallBlind,
                 bigBlind: options.bigBlind,
-                timeout: options.timeout,
+                timeout: timeout, // Use default timeout if not provided
                 type: options.type!,
                 otherOptions: options.otherOptions!
             } as Required<GameOptionsDTO>;

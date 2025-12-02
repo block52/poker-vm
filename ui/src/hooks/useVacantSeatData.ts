@@ -2,6 +2,7 @@ import React from "react";
 import { useGameStateContext } from "../context/GameStateContext";
 import { PlayerDTO } from "@bitcoinbrisbane/block52";
 import { VacantSeatResponse } from "../types/index";
+import { isValidPlayerAddress } from "../utils/addressUtils";
 
 /**
  * Custom hook to manage data for vacant seats
@@ -34,8 +35,7 @@ export const useVacantSeatData = (): VacantSeatResponse => {
         (seatIndex: number) => {
             return !players.some(
                 (player: PlayerDTO) => player.seat === seatIndex &&
-                player.address &&
-                player.address.trim() !== ""
+                isValidPlayerAddress(player.address)
             );
         },
         [players]
@@ -50,7 +50,7 @@ export const useVacantSeatData = (): VacantSeatResponse => {
         
         const occupiedSeats = new Set(
             players
-                .filter(player => player.address && player.address.trim() !== "")
+                .filter(player => isValidPlayerAddress(player.address))
                 .map(player => player.seat)
         );
         
@@ -67,9 +67,19 @@ export const useVacantSeatData = (): VacantSeatResponse => {
     // Function to check if a user can join a specific seat
     const canJoinSeat = React.useCallback(
         (seatIndex: number) => {
-            return !isUserAlreadyPlaying && isSeatVacant(seatIndex);
+            const vacant = isSeatVacant(seatIndex);
+            const canJoin = !isUserAlreadyPlaying && vacant;
+            console.log("🔍 useVacantSeatData.canJoinSeat:", {
+                seatIndex,
+                isUserAlreadyPlaying,
+                isSeatVacant: vacant,
+                canJoin,
+                userAddress,
+                playersCount: players.length
+            });
+            return canJoin;
         },
-        [isSeatVacant, isUserAlreadyPlaying]
+        [isSeatVacant, isUserAlreadyPlaying, userAddress, players.length]
     );
 
     // Get array of all empty seat indexes that the user can join

@@ -4,6 +4,7 @@ import { getCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { ClickableAddress } from "../../components/explorer/ClickableAddress";
+import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 
 // Types from CosmosClient
 interface CosmosBlock {
@@ -273,8 +274,9 @@ export default function BlockDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden bg-[#2c3245]">
-                <div className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center" style={containerStyle}>
+            <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
+                <AnimatedBackground />
+                <div className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center relative z-10" style={containerStyle}>
                     <div className="flex justify-center mb-4">
                         <svg
                             className="animate-spin h-10 w-10"
@@ -299,8 +301,9 @@ export default function BlockDetailPage() {
 
     if (error || !block) {
         return (
-            <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden bg-[#2c3245]">
-                <div className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center max-w-lg" style={containerStyle}>
+            <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden">
+                <AnimatedBackground />
+                <div className="backdrop-blur-md p-8 rounded-xl shadow-2xl text-center max-w-lg relative z-10" style={containerStyle}>
                     <div className="flex justify-center mb-4">
                         <svg className="h-16 w-16" style={{ color: colors.accent.danger }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -326,8 +329,9 @@ export default function BlockDetailPage() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center relative overflow-hidden bg-[#2c3245] p-6">
-            <div className="w-full max-w-7xl">
+        <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
+            <AnimatedBackground />
+            <div className="w-full max-w-7xl relative z-10">
                 {/* Header with Back Button */}
                 <div className="mb-6">
                     <button

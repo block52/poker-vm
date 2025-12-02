@@ -1,15 +1,23 @@
-import { getServerInstance, Server } from "../core/server";
 import { ISignedCommand, ISignedResponse } from "./interfaces";
 
-export class MeCommand implements ISignedCommand<any> {
-    private readonly server: Server;
+const VERSION = "1.0.3";
+const PORT = 8545;
 
-    constructor() {
-        this.server = getServerInstance();
-    }
+interface ServerInfo {
+    name: string;
+    version: string;
+    url: string;
+}
 
-    public async execute(): Promise<ISignedResponse<any>> {
-        const info = await this.server.me();
+export class MeCommand implements ISignedCommand<ServerInfo> {
+    constructor() { }
+
+    public async execute(): Promise<ISignedResponse<ServerInfo>> {
+        const info: ServerInfo = {
+            name: "pvm-typescript",
+            version: VERSION,
+            url: `http://localhost:${PORT}`
+        };
         return {
             data: info,
             signature: "" // No signing required for basic server info

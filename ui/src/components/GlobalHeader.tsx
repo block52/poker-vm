@@ -10,7 +10,30 @@ interface MenuItem {
     label: string;
     icon: string;
     badge?: string;
+    iconOnly?: boolean; // Show only icon, hide label (for discreet menu items)
+    newTab?: boolean; // Open link in new tab
 }
+
+// Reusable component for network status and selector (extracted to avoid recreation on every render)
+const NetworkStatusAndSelector: React.FC<{ latestBlockHeight: string | null; hasError: boolean }> = ({ latestBlockHeight, hasError }) => (
+    <>
+        {/* Block Height Indicator - clickable link to block explorer */}
+        {latestBlockHeight && (
+            <Link
+                to={`/explorer/block/${latestBlockHeight}`}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
+            >
+                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
+                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
+                    #{latestBlockHeight}
+                </span>
+            </Link>
+        )}
+
+        <NetworkSelector />
+    </>
+);
 
 export const GlobalHeader: React.FC = () => {
     const location = useLocation();
@@ -56,24 +79,21 @@ export const GlobalHeader: React.FC = () => {
         return null;
     }
 
-    const menuItems: MenuItem[] = [
-        { path: "/wallet", label: "Block52 Wallet", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
-        { path: "/genesis", label: "Genesis State", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
-        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14", badge: "50" },
-        { path: "/bridge/manual", label: "Manual Bridge", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" },
-        { path: "/bridge/withdrawals", label: "Withdrawals", icon: "M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" },
-        { path: "/test-signing", label: "Test Signing", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
-        {
-            path: "/bridge/admin",
-            label: "Bridge Admin",
-            icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-        },
-        {
-            path: "/table/admin",
-            label: "Table Admin",
-            icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-        }
+    // User-facing menu items (always visible)
+    // Note: Wallet removed - accessible via settings button in Dashboard
+    // Note: Withdrawals moved to Admin > Bridge Management section
+    const userMenuItems: MenuItem[] = [
+        { path: "/admin/tables", label: "Tables", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" },
+        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14", newTab: true }
     ];
+
+    // Admin/dev menu items - icon only for discreet access
+    const adminMenuItems: MenuItem[] = [
+        { path: "/admin", label: "Admin", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z", iconOnly: true }
+    ];
+
+    // User-facing menu items only (admin moved to right side of header)
+    const menuItems: MenuItem[] = [...userMenuItems];
 
     return (
         <header
@@ -85,29 +105,33 @@ export const GlobalHeader: React.FC = () => {
             }}
         >
             <div className="container mx-auto px-4 py-3">
-                <div className="flex items-center justify-between">
-                    {/* Left side - Logo/Title */}
+                {/* Desktop Layout: 3-column flexbox with logo+nav on left, network status on right */}
+                <div className="hidden lg:flex items-center justify-between">
+                    {/* Left: Logo + Navigation */}
                     <div className="flex items-center gap-6">
                         <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
                             {import.meta.env.VITE_CLUB_NAME || "Block 52"}
                         </Link>
 
                         {/* Desktop Navigation */}
-                        <nav className="hidden lg:flex items-center gap-1">
+                        <nav className="flex items-center gap-1">
                             {menuItems.map(item => (
                                 <Link
                                     key={item.path}
                                     to={item.path}
-                                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80 flex items-center gap-1.5"
+                                    target={item.newTab ? "_blank" : undefined}
+                                    rel={item.newTab ? "noopener noreferrer" : undefined}
+                                    className={`${item.iconOnly ? "px-2" : "px-3"} py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80 flex items-center gap-1.5`}
                                     style={{
                                         color: location.pathname === item.path ? colors.brand.primary : colors.ui.textSecondary,
                                         backgroundColor: location.pathname === item.path ? hexToRgba(colors.brand.primary, 0.1) : "transparent"
                                     }}
+                                    title={item.iconOnly ? item.label : undefined}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
                                     </svg>
-                                    {item.label}
+                                    {!item.iconOnly && item.label}
                                     {item.badge && (
                                         <span
                                             className="ml-1 px-1.5 py-0.5 rounded text-xs font-semibold"
@@ -124,27 +148,46 @@ export const GlobalHeader: React.FC = () => {
                         </nav>
                     </div>
 
+                    {/* Right: Admin + Network Status & Selector */}
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                        <NetworkStatusAndSelector latestBlockHeight={latestBlockHeight} hasError={hasError} />
+                        {/* Admin icon - discreet access */}
+                        <Link
+                            to="/admin"
+                            className="p-2 rounded-lg transition-all duration-200 hover:opacity-80"
+                            style={{
+                                color: location.pathname === "/admin" ? colors.brand.primary : colors.ui.textSecondary,
+                                backgroundColor: location.pathname === "/admin" ? hexToRgba(colors.brand.primary, 0.1) : "transparent"
+                            }}
+                            title="Admin"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            </svg>
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Mobile/Tablet Layout: Keep original structure */}
+                <div className="flex lg:hidden items-center justify-between">
+                    {/* Left side - Logo/Title */}
+                    <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
+                        {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                    </Link>
+
                     {/* Right side - Network Selector & Mobile Menu */}
                     <div className="flex items-center gap-4">
-                        {/* Block Height Indicator */}
-                        {latestBlockHeight && (
-                            <div
-                                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                                style={{ backgroundColor: hexToRgba(colors.ui.bgDark, 0.6) }}
-                            >
-                                <div className={`w-2 h-2 rounded-full animate-pulse ${hasError ? "bg-red-400" : "bg-green-400"}`}></div>
-                                <span className="text-sm font-mono" style={{ color: colors.ui.textSecondary }}>
-                                    #{latestBlockHeight}
-                                </span>
-                            </div>
-                        )}
-
-                        <NetworkSelector />
+                        <div className="hidden md:flex items-center gap-4">
+                            <NetworkStatusAndSelector latestBlockHeight={latestBlockHeight} hasError={hasError} />
+                        </div>
+                        <div className="md:hidden">
+                            <NetworkSelector />
+                        </div>
 
                         {/* Mobile Menu Button */}
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="lg:hidden p-2 rounded-lg hover:opacity-80 transition-opacity"
+                            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
                             style={{ color: colors.brand.primary }}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,10 +205,12 @@ export const GlobalHeader: React.FC = () => {
                 {isMenuOpen && (
                     <nav className="lg:hidden mt-4 pb-2 border-t pt-4" style={{ borderColor: hexToRgba(colors.brand.primary, 0.2) }}>
                         <div className="flex flex-col gap-2">
-                            {menuItems.map(item => (
+                            {[...menuItems, ...adminMenuItems].map(item => (
                                 <Link
                                     key={item.path}
                                     to={item.path}
+                                    target={item.newTab ? "_blank" : undefined}
+                                    rel={item.newTab ? "noopener noreferrer" : undefined}
                                     onClick={() => setIsMenuOpen(false)}
                                     className="px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80 flex items-center gap-2"
                                     style={{

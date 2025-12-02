@@ -274,9 +274,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             console.log("  joinOptions.amount:", joinOptions.amount);
             console.log("  tableId:", tableId);
 
-            joinTable(tableId || "default-game-id", joinOptions, currentNetwork);
+            const result = await joinTable(tableId || "default-game-id", joinOptions, currentNetwork);
+            console.log("✅ BuyInModal - Join successful:", result);
 
-            // Navigate to table
+            // Navigate to table after successful join
             navigate(`/table/${tableId}`);
         } catch (error) {
             console.error("❌ Error joining random seat:", error);
@@ -299,8 +300,12 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     ]);
 
     return (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-            <div className="p-8 rounded-xl shadow-2xl w-96 overflow-hidden relative" style={STATIC_STYLES.modal}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={onClose} />
+
+            {/* Modal */}
+            <div className="relative p-8 rounded-xl shadow-2xl w-96 overflow-hidden" style={STATIC_STYLES.modal}>
                 {/* Hexagon pattern background */}
                 <HexagonPattern />
 

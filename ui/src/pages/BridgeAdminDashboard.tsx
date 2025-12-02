@@ -1,12 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
-import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
-import { getCosmosMnemonic } from "../utils/cosmos/storage";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
-import { getCosmosUrls } from "../utils/cosmos/urls";
+import { getSigningClient, getCosmosUrls } from "../utils/cosmos/client";
+import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
+
+// Minimum STAKE needed for gas fees (transaction costs ~2000 stake)
+const MIN_STAKE_FOR_GAS = 2000;
 
 /**
  * BridgeAdminDashboard - Admin interface for viewing and processing bridge deposits
@@ -17,14 +22,6 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
  * - Process individual deposits
  * - Filter by status (all/processed/pending)
  */
-
-// Bridge contract ABI for deposits mapping
-const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string memory account, uint256 amount)"];
-
-// Helper function to format USDC amounts (6 decimals)
-const formatUSDC = (microAmount: string | number): string => {
-    return formatMicroAsUsdc(microAmount, 6);
-};
 
 interface Deposit {
     index: number;
@@ -51,6 +48,16 @@ export default function BridgeAdminDashboard() {
     // Ethereum configuration
     const bridgeContractAddress = "0xcc391c8f1aFd6DB5D8b0e064BA81b1383b14FE5B"; // Base Chain production
     const ethRpcUrl = import.meta.env.VITE_ALCHEMY_URL || import.meta.env.VITE_MAINNET_RPC_URL;
+
+    // Get STAKE balance from wallet for gas fees
+    const stakeBalance = useMemo(() => {
+        const balance = cosmosWallet.balance.find(b => b.denom === "stake");
+        return balance ? parseInt(balance.amount) : 0;
+    }, [cosmosWallet.balance]);
+
+    // Check if user has enough STAKE for gas fees
+    const hasEnoughStake = stakeBalance >= MIN_STAKE_FOR_GAS;
+    const stakeBalanceFormatted = (stakeBalance / 1000000).toFixed(2);
 
     // Validate Alchemy URL is configured
     useEffect(() => {
@@ -128,7 +135,7 @@ export default function BridgeAdminDashboard() {
         try {
             // Connect to Ethereum
             const provider = new ethers.JsonRpcProvider(ethRpcUrl);
-            const contract = new ethers.Contract(bridgeContractAddress, DEPOSITS_ABI, provider);
+            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_DEPOSITS_ABI, provider);
 
             // Calculate start and end indices based on current page
             const startIndex = (currentPage - 1) * itemsPerPage;
@@ -150,7 +157,7 @@ export default function BridgeAdminDashboard() {
                         index: i,
                         recipient: account,
                         amount: amount.toString(),
-                        amountFormatted: formatUSDC(amount.toString()),
+                        amountFormatted: formatMicroAsUsdc(amount.toString(), 6),
                         status: "loading" // Will check processing status next
                     });
                 } catch (err: any) {
@@ -198,26 +205,7 @@ export default function BridgeAdminDashboard() {
         setProcessingIndex(depositIndex);
 
         try {
-            // Get mnemonic from storage
-            const mnemonic = getCosmosMnemonic();
-            if (!mnemonic) {
-                throw new Error("No mnemonic found in storage");
-            }
-
-            // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "usdc",
-                    gasPrice: "0.025stake"
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             console.log("🌉 Processing deposit index:", depositIndex);
 
@@ -266,11 +254,13 @@ export default function BridgeAdminDashboard() {
         loadDeposits();
     }, [currentPage, itemsPerPage, loadDeposits]);
 
-    // Filter deposits based on selected filter
-    const filteredDeposits = deposits.filter(deposit => {
-        if (filter === "all") return true;
-        return deposit.status === filter;
-    });
+    // Filter deposits based on selected filter and sort by index descending (newest first)
+    const filteredDeposits = deposits
+        .filter(deposit => {
+            if (filter === "all") return true;
+            return deposit.status === filter;
+        })
+        .sort((a, b) => b.index - a.index);
 
     // Stats
     const totalDeposits = deposits.length;
@@ -281,10 +271,11 @@ export default function BridgeAdminDashboard() {
     const hasPrevPage = currentPage > 1;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">Bridge Admin Dashboard</h1>
                     <p className="text-gray-400">
                         View and process Ethereum USDC bridge deposits
@@ -317,8 +308,45 @@ export default function BridgeAdminDashboard() {
                     </div>
                 )}
 
+                {/* Insufficient STAKE Warning */}
+                {cosmosWallet.address && !hasEnoughStake && (
+                    <div className="mb-6 bg-yellow-900/30 border-2 border-yellow-700 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                                <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                    />
+                                </svg>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-yellow-200 font-semibold mb-1">Insufficient STAKE for Gas Fees</h3>
+                                <p className="text-yellow-300/80 text-sm mb-3">
+                                    You need STAKE tokens to pay for gas fees when processing deposits.
+                                    Your current balance is <strong>{stakeBalanceFormatted} STAKE</strong>.
+                                </p>
+                                <Link
+                                    to="/faucet"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Get STAKE from Faucet
+                                </Link>
+                                <p className="text-gray-500 text-xs mt-2">
+                                    The faucet provides free STAKE tokens for gas fees on the testnet.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                         <p className="text-gray-400 text-sm mb-1">Total Deposits</p>
                         <p className="text-2xl font-bold text-white">{totalDeposits}</p>
@@ -331,20 +359,16 @@ export default function BridgeAdminDashboard() {
                         <p className="text-yellow-400 text-sm mb-1">Pending</p>
                         <p className="text-2xl font-bold text-yellow-300">{pendingCount}</p>
                     </div>
+                    <div className={`rounded-lg p-4 border ${hasEnoughStake ? "bg-purple-900/30 border-purple-700" : "bg-red-900/30 border-red-700"}`}>
+                        <p className={`text-sm mb-1 ${hasEnoughStake ? "text-purple-400" : "text-red-400"}`}>Your STAKE (Gas)</p>
+                        <p className={`text-2xl font-bold ${hasEnoughStake ? "text-purple-300" : "text-red-300"}`}>{stakeBalanceFormatted}</p>
+                    </div>
                 </div>
 
                 {/* Controls */}
                 <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <button
-                                onClick={loadDeposits}
-                                disabled={isLoading}
-                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600"
-                            >
-                                {isLoading ? "Loading..." : "Refresh"}
-                            </button>
-
                             <div className="flex items-center gap-2">
                                 <label className="text-white text-sm">Items per page:</label>
                                 <select
@@ -363,17 +387,34 @@ export default function BridgeAdminDashboard() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <label className="text-white text-sm">Filter:</label>
-                            <select
-                                value={filter}
-                                onChange={e => setFilter(e.target.value as any)}
-                                className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <label className="text-white text-sm">Filter:</label>
+                                <select
+                                    value={filter}
+                                    onChange={e => setFilter(e.target.value as any)}
+                                    className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                >
+                                    <option value="all">All</option>
+                                    <option value="processed">Processed</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+
+                            <button
+                                onClick={loadDeposits}
+                                disabled={isLoading}
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600 flex items-center gap-2"
                             >
-                                <option value="all">All</option>
-                                <option value="processed">Processed</option>
-                                <option value="pending">Pending</option>
-                            </select>
+                                {isLoading ? (
+                                    <>
+                                        <LoadingSpinner size="sm" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    "Refresh"
+                                )}
+                            </button>
                         </div>
                     </div>
 
@@ -474,7 +515,10 @@ export default function BridgeAdminDashboard() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 {deposit.status === "loading" && (
-                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300">Loading...</span>
+                                                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-700 text-gray-300 flex items-center gap-2 justify-center">
+                                                        <LoadingSpinner size="xs" />
+                                                        Loading...
+                                                    </span>
                                                 )}
                                                 {deposit.status === "processed" && (
                                                     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-900/50 text-green-300 border border-green-700">
@@ -499,10 +543,20 @@ export default function BridgeAdminDashboard() {
                                                 {deposit.status === "pending" || deposit.status === "error" ? (
                                                     <button
                                                         onClick={() => handleProcessDeposit(deposit.index)}
-                                                        disabled={processingIndex === deposit.index || !cosmosWallet.address}
-                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                                                        disabled={processingIndex === deposit.index || !cosmosWallet.address || !hasEnoughStake}
+                                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2 justify-center mx-auto"
+                                                        title={!hasEnoughStake ? "Need STAKE for gas fees" : ""}
                                                     >
-                                                        {processingIndex === deposit.index ? "Processing..." : "Process"}
+                                                        {processingIndex === deposit.index ? (
+                                                            <>
+                                                                <LoadingSpinner size="xs" />
+                                                                Processing...
+                                                            </>
+                                                        ) : !hasEnoughStake ? (
+                                                            "No STAKE"
+                                                        ) : (
+                                                            "Process"
+                                                        )}
                                                     </button>
                                                 ) : (
                                                     <span className="text-gray-500 text-sm">—</span>

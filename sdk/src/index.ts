@@ -83,6 +83,9 @@ export * from './types/game'
 // Re-export core SDK types
 export * from './types'
 
+// Explicitly re-export RPC types (needed for rollup-plugin-dts)
+export { RPCMethods, RPCRequest, RPCResponse, RPCRequestParams, ISignedResponse } from './types/rpc'
+
 // Re-export chain types
 export * from './types/chain'
 

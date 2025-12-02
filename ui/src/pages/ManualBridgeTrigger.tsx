@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
-import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
-import { getCosmosUrls } from "../utils/cosmos/urls";
-
+import { getSigningClient } from "../utils/cosmos/client";
+import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 /**
  * ManualBridgeTrigger - Simple page to manually process bridge deposits
  *
@@ -18,14 +18,6 @@ import { getCosmosUrls } from "../utils/cosmos/urls";
  * - Status display
  * - Transaction hash on success
  */
-
-// Bridge contract ABI for deposits mapping
-const DEPOSITS_ABI = ["function deposits(uint256) external view returns (string memory account, uint256 amount)"];
-
-// Helper function to format USDC amounts (6 decimals)
-const formatUSDC = (microAmount: string | number): string => {
-    return formatMicroAsUsdc(microAmount, 6);
-};
 
 export default function ManualBridgeTrigger() {
     const cosmosWallet = useCosmosWallet();
@@ -63,14 +55,14 @@ export default function ManualBridgeTrigger() {
 
             // Connect to Base Chain
             const provider = new ethers.JsonRpcProvider(ethRpcUrl);
-            const contract = new ethers.Contract(bridgeContractAddress, DEPOSITS_ABI, provider);
+            const contract = new ethers.Contract(bridgeContractAddress, BRIDGE_DEPOSITS_ABI, provider);
 
             // Query the deposit
             const [recipient, amount] = await contract.deposits(index);
 
             console.log("📦 Deposit data:", { recipient, amount: amount.toString() });
 
-            if (recipient === "0x0000000000000000000000000000000000000000" || recipient === "") {
+            if (recipient === ethers.ZeroAddress || recipient === "") {
                 setError(`Deposit ${index} not found or is empty`);
                 setQueryResult(null);
             } else {
@@ -108,32 +100,13 @@ export default function ManualBridgeTrigger() {
         setDepositDetails(null);
 
         try {
-            // Get mnemonic from storage
-            const mnemonic = getCosmosMnemonic();
-            if (!mnemonic) {
-                throw new Error("No mnemonic found in storage");
-            }
-
-            // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
             console.log("🔗 Connecting to network:", {
                 name: currentNetwork.name,
-                rpc: rpcEndpoint,
-                rest: restEndpoint
+                rpc: currentNetwork.rpc,
+                rest: currentNetwork.rest
             });
 
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "usdc",
-                    gasPrice: "0.025stake" // Use stake for testnet fees
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             console.log("✅ Signing client created successfully");
             console.log("🌉 Processing deposit index:", index);
@@ -206,10 +179,11 @@ export default function ManualBridgeTrigger() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-2xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-2xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">Manual Bridge Trigger</h1>
                     <p className="text-gray-400">Process Ethereum deposits manually by deposit index</p>
                 </div>
@@ -225,7 +199,7 @@ export default function ManualBridgeTrigger() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-400">Balance:</span>
-                                <span className="text-white">{formatUSDC(cosmosWallet.balance.find(b => b.denom === "usdc")?.amount || "0")} USDC</span>
+                                <span className="text-white">{formatMicroAsUsdc(cosmosWallet.balance.find(b => b.denom === "usdc")?.amount || "0", 6)} USDC</span>
                             </div>
                         </div>
                     ) : (
@@ -240,7 +214,7 @@ export default function ManualBridgeTrigger() {
                     <div className="space-y-4">
                         {/* Input */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Deposit Index</label>
+                            <label className="block text-sm font-medium text-gray-400 mb-2">Deposit Index</label>
                             <input
                                 type="number"
                                 min="0"
@@ -258,19 +232,12 @@ export default function ManualBridgeTrigger() {
                             onClick={handleQueryDeposit}
                             disabled={isQuerying || isProcessing}
                             className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all ${
-                                isQuerying || isProcessing ? "bg-gray-600 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 active:scale-95"
+                                isQuerying || isProcessing ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 active:scale-95"
                             }`}
                         >
                             {isQuerying ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        />
-                                    </svg>
+                                    <LoadingSpinner size="md" />
                                     Querying...
                                 </span>
                             ) : (
@@ -289,7 +256,7 @@ export default function ManualBridgeTrigger() {
                                     </div>
                                     <div>
                                         <p className="text-blue-300 text-xs">Amount:</p>
-                                        <p className="text-blue-100 text-sm font-mono">{formatUSDC(queryResult.amount)} USDC</p>
+                                        <p className="text-blue-100 text-sm font-mono">{formatMicroAsUsdc(queryResult.amount, 6)} USDC</p>
                                     </div>
                                 </div>
                             </div>
@@ -307,14 +274,7 @@ export default function ManualBridgeTrigger() {
                         >
                             {isProcessing ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        />
-                                    </svg>
+                                    <LoadingSpinner size="md" />
                                     Processing...
                                 </span>
                             ) : (
@@ -364,6 +324,16 @@ export default function ManualBridgeTrigger() {
                         <li>Chain queries Ethereum contract for deposit data</li>
                         <li>If valid and not processed, mints USDC on Cosmos</li>
                     </ol>
+                </div>
+            </div>
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
                 </div>
             </div>
         </div>

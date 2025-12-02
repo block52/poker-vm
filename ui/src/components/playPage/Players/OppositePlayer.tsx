@@ -53,6 +53,7 @@ import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
 import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
+import { getCardImageUrl, getCardBackUrl } from "../../../utils/cardImages";
 
 type OppositePlayerProps = {
     left?: string;
@@ -165,14 +166,14 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                         isShowingCards && showingCards ? (
                             // Show the actual cards if player is showing
                             <>
-                                <img src={`/cards/${showingCards[0]}.svg`} alt="Player Card 1" width={60} height={80} className="mb-[11px]" />
-                                <img src={`/cards/${showingCards[1]}.svg`} alt="Player Card 2" width={60} height={80} className="mb-[11px]" />
+                                <img src={getCardImageUrl(showingCards[0])} alt="Player Card 1" width={60} height={80} className="mb-[11px]" />
+                                <img src={getCardImageUrl(showingCards[1])} alt="Player Card 2" width={60} height={80} className="mb-[11px]" />
                             </>
                         ) : (
                             // Show card backs for opponents (they shouldn't see actual cards)
                             <>
-                                <img src="/cards/Back.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
-                                <img src="/cards/Back.svg" alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src={getCardBackUrl()} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src={getCardBackUrl()} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
                             </>
                         )
                     ) : (

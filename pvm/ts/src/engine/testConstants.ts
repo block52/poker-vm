@@ -80,7 +80,7 @@ export const getDefaultGame = (playerStates: Map<number, Player | null>): TexasH
     return game;
 };
 
-export const getDefaultGameWithActions = (previousActions: any[] = [], playerStates: Map<number, Player | null>): TexasHoldemGame => {
+export const getDefaultGameWithActions = (previousActions: ActionDTO[] = [], playerStates: Map<number, Player | null>): TexasHoldemGame => {
     const game = new TexasHoldemGame(
         ethers.ZeroAddress,
         gameOptions,
@@ -98,9 +98,10 @@ export const getDefaultGameWithActions = (previousActions: any[] = [], playerSta
     return game;
 };
 
-export const fromTestJson = (json: any): TexasHoldemGame => {
-    const data = json.result.data;
-    const gameConfig = data.gameOptions;
+export const fromTestJson = (json: Record<string, unknown>): TexasHoldemGame => {
+    const result = json.result as Record<string, unknown>;
+    const data = result.data as Record<string, unknown>;
+    const gameConfig = data.gameOptions as GameOptions;
 
     return TexasHoldemGame.fromJson(data, gameConfig);
 };

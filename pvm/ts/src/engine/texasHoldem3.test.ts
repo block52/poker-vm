@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound, GameOptions, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 import { Player } from "../models/player";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions } from "./testConstants";

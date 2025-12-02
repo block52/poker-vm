@@ -67,7 +67,6 @@ import { colors, getTableHeaderGradient, getHexagonStroke, hexToRgba } from "../
 
 // Use environment variable for club logo with fallback to default
 const clubLogo = import.meta.env.VITE_CLUB_LOGO || defaultLogo;
-const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
 const _randomSeat = import.meta.env.VITE_RANDOM_SEAT === "true" ? true : false;
 
 import { LuPanelLeftClose } from "react-icons/lu";
@@ -76,8 +75,10 @@ import { RxExit } from "react-icons/rx";
 import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
+import { NetworkSelector } from "../NetworkSelector";
 
-import { ethers } from "ethers";
+import { isValidPlayerAddress } from "../../utils/addressUtils";
+import { getCardImageUrl, getCardBackUrl } from "../../utils/cardImages";
 
 import "./Table.css"; // Import the Table CSS file
 
@@ -99,6 +100,7 @@ import { useGameProgress } from "../../hooks/useGameProgress"; //Provides isGame
 //todo wire up to use the sdk instead of the proxy
 // 4. Player Actions
 import { leaveTable } from "../../hooks/playerActions/leaveTable";
+import LeaveTableModal from "./LeaveTableModal";
 
 // 5. Winner Info
 import { useWinnerInfo } from "../../hooks/useWinnerInfo"; // Provides winner information for animations
@@ -120,9 +122,6 @@ import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 import GameStartCountdown from "./common/GameStartCountdown";
 import SitAndGoAutoJoinModal from "./SitAndGoAutoJoinModal";
 import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
-
-// Cosmos Integration
-import CosmosStatus from "../cosmos/CosmosStatus";
 
 // Table Layout Configuration
 import { useTableLayout } from "../../hooks/useTableLayout";
@@ -233,6 +232,9 @@ const Table = React.memo(() => {
     // Zoom is now managed by useTableLayout hook
     const [openSidebar, setOpenSidebar] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
+
+    // Leave table modal state
+    const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
 
     // Transaction popup state
     const [recentTxHash, setRecentTxHash] = useState<string | null>(null);
@@ -438,7 +440,7 @@ const Table = React.memo(() => {
 
     // Memoize table active players
     const tableActivePlayers = useMemo(() => {
-        const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => player.address !== ethers.ZeroAddress) ?? [];
+        const activePlayers = tableDataValues.tableDataPlayers?.filter((player: PlayerDTO) => isValidPlayerAddress(player.address)) ?? [];
 
         return activePlayers;
     }, [tableDataValues.tableDataPlayers]);
@@ -583,7 +585,7 @@ const Table = React.memo(() => {
                 const card = communityCards[idx];
                 return (
                     <div key={idx} className="card animate-fall">
-                        <OppositePlayerCards frontSrc={`/cards/${card}.svg`} backSrc="/cards/Back.svg" flipped />
+                        <OppositePlayerCards frontSrc={getCardImageUrl(card)} backSrc={getCardBackUrl()} flipped />
                     </div>
                 );
             } else {
@@ -749,23 +751,45 @@ const Table = React.memo(() => {
         e.currentTarget.style.color = colors.ui.textSecondary;
     }, []);
 
+    // Open leave table modal
     const handleLeaveTableClick = useCallback(() => {
-        // Get player's current stack if they are seated
-        const playerData = tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress);
+        console.log("🚪 LEAVE TABLE - Opening modal...");
+        setIsLeaveModalOpen(true);
+    }, []);
 
-        if (id && playerData) {
-            leaveTable(id, playerData.stack || "0", currentNetwork)
-                .then(() => {
-                    window.location.href = "/";
-                })
-                .catch((err: any) => {
-                    console.error("Error leaving table:", err);
-                    window.location.href = "/";
-                });
-        } else {
-            window.location.href = "/";
+    // Close leave table modal
+    const handleLeaveModalClose = useCallback(() => {
+        setIsLeaveModalOpen(false);
+    }, []);
+
+    // Get current player data for leave modal
+    const currentPlayerData = useMemo(() => {
+        return tableDataValues.tableDataPlayers?.find((p: PlayerDTO) => p.address?.toLowerCase() === userWalletAddress?.toLowerCase());
+    }, [tableDataValues.tableDataPlayers, userWalletAddress]);
+
+    // Confirm leave table action
+    const handleLeaveTableConfirm = useCallback(async () => {
+        console.log("🚪 LEAVE TABLE - Confirming leave...");
+        console.log("🚪 LEAVE TABLE - Table ID:", id);
+        console.log("🚪 LEAVE TABLE - User wallet address:", userWalletAddress);
+        console.log("🚪 LEAVE TABLE - Player data:", JSON.stringify(currentPlayerData, null, 2));
+
+        if (!id || !currentPlayerData) {
+            throw new Error("Cannot leave: missing table ID or player data");
         }
-    }, [tableDataValues.tableDataPlayers, userWalletAddress, id, currentNetwork]);
+
+        console.log("🚪 LEAVE TABLE - Calling leaveTable API with:", {
+            tableId: id,
+            stack: currentPlayerData.stack || "0",
+            network: currentNetwork
+        });
+
+        await leaveTable(id, currentPlayerData.stack || "0", currentNetwork);
+        console.log("🚪 LEAVE TABLE - Successfully left table");
+
+        // Refresh balance after leaving
+        fetchAccountBalance();
+    }, [id, userWalletAddress, currentPlayerData, currentNetwork, fetchAccountBalance]);
 
     if (tableDataValues.error) {
         console.error("Error loading table data:", tableDataValues.error);
@@ -777,7 +801,7 @@ const Table = React.memo(() => {
         console.log("🎲 TABLE - Full Game State from WebSocket:\n" + JSON.stringify(gameState, null, 2));
 
         // Also log active players mapping
-        const activePlayers = gameState?.players?.filter((player: any) => player.address !== ethers.ZeroAddress) ?? [];
+        const activePlayers = gameState?.players?.filter((player: any) => isValidPlayerAddress(player.address)) ?? [];
         console.log(
             "🎲 TABLE - Active Players Mapping: " +
                 JSON.stringify(
@@ -821,15 +845,15 @@ const Table = React.memo(() => {
                             ></div>
                         </div>
 
-                        {/* Left Section - Lobby button and Network display */}
-                        <div className="flex items-center space-x-2 sm:space-x-4 z-10">
+                        {/* Left Section - Table button and Network selector */}
+                        <div className="flex items-center space-x-2 sm:space-x-4 z-[9999] relative">
                             <span
                                 className="text-white text-sm sm:text-[24px] cursor-pointer hover:text-[#ffffff] transition-colors duration-300 font-bold"
                                 onClick={handleLobbyClick}
                             >
-                                Lobby
+                                Table {id ? id.slice(-5) : ""}
                             </span>
-                            <NetworkDisplay isMainnet={false} />
+                            <NetworkSelector />
                             {/* Game Type Display - Desktop Only */}
                             {gameOptions && (
                                 <div
@@ -974,18 +998,21 @@ const Table = React.memo(() => {
                                 {/* <span className="text-xs ml-1">{openSidebar ? "Hide Log" : "Show Log"}</span> */}
                             </span>
 
-                            <span
-                                className="text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 transition-colors duration-300 ml-2 sm:ml-3"
-                                style={{ color: colors.ui.textSecondary }}
-                                onMouseEnter={handleLeaveTableMouseEnter}
-                                onMouseLeave={handleLeaveTableMouseLeave}
-                                onClick={handleLeaveTableClick}
-                                title="Return to Lobby"
-                            >
-                                <span className="hidden sm:inline">Leave Table</span>
-                                <span className="sm:hidden">Leave</span>
-                                <RxExit size={12} />
-                            </span>
+                            {/* Only show Leave Table button if user is seated */}
+                            {currentPlayerData && (
+                                <span
+                                    className="text-xs sm:text-[16px] cursor-pointer flex items-center gap-0.5 transition-colors duration-300 ml-2 sm:ml-3"
+                                    style={{ color: colors.ui.textSecondary }}
+                                    onMouseEnter={handleLeaveTableMouseEnter}
+                                    onMouseLeave={handleLeaveTableMouseLeave}
+                                    onClick={handleLeaveTableClick}
+                                    title="Leave Table"
+                                >
+                                    <span className="hidden sm:inline">Leave Table</span>
+                                    <span className="sm:hidden">Leave</span>
+                                    <RxExit size={12} />
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -997,7 +1024,7 @@ const Table = React.memo(() => {
                     {/* Left: Essential Info */}
                     <div className="flex items-center gap-2 bg-black bg-opacity-70 px-2 py-1 rounded-lg">
                         <span className="text-white text-xs font-bold cursor-pointer" onClick={handleLobbyClick}>
-                            Lobby
+                            Table {id ? id.slice(-5) : ""}
                         </span>
                         <span className="text-gray-300 text-xs">|</span>
                         <span className="text-white text-xs">
@@ -1008,10 +1035,14 @@ const Table = React.memo(() => {
                     {/* Right: Balance & Leave */}
                     <div className="flex items-center gap-2 bg-black bg-opacity-70 px-2 py-1 rounded-lg">
                         <span className="text-white text-xs font-mono">${balanceFormatted}</span>
-                        <span className="text-gray-300 text-xs">|</span>
-                        <span className="text-white text-xs cursor-pointer flex items-center gap-1" onClick={handleLeaveTableClick}>
-                            Leave <RxExit size={10} />
-                        </span>
+                        {currentPlayerData && (
+                            <>
+                                <span className="text-gray-300 text-xs">|</span>
+                                <span className="text-white text-xs cursor-pointer flex items-center gap-1" onClick={handleLeaveTableClick}>
+                                    Leave <RxExit size={10} />
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -1370,16 +1401,6 @@ const Table = React.memo(() => {
                 </div>
             )}
 
-            {/* Powered by Block52 */}
-            <div className="powered-by-block52">
-                <div className="powered-by-content">
-                    <div className="powered-by-text">
-                        <span className="text-xs text-white font-medium tracking-wide">POWERED BY</span>
-                    </div>
-                    <img src="/block52.png" alt="Block52 Logo" className="powered-by-logo" />
-                </div>
-            </div>
-
             {/* Game Start Countdown Modal */}
             {showCountdown && gameStartTime && (
                 <GameStartCountdown gameStartTime={gameStartTime} onCountdownComplete={handleCountdownComplete} onSkip={handleSkipCountdown} />
@@ -1396,20 +1417,17 @@ const Table = React.memo(() => {
                 />
             )}
 
-            {/* Club Name at Bottom Center (or Bottom Right in mobile landscape) */}
-            <div className={`fixed z-40 ${isMobileLandscape ? "bottom-4 right-4 opacity-30" : "bottom-1 left-1/2 transform -translate-x-1/2 opacity-60"}`}>
-                <div className="text-xs" style={{ color: colors.ui.textSecondary, fontSize: isMobileLandscape ? "14px" : "20px" }}>
-                    {clubName}
-                </div>
-            </div>
-
-            {/* Cosmos Status in Bottom Left */}
-            <div className="fixed bottom-2 left-2 z-40 opacity-60">
-                <CosmosStatus />
-            </div>
-
             {/* Transaction Popup - Bottom Right */}
             <TransactionPopup txHash={recentTxHash} onClose={handleCloseTransactionPopup} />
+
+            {/* Leave Table Modal */}
+            <LeaveTableModal
+                isOpen={isLeaveModalOpen}
+                onClose={handleLeaveModalClose}
+                onConfirm={handleLeaveTableConfirm}
+                playerStack={currentPlayerData?.stack || "0"}
+                isInActiveHand={isGameInProgress && currentUserSeat > 0}
+            />
         </div>
     );
 });

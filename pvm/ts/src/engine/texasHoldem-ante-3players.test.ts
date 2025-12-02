@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
 
@@ -126,6 +126,42 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             expect(seat2Actions.length).toEqual(2);
             expect(seat2Actions[0].action).toEqual(NonPlayerActionType.DEAL);
             expect(seat2Actions[1].action).toEqual(PlayerActionType.SIT_OUT);
+        });
+
+        it("should allow a player to leave and remove them from the game", () => {
+            expect(game.getPlayerCount()).toEqual(3);
+
+            // Player 3 leaves the game
+            game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, 4);
+
+            // Assert player count decreased
+            expect(game.getPlayerCount()).toEqual(2);
+
+            // Assert player is no longer in the game
+            expect(game.exists(PLAYER_3)).toBe(false);
+
+            // Assert other players are still in the game
+            expect(game.exists(PLAYER_1)).toBe(true);
+            expect(game.exists(PLAYER_2)).toBe(true);
+
+            // Assert player is not in toJson output
+            const json: TexasHoldemStateDTO = game.toJson();
+            expect(json).toBeDefined();
+            expect(json.players).toBeDefined();
+            expect(json.players.length).toEqual(2);
+
+            // Verify PLAYER_3 is not in the players array
+            const player3InJson = json.players.find(p => p.address === PLAYER_3);
+            expect(player3InJson).toBeUndefined();
+
+            // Verify the other players are still in the JSON
+            const player1InJson = json.players.find(p => p.address === PLAYER_1);
+            const player2InJson = json.players.find(p => p.address === PLAYER_2);
+            expect(player1InJson).toBeDefined();
+            expect(player2InJson).toBeDefined();
+
+            // Verify seat 8 is now empty
+            expect(game.getPlayerAtSeat(8)).toBeUndefined();
         });
     });
 });

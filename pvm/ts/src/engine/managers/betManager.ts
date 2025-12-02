@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
 import { Turn } from "../types";
 import { IBetManager } from "../../types/interfaces";
 
@@ -24,7 +24,8 @@ export class BetManager implements IBetManager {
     add(action: Turn): void {
         // Implementation for adding an action to the bet manager
         if (action.playerId && action.amount !== undefined) {
-            if (action.action === NonPlayerActionType.JOIN) {
+            if (action.action === NonPlayerActionType.JOIN ||
+                action.action === NonPlayerActionType.LEAVE) {
                 return;
             }
 

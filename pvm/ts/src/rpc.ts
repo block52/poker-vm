@@ -1,4 +1,4 @@
-import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCRequestParams, RPCResponse, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { GameOptions, NonPlayerActionType, PlayerActionType, RPCMethods, RPCRequest, RPCResponse, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
 
 import {
     ISignedResponse,
@@ -8,11 +8,10 @@ import {
 import { PerformActionCommand } from "./commands/cosmos/performActionCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
-import { READ_METHODS, WRITE_METHODS } from "./types/rpc";
-import { getServerInstance } from "./core/server";
+import { LoggerFactory } from "./utils/logger";
 
 export class RPC {
-    static async handle(request: RPCRequest): Promise<RPCResponse<any>> {
+    static async handle(request: RPCRequest): Promise<RPCResponse<unknown>> {
         if (!request) {
             throw new Error("Null request");
         }
@@ -21,26 +20,34 @@ export class RPC {
             return makeErrorRPCResponse(request.id, "Missing method");
         }
 
-        const method = request.method as RPCMethods;
+        const method = request.method as string;
+        return await this.handleMethod(method, request);
+    }
 
-        if (!Object.values(RPCMethods).includes(method)) {
-            return makeErrorRPCResponse(request.id, "Method not found");
-        }
+    private static async handleGetLogs(id: string, lines: number): Promise<RPCResponse<unknown>> {
+        try {
+            const logger = LoggerFactory.getInstance();
+            const logs = await logger.getLogs(lines);
 
-        if (READ_METHODS.includes(method)) {
-            return this.handleReadMethod(method, request);
+            return {
+                id,
+                result: {
+                    data: {
+                        logs
+                    },
+                    signature: ""
+                }
+            };
+        } catch (e) {
+            LoggerFactory.getInstance().log(String(e), "error");
+            return makeErrorRPCResponse(id, "Failed to retrieve logs");
         }
-        if (WRITE_METHODS.includes(method)) {
-            return this.handleWriteMethod(method, request);
-        }
-
-        return makeErrorRPCResponse(request.id, "Method not found");
     }
 
     // Return a JSONModel
-    static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<ISignedResponse<any>>> {
+    static async handleMethod(method: string, request: RPCRequest): Promise<RPCResponse<unknown>> {
         const id = request.id;
-        let result: ISignedResponse<any>;
+        let result: ISignedResponse<unknown>;
 
         try {
             switch (method) {
@@ -50,56 +57,18 @@ export class RPC {
                     break;
                 }
 
-                // All blockchain/state management methods are handled by Cosmos
-                case RPCMethods.FIND_CONTRACT:
-                case RPCMethods.GET_ACCOUNT:
-                case RPCMethods.GET_BLOCK:
-                case RPCMethods.GET_BLOCK_BY_HASH:
-                case RPCMethods.GET_BLOCK_HEIGHT:
-                case RPCMethods.GET_LAST_BLOCK:
-                case RPCMethods.GET_BLOCKS:
-                case RPCMethods.GET_MEMPOOL:
-                case RPCMethods.GET_TRANSACTION:
-                case RPCMethods.GET_TRANSACTIONS:
-                case RPCMethods.GET_GAME_STATE:
-                case RPCMethods.GET_NODES:
-                case RPCMethods.GET_SHARED_SECRET:
-                    return makeErrorRPCResponse(id, `${method} not implemented - query Cosmos chain directly`);
+                case "get_logs": {
+                    const params = request.params as [number?] | undefined;
+                    const lines = params?.[0] ?? 100;
+                    return await this.handleGetLogs(id, lines);
+                }
 
-                default:
-                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
-            }
-        } catch (e) {
-            console.error(e);
-            return makeErrorRPCResponse(id, "Operation failed");
-        }
-
-        if (result === null) {
-            return makeErrorRPCResponse(id, "Operation failed");
-        }
-
-        return {
-            id,
-            result: {
-                ...result,
-                data: result.data?.toJson ? result.data.toJson() : result.data
-            }
-        };
-    }
-
-    // These always return a transaction hash
-    static async handleWriteMethod(method: RPCMethods, request: RPCRequest): Promise<any> {
-        const id = request.id;
-        console.log("handleWriteMethod", method, request);
-
-        try {
-            switch (method) {
-                // This readonly now too
                 case RPCMethods.PERFORM_ACTION: {
                     // [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string, string, string, number?];
                     // params: [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp?]
                     // timestamp (9th param) should be Cosmos block timestamp for deterministic gameplay
-                    const [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp] = request.params as any;
+                    const params = request.params as unknown as [string, string, string, string | null, string, string, string, string, string, number?];
+                    const [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp] = params;
                     const gameState: TexasHoldemStateDTO = gameStateJson ? JSON.parse(gameStateJson) : null;
                     const gameOptions: GameOptions = gameOptionsJson ? JSON.parse(gameOptionsJson) : null;
                     const _action = action as PlayerActionType | NonPlayerActionType;
@@ -111,17 +80,33 @@ export class RPC {
                         id: request.id,
                         result: {
                             data: _result,
-                            signature: null
+                            signature: ""
                         }
                     };
                 }
 
                 default:
-                    return makeErrorRPCResponse(id, "Method not found");
+                    return makeErrorRPCResponse(id, `Unknown method: ${method}`);
             }
         } catch (e) {
-            console.error(e);
+            LoggerFactory.getInstance().log(String(e), "error");
             return makeErrorRPCResponse(id, "Operation failed");
         }
+
+        if (result === null) {
+            return makeErrorRPCResponse(id, "Operation failed");
+        }
+
+        const processedData = result.data && typeof result.data === 'object' && 'toJson' in result.data && typeof (result.data as { toJson: () => unknown }).toJson === 'function'
+            ? (result.data as { toJson: () => unknown }).toJson()
+            : result.data;
+
+        return {
+            id,
+            result: {
+                data: processedData,
+                signature: result.signature
+            }
+        };
     }
 }

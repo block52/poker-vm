@@ -1,0 +1,32 @@
+import { ethers } from "ethers";
+
+/**
+ * Check if an address represents an empty/vacant player slot.
+ * Handles both Ethereum-style addresses (0x...) and Cosmos-style addresses (poker52...).
+ *
+ * @param address - The player address to check
+ * @returns true if the address is empty/vacant, false if it's a real player
+ */
+export const isEmptyAddress = (address: string | null | undefined): boolean => {
+    if (!address) return true;
+    if (address === "") return true;
+
+    // Ethereum zero address
+    if (address === ethers.ZeroAddress) return true;
+
+    // Check for any all-zero address patterns (lowercase or checksum)
+    if (address.toLowerCase() === "0x0000000000000000000000000000000000000000") return true;
+
+    return false;
+};
+
+/**
+ * Check if an address represents a valid (non-empty) player.
+ * Opposite of isEmptyAddress.
+ *
+ * @param address - The player address to check
+ * @returns true if the address is a valid player address, false if empty
+ */
+export const isValidPlayerAddress = (address: string | null | undefined): boolean => {
+    return !isEmptyAddress(address);
+};

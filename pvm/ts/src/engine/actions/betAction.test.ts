@@ -1,10 +1,10 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import BetAction from "./betAction";
 import { Player } from "../../models/player";
-import { IUpdate, Turn, TurnWithSeat } from "../types";
+import { IUpdate } from "../types";
 import TexasHoldemGame from "../texasHoldem";
 import { BetManager } from "../managers/betManager";
-import { getDefaultGame, ONE_THOUSAND_TOKENS, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS, TEN_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, PLAYER_1_ADDRESS, PLAYER_2_ADDRESS } from "../testConstants";
 import { MockBetManager } from "../testConstants";
 
 describe("BetAction", () => {

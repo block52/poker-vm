@@ -1,7 +1,7 @@
 import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { Player } from "../../models/player";
 import BaseAction from "./baseAction";
-import { IAction, Range, Turn } from "../types";
+import { IAction, Range } from "../types";
 
 class MuckAction extends BaseAction implements IAction {
     get type(): PlayerActionType { return PlayerActionType.MUCK }
@@ -27,7 +27,7 @@ class MuckAction extends BaseAction implements IAction {
     }
 
     // Override execute to set player's status to FOLDED
-    execute(player: Player, index: number, amount?: bigint): void {
+    execute(player: Player, index: number, _amount?: bigint): void {
         // First verify the action
         this.verify(player);
 

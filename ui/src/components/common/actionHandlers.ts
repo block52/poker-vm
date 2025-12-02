@@ -1,11 +1,12 @@
 import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
-import { usdcToMicro } from "../../constants/currency";
 import type { NetworkEndpoints } from "../../context/NetworkContext";
 
 /**
  * All handlers now return Promise<string | null> where:
  * - string is the transaction hash on success
  * - null is returned on error or if tableId is missing
+ *
+ * Amounts are accepted as bigint (in micro-units, 10^6 precision).
  */
 
 const handleCheck = async (tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
@@ -32,13 +33,15 @@ const handleFold = async (tableId: string | undefined, network: NetworkEndpoints
     }
 };
 
-const handleCall = async (amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
+/**
+ * Handle call action
+ * @param amount - Amount in micro-units as bigint (10^6 precision)
+ */
+const handleCall = async (amount: bigint, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
     try {
-        // Convert amount to microunits (6 decimals for USDC on Cosmos)
-        const amountMicrounits = usdcToMicro(amount).toString();
-        const result = await callHand(tableId, amountMicrounits, network);
+        const result = await callHand(tableId, amount, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to call:", error);
@@ -46,14 +49,15 @@ const handleCall = async (amount: number, tableId: string | undefined, network: 
     }
 };
 
-const handleBet = async (amount: number, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
+/**
+ * Handle bet action
+ * @param amount - Amount in micro-units as bigint (10^6 precision)
+ */
+const handleBet = async (amount: bigint, tableId: string | undefined, network: NetworkEndpoints): Promise<string | null> => {
     if (!tableId) return null;
 
-    // Convert amount to microunits (6 decimals for USDC on Cosmos)
-    const amountMicrounits = usdcToMicro(amount).toString();
-
     try {
-        const result = await betHand(tableId, amountMicrounits, network);
+        const result = await betHand(tableId, amount, network);
         return result?.hash || null;
     } catch (error: any) {
         console.error("Failed to bet:", error);

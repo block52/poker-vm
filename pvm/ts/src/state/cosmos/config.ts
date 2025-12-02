@@ -1,4 +1,13 @@
-import { CosmosConfig } from "@bitcoinbrisbane/block52";
+// CosmosConfig interface - defined locally as SDK export is not bundled correctly
+export interface CosmosConfig {
+    rpcEndpoint: string;
+    restEndpoint: string;
+    chainId: string;
+    prefix: string;
+    denom: string;
+    gasPrice: string;
+    mnemonic?: string;
+}
 
 /**
  * Default Cosmos SDK configuration for poker VM
@@ -28,12 +37,12 @@ export const TEST_COSMOS_CONFIG: CosmosConfig = {
  * Production configuration (values should come from environment)
  */
 export const PROD_COSMOS_CONFIG: CosmosConfig = {
-    rpcEndpoint: process.env.COSMOS_RPC_ENDPOINT!,
-    restEndpoint: process.env.COSMOS_REST_ENDPOINT!,
-    chainId: process.env.COSMOS_CHAIN_ID!,
-    prefix: process.env.COSMOS_PREFIX!,
-    denom: process.env.COSMOS_DENOM!,
-    gasPrice: process.env.COSMOS_GAS_PRICE!,
+    rpcEndpoint: process.env.COSMOS_RPC_ENDPOINT || "",
+    restEndpoint: process.env.COSMOS_REST_ENDPOINT || "",
+    chainId: process.env.COSMOS_CHAIN_ID || "",
+    prefix: process.env.COSMOS_PREFIX || "",
+    denom: process.env.COSMOS_DENOM || "",
+    gasPrice: process.env.COSMOS_GAS_PRICE || "",
     mnemonic: process.env.COSMOS_MNEMONIC
 };
 

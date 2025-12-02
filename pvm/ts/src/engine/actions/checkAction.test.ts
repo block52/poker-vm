@@ -54,7 +54,7 @@ describe("CheckAction", () => {
             const mockNextPlayer = {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as Player);
 
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
@@ -121,7 +121,7 @@ describe("CheckAction", () => {
             const mockNextPlayer = {
                 address: "0x980b8D8A16f5891F41871d878a479d81Da52334c"
             };
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as any);
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(mockNextPlayer as Player);
 
             // Mock current round
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
@@ -130,7 +130,7 @@ describe("CheckAction", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
             // Mock verify to return undefined (no range)
-            jest.spyOn(action, "verify").mockReturnValue({ minAmount: 0n, maxAmount: 0n } as any);
+            jest.spyOn(action, "verify").mockReturnValue({ minAmount: 0n, maxAmount: 0n });
 
             // Mock game's addAction method
             game.addAction = jest.fn();

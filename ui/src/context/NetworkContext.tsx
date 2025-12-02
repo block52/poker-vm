@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+/**
+ * NetworkEndpoints describes all endpoints for a given network.
+ * - name: Display name for the network
+ * - rpc: Tendermint RPC endpoint (HTTP/S)
+ * - rest: Cosmos REST API endpoint
+ * - grpc: Cosmos gRPC endpoint
+ * - ws: WebSocket endpoint for real-time table/game updates (used by UI)
+ */
 export interface NetworkEndpoints {
     name: string;
     rpc: string;
     rest: string;
     grpc: string;
+    ws: string;
 }
 
 // TODO: Dynamic endpoint discovery from validators API
@@ -49,29 +58,47 @@ export interface NetworkEndpoints {
 //   curl -s https://node.texashodl.net/cosmos/base/tendermint/v1beta1/node_info | jq '.default_node_info.moniker'
 //   curl -s https://node.texashodl.net/cosmos/base/tendermint/v1beta1/blocks/latest | jq '.block.header.height'
 //
+/**
+ * NETWORK_PRESETS
+ *
+ * Each network entry includes endpoints for RPC, REST, gRPC, and WebSocket (ws).
+ * The ws property is used by the UI for real-time table/game updates.
+ *
+ * WebSocket Server Architecture:
+ *   - Runs on port 8585 (separate from Tendermint RPC on 26657)
+ *   - Subscribes to Tendermint events and broadcasts to UI clients
+ *   - Production: nginx proxies /ws path to localhost:8585
+ *
+ * Example ws usage:
+ *   ws://localhost:8585/ws (local development)
+ *   wss://node.texashodl.net/ws (production via nginx proxy)
+ */
 export const NETWORK_PRESETS: NetworkEndpoints[] = [
-    // ✅ WORKING - Default for local development with `ignite chain serve`
+    // [0] ✅ Localhost - Default for local development with `ignite chain serve`
     {
         name: "Localhost",
         rpc: "http://localhost:26657",
         rest: "http://localhost:1317",
-        grpc: "http://localhost:9090"
+        grpc: "http://localhost:9090",
+        ws: "ws://localhost:8585/ws" // WebSocket server for real-time game updates (port 8585)
     },
-    // ✅ WORKING - Recommended for production testing
+    // [1] ✅ Texas Hodl - Recommended for production testing
     {
         name: "Texas Hodl",
-        rpc: "https://texashodl.net/rpc",
+        rpc: "https://node.texashodl.net/rpc/",
         rest: "https://node.texashodl.net",
-        grpc: "grpcs://texashodl.net:9443"
+        grpc: "grpcs://node.texashodl.net:9443",
+        ws: "wss://node.texashodl.net/ws" // WebSocket endpoint for table/game updates
     },
-    // ⚠️ Block52 - Using direct ports to avoid CORS issues with HTTPS redirects
-    // HTTPS endpoints return 301 redirects which cause CORS errors
-    // Using direct RPC port 26657 and REST port 1317 instead
+    // [2] ✅ Block52 - Official node (default for production builds)
+    // Using HTTPS endpoints via NGINX reverse proxy to avoid mixed content errors
+    // NOTE: /rpc/ requires trailing slash due to nginx location block configuration
     {
         name: "Block52",
-        rpc: "http://node1.block52.xyz:26657",
+        rpc: "https://node1.block52.xyz/rpc/",
         rest: "https://node1.block52.xyz",
-        grpc: "grpcs://node1.block52.xyz:9443"
+        grpc: "grpcs://node1.block52.xyz:9443",
+        ws: "wss://node1.block52.xyz/ws" // WebSocket endpoint for table/game updates
     }
 ];
 
@@ -84,18 +111,26 @@ interface NetworkContextType {
 const NetworkContext = createContext<NetworkContextType | undefined>(undefined);
 
 export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Initialize with the first network (Node 1 Remote)
+    // Initialize network from localStorage or default to Texas Hodl
     const [currentNetwork, setCurrentNetwork] = useState<NetworkEndpoints>(() => {
-        // Try to load from localStorage
+        // Try to load user's saved network preference from localStorage
         const saved = localStorage.getItem("selectedNetwork");
         if (saved) {
             try {
-                return JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                // Validate that the parsed object has the ws property (for backward compatibility)
+                if (!parsed.ws) {
+                    console.warn("[NetworkContext] Saved network missing 'ws' property, resetting to default");
+                    return NETWORK_PRESETS[1]; // Texas Hodl
+                }
+                return parsed;
             } catch {
-                return NETWORK_PRESETS[0];
+                // If localStorage is corrupted, default to Texas Hodl
+                return NETWORK_PRESETS[1]; // Texas Hodl
             }
         }
-        return NETWORK_PRESETS[0];
+        // First time user - default to Texas Hodl
+        return NETWORK_PRESETS[1]; // Texas Hodl
     });
 
     // Save to localStorage whenever network changes

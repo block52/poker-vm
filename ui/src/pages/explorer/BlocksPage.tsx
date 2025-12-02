@@ -3,6 +3,9 @@ import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { CosmosBlock } from "./types";
 import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { AnimatedBackground } from "../../components/common/AnimatedBackground";
+import { ExplorerHeader } from "../../components/explorer/ExplorerHeader";
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -91,17 +94,11 @@ export default function BlocksPage() {
 
     if (loading && blocks.length === 0) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-                <div className="bg-gray-800 border border-gray-700 p-8 rounded-lg shadow-2xl text-center">
+            <div className="min-h-screen flex items-center justify-center relative">
+                <AnimatedBackground />
+                <div className="bg-gray-800 border border-gray-700 p-8 rounded-lg shadow-2xl text-center relative z-10">
                     <div className="flex justify-center mb-4">
-                        <svg className="animate-spin h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                        </svg>
+                        <LoadingSpinner size="xl" className="text-blue-500" />
                     </div>
                     <h2 className="text-2xl font-bold text-white">Loading blocks...</h2>
                 </div>
@@ -111,8 +108,9 @@ export default function BlocksPage() {
 
     if (error && blocks.length === 0) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-                <div className="max-w-7xl mx-auto">
+            <div className="min-h-screen p-8 relative">
+                <AnimatedBackground />
+                <div className="max-w-7xl mx-auto relative z-10">
                     {/* Header */}
                     <div className="mb-8">
                         <div>
@@ -149,18 +147,11 @@ export default function BlocksPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen p-8 relative">
+            <AnimatedBackground />
+            <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-white mb-2 text-center">Block Explorer</h1>
-                    <p className="text-gray-400 text-center">Latest blocks on Pokerchain</p>
-                    <div className="mt-3 flex gap-4 justify-center">
-                        <a href="/explorer/distribution" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                            📊 Card Distribution Analytics
-                        </a>
-                    </div>
-                </div>
+                <ExplorerHeader />
 
                 {/* Blocks Table */}
                 <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
@@ -184,10 +175,8 @@ export default function BlocksPage() {
                                         <td className="px-6 py-4">
                                             <a
                                                 href={`/explorer/block/${block.block.header.height}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
                                                 className="font-mono text-xs text-blue-400 hover:text-blue-300 cursor-pointer transition-colors break-all block"
-                                                title="Click to view block details in new tab"
+                                                title="Click to view block details"
                                             >
                                                 {block.block_id.hash}
                                             </a>
@@ -202,7 +191,7 @@ export default function BlocksPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="font-mono text-xs text-gray-300" title={block.block.header.proposer_address}>
+                                            <span className="font-mono text-xs text-white" title={block.block.header.proposer_address}>
                                                 {truncateHash(block.block.header.proposer_address)}
                                             </span>
                                         </td>
@@ -238,6 +227,16 @@ export default function BlocksPage() {
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Powered by Block52 */}
+            <div className="fixed bottom-4 left-4 flex items-center z-10 opacity-30">
+                <div className="flex flex-col items-start bg-transparent px-3 py-2 rounded-lg backdrop-blur-sm border-0">
+                    <div className="text-left mb-1">
+                        <span className="text-xs text-white font-medium tracking-wide  ">POWERED BY</span>
+                    </div>
+                    <img src="/block52.png" alt="Block52 Logo" className="h-6 w-auto object-contain interaction-none" />
+                </div>
             </div>
         </div>
     );

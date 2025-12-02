@@ -69,7 +69,7 @@ describe("Texas Holdem Game - Next seat", () => {
             customPlayers.set(6, new Player("0x6000000000000000000000000000000000000000", undefined, ONE_HUNDRED_TOKENS, undefined, PlayerStatus.ACTIVE));
 
             // Use reflection to access private field
-            const gameAsAny = game as any;
+            const gameAsAny = game as unknown as { _playersMap: Map<number, Player | null>; _smallBlindPosition: number; _bigBlindPosition: number };
             gameAsAny._playersMap = customPlayers;
 
             // Set up blinds positions
@@ -81,7 +81,7 @@ describe("Texas Holdem Game - Next seat", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 3);
 
             // Set last acted seat to 6 (max seat number)
-            gameAsAny._lastActedSeat = 6;
+            (gameAsAny as unknown as { _lastActedSeat: number })._lastActedSeat = 6;
 
             // Next player should wrap around to seat 1
             const nextPlayer = game.getNextPlayerToAct();
@@ -103,7 +103,7 @@ describe("Texas Holdem Game - Next seat", () => {
             player2.updateStatus(PlayerStatus.FOLDED);
 
             // Set last acted player to seat 1
-            const gameAsAny = game as any;
+            const gameAsAny = game as unknown as { _playersMap: Map<number, Player | null>; _smallBlindPosition: number; _bigBlindPosition: number; _lastActedSeat: number };
             gameAsAny._lastActedSeat = 1;
 
             // Next player should be seat 3, skipping the folded player at seat 2
@@ -144,7 +144,7 @@ describe("Texas Holdem Game - Next seat", () => {
             game.performAction("0x3333333333333333333333333333333333333333", PlayerActionType.BIG_BLIND, 5);
 
             // Set last acted player to seat 3
-            const gameAsAny = game as any;
+            const gameAsAny = game as unknown as { _playersMap: Map<number, Player | null>; _smallBlindPosition: number; _bigBlindPosition: number; _lastActedSeat: number };
             gameAsAny._lastActedSeat = 3;
 
             // Next player should be seat 2 (ACTIVE) even though we've passed it
@@ -165,17 +165,16 @@ describe("Texas Holdem Game - Next seat", () => {
             player2.updateStatus(PlayerStatus.SITTING_OUT);
 
             // Post blinds (this is a bit artificial but necessary for the test)
-            const gameAsAny = game as any;
             const turn1: Turn = {
                 playerId: "0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac",
                 action: PlayerActionType.SMALL_BLIND,
-                amount: gameAsAny.smallBlind,
+                amount: game.smallBlind,
                 index: 3
             };
             const turn2: Turn = {
                 playerId: "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 action: PlayerActionType.BIG_BLIND,
-                amount: gameAsAny.bigBlind,
+                amount: game.bigBlind,
                 index: 4
             };
             game.addAction(turn1, TexasHoldemRound.ANTE);
