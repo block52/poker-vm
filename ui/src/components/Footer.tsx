@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { NonPlayerActionType, PlayerActionType, PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import { useParams } from "react-router-dom";
 import { colors } from "../utils/colorConfig";
@@ -15,10 +15,14 @@ import { useGameStateContext } from "../context/GameStateContext";
 import { useNetwork } from "../context/NetworkContext";
 
 // Import action handlers (removing unused ones)
-import { handleCall, handleCheck, handleDeal, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import { handleCall, handleCheck, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import { dealCardsWithEntropy } from "../hooks/playerActions/dealCards";
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
 import "./Footer.css";
+
+// Import the DealEntropyModal
+import DealEntropyModal from "./playPage/DealEntropyModal";
 
 interface PokerActionPanelProps {
     onTransactionSubmitted?: (txHash: string | null) => void;
@@ -30,6 +34,9 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
 
     // Loading state for actions
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
+
+    // State for deal entropy modal
+    const [showDealModal, setShowDealModal] = useState(false);
 
     // Detect mobile landscape orientation
     const [isMobileLandscape, setIsMobileLandscape] = useState(window.innerWidth <= 926 && window.innerWidth > window.innerHeight);
@@ -287,6 +294,24 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         });
     };
 
+    // Handler for dealing cards with entropy from modal
+    const handleDealWithEntropy = useCallback(async (entropy: string) => {
+        if (!tableId) return;
+
+        setLoadingAction("deal");
+        try {
+            const result = await dealCardsWithEntropy(tableId, currentNetwork, entropy);
+            if (result?.hash && onTransactionSubmitted) {
+                onTransactionSubmitted(result.hash);
+            }
+        } catch (error: any) {
+            console.error("Failed to deal:", error);
+            throw error;
+        } finally {
+            setLoadingAction(null);
+        }
+    }, [tableId, currentNetwork, onTransactionSubmitted]);
+
     // Calculate button visibility flags
     const { canFoldAnytime, showActionButtons, showSmallBlindButton, showBigBlindButton } = useMemo(() => {
         const showButtons = isUserInTable;
@@ -312,11 +337,20 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                     isMobileLandscape ? "mx-1 space-y-0.5 max-w-full" : "lg:w-[850px] mx-4 lg:mx-0 space-y-2 lg:space-y-3 max-w-full"
                 }`}
             >
+                {/* Deal Entropy Modal */}
+                {showDealModal && (
+                    <DealEntropyModal
+                        tableId={tableId}
+                        onClose={() => setShowDealModal(false)}
+                        onDeal={handleDealWithEntropy}
+                    />
+                )}
+
                 {/* Deal Button - Show above other buttons when available */}
                 {shouldShowDealButton && (
-                    <div className="flex justify-center mb-2 lg:mb-3">
+                    <div className="flex justify-center gap-2 mb-2 lg:mb-3">
                         <button
-                            onClick={() => handleActionWithTransaction("deal", () => handleDeal(tableId, currentNetwork))}
+                            onClick={() => handleDealWithEntropy("")}
                             disabled={loadingAction !== null}
                             className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -334,6 +368,18 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                                 </svg>
                             )}
                             {loadingAction === "deal" ? "DEALING..." : "DEAL"}
+                        </button>
+                        <button
+                            onClick={() => setShowDealModal(true)}
+                            disabled={loadingAction !== null}
+                            className="text-white font-bold py-2 lg:py-3 px-4 lg:px-6 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: colors.ui.bgMedium, border: `1px solid ${colors.ui.borderColor}` }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Show Entropy
                         </button>
                     </div>
                 )}

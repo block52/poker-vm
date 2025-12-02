@@ -291,8 +291,13 @@ export class SigningCosmosClient extends CosmosClient {
     /**
      * Perform a game action (fold, call, raise, etc.)
      * The keeper calculates the action index automatically
+     *
+     * @param gameId - The game/table ID
+     * @param action - The action type (fold, call, raise, deal, etc.)
+     * @param amount - The amount for the action (default 0)
+     * @param data - Optional data string (e.g., entropy for deal action)
      */
-    public async performAction(gameId: string, action: string, amount: bigint = 0n): Promise<string> {
+    public async performAction(gameId: string, action: string, amount: bigint = 0n, data?: string): Promise<string> {
         await this.initializeSigningClient();
 
         if (!this.signingClient || !this.wallet) {
@@ -303,12 +308,17 @@ export class SigningCosmosClient extends CosmosClient {
         const player = account.address;
 
         // Create the message object (action index is calculated by the keeper)
-        const msgPerformAction = {
+        const msgPerformAction: Record<string, unknown> = {
             player,
             gameId,
             action,
             amount: Long.fromString(amount.toString(), true)
         };
+
+        // Add optional data field if provided (e.g., entropy for deal)
+        if (data) {
+            msgPerformAction.data = data;
+        }
 
         // Create the transaction message
         const msg: EncodeObject = {
@@ -322,7 +332,8 @@ export class SigningCosmosClient extends CosmosClient {
         console.log("🃏 Performing action:", {
             gameId,
             action,
-            amount: amount.toString()
+            amount: amount.toString(),
+            data: data ? `${data.substring(0, 20)}...` : undefined
         });
 
         try {
