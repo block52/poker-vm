@@ -189,7 +189,7 @@ export class DealerPositionManager implements IDealerPositionManager {
 
         // 3+ players: small blind is next active player after dealer
         const sbPlayer = this.findNextActivePlayer(dealerSeat);
-        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : (this.game.maxPlayers % dealerSeat) + 1;
+        return sbPlayer ? this.game.getPlayerSeatNumber(sbPlayer.address) : (dealerSeat % this.game.maxPlayers) + 1;
     }
 
     /**
@@ -202,13 +202,13 @@ export class DealerPositionManager implements IDealerPositionManager {
         if (activePlayers.length === 2) {
             const effectiveDealer = this.getEffectiveDealerPosition();
             const bbPlayer = this.findNextActivePlayer(effectiveDealer);
-            return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (this.game.maxPlayers % effectiveDealer) + 1;
+            return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (effectiveDealer % this.game.maxPlayers) + 1;
         }
 
         // 3+ players: big blind is next active player after small blind
         const sbSeat = this.getSmallBlindPosition();
         const bbPlayer = this.findNextActivePlayer(sbSeat);
-        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (this.game.maxPlayers % sbSeat) + 1;
+        return bbPlayer ? this.game.getPlayerSeatNumber(bbPlayer.address) : (sbSeat % this.game.maxPlayers) + 1;
     }
 
     /**
