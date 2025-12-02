@@ -66,7 +66,7 @@ const QRDeposit: React.FC = () => {
     const [showDebug, setShowDebug] = useState<boolean>(false);
 
     const [isBitcoinLoading, setIsBitcoinLoading] = useState<boolean>(false);
-    // const [usdcAmount, setUSDCAmount] = useState("100.00"); // Default value for USDC input
+    const [qrDepositAmount, setQrDepositAmount] = useState<string>("100"); // Amount for QR code deposit
 
     // Add state for mouse position
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -500,6 +500,32 @@ const QRDeposit: React.FC = () => {
             console.error("Failed to copy:", err);
         }
     };
+
+    // Generate EIP-681 URI for USDC token transfers
+    // Format: ethereum:<token_address>@<chain_id>/transfer?address=<recipient>&uint256=<amount>
+    const generateUSDCPaymentURI = useCallback((amount: string): string => {
+        if (!amount || parseFloat(amount) <= 0) {
+            // Fallback to simple address if no amount
+            return `ethereum:${DEPOSIT_ADDRESS}`;
+        }
+
+        // Convert USDC amount to wei (6 decimals for USDC)
+        const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1_000_000));
+
+        // EIP-681 format for token transfer on Ethereum mainnet (chain ID 1)
+        // This format is supported by MetaMask, Trust Wallet, Coinbase Wallet, etc.
+        return `ethereum:${TOKEN_ADDRESS}@1/transfer?address=${DEPOSIT_ADDRESS}&uint256=${amountInWei.toString()}`;
+    }, []);
+
+    // Generate deep link for mobile wallets
+    const generateMobileDeepLink = useCallback((amount: string): string => {
+        const amountInWei = amount && parseFloat(amount) > 0
+            ? BigInt(Math.floor(parseFloat(amount) * 1_000_000)).toString()
+            : "0";
+
+        // MetaMask deep link format
+        return `https://metamask.app.link/send/${TOKEN_ADDRESS}@1/transfer?address=${DEPOSIT_ADDRESS}&uint256=${amountInWei}`;
+    }, []);
 
     // Add polling effect
     useEffect(() => {
@@ -1182,30 +1208,129 @@ const QRDeposit: React.FC = () => {
                                             Pay with USDC ERC20
                                         </h2>
                                         <p className="text-sm mb-4" style={{ color: colors.ui.textSecondary + "dd" }}>
-                                            Only send USDC using the Ethereum network
+                                            Scan with your mobile wallet to deposit USDC
                                         </p>
                                     </div>
 
-                                    {/* QR Code */}
-                                    <div className="flex justify-center mb-6">
-                                        <div className="bg-white p-4 rounded-lg shadow-lg">
-                                            <QRCodeSVG value={`ethereum:${DEPOSIT_ADDRESS}`} size={200} level="H" />
+                                    {/* Deposit Amount Input */}
+                                    <div
+                                        className="backdrop-blur-sm rounded-lg p-4 mb-6"
+                                        style={{
+                                            backgroundColor: colors.ui.bgMedium,
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                        }}
+                                    >
+                                        <label className="text-sm text-gray-400 block mb-2">Deposit Amount (USDC)</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="number"
+                                                value={qrDepositAmount}
+                                                onChange={e => setQrDepositAmount(e.target.value)}
+                                                placeholder="100"
+                                                className="flex-1 p-3 rounded-lg focus:outline-none focus:ring-2 transition-all text-lg font-bold text-center"
+                                                style={{
+                                                    backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
+                                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`,
+                                                    color: "white"
+                                                }}
+                                                min="1"
+                                                step="1"
+                                            />
+                                            <div className="flex flex-col gap-1">
+                                                {[50, 100, 250].map(amount => (
+                                                    <button
+                                                        key={amount}
+                                                        type="button"
+                                                        onClick={() => setQrDepositAmount(amount.toString())}
+                                                        className="px-3 py-1 text-xs rounded transition-colors"
+                                                        style={{
+                                                            backgroundColor: qrDepositAmount === amount.toString()
+                                                                ? colors.brand.primary
+                                                                : hexToRgba(colors.ui.bgDark, 0.6),
+                                                            color: "white",
+                                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
+                                                        }}
+                                                    >
+                                                        ${amount}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
+                                        <p className="text-xs text-gray-500 mt-2 text-center">
+                                            QR code includes amount for compatible wallets
+                                        </p>
                                     </div>
+
+                                    {/* QR Code - Larger for mobile scanning */}
+                                    <div className="flex flex-col items-center mb-6">
+                                        <div className="bg-white p-6 rounded-xl shadow-lg">
+                                            <QRCodeSVG
+                                                value={generateUSDCPaymentURI(qrDepositAmount)}
+                                                size={280}
+                                                level="H"
+                                                includeMargin={true}
+                                            />
+                                        </div>
+                                        <p className="text-center mt-3 text-sm" style={{ color: colors.brand.primary }}>
+                                            Scan to deposit <strong>${qrDepositAmount || "0"} USDC</strong>
+                                        </p>
+                                    </div>
+
+                                    {/* Mobile Deep Link Button */}
+                                    <a
+                                        href={generateMobileDeepLink(qrDepositAmount)}
+                                        className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center gap-2 mb-4"
+                                        style={{
+                                            backgroundColor: hexToRgba(colors.brand.primary, 0.8),
+                                            color: "white",
+                                            textDecoration: "none"
+                                        }}
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M17.5 12a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0zm1.5 0a7 7 0 10-14 0 7 7 0 0014 0zm-7-3a1 1 0 011 1v1.5h1.5a1 1 0 110 2H13V15a1 1 0 11-2 0v-1.5H9.5a1 1 0 110-2H11V10a1 1 0 011-1z"/>
+                                        </svg>
+                                        Open in Mobile Wallet
+                                    </a>
 
                                     {/* Payment Details */}
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="text-sm text-gray-400">Payment address</label>
+                                            <label className="text-sm text-gray-400">Deposit Address (tap to copy)</label>
                                             <div
-                                                className="flex items-center justify-between p-2 rounded cursor-pointer"
+                                                className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                                                 style={{
                                                     backgroundColor: colors.ui.bgMedium,
                                                     border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
                                                 }}
-                                                onClick={() => copyToClipboard(DEPOSIT_ADDRESS)}
+                                                onClick={() => {
+                                                    copyToClipboard(DEPOSIT_ADDRESS);
+                                                    // Show brief feedback
+                                                    const el = document.getElementById("copy-feedback");
+                                                    if (el) {
+                                                        el.textContent = "Copied!";
+                                                        setTimeout(() => { el.textContent = "Tap to copy"; }, 2000);
+                                                    }
+                                                }}
                                             >
-                                                <span className="text-sm" style={{ color: "white" }}>{`${DEPOSIT_ADDRESS}`}</span>
+                                                <span className="text-sm font-mono break-all" style={{ color: "white" }}>{DEPOSIT_ADDRESS}</span>
+                                                <svg className="w-5 h-5 ml-2 flex-shrink-0" style={{ color: colors.brand.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                </svg>
+                                            </div>
+                                            <p id="copy-feedback" className="text-xs text-gray-500 mt-1 text-center">Tap to copy</p>
+                                        </div>
+                                        <div
+                                            className="p-3 rounded-lg text-xs"
+                                            style={{
+                                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
+                                                border: `1px solid ${hexToRgba("#eab308", 0.3)}`
+                                            }}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <span style={{ color: "#eab308" }}>⚠️</span>
+                                                <div style={{ color: colors.ui.textSecondary }}>
+                                                    <strong>Important:</strong> Only send USDC on Ethereum mainnet. Other tokens or networks will be lost.
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1248,200 +1373,6 @@ const QRDeposit: React.FC = () => {
                         </>
                     )}
                 </form>
-
-                {/* Web3 Wallet Connection Section - Now placed below as alternative */}
-                <div className="mt-8 pt-6 border-t" style={{ borderColor: hexToRgba(colors.brand.primary, 0.1) }}>
-                    <div className="text-center mb-4">
-                        <div className="flex items-center justify-center gap-3">
-                            <div className="h-px flex-1" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.1) }}></div>
-                            <span className="text-gray-400 text-sm px-2">OR</span>
-                            <div className="h-px flex-1" style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.1) }}></div>
-                        </div>
-                    </div>
-
-                    <div
-                        className="backdrop-blur-sm rounded-xl p-5 shadow-lg transition-all duration-300"
-                        style={{
-                            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
-                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
-                        }}
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <svg className="w-8 h-8" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                                    <g fill="none" fillRule="evenodd">
-                                        <circle cx="16" cy="16" r="16" fill="#2775CA" />
-                                        <path
-                                            fill="#FFF"
-                                            d="M15.75 27.5C9.26 27.5 4 22.24 4 15.75S9.26 4 15.75 4a11.75 11.75 0 110 23.5zm-.7-16.11a2.58 2.58 0 00-2.45 2.47c0 1.21.74 2 2.31 2.33 1.1.26 1.3.5 1.3.93s-.27.69-.9.69a4.46 4.46 0 01-2.44-.75l-.44 1.84a5.26 5.26 0 002.44.57v1.78h1.5V19c1.84-.17 2.87-1.33 2.87-2.69 0-1.17-.7-1.94-2.27-2.3-1.1-.23-1.34-.48-1.34-.91s.28-.66.83-.66a4.06 4.06 0 012 .54L19 11.3a5.66 5.66 0 00-2-.43v-1.8h-1.5v1.78a2.52 2.52 0 00-.45.04zm4.93 8.68a2.58 2.58 0 002.45-2.47c0-1.21-.74-2-2.31-2.33-1.1-.26-1.3-.5-1.3-.93s.27-.69.9-.69a4.46 4.46 0 012.44.75l.44-1.84a5.26 5.26 0 00-2.44-.57V9.26h-1.5V11a2.58 2.58 0 00-2.45 2.47c0 1.17.7 1.94 2.27 2.3 1.1.23 1.34.48 1.34.91s-.28.66-.83.66a4.06 4.06 0 01-2-.54L13 18.48a5.66 5.66 0 002 .43v1.8h1.5v-1.78c.15.03.3.04.45.04z"
-                                        />
-                                    </g>
-                                </svg>
-                                <div>
-                                    <h2 className="text-lg font-bold" style={{ color: "white" }}>
-                                        Method 2: Web3 Wallet Direct Deposit
-                                    </h2>
-                                    <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
-                                        Pay with USDC • Direct from your wallet
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            className="p-3 rounded-lg mb-4"
-                            style={{
-                                backgroundColor: hexToRgba(colors.ui.bgDark, 0.4),
-                                border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                            }}
-                        >
-                            <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
-                                <strong>How it works:</strong> Connect wallet → Send USDC directly → No conversion fees → Credits your gaming account
-                            </p>
-                        </div>
-
-                        {!isConnected ? (
-                            <button
-                                onClick={open}
-                                className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md hover:opacity-90"
-                                style={{
-                                    background: `linear-gradient(135deg, ${hexToRgba(colors.brand.primary, 0.7)} 0%, ${hexToRgba(
-                                        colors.brand.primary,
-                                        0.8
-                                    )} 100%)`
-                                }}
-                            >
-                                <div className="flex items-center justify-center gap-2">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                    <span className="text-white">Connect Wallet</span>
-                                </div>
-                            </button>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center" style={{ color: "white" }}>
-                                    <span>
-                                        Connected: {web3Address?.slice(0, 6)}...{web3Address?.slice(-4)}
-                                    </span>
-                                    <button
-                                        onClick={disconnect}
-                                        className="text-xs px-3 py-1 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-lg transition duration-300 shadow-md"
-                                    >
-                                        Disconnect
-                                    </button>
-                                </div>
-
-                                <div
-                                    className="p-3 rounded-lg"
-                                    style={{
-                                        backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-                                    }}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div
-                                                className="w-10 h-10 rounded-full flex items-center justify-center"
-                                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.2) }}
-                                            >
-                                                <span className="font-bold text-lg" style={{ color: colors.brand.primary }}>
-                                                    $
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold" style={{ color: "white" }}>
-                                                    Web3 Wallet USDC Balance
-                                                </p>
-                                                <p className="text-xs" style={{ color: colors.ui.textSecondary }}>
-                                                    Available on Ethereum Mainnet
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-right">
-                                                <p className="text-lg font-bold" style={{ color: colors.brand.primary }}>
-                                                    ${web3Balance || "0.00"}
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={() => fetchWeb3Balance()}
-                                                className="p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors"
-                                                title="Refresh balance"
-                                            >
-                                                <svg
-                                                    className="w-4 h-4"
-                                                    style={{ color: colors.brand.primary }}
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth="2"
-                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <p className="text-sm mb-2" style={{ color: colors.ui.textSecondary + "dd" }}>
-                                        Enter amount in USD:
-                                    </p>
-                                    <input
-                                        type="number"
-                                        value={depositAmount}
-                                        onChange={e => setDepositAmount(e.target.value)}
-                                        placeholder="100.00"
-                                        className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 transition-all"
-                                        style={{
-                                            backgroundColor: hexToRgba(colors.ui.bgDark, 0.6),
-                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`,
-                                            color: "white"
-                                        }}
-                                        min="0"
-                                        step="0.01"
-                                    />
-
-                                    <button
-                                        onClick={handleDirectTransfer}
-                                        disabled={!depositAmount || isTransferring || parseFloat(depositAmount) <= 0}
-                                        className="w-full py-3 px-4 rounded-lg transition duration-300 shadow-md"
-                                        style={{
-                                            backgroundColor:
-                                                !depositAmount || isTransferring || parseFloat(depositAmount) <= 0
-                                                    ? colors.ui.textSecondary
-                                                    : colors.brand.primary,
-                                            color: "white",
-                                            cursor: !depositAmount || isTransferring || parseFloat(depositAmount) <= 0 ? "not-allowed" : "pointer"
-                                        }}
-                                        onMouseEnter={e => {
-                                            if (depositAmount && !isTransferring && parseFloat(depositAmount) > 0) {
-                                                e.currentTarget.style.backgroundColor = colors.brand.secondary;
-                                            }
-                                        }}
-                                        onMouseLeave={e => {
-                                            if (depositAmount && !isTransferring && parseFloat(depositAmount) > 0) {
-                                                e.currentTarget.style.backgroundColor = colors.brand.primary;
-                                            }
-                                        }}
-                                    >
-                                        {isTransferring ? "Processing..." : "Deposit USDC"}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
             </div>
 
             {/* Error message display */}

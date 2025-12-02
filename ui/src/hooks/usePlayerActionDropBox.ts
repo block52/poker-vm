@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useGameProgress } from "./useGameProgress";
-import { PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 
 export interface PlayerActionDisplay {
   action: string;
@@ -22,12 +22,12 @@ const ACTION_DISPLAY_MAP: Record<string, string> = {
   [PlayerActionType.CHECK]: "CHECK",
   [PlayerActionType.SHOW]: "SHOW",
   [PlayerActionType.MUCK]: "MUCK",
-  [PlayerActionType.SIT_OUT]: "SITTING OUT",
   [PlayerActionType.SIT_IN]: "SIT IN",
 
-  // Non-player actions - we'll filter these out mostly
-  "join": "JOINED",
-  "leave": "LEFT",
+  // Non-player actions
+  [NonPlayerActionType.SIT_OUT]: "SITTING OUT",
+  [NonPlayerActionType.JOIN]: "JOINED",
+  [NonPlayerActionType.LEAVE]: "LEFT",
   "deal": "DEAL",
   "new-hand": "NEW HAND",
 
