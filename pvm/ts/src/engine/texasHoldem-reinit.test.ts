@@ -70,9 +70,10 @@ describe("Texas Holdem - Reinit", () => {
             expect(game.exists(PLAYER_2)).toBeTruthy();
             expect(game.getPlayer(PLAYER_1)).toBeDefined();
             expect(game.getPlayer(PLAYER_2)).toBeDefined();
-            expect(game.dealerPosition).toEqual(1);
-            expect(game.smallBlindPosition).toEqual(2);
-            expect(game.bigBlindPosition).toEqual(1);
+            // In heads-up: effective dealer was seat 1, so after rotation dealer moves to seat 2
+            expect(game.dealerPosition).toEqual(2);
+            expect(game.smallBlindPosition).toEqual(2);  // dealer is SB in heads-up
+            expect(game.bigBlindPosition).toEqual(1);    // non-dealer is BB
             expect(game.communityCards.length).toEqual(0);
 
             const player0 = game.getPlayer(PLAYER_1);
