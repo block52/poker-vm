@@ -200,10 +200,10 @@
     viem "^2.31.7"
     zustand "5.0.3"
 
-"@bitcoinbrisbane/block52@3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.1.0.tgz#5c179cde901740ad80092db228afb8cf5598e82e"
-  integrity sha512-FIIRT5+glBg8OtxBv/ZUwC+lPPJbG/JltwOBy4XwgarRl4ifbt4+OypjWrQggCGabZ3n4mPOmogIE/gBfscc5g==
+"@bitcoinbrisbane/block52@3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.1.1.tgz#1c4f06acfb786d5666e590776232d05294464602"
+  integrity sha512-4GOOzPd1UPjmmp2HeHHJPwmhatGnf59eixqWQV28zlP+Om9yOSWgjx4RauPhxPrkhiEQb5BlRpH4Zii78nA4+Q==
   dependencies:
     "@bufbuild/protobuf" "^2.10.0"
     "@cosmjs/crypto" "^0.32.4"
