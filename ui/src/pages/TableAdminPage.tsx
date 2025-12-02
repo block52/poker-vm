@@ -20,7 +20,7 @@ const GAME_CREATION_FEE_USDC = GAME_CREATION_FEE_BASE / Math.pow(10, USDC_DECIMA
  * Features:
  * - Create new poker tables (Sit & Go, Texas Hold'em)
  * - View all tables with their settings
- * - Copy table URL to clipboard
+ * - Join tables directly from the dashboard
  */
 
 interface TableData {
@@ -222,14 +222,6 @@ export default function TableAdminPage() {
             toast.error(`Failed to load games: ${gamesError.message}`);
         }
     }, [createError, gamesError]);
-
-    // Copy table URL to clipboard
-    const handleCopyTableUrl = (gameId: string) => {
-        const baseUrl = window.location.origin;
-        const tableUrl = `${baseUrl}/table/${gameId}`;
-        navigator.clipboard.writeText(tableUrl);
-        toast.success("Table URL copied to clipboard!");
-    };
 
     // Stats
     const totalTables = tables.length;
@@ -599,12 +591,12 @@ export default function TableAdminPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <button
-                                                    onClick={() => handleCopyTableUrl(table.gameId)}
-                                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                                                <Link
+                                                    to={`/table/${table.gameId}`}
+                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
                                                 >
-                                                    📋 Copy URL
-                                                </button>
+                                                    Join Table
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))
@@ -620,7 +612,7 @@ export default function TableAdminPage() {
                     <ul className="text-blue-300 text-sm space-y-1 list-disc list-inside">
                         <li>Create new poker tables with custom settings (buy-in, blinds, player count)</li>
                         <li>All tables are stored on the blockchain and queryable via REST API</li>
-                        <li>Copy the table URL to share with players</li>
+                        <li>Click "Join Table" to enter any available table</li>
                         <li>Tables show real-time status (waiting, playing, finished)</li>
                         <li>Default setup: Sit & Go, 4 players, Texas Hold'em</li>
                     </ul>
