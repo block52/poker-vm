@@ -25,7 +25,6 @@ import {
 
 // Import utils
 import { getActionByType, hasAction } from "../../utils/actionUtils";
-import { getRaiseToAmount } from "../../utils/raiseUtils";
 
 // Import sub-components
 import { ActionButton } from "./ActionButton";
@@ -164,20 +163,23 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
     }, [hasRaiseAction, hasBetAction, minRaise, minBet]);
 
     // Helper function to wrap action handlers with loading state
-    const handleActionWithTransaction = async (actionName: string, actionFn: () => Promise<string | null>) => {
-        try {
-            setLoadingAction(actionName);
-            const txHash = await actionFn();
-            if (txHash && onTransactionSubmitted) {
-                onTransactionSubmitted(txHash);
+    const handleActionWithTransaction = useCallback(
+        async (actionName: string, actionFn: () => Promise<string | null>) => {
+            try {
+                setLoadingAction(actionName);
+                const txHash = await actionFn();
+                if (txHash && onTransactionSubmitted) {
+                    onTransactionSubmitted(txHash);
+                }
+            } catch (error) {
+                console.error(`Error executing ${actionName}:`, error);
+                throw error;
+            } finally {
+                setLoadingAction(null);
             }
-        } catch (error) {
-            console.error(`Error executing ${actionName}:`, error);
-            throw error;
-        } finally {
-            setLoadingAction(null);
-        }
-    };
+        },
+        [onTransactionSubmitted]
+    );
 
     // Handler for dealing cards with entropy
     const handleDealWithEntropy = useCallback(
@@ -195,7 +197,7 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
                 }
             });
         },
-        [tableId, network, onTransactionSubmitted]
+        [tableId, network, handleActionWithTransaction]
     );
 
     // Action handlers
