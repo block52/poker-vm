@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
-import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
-import { getCosmosUrls } from "../utils/cosmos/urls";
+import { getSigningClient } from "../utils/cosmos/client";
 import { BRIDGE_DEPOSITS_ABI } from "../utils/bridge/abis";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
@@ -102,32 +100,13 @@ export default function ManualBridgeTrigger() {
         setDepositDetails(null);
 
         try {
-            // Get mnemonic from storage
-            const mnemonic = getCosmosMnemonic();
-            if (!mnemonic) {
-                throw new Error("No mnemonic found in storage");
-            }
-
-            // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
             console.log("🔗 Connecting to network:", {
                 name: currentNetwork.name,
-                rpc: rpcEndpoint,
-                rest: restEndpoint
+                rpc: currentNetwork.rpc,
+                rest: currentNetwork.rest
             });
 
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "usdc",
-                    gasPrice: "0.025stake" // Use stake for testnet fees
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             console.log("✅ Signing client created successfully");
             console.log("🌉 Processing deposit index:", index);

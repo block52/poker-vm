@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
-import { GameType, COSMOS_CONSTANTS, createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
-import { getCosmosAddress, getCosmosMnemonic } from "../utils/cosmos/storage";
-import { getCosmosUrls } from "../utils/cosmos/urls";
+import { GameType, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { getSigningClient } from "../utils/cosmos/client";
 import { useNetwork } from "../context/NetworkContext";
 
 // Type for creating new table options
@@ -44,40 +43,10 @@ export const useNewTable = (): UseNewTableReturn => {
         setNewGameId(null);
 
         try {
-            // Get user's Cosmos address and mnemonic
-            console.log("📍 Step 1: Getting user address and mnemonic...");
-            const userAddress = getCosmosAddress();
-            const mnemonic = getCosmosMnemonic();
-
-            console.log("User address:", userAddress);
-            console.log("Mnemonic exists:", !!mnemonic);
-
-            if (!userAddress || !mnemonic) {
-                throw new Error("Cosmos wallet not initialized. Please create or import a Cosmos wallet first.");
-            }
-
-            // Create signing client from mnemonic
-            console.log("📍 Step 2: Getting Cosmos URLs...");
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-            console.log("RPC Endpoint:", rpcEndpoint);
-            console.log("REST Endpoint:", restEndpoint);
-
-            console.log("📍 Step 3: Creating signing client...");
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: COSMOS_CONSTANTS.CHAIN_ID,
-                    prefix: COSMOS_CONSTANTS.ADDRESS_PREFIX,
-                    denom: "stake", // Gas token (use "stake" for testnet, "b52Token" for production)
-                    gasPrice: "0.01stake" // Chain requires minimum fees (200k gas * 0.01 = 2000 stake)
-                },
-                mnemonic
-            );
-            console.log("✅ Signing client created successfully");
+            const { signingClient, userAddress } = await getSigningClient(currentNetwork);
 
             // Convert buy-in from dollars to usdc micro-units using SDK constants
-            console.log("📍 Step 4: Converting amounts to micro-units...");
+            console.log("📍 Converting amounts to micro-units...");
             const minBuyInB52USDC = BigInt(Math.floor(gameOptions.minBuyIn * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
             const maxBuyInB52USDC = BigInt(Math.floor(gameOptions.maxBuyIn * Math.pow(10, COSMOS_CONSTANTS.USDC_DECIMALS)));
 
@@ -111,7 +80,7 @@ export const useNewTable = (): UseNewTableReturn => {
             // Timeout in seconds (5 minutes = 300 seconds)
             const timeoutSeconds = 300;
 
-            console.log("📍 Step 5: Calling signingClient.createGame...");
+            console.log("📍 Calling signingClient.createGame...");
             // Call SigningCosmosClient.createGame()
             const txHash = await signingClient.createGame(
                 gameTypeStr,
@@ -127,9 +96,6 @@ export const useNewTable = (): UseNewTableReturn => {
             if (txHash) {
                 console.log(`✅ Game creation transaction submitted: ${txHash}`);
                 setNewGameId(txHash);
-
-                // Note: The actual game ID will be returned in the transaction result
-                // You may want to query the transaction to get the game ID from events
             } else {
                 console.warn("⚠️ signingClient.createGame returned null/undefined");
             }

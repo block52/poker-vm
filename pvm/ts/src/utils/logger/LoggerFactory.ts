@@ -1,5 +1,5 @@
 import { ILogger } from "./ILogger";
-import { ConsoleLogger } from "./ConsoleLogger";
+import { DiskLogger } from "./DiskLogger";
 
 export class LoggerFactory {
   private static instance: ILogger | null = null;
@@ -10,7 +10,7 @@ export class LoggerFactory {
 
   public static getInstance(): ILogger {
     if (!LoggerFactory.instance) {
-      LoggerFactory.instance = new ConsoleLogger();
+      LoggerFactory.instance = new DiskLogger();
     }
     return LoggerFactory.instance;
   }

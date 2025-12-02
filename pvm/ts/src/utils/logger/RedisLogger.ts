@@ -29,6 +29,26 @@ export class RedisLogger implements ILogger {
     }
   }
 
+  async getLogs(lines: number = 100): Promise<string[]> {
+    try {
+      await this.ensureConnected();
+      // Get the last N entries from the list
+      const entries = await this.client.lRange(this.logKey, -lines, -1);
+
+      return entries.map(entry => {
+        try {
+          const parsed = JSON.parse(entry);
+          return `[${parsed.timestamp}] [${parsed.level.toUpperCase()}] ${parsed.message}`;
+        } catch {
+          return entry;
+        }
+      });
+    } catch (error) {
+      console.error("Error reading Redis logs:", error);
+      return [];
+    }
+  }
+
   async log(message: string, level: "info" | "warn" | "error" | "debug" = "info"): Promise<void> {
     try {
       await this.ensureConnected();

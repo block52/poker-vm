@@ -8,9 +8,9 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { getCosmosClient } from "../utils/cosmos/client";
+import { getCosmosClient, getSigningClient } from "../utils/cosmos/client";
 import { getCosmosMnemonic, setCosmosMnemonic } from "../utils/cosmos/storage";
-import { getAddressFromMnemonic, createSigningClientFromMnemonic } from "@bitcoinbrisbane/block52";
+import { getAddressFromMnemonic } from "@bitcoinbrisbane/block52";
 import { useNetwork } from "../context/NetworkContext";
 
 interface Balance {
@@ -115,25 +115,8 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
             throw new Error("No wallet connected");
         }
 
-        const mnemonic = getCosmosMnemonic();
-        if (!mnemonic) {
-            throw new Error("No mnemonic found. Please import a wallet first.");
-        }
-
         try {
-            // Create signing client using SDK helper function
-            // This properly handles gas price and fee calculation
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint: currentNetwork.rpc,
-                    restEndpoint: currentNetwork.rest,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "stake", // Native gas token
-                    gasPrice: "0.025stake" // Chain requires minimum fees (matches joinTable.ts)
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             // Convert amount to BigInt if it's a string
             const amountBigInt = typeof amount === "string" ? BigInt(amount) : amount;

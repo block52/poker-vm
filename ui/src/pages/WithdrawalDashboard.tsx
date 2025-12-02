@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { createSigningClientFromMnemonic, SigningCosmosClient } from "@bitcoinbrisbane/block52";
-import { getCosmosMnemonic } from "../utils/cosmos/storage";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNetwork } from "../context/NetworkContext";
 import { toast } from "react-toastify";
 import { ethers } from "ethers";
 import { formatMicroAsUsdc } from "../constants/currency";
-import { getCosmosUrls } from "../utils/cosmos/urls";
+import { getSigningClient } from "../utils/cosmos/client";
 import { useAccount } from "wagmi";
 import { BRIDGE_WITHDRAWAL_ABI } from "../utils/bridge/abis";
 import { base64ToHex } from "../utils/encodingUtils";
@@ -69,26 +67,7 @@ export default function WithdrawalDashboard() {
         setIsLoading(true);
 
         try {
-            // Get mnemonic from storage
-            const mnemonic = getCosmosMnemonic();
-            if (!mnemonic) {
-                throw new Error("No mnemonic found in storage");
-            }
-
-            // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
-            const signingClient: SigningCosmosClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "usdc",
-                    gasPrice: "0.025stake"
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             // Fetch withdrawal requests for this user
             const withdrawalRequests = await signingClient.listWithdrawalRequests(cosmosWallet.address);
@@ -141,26 +120,7 @@ export default function WithdrawalDashboard() {
         setIsInitiating(true);
 
         try {
-            // Get mnemonic from storage
-            const mnemonic = getCosmosMnemonic();
-            if (!mnemonic) {
-                throw new Error("No mnemonic found in storage");
-            }
-
-            // Create signing client
-            const { rpcEndpoint, restEndpoint } = getCosmosUrls(currentNetwork);
-
-            const signingClient = await createSigningClientFromMnemonic(
-                {
-                    rpcEndpoint,
-                    restEndpoint,
-                    chainId: "pokerchain",
-                    prefix: "b52",
-                    denom: "usdc",
-                    gasPrice: "0.025stake"
-                },
-                mnemonic
-            );
+            const { signingClient } = await getSigningClient(currentNetwork);
 
             console.log("🌉 Initiating withdrawal:", {
                 baseAddress: withdrawalBaseAddress,

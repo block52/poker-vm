@@ -13,14 +13,16 @@ export class DiskLogger implements ILogger {
     if (logPath) {
       this.logPath = logPath;
     } else {
-      const defaultLogDir = os.platform() === "win32"
-        ? path.join(process.env.APPDATA || os.homedir(), "logs")
-        : path.join(os.homedir(), "Library", "Logs");
-      this.logPath = path.join(defaultLogDir, "pvm");
+      // Use OS temp directory by default: /tmp/pvm on Linux/Mac, %TEMP%\pvm on Windows
+      this.logPath = path.join(os.tmpdir(), "pvm");
     }
 
     this.currentLogFile = path.join(this.logPath, "app.log");
     this.ensureLogDirectory();
+  }
+
+  getLogPath(): string {
+    return this.currentLogFile;
   }
 
   private ensureLogDirectory(): void {
@@ -72,6 +74,26 @@ export class DiskLogger implements ILogger {
       );
     } catch (error) {
       console.error("Error purging log files:", error);
+    }
+  }
+
+  /**
+   * Get the latest log entries
+   * @param lines Number of lines to return (default 100)
+   * @returns Array of log lines
+   */
+  async getLogs(lines: number = 100): Promise<string[]> {
+    try {
+      const content = await fs.readFile(this.currentLogFile, "utf8");
+      const allLines = content.split("\n").filter(line => line.trim() !== "");
+      // Return the last N lines
+      return allLines.slice(-lines);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return []; // No log file exists yet
+      }
+      console.error("Error reading log file:", error);
+      return [];
     }
   }
 }

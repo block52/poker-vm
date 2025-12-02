@@ -8,7 +8,6 @@ import {
 import { PerformActionCommand } from "./commands/cosmos/performActionCommand";
 
 import { makeErrorRPCResponse } from "./types/response";
-import { READ_METHODS, WRITE_METHODS } from "./types/rpc";
 import { LoggerFactory } from "./utils/logger";
 
 export class RPC {
@@ -21,24 +20,32 @@ export class RPC {
             return makeErrorRPCResponse(request.id, "Missing method");
         }
 
-        const method = request.method as RPCMethods;
+        const method = request.method as string;
+        return await this.handleMethod(method, request);
+    }
 
-        if (!Object.values(RPCMethods).includes(method)) {
-            return makeErrorRPCResponse(request.id, "Method not found");
-        }
+    private static async handleGetLogs(id: string, lines: number): Promise<RPCResponse<unknown>> {
+        try {
+            const logger = LoggerFactory.getInstance();
+            const logs = await logger.getLogs(lines);
 
-        if (READ_METHODS.includes(method)) {
-            return this.handleReadMethod(method, request);
+            return {
+                id,
+                result: {
+                    data: {
+                        logs
+                    },
+                    signature: ""
+                }
+            };
+        } catch (e) {
+            LoggerFactory.getInstance().log(String(e), "error");
+            return makeErrorRPCResponse(id, "Failed to retrieve logs");
         }
-        if (WRITE_METHODS.includes(method)) {
-            return this.handleWriteMethod(method, request);
-        }
-
-        return makeErrorRPCResponse(request.id, "Method not found");
     }
 
     // Return a JSONModel
-    static async handleReadMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<unknown>> {
+    static async handleMethod(method: string, request: RPCRequest): Promise<RPCResponse<unknown>> {
         const id = request.id;
         let result: ISignedResponse<unknown>;
 
@@ -50,39 +57,12 @@ export class RPC {
                     break;
                 }
 
-                default:
-                    return makeErrorRPCResponse(id, `Unknown read method: ${method}`);
-            }
-        } catch (e) {
-            LoggerFactory.getInstance().log(String(e), "error");
-            return makeErrorRPCResponse(id, "Operation failed");
-        }
+                case "get_logs": {
+                    const params = request.params as [number?] | undefined;
+                    const lines = params?.[0] ?? 100;
+                    return await this.handleGetLogs(id, lines);
+                }
 
-        if (result === null) {
-            return makeErrorRPCResponse(id, "Operation failed");
-        }
-
-        const processedData = result.data && typeof result.data === 'object' && 'toJson' in result.data && typeof (result.data as { toJson: () => unknown }).toJson === 'function'
-            ? (result.data as { toJson: () => unknown }).toJson()
-            : result.data;
-
-        return {
-            id,
-            result: {
-                data: processedData,
-                signature: result.signature
-            }
-        };
-    }
-
-    // These always return a transaction hash
-    static async handleWriteMethod(method: RPCMethods, request: RPCRequest): Promise<RPCResponse<unknown>> {
-        const id = request.id;
-        LoggerFactory.getInstance().log(`handleWriteMethod ${method} ${JSON.stringify(request)}`, "debug");
-
-        try {
-            switch (method) {
-                // This readonly now too
                 case RPCMethods.PERFORM_ACTION: {
                     // [RPCMethods.PERFORM_ACTION]: [string, string, string, string | null, string, number, string, string, string, number?];
                     // params: [from, to, action, value, index, gameStateJson, gameOptionsJson, data, timestamp?]
@@ -106,11 +86,27 @@ export class RPC {
                 }
 
                 default:
-                    return makeErrorRPCResponse(id, "Method not found");
+                    return makeErrorRPCResponse(id, `Unknown method: ${method}`);
             }
         } catch (e) {
             LoggerFactory.getInstance().log(String(e), "error");
             return makeErrorRPCResponse(id, "Operation failed");
         }
+
+        if (result === null) {
+            return makeErrorRPCResponse(id, "Operation failed");
+        }
+
+        const processedData = result.data && typeof result.data === 'object' && 'toJson' in result.data && typeof (result.data as { toJson: () => unknown }).toJson === 'function'
+            ? (result.data as { toJson: () => unknown }).toJson()
+            : result.data;
+
+        return {
+            id,
+            result: {
+                data: processedData,
+                signature: result.signature
+            }
+        };
     }
 }
