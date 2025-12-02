@@ -55,7 +55,7 @@ export const useGameProgress = (_tableId?: string): GameProgressReturn => {
             activePlayers,
             playerCount: activePlayers.length,
             handNumber: gameState.handNumber || 0,
-            actionCount: gameState.actionCount || 0,
+            actionCount: gameState.previousActions?.length || 0,
             nextToAct: gameState.nextToAct || 0,
             previousActions: gameState.previousActions || [],
             isLoading: false,
