@@ -1,28 +1,78 @@
 import { useCallback } from "react";
 import { useGameStateContext } from "../../context/GameStateContext";
-import { useNetwork } from "../../context/NetworkContext";
+import { useNetwork, NetworkEndpoints } from "../../context/NetworkContext";
+import { getSigningClient } from "../../utils/cosmos/client";
 import type { PlayerActionResult } from "../../types";
+import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
 
-// Import all action functions
-import { betHand } from "./betHand";
-import { callHand } from "./callHand";
-import { checkHand } from "./checkHand";
-import { foldHand } from "./foldHand";
-import { raiseHand } from "./raiseHand";
-import { muckCards } from "./muckCards";
-import { showCards } from "./showCards";
-import { sitIn } from "./sitIn";
-import { sitOut } from "./sitOut";
+/**
+ * Actions that can be performed optimistically.
+ * Uses SDK enums for type safety.
+ */
+export const OptimisticAction = {
+    // Player actions (from PlayerActionType)
+    FOLD: PlayerActionType.FOLD,
+    CHECK: PlayerActionType.CHECK,
+    BET: PlayerActionType.BET,
+    CALL: PlayerActionType.CALL,
+    RAISE: PlayerActionType.RAISE,
+    MUCK: PlayerActionType.MUCK,
+    SHOW: PlayerActionType.SHOW,
+    SIT_IN: PlayerActionType.SIT_IN,
+    // Non-player actions (from NonPlayerActionType)
+    SIT_OUT: NonPlayerActionType.SIT_OUT,
+} as const;
 
-type ActionType = "fold" | "call" | "check" | "bet" | "raise" | "muck" | "show" | "sit_in" | "sit_out";
+export type OptimisticActionType = typeof OptimisticAction[keyof typeof OptimisticAction];
+
+/**
+ * Actions that require an amount parameter
+ */
+const ACTIONS_REQUIRING_AMOUNT: Set<OptimisticActionType> = new Set([
+    OptimisticAction.BET,
+    OptimisticAction.CALL,
+    OptimisticAction.RAISE,
+]);
 
 interface UseOptimisticActionReturn {
     performOptimisticAction: (
         tableId: string,
-        action: ActionType,
+        action: OptimisticActionType,
         amount?: bigint
     ) => Promise<PlayerActionResult>;
     isPending: boolean;
+}
+
+/**
+ * Execute a poker action on the Cosmos blockchain.
+ * Uses the SDK's performAction method directly.
+ */
+async function executeAction(
+    tableId: string,
+    action: OptimisticActionType,
+    amount: bigint,
+    network: NetworkEndpoints
+): Promise<PlayerActionResult> {
+    const { signingClient, userAddress } = await getSigningClient(network);
+
+    console.log(`🎯 [executeAction] ${action} on Cosmos blockchain`);
+    console.log(`  Player: ${userAddress}`);
+    console.log(`  Game ID: ${tableId}`);
+    console.log(`  Amount: ${amount}`);
+
+    const transactionHash = await signingClient.performAction(
+        tableId,
+        action,
+        amount
+    );
+
+    console.log(`✅ [executeAction] Transaction submitted: ${transactionHash}`);
+
+    return {
+        hash: transactionHash,
+        gameId: tableId,
+        action: action
+    };
 }
 
 /**
@@ -30,14 +80,14 @@ interface UseOptimisticActionReturn {
  *
  * This hook:
  * 1. Sends the action via WebSocket for immediate broadcast to all subscribers
- * 2. Executes the actual blockchain transaction
+ * 2. Executes the actual blockchain transaction via SDK
  * 3. The WebSocket server will broadcast "pending" state immediately
  * 4. When the block confirms, the server broadcasts "confirmed" state
  *
  * Usage:
  *   const { performOptimisticAction } = useOptimisticAction();
- *   await performOptimisticAction(tableId, "fold");
- *   await performOptimisticAction(tableId, "raise", 100n);
+ *   await performOptimisticAction(tableId, OptimisticAction.FOLD);
+ *   await performOptimisticAction(tableId, OptimisticAction.RAISE, 100n);
  */
 export function useOptimisticAction(): UseOptimisticActionReturn {
     const { sendAction, pendingAction } = useGameStateContext();
@@ -46,10 +96,15 @@ export function useOptimisticAction(): UseOptimisticActionReturn {
     const performOptimisticAction = useCallback(
         async (
             tableId: string,
-            action: ActionType,
+            action: OptimisticActionType,
             amount?: bigint
         ): Promise<PlayerActionResult> => {
             console.log(`🚀 [useOptimisticAction] Starting optimistic action: ${action}`);
+
+            // Validate amount for actions that require it
+            if (ACTIONS_REQUIRING_AMOUNT.has(action) && amount === undefined) {
+                throw new Error(`Amount required for ${action}`);
+            }
 
             // Step 1: Send via WebSocket for immediate optimistic broadcast
             try {
@@ -60,46 +115,13 @@ export function useOptimisticAction(): UseOptimisticActionReturn {
                 console.warn(`⚠️ [useOptimisticAction] WebSocket notification failed:`, wsError);
             }
 
-            // Step 2: Execute the actual blockchain transaction
-            let result: PlayerActionResult;
-
-            switch (action) {
-                case "fold":
-                    result = await foldHand(tableId, currentNetwork);
-                    break;
-                case "call":
-                    // callHand signature: (tableId, amount, network) - amount is required
-                    if (amount === undefined) throw new Error("Amount required for call");
-                    result = await callHand(tableId, amount, currentNetwork);
-                    break;
-                case "check":
-                    result = await checkHand(tableId, currentNetwork);
-                    break;
-                case "bet":
-                    if (amount === undefined) throw new Error("Amount required for bet");
-                    // betHand signature: (tableId, amount, network)
-                    result = await betHand(tableId, amount, currentNetwork);
-                    break;
-                case "raise":
-                    if (amount === undefined) throw new Error("Amount required for raise");
-                    // raiseHand signature: (tableId, amount, network)
-                    result = await raiseHand(tableId, amount, currentNetwork);
-                    break;
-                case "muck":
-                    result = await muckCards(tableId, currentNetwork);
-                    break;
-                case "show":
-                    result = await showCards(tableId, currentNetwork);
-                    break;
-                case "sit_in":
-                    result = await sitIn(tableId, currentNetwork);
-                    break;
-                case "sit_out":
-                    result = await sitOut(tableId, currentNetwork);
-                    break;
-                default:
-                    throw new Error(`Unknown action: ${action}`);
-            }
+            // Step 2: Execute the blockchain transaction via SDK
+            const result = await executeAction(
+                tableId,
+                action,
+                amount ?? 0n,
+                currentNetwork
+            );
 
             console.log(`✅ [useOptimisticAction] Transaction submitted: ${result.hash}`);
             return result;
