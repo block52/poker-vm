@@ -188,40 +188,61 @@ fi
 print_success "Generated files found in $TS_CLIENT_DIR"
 
 ################################################################################
-# Copy Generated Types to SDK
+# Copy Generated Types to SDK (SAFE MODE - preserves custom settings)
 ################################################################################
 
-print_header "Copying Generated Types to SDK"
+print_header "Copying Generated Types to SDK (Safe Mode)"
 
 cd "$SDK_DIR"
 
-# Remove old poker module
-if [ -d "src/$POKER_MODULE" ]; then
-    print_info "Removing old $POKER_MODULE..."
-    rm -rf "src/$POKER_MODULE"
+# IMPORTANT: We do NOT delete and replace the entire module folder!
+# module.ts contains CUSTOM GAS SETTINGS that must be preserved.
+# See: PROTO_REGENERATION.md for details
+
+print_warning "SAFE MODE: Preserving module.ts with custom gas settings"
+
+# Ensure the poker module directory exists
+mkdir -p "src/$POKER_MODULE"
+
+# Copy only the SAFE files (types/ folder and registry.ts)
+# These are purely auto-generated and have no custom settings
+
+# 1. Copy types/ folder (contains message interfaces)
+print_info "Copying types/ folder..."
+rm -rf "src/$POKER_MODULE/types"
+cp -r "$TS_CLIENT_DIR/$POKER_MODULE/types" "src/$POKER_MODULE/"
+print_success "Copied types/ folder"
+
+# 2. Copy registry.ts (contains type URL registrations)
+print_info "Copying registry.ts..."
+cp "$TS_CLIENT_DIR/$POKER_MODULE/registry.ts" "src/$POKER_MODULE/"
+print_success "Copied registry.ts"
+
+# 3. Copy rest.ts (REST API client)
+print_info "Copying rest.ts..."
+cp "$TS_CLIENT_DIR/$POKER_MODULE/rest.ts" "src/$POKER_MODULE/"
+print_success "Copied rest.ts"
+
+# 4. Copy index.ts
+print_info "Copying index.ts..."
+cp "$TS_CLIENT_DIR/$POKER_MODULE/index.ts" "src/$POKER_MODULE/"
+print_success "Copied index.ts"
+
+# 5. DO NOT copy module.ts - it has custom gas settings!
+print_warning "SKIPPED module.ts - contains custom gas settings (gas: 250000)"
+print_info "If new message types were added, manually update module.ts"
+
+# Check if new messages were added that need manual update
+NEW_MESSAGES=$(diff <(grep "Msg" "$TS_CLIENT_DIR/$POKER_MODULE/module.ts" | grep -E "send|msg" | sort) \
+                     <(grep "Msg" "src/$POKER_MODULE/module.ts" | grep -E "send|msg" | sort) 2>/dev/null || true)
+if [ -n "$NEW_MESSAGES" ]; then
+    print_warning "ATTENTION: New message types detected!"
+    print_warning "You may need to manually add them to module.ts"
+    echo "$NEW_MESSAGES"
 fi
 
-# Copy new poker module
-print_info "Copying new $POKER_MODULE..."
-cp -r "$TS_CLIENT_DIR/$POKER_MODULE" "src/"
-
-if [ -d "src/$POKER_MODULE" ]; then
-    print_success "Copied $POKER_MODULE to SDK"
-else
-    print_error "Failed to copy $POKER_MODULE"
-    exit 1
-fi
-
-# Optional: Update standard Cosmos modules if they exist in ts-client
-print_info "Checking for Cosmos module updates..."
-for module in "${COSMOS_MODULES[@]}"; do
-    if [ -d "$TS_CLIENT_DIR/$module" ]; then
-        print_info "Updating $module..."
-        rm -rf "src/$module" 2>/dev/null || true
-        cp -r "$TS_CLIENT_DIR/$module" "src/"
-        print_success "Updated $module"
-    fi
-done
+# Skip Cosmos modules - they also have custom settings and rarely change
+print_info "Skipping Cosmos modules (rarely need updates)"
 
 ################################################################################
 # Verify Generated Types
