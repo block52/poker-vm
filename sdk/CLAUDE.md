@@ -8,7 +8,7 @@ When regenerating proto types, the `module.ts` file contains **custom gas settin
 ```typescript
 const defaultFee = {
   amount: [],
-  gas: "250000",  // <-- Required for poker actions (~203,000 gas)
+  gas: "1000000",  // <-- High limit for safety on all poker actions
 };
 ```
 

@@ -8,18 +8,18 @@
 
 ```typescript
 // Gasless transactions - chain has minimum-gas-prices = "0.0stake"
-// Note: Poker actions require ~203,000 gas, so 250,000 provides safety margin
+// Gas limit set to 1,000,000 for safety margin on all poker actions
 const defaultFee = {
   amount: [],
-  gas: "250000",  // <-- DO NOT CHANGE THIS VALUE
+  gas: "1000000",  // <-- DO NOT CHANGE THIS VALUE
 };
 ```
 
 **Why this matters:**
-- Poker actions (like `performAction`) require ~203,000 gas
+- Poker actions require varying amounts of gas depending on complexity
 - The default ignite template uses `200000` which is NOT enough
-- We use `250000` to provide a safety margin
-- If this gets overwritten, transactions will fail with "out of gas" errors
+- We use `1000000` to provide ample safety margin for all operations
+- If this gets overwritten, transactions may fail with "out of gas" errors
 
 ## Safe Regeneration Process
 

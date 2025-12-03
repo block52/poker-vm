@@ -229,7 +229,7 @@ cp "$TS_CLIENT_DIR/$POKER_MODULE/index.ts" "src/$POKER_MODULE/"
 print_success "Copied index.ts"
 
 # 5. DO NOT copy module.ts - it has custom gas settings!
-print_warning "SKIPPED module.ts - contains custom gas settings (gas: 250000)"
+print_warning "SKIPPED module.ts - contains custom gas settings (gas: 1000000)"
 print_info "If new message types were added, manually update module.ts"
 
 # Check if new messages were added that need manual update
