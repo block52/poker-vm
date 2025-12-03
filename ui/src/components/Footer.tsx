@@ -7,7 +7,7 @@ import { LoadingSpinner } from "./common";
 import { parseMicroToBigInt, microBigIntToUsdc, usdcToMicroBigInt } from "../constants/currency";
 
 // Import hooks from barrel file
-import { useTableState, useNextToActInfo, useGameOptions, betHand, postBigBlind, postSmallBlind, raiseHand } from "../hooks";
+import { useTableState, useNextToActInfo, useGameOptions } from "../hooks";
 
 // Import specific hooks not in barrel
 import { usePlayerLegalActions } from "../hooks/playerActions/usePlayerLegalActions";
@@ -15,7 +15,18 @@ import { useGameStateContext } from "../context/GameStateContext";
 import { useNetwork } from "../context/NetworkContext";
 
 // Import action handlers (removing unused ones)
-import { handleCall, handleCheck, handleFold, handleMuck, handleShow, handleStartNewHand } from "./common/actionHandlers";
+import {
+    handleBet,
+    handleCall,
+    handleCheck,
+    handleFold,
+    handleMuck,
+    handleShow,
+    handleStartNewHand,
+    handlePostSmallBlind,
+    handlePostBigBlind,
+    handleRaise
+} from "./common/actionHandlers";
 import { dealCardsWithEntropy } from "../hooks/playerActions/dealCards";
 import { getActionByType, hasAction } from "../utils/actionUtils";
 import { getRaiseToAmount } from "../utils/raiseUtils";
@@ -221,7 +232,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
 
     // Handler functions for different actions - simplified
     // All amounts are passed as bigint (micro-units) to the action hooks
-    const handlePostSmallBlind = async () => {
+    const handlePostSmallBlindAction = async () => {
         if (!tableId) return;
 
         // Use the bigint amount directly, fallback to gameOptions if action not available
@@ -229,20 +240,11 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         if (sbAmount === 0n) return;
 
         await handleActionWithTransaction("small-blind", async () => {
-            try {
-                console.log("🎰 Attempting to post small blind:", sbAmount.toString());
-                const result = await postSmallBlind(tableId, sbAmount, currentNetwork);
-                console.log("✅ Small blind posted successfully");
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("❌ Failed to post small blind:", error);
-                alert(`Failed to post small blind: ${error.message}`);
-                throw error;
-            }
+            return await handlePostSmallBlind(tableId, sbAmount, currentNetwork);
         });
     };
 
-    const handlePostBigBlind = async () => {
+    const handlePostBigBlindAction = async () => {
         if (!tableId) return;
 
         // Use the bigint amount directly, fallback to gameOptions if action not available
@@ -250,47 +252,29 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
         if (bbAmount === 0n) return;
 
         await handleActionWithTransaction("big-blind", async () => {
-            try {
-                const result = await postBigBlind(tableId, bbAmount, currentNetwork);
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("❌ Failed to post big blind:", error);
-                throw error;
-            }
+            return await handlePostBigBlind(tableId, bbAmount, currentNetwork);
         });
     };
 
-    const handleBet = async () => {
+    const handleBetAction = async () => {
         if (!tableId) return;
 
         // Convert USDC display amount to micro-units (bigint)
         const amountMicro = usdcToMicroBigInt(raiseAmount);
 
         await handleActionWithTransaction("bet", async () => {
-            try {
-                const result = await betHand(tableId, amountMicro, currentNetwork);
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("Failed to bet:", error);
-                throw error;
-            }
+            return await handleBet(amountMicro, tableId, currentNetwork);
         });
     };
 
-    const handleRaise = async () => {
+    const handleRaiseAction = async () => {
         if (!tableId) return;
 
         // Convert USDC display amount to micro-units (bigint)
         const amountMicro = usdcToMicroBigInt(raiseAmount);
 
         await handleActionWithTransaction("raise", async () => {
-            try {
-                const result = await raiseHand(tableId, amountMicro, currentNetwork);
-                return result?.hash || null;
-            } catch (error: any) {
-                console.error("Failed to raise:", error);
-                throw error;
-            }
+            return await handleRaise(tableId, amountMicro, currentNetwork);
         });
     };
 
@@ -457,7 +441,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
                         <div className={`flex justify-center items-center ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
                             {showSmallBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
-                                    onClick={handlePostSmallBlind}
+                                    onClick={handlePostSmallBlindAction}
                                     disabled={loadingAction !== null}
                                     className="btn-small-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                                 >
@@ -477,7 +461,7 @@ const PokerActionPanel: React.FC<PokerActionPanelProps> = React.memo(({ onTransa
 
                             {showBigBlindButton && playerStatus !== PlayerStatus.FOLDED && (
                                 <button
-                                    onClick={handlePostBigBlind}
+                                    onClick={handlePostBigBlindAction}
                                     disabled={loadingAction !== null}
                                     className="btn-big-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                                 >
@@ -576,7 +560,7 @@ transition-all duration-200 font-medium min-w-[80px] lg:min-w-[100px] disabled:o
                                     )}
                                     {(hasRaiseAction || hasBetAction) && (
                                         <button
-                                            onClick={hasRaiseAction ? handleRaise : handleBet}
+                                            onClick={hasRaiseAction ? handleRaiseAction : handleBetAction}
                                             disabled={loadingAction !== null || (hasRaiseAction ? isRaiseAmountInvalid : !hasBetAction || !isPlayerTurn)}
                                             className={`cursor-pointer hover:scale-105 btn-raise rounded-lg w-full border shadow-md backdrop-blur-sm transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
                                                 isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
