@@ -105,7 +105,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             rake: gameOptions.rake ? {
                 rakeFreeThreshold: BigInt(gameOptions.rake.rakeFreeThreshold),
                 rakePercentage: gameOptions.rake.rakePercentage,
-                rakeCap: BigInt(gameOptions.rake.rakeCap)
+                rakeCap: BigInt(gameOptions.rake.rakeCap),
+                owner: gameOptions.rake.owner || gameOptions.owner || ""
             } : undefined,
             owner: gameOptions.owner
         };
@@ -1816,7 +1817,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 gameOptions.rake = {
                     rakeFreeThreshold: BigInt(gameOptions.rake.rakeFreeThreshold),
                     rakePercentage: gameOptions.rake.rakePercentage,
-                    rakeCap: BigInt(gameOptions.rake.rakeCap)
+                    rakeCap: BigInt(gameOptions.rake.rakeCap),
+                    owner: gameOptions.rake.owner || gameOptions.owner || ""
                 };
             }
             // Owner is already a string, no conversion needed

@@ -60,6 +60,7 @@ export type RakeConfig = {
     rakeFreeThreshold: bigint; // Absolute value below which the hand is rake-free
     rakePercentage: number; // Percentage of the pot that is the rake (e.g., 5 for 5%)
     rakeCap: bigint; // Maximum rake amount (absolute cap)
+    owner: string; // Address that receives the rake
 };
 
 export type RakeConfigDTO = {
