@@ -838,7 +838,7 @@ const Table = React.memo(() => {
             {!isMobileLandscape && (
                 <div className="flex-shrink-0">
                     <div
-                        className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2"
+                        className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-[100] relative border-b-2"
                         style={headerStyle}
                     >
                         {/* Subtle animated background */}
@@ -961,7 +961,7 @@ const Table = React.memo(() => {
 
                     {/* SUB HEADER */}
                     <div
-                        className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header"
+                        className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header z-[1]"
                         style={subHeaderStyle}
                     >
                         {/* Animated background overlay */}
