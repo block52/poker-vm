@@ -13,6 +13,7 @@ import { showCards } from "./showCards";
 import { sitIn } from "./sitIn";
 import { sitOut } from "./sitOut";
 import { startNewHand } from "./startNewHand";
+import { useOptimisticAction } from "./useOptimisticAction";
 
 export {
     betHand,
@@ -29,5 +30,6 @@ export {
     showCards,
     sitIn,
     sitOut,
-    startNewHand
+    startNewHand,
+    useOptimisticAction
 };
