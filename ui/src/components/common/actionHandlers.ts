@@ -1,4 +1,4 @@
-import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand } from "../../hooks/playerActions";
+import { betHand, callHand, checkHand, dealCards, foldHand, muckCards, showCards, sitIn, sitOut, startNewHand, postSmallBlind, postBigBlind, raiseHand } from "../../hooks/playerActions";
 import type { NetworkEndpoints } from "../../context/NetworkContext";
 
 /**
@@ -147,6 +147,58 @@ const handleSitIn = async (tableId: string | undefined, network: NetworkEndpoint
     }
 };
 
+/**
+ * Handle post small blind action
+ * @param amount - Amount in micro-units as bigint (10^6 precision)
+ */
+const handlePostSmallBlind = async (tableId: string | undefined, amount: bigint, network: NetworkEndpoints): Promise<string | null> => {
+    if (!tableId) return null;
+
+    try {
+        console.log("🎰 Attempting to post small blind:", amount.toString());
+        const result = await postSmallBlind(tableId, amount, network);
+        console.log("✅ Small blind posted successfully");
+        return result?.hash || null;
+    } catch (error: any) {
+        console.error("❌ Failed to post small blind:", error);
+        alert(`Failed to post small blind: ${error.message}`);
+        return null;
+    }
+};
+
+/**
+ * Handle post big blind action
+ * @param amount - Amount in micro-units as bigint (10^6 precision)
+ */
+const handlePostBigBlind = async (tableId: string | undefined, amount: bigint, network: NetworkEndpoints): Promise<string | null> => {
+    if (!tableId) return null;
+
+    try {
+        const result = await postBigBlind(tableId, amount, network);
+        console.log("✅ Big blind posted successfully");
+        return result?.hash || null;
+    } catch (error: any) {
+        console.error("❌ Failed to post big blind:", error);
+        return null;
+    }
+};
+
+/**
+ * Handle raise action
+ * @param amount - Amount in micro-units as bigint (10^6 precision)
+ */
+const handleRaise = async (tableId: string | undefined, amount: bigint, network: NetworkEndpoints): Promise<string | null> => {
+    if (!tableId) return null;
+
+    try {
+        const result = await raiseHand(tableId, amount, network);
+        return result?.hash || null;
+    } catch (error: any) {
+        console.error("Failed to raise:", error);
+        return null;
+    }
+};
+
 export {
     handleBet,
     handleCall,
@@ -158,4 +210,7 @@ export {
     handleSitIn,
     handleSitOut,
     handleStartNewHand,
+    handlePostSmallBlind,
+    handlePostBigBlind,
+    handleRaise,
 };
