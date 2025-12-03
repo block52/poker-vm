@@ -49,8 +49,9 @@ export function getCardImageUrl(cardCode: string): string {
  * @param style - The card back style to use (default, block52, custom, or a custom URL)
  * @returns The URL to the card back SVG image
  * @example
- * getCardBackUrl() // Returns default Back.svg
+ * getCardBackUrl() // Returns default b52CardBack.svg
  * getCardBackUrl("block52") // Returns b52CardBack.svg
+ * getCardBackUrl("legacy") // Returns Back.svg
  * getCardBackUrl("custom") // Returns BackCustom.svg
  * getCardBackUrl("https://example.com/my-card-back.svg") // Returns custom URL
  */

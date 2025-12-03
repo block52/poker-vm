@@ -24,15 +24,19 @@ describe("cardImages", () => {
 
     describe("getCardBackUrl", () => {
         it("should return default card back when no style specified", () => {
-            expect(getCardBackUrl()).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+            expect(getCardBackUrl()).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
         });
 
         it("should return default card back when style is 'default'", () => {
-            expect(getCardBackUrl("default")).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+            expect(getCardBackUrl("default")).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
         });
 
         it("should return Block52 branded card back when style is 'block52'", () => {
             expect(getCardBackUrl("block52")).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
+        });
+
+        it("should return legacy card back when style is 'legacy'", () => {
+            expect(getCardBackUrl("legacy")).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
         });
 
         it("should return custom card back when style is 'custom'", () => {
@@ -68,19 +72,19 @@ describe("cardImages", () => {
         });
 
         it("should return card back for empty string", () => {
-            expect(getCardImageUrl("")).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+            expect(getCardImageUrl("")).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
         });
 
         it("should return card back for question marks", () => {
-            expect(getCardImageUrl("??")).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+            expect(getCardImageUrl("??")).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
         });
 
         it("should return card back for undefined", () => {
-            expect(getCardImageUrl(undefined as any)).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+            expect(getCardImageUrl(undefined as any)).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
         });
 
         it("should return card back for null", () => {
-            expect(getCardImageUrl(null as any)).toBe(`${GITHUB_CDN_BASE}/Back.svg`);
+            expect(getCardImageUrl(null as any)).toBe(`${GITHUB_CDN_BASE}/b52CardBack.svg`);
         });
 
         it("should handle all suits", () => {
