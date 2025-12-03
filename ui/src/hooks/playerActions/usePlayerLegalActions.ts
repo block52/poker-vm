@@ -20,11 +20,11 @@ const debugLog = (eventType: string, data: any) => {
 
 /**
  * Custom hook to fetch the legal actions for the current player
- * 
+ *
  * NOTE: Table identification and player legal actions are handled through GameStateContext subscription.
- * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress 
+ * Components call subscribeToTable(tableId) which creates a WebSocket connection with both tableAddress
  * and playerId (player address) parameters. This hook reads the real-time legal actions from that context.
- * 
+ *
  * @returns Object containing the player's legal actions and related information
  */
 export function usePlayerLegalActions(): PlayerLegalActionsResult {
@@ -82,10 +82,26 @@ export function usePlayerLegalActions(): PlayerLegalActionsResult {
                 isPlayerInGame = !!currentPlayer;
             }
 
-
-
-            // If there's still no player found, return default
+            // If there's still no player found, check for viewer legal actions (JOIN)
             if (!currentPlayer) {
+                // Check for viewer legal actions (e.g., JOIN action for non-players)
+                const viewerActions = (gameState as any).viewerLegalActions || [];
+                if (viewerActions.length > 0) {
+                    return {
+                        legalActions: viewerActions,
+                        isSmallBlindPosition: false,
+                        isBigBlindPosition: false,
+                        isDealerPosition: false,
+                        isPlayerTurn: false,
+                        playerStatus: null,
+                        playerSeat: null,
+                        isLoading: false,
+                        error: null,
+                        foldActionIndex: null,
+                        actionTurnIndex: viewerActions[0]?.index || 0,
+                        isPlayerInGame: false
+                    };
+                }
                 return defaultReturn;
             }
 

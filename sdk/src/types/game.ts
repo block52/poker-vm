@@ -186,6 +186,7 @@ export type TexasHoldemStateDTO = {
     round: TexasHoldemRound;
     winners: WinnerDTO[];
     results: ResultDTO[];
+    viewerLegalActions?: LegalActionDTO[]; // Legal actions for non-player viewers (e.g., JOIN)
     signature: string;
 };
 
