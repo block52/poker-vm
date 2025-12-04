@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { GameType, CosmosClient, getDefaultCosmosConfig } from "@bitcoinbrisbane/block52";
+import { useState, useEffect, useMemo } from "react";
+import { GameType } from "@bitcoinbrisbane/block52";
 import { Link } from "react-router-dom";
 import useCosmosWallet from "../hooks/useCosmosWallet";
-import { isValidPlayerAddress } from "../utils/addressUtils";
 import { useNewTable } from "../hooks/useNewTable";
 import { useFindGames } from "../hooks/useFindGames";
+import { useTablePlayerCounts } from "../hooks/useTablePlayerCounts";
 import { toast } from "react-toastify";
 import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
@@ -63,10 +63,6 @@ export default function TableAdminPage() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
 
-    // Player counts from game state
-    const [playerCounts, setPlayerCounts] = useState<Record<string, number>>({});
-    const [cosmosClient] = useState(() => new CosmosClient(getDefaultCosmosConfig()));
-
     // Get USDC balance from wallet
     const usdcBalance = useMemo(() => {
         const balance = cosmosWallet.balance.find(b => b.denom === "usdc");
@@ -100,6 +96,12 @@ export default function TableAdminPage() {
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
     }, [fetchedGames]);
+
+    // Get table addresses for player count hook
+    const tableAddresses = useMemo(() => tables.map(t => t.gameId), [tables]);
+
+    // Use the dedicated hook to fetch player counts
+    const { playerCounts: playerCountsMap } = useTablePlayerCounts(tableAddresses);
 
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
@@ -169,49 +171,6 @@ export default function TableAdminPage() {
             toast.error(`Failed to create table: ${errorMessage}`);
         }
     };
-
-    // Fetch player counts for all tables - only runs once when tables are first loaded
-    // Use a ref to track table IDs to prevent duplicate requests
-    const tableIdsRef = useRef<string>("");
-
-    useEffect(() => {
-        // Create a stable key from table IDs to detect actual changes
-        const currentTableIds = tables.map(t => t.gameId).join(",");
-
-        // Only fetch if tables changed (not just reference equality)
-        if (tables.length === 0 || currentTableIds === tableIdsRef.current) {
-            return;
-        }
-
-        tableIdsRef.current = currentTableIds;
-
-        const fetchPlayerCounts = async () => {
-            const counts: Record<string, number> = {};
-
-            for (const table of tables) {
-                try {
-                    const gameStateResponse = await cosmosClient.getGameState(table.gameId);
-                    if (gameStateResponse && gameStateResponse.game_state) {
-                        const gameState = JSON.parse(gameStateResponse.game_state);
-                        // Count players with valid addresses (seated players)
-                        // Filter out empty seats using the utility function
-                        const seatedPlayers = gameState.players?.filter((p: any) =>
-                            isValidPlayerAddress(p.address) && p.status !== "empty"
-                        ).length || 0;
-                        counts[table.gameId] = seatedPlayers;
-                    }
-                } catch (err) {
-                    console.error(`Failed to fetch game state for ${table.gameId}:`, err);
-                    // If we can't fetch game state, default to 0
-                    counts[table.gameId] = 0;
-                }
-            }
-
-            setPlayerCounts(counts);
-        };
-
-        fetchPlayerCounts();
-    }, [tables, cosmosClient]);
 
     // Show error toast if createError or gamesError changes
     useEffect(() => {
@@ -533,59 +492,63 @@ export default function TableAdminPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    tables.map(table => (
-                                        <tr key={table.gameId} className="hover:bg-gray-700/50 transition-colors">
-                                            <td className="px-6 py-4 text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <span className="text-white font-mono text-xs break-all max-w-[200px]" title={table.gameId}>
-                                                        {table.gameId.substring(0, 16)}...
+                                    tables.map(table => {
+                                        const playerCount = playerCountsMap.get(table.gameId);
+                                        const currentPlayers = playerCount?.currentPlayers ?? 0;
+                                        return (
+                                            <tr key={table.gameId} className="hover:bg-gray-700/50 transition-colors">
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <span className="text-white font-mono text-xs break-all max-w-[200px]" title={table.gameId}>
+                                                            {table.gameId.substring(0, 16)}...
+                                                        </span>
+                                                        <button
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(table.gameId);
+                                                                toast.success("Table ID copied!");
+                                                            }}
+                                                            className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth="2"
+                                                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <span className="text-white capitalize">{table.gameType.replace("-", " ")}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <span className="text-white font-semibold">
+                                                        {currentPlayers}/{table.maxPlayers}
                                                     </span>
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(table.gameId);
-                                                            toast.success("Table ID copied!");
-                                                        }}
-                                                        className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <span className="text-white font-mono text-sm">
+                                                        ${formatMicroAsUsdc(table.minBuyIn, 2)} - ${formatMicroAsUsdc(table.maxBuyIn, 2)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <span className="text-white font-mono text-sm">
+                                                        ${formatMicroAsUsdc(table.smallBlind, 2)} / ${formatMicroAsUsdc(table.bigBlind, 2)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <Link
+                                                        to={`/table/${table.gameId}`}
+                                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth="2"
-                                                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white capitalize">{table.gameType.replace("-", " ")}</span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white font-semibold">
-                                                    {playerCounts[table.gameId] ?? "-"}/{table.maxPlayers}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white font-mono text-sm">
-                                                    ${formatMicroAsUsdc(table.minBuyIn, 2)} - ${formatMicroAsUsdc(table.maxBuyIn, 2)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white font-mono text-sm">
-                                                    ${formatMicroAsUsdc(table.smallBlind, 2)} / ${formatMicroAsUsdc(table.bigBlind, 2)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <Link
-                                                    to={`/table/${table.gameId}`}
-                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
-                                                >
-                                                    Join Table
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                        Join Table
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
