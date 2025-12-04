@@ -101,7 +101,7 @@ export default function TableAdminPage() {
     const tableAddresses = useMemo(() => tables.map(t => t.gameId), [tables]);
 
     // Use the dedicated hook to fetch player counts
-    const { playerCounts: playerCountsMap } = useTablePlayerCounts(tableAddresses);
+    const { playerCounts: playerCountsMap, isLoading: isLoadingPlayerCounts } = useTablePlayerCounts(tableAddresses);
 
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
@@ -494,7 +494,7 @@ export default function TableAdminPage() {
                                 ) : (
                                     tables.map(table => {
                                         const playerCount = playerCountsMap.get(table.gameId);
-                                        const currentPlayers = playerCount?.currentPlayers ?? 0;
+                                        const currentPlayers = playerCount?.currentPlayers;
                                         return (
                                             <tr key={table.gameId} className="hover:bg-gray-700/50 transition-colors">
                                                 <td className="px-6 py-4 text-center">
@@ -525,7 +525,7 @@ export default function TableAdminPage() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     <span className="text-white font-semibold">
-                                                        {currentPlayers}/{table.maxPlayers}
+                                                        {currentPlayers !== undefined ? `${currentPlayers}/${table.maxPlayers}` : isLoadingPlayerCounts ? "..." : `0/${table.maxPlayers}`}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
