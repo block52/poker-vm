@@ -112,7 +112,7 @@ export function useOptimisticAction(): UseOptimisticActionReturn {
                 console.log(`✅ [useOptimisticAction] WebSocket notification sent for: ${action}`);
             } catch (wsError) {
                 // WebSocket notification failed - continue with transaction anyway
-                console.warn(`⚠️ [useOptimisticAction] WebSocket notification failed:`, wsError);
+                console.warn("⚠️ [useOptimisticAction] WebSocket notification failed:", wsError);
             }
 
             // Step 2: Execute the blockchain transaction via SDK

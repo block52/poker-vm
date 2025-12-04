@@ -198,7 +198,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                     signature: authPayload?.signature
                 };
 
-                console.log(`[GameStateContext] 📤 Sending subscription message:`, {
+                console.log("[GameStateContext] 📤 Sending subscription message:", {
                     ...subscriptionMessage,
                     signature: subscriptionMessage.signature ? subscriptionMessage.signature.substring(0, 20) + "..." : undefined
                 });
