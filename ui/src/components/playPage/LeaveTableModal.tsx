@@ -135,7 +135,6 @@ const LeaveTableModal: React.FC<LeaveTableModalProps> = React.memo(({ isOpen, on
                             <span className="text-gray-400 text-sm">Your Stack:</span>
                             <span className="text-white font-bold text-lg">${stackFormatted}</span>
                         </div>
-                        <p className="text-gray-400 text-xs mt-2">This amount will be returned to your wallet.</p>
                     </div>
                 </div>
 
@@ -180,13 +179,6 @@ const LeaveTableModal: React.FC<LeaveTableModalProps> = React.memo(({ isOpen, on
                     >
                         Cancel
                     </button>
-                </div>
-
-                {/* Note */}
-                <div className="mt-4" style={{ color: colors.ui.textSecondary }}>
-                    <p className="text-xs">
-                        <strong>Note:</strong> You can rejoin the table at any time if seats are available.
-                    </p>
                 </div>
             </div>
         </div>
