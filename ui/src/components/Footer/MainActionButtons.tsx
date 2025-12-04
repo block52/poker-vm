@@ -40,6 +40,7 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
 }) => {
     return (
         <div className={`flex justify-between ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
+            {/* Fold button with loading spinner - issue #1377 */}
             {canFold && (
                 <button
                     className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
