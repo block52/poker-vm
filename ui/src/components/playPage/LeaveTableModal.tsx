@@ -95,7 +95,7 @@ const LeaveTableModal: React.FC<LeaveTableModalProps> = React.memo(({ isOpen, on
                 <div className="absolute -left-8 -bottom-8 text-6xl opacity-10 -rotate-12">♥</div>
 
                 {/* Header */}
-                <h2 className="text-2xl font-bold mb-4 text-white flex items-center">
+                <h2 className="text-2xl font-bold mb-4 text-white flex items-center justify-center">
                     <span style={{ color: colors.accent.danger }} className="mr-2">
                         ⚠
                     </span>
