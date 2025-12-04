@@ -599,7 +599,7 @@ export default function TableAdminPage() {
                         <li>Create new poker tables with custom settings (buy-in, blinds, player count)</li>
                         <li>All tables are stored on the blockchain and queryable via REST API</li>
                         <li>Click "Join Table" to enter any available table</li>
-                        <li>Tables show real-time status (waiting, playing, finished)</li>
+                        <li>Tables show real-time player counts and game settings</li>
                         <li>Default setup: Sit & Go, 4 players, Texas Hold'em</li>
                     </ul>
                 </div>
