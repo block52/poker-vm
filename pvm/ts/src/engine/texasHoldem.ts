@@ -1224,7 +1224,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Check if the round has ended and advance if needed
         // Loop through remaining rounds if auto-runout is triggered (all-in scenario)
-        while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.SHOWDOWN && this._currentRound !== TexasHoldemRound.END) {
+        // Continue until we reach END round
+        while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.END) {
             this.nextRound();
         }
     }
