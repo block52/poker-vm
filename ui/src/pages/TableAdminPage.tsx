@@ -517,11 +517,11 @@ export default function TableAdminPage() {
                         <table className="w-full">
                             <thead className="bg-gray-900">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Table ID</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Game Type</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Table ID</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Game Type</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Players</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Buy In</th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Blinds</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Buy In</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Blinds</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Action</th>
                                 </tr>
                             </thead>
@@ -535,8 +535,8 @@ export default function TableAdminPage() {
                                 ) : (
                                     tables.map(table => (
                                         <tr key={table.gameId} className="hover:bg-gray-700/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
+                                            <td className="px-6 py-4 text-center">
+                                                <div className="flex items-center justify-center gap-2">
                                                     <span className="text-white font-mono text-xs break-all max-w-[200px]" title={table.gameId}>
                                                         {table.gameId.substring(0, 16)}...
                                                     </span>
@@ -558,7 +558,7 @@ export default function TableAdminPage() {
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <span className="text-white capitalize">{table.gameType.replace("-", " ")}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -566,12 +566,12 @@ export default function TableAdminPage() {
                                                     {playerCounts[table.gameId] ?? "-"}/{table.maxPlayers}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <span className="text-white font-mono text-sm">
                                                     ${formatMicroAsUsdc(table.minBuyIn, 2)} - ${formatMicroAsUsdc(table.maxBuyIn, 2)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <span className="text-white font-mono text-sm">
                                                     ${formatMicroAsUsdc(table.smallBlind, 2)} / ${formatMicroAsUsdc(table.bigBlind, 2)}
                                                 </span>
