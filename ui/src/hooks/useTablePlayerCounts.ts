@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { getCosmosUrls } from "../utils/cosmos/urls";
 import { useNetwork } from "../context/NetworkContext";
+import { isValidPlayerAddress } from "../utils/addressUtils";
 
 interface TablePlayerCount {
     tableId: string;
@@ -53,8 +54,10 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
                         if (data.game_state) {
                             const gameState = JSON.parse(data.game_state);
 
-                            // Count non-null active players
-                            const activePlayers = gameState.players?.filter((p: any) => p !== null).length || 0;
+                            // Count players with valid addresses (same logic as Table component)
+                            const activePlayers = gameState.players?.filter((p: any) => 
+                                p && isValidPlayerAddress(p.address)
+                            ).length || 0;
                             const maxPlayers = gameState.gameOptions?.maxPlayers || 0;
 
                             return {
