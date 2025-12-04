@@ -522,14 +522,13 @@ export default function TableAdminPage() {
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Players</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Buy In</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider">Blinds</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700">
                                 {tables.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-8 text-center text-gray-400">
+                                        <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                                             {isLoading ? "Loading tables..." : "No tables found. Create your first table!"}
                                         </td>
                                     </tr>
@@ -578,19 +577,6 @@ export default function TableAdminPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span
-                                                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                                                        table.status === "playing"
-                                                            ? "bg-green-900/50 text-green-300 border border-green-700"
-                                                            : table.status === "waiting"
-                                                            ? "bg-yellow-900/50 text-yellow-300 border border-yellow-700"
-                                                            : "bg-gray-700 text-gray-300"
-                                                    }`}
-                                                >
-                                                    {table.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <Link
                                                     to={`/table/${table.gameId}`}
                                                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
@@ -613,7 +599,7 @@ export default function TableAdminPage() {
                         <li>Create new poker tables with custom settings (buy-in, blinds, player count)</li>
                         <li>All tables are stored on the blockchain and queryable via REST API</li>
                         <li>Click "Join Table" to enter any available table</li>
-                        <li>Tables show real-time status (waiting, playing, finished)</li>
+                        <li>Tables show real-time player counts and game settings</li>
                         <li>Default setup: Sit & Go, 4 players, Texas Hold'em</li>
                     </ul>
                 </div>
