@@ -23,6 +23,7 @@ import WithdrawalDashboard from "./pages/WithdrawalDashboard";
 import TableAdminPage from "./pages/TableAdminPage";
 import GenesisState from "./pages/GenesisState";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import ValidatorsPage from "./pages/ValidatorsPage";
 import FaucetPage from "./pages/FaucetPage";
 import { TestSdk } from "./test-sdk";
 import { GameStateProvider } from "./context/GameStateContext";
@@ -82,6 +83,7 @@ function AppContent() {
                 <Route path="/admin/bridge" element={<BridgeAdminDashboard />} />
                 <Route path="/admin/bridge-manual" element={<ManualBridgeTrigger />} />
                 <Route path="/admin/tables" element={<TableAdminPage />} />
+                <Route path="/admin/validators" element={<ValidatorsPage />} />
                 <Route path="/admin/test-signing" element={<TestSigningPage />} />
 
                 {/* Legacy routes - redirect to new admin paths */}
