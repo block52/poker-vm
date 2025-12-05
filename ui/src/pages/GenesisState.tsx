@@ -234,7 +234,7 @@ export default function GenesisState() {
             <AnimatedBackground />
             <div className="max-w-7xl mx-auto space-y-8 relative z-10">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-lg p-8 border border-blue-500/30">
+                <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-lg p-8 border border-blue-500/30 text-center">
                     <h1 className="text-4xl font-bold text-white mb-2">🔷 Genesis State - Block 0</h1>
                     <p className="text-gray-300">
                         Initial blockchain state when the chain was started. Shows which accounts exist from genesis.
