@@ -32,7 +32,7 @@ const LogoComponent: React.FC = React.memo(() => {
 
     return (
         <img 
-            src="/block52.png" 
+            src="/logo1080.png" 
             alt="Block52 Logo" 
             className="h-8 w-auto object-contain"
             onError={() => setImageError(true)}
