@@ -109,8 +109,8 @@ export const GlobalHeader: React.FC = () => {
                 <div className="hidden lg:flex items-center justify-between">
                     {/* Left: Logo + Navigation */}
                     <div className="flex items-center gap-6">
-                        <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
-                            {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                        <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
+                            <img src="/block52.png" alt="Block52 Logo" className="h-8 w-auto object-contain" />
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -171,8 +171,8 @@ export const GlobalHeader: React.FC = () => {
                 {/* Mobile/Tablet Layout: Keep original structure */}
                 <div className="flex lg:hidden items-center justify-between">
                     {/* Left side - Logo/Title */}
-                    <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
-                        {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                    <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
+                        <img src="/block52.png" alt="Block52 Logo" className="h-8 w-auto object-contain" />
                     </Link>
 
                     {/* Right side - Network Selector & Mobile Menu */}

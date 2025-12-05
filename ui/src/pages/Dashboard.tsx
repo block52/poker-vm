@@ -1282,7 +1282,7 @@ const Dashboard: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex justify-center items-center mb-6">
                             <h1 className="text-4xl font-extrabold text-white text-shadow">Start Playing Now</h1>
                         </div>
 
