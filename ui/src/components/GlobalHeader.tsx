@@ -110,7 +110,17 @@ export const GlobalHeader: React.FC = () => {
                     {/* Left: Logo + Navigation */}
                     <div className="flex items-center gap-6">
                         <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
-                            <img src="/block52.png" alt="Block52 Logo" className="h-8 w-auto object-contain" />
+                            <img 
+                                src="/block52.png" 
+                                alt="Block52 Logo" 
+                                className="h-8 w-auto object-contain"
+                                onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                    e.currentTarget.insertAdjacentHTML("afterend", 
+                                        `<span style="color: ${colors.brand.primary}; font-weight: bold; font-size: 1.25rem;">Block 52</span>`
+                                    );
+                                }}
+                            />
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -172,7 +182,17 @@ export const GlobalHeader: React.FC = () => {
                 <div className="flex lg:hidden items-center justify-between">
                     {/* Left side - Logo/Title */}
                     <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
-                        <img src="/block52.png" alt="Block52 Logo" className="h-8 w-auto object-contain" />
+                        <img 
+                            src="/block52.png" 
+                            alt="Block52 Logo" 
+                            className="h-8 w-auto object-contain"
+                            onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                e.currentTarget.insertAdjacentHTML("afterend", 
+                                    `<span style="color: ${colors.brand.primary}; font-weight: bold; font-size: 1.25rem;">Block 52</span>`
+                                );
+                            }}
+                        />
                     </Link>
 
                     {/* Right side - Network Selector & Mobile Menu */}
