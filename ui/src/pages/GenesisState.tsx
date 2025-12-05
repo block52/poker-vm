@@ -263,7 +263,7 @@ export default function GenesisState() {
                                 </button>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-gray-400">Status:</span>
+                                <span className="text-gray-400 pl-3">Status:</span>
                                 {myWalletInGenesis ? (
                                     <span className="text-green-400 font-semibold">✅ In Genesis (has funds)</span>
                                 ) : (
