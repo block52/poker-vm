@@ -15,17 +15,15 @@ interface MenuItem {
 }
 
 // Logo component with error handling - uses React state instead of direct DOM manipulation
-const LogoComponent: React.FC = () => {
+// Memoized to prevent unnecessary re-renders
+const LogoComponent: React.FC = React.memo(() => {
     const [imageError, setImageError] = useState(false);
 
     if (imageError) {
         return (
             <span 
-                style={{ 
-                    color: colors.brand.primary, 
-                    fontWeight: "bold", 
-                    fontSize: "1.25rem" 
-                }}
+                className="text-xl font-bold"
+                style={{ color: colors.brand.primary }}
             >
                 Block 52
             </span>
@@ -40,7 +38,7 @@ const LogoComponent: React.FC = () => {
             onError={() => setImageError(true)}
         />
     );
-};
+});
 
 // Reusable component for network status and selector (extracted to avoid recreation on every render)
 const NetworkStatusAndSelector: React.FC<{ latestBlockHeight: string | null; hasError: boolean }> = ({ latestBlockHeight, hasError }) => (
