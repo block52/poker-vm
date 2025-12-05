@@ -251,7 +251,7 @@ export default function GenesisState() {
                         <h2 className="text-xl font-bold text-white mb-3">🔐 Your Connected Wallet</h2>
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <span className="text-gray-400 w-16">Address:</span>
+                                <span className="text-gray-400 w-16 text-right">Address:</span>
                                 <code className="text-white font-mono text-sm bg-black/30 px-2 py-1 rounded">
                                     {cosmosAddress}
                                 </code>
@@ -263,7 +263,7 @@ export default function GenesisState() {
                                 </button>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-gray-400 w-16">Status:</span>
+                                <span className="text-gray-400 w-16 text-right">Status:</span>
                                 {myWalletInGenesis ? (
                                     <span className="text-green-400 font-semibold">✅ In Genesis (has funds)</span>
                                 ) : (
