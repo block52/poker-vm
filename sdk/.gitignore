@@ -7,3 +7,7 @@
 !jest.config.js
 !eslint.config.js
 !smoke-test.js
+
+# Proto regeneration backups
+.backup/
+.last_backup
