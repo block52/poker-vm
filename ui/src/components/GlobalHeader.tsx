@@ -14,6 +14,32 @@ interface MenuItem {
     newTab?: boolean; // Open link in new tab
 }
 
+// Logo component with error handling - uses React state instead of direct DOM manipulation
+// Memoized to prevent unnecessary re-renders
+const LogoComponent: React.FC = React.memo(() => {
+    const [imageError, setImageError] = useState(false);
+
+    if (imageError) {
+        return (
+            <span 
+                className="text-xl font-bold"
+                style={{ color: colors.brand.primary }}
+            >
+                Block 52
+            </span>
+        );
+    }
+
+    return (
+        <img 
+            src="/logo1080.png" 
+            alt="Block52 Logo" 
+            className="h-8 w-auto object-contain"
+            onError={() => setImageError(true)}
+        />
+    );
+});
+
 // Reusable component for network status and selector (extracted to avoid recreation on every render)
 const NetworkStatusAndSelector: React.FC<{ latestBlockHeight: string | null; hasError: boolean }> = ({ latestBlockHeight, hasError }) => (
     <>
@@ -109,8 +135,8 @@ export const GlobalHeader: React.FC = () => {
                 <div className="hidden lg:flex items-center justify-between">
                     {/* Left: Logo + Navigation */}
                     <div className="flex items-center gap-6">
-                        <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
-                            {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                        <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
+                            <LogoComponent />
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -171,8 +197,8 @@ export const GlobalHeader: React.FC = () => {
                 {/* Mobile/Tablet Layout: Keep original structure */}
                 <div className="flex lg:hidden items-center justify-between">
                     {/* Left side - Logo/Title */}
-                    <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
-                        {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                    <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
+                        <LogoComponent />
                     </Link>
 
                     {/* Right side - Network Selector & Mobile Menu */}
