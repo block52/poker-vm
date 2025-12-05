@@ -14,6 +14,21 @@ interface MenuItem {
     newTab?: boolean; // Open link in new tab
 }
 
+// Handler for logo image error - safely creates fallback text element
+const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    img.style.display = "none";
+    
+    // Create fallback span element safely
+    const fallbackText = document.createElement("span");
+    fallbackText.textContent = "Block 52";
+    fallbackText.style.color = colors.brand.primary;
+    fallbackText.style.fontWeight = "bold";
+    fallbackText.style.fontSize = "1.25rem";
+    
+    img.insertAdjacentElement("afterend", fallbackText);
+};
+
 // Reusable component for network status and selector (extracted to avoid recreation on every render)
 const NetworkStatusAndSelector: React.FC<{ latestBlockHeight: string | null; hasError: boolean }> = ({ latestBlockHeight, hasError }) => (
     <>
@@ -114,12 +129,7 @@ export const GlobalHeader: React.FC = () => {
                                 src="/block52.png" 
                                 alt="Block52 Logo" 
                                 className="h-8 w-auto object-contain"
-                                onError={(e) => {
-                                    e.currentTarget.style.display = "none";
-                                    e.currentTarget.insertAdjacentHTML("afterend", 
-                                        `<span style="color: ${colors.brand.primary}; font-weight: bold; font-size: 1.25rem;">Block 52</span>`
-                                    );
-                                }}
+                                onError={handleLogoError}
                             />
                         </Link>
 
@@ -186,12 +196,7 @@ export const GlobalHeader: React.FC = () => {
                             src="/block52.png" 
                             alt="Block52 Logo" 
                             className="h-8 w-auto object-contain"
-                            onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                                e.currentTarget.insertAdjacentHTML("afterend", 
-                                    `<span style="color: ${colors.brand.primary}; font-weight: bold; font-size: 1.25rem;">Block 52</span>`
-                                );
-                            }}
+                            onError={handleLogoError}
                         />
                     </Link>
 
