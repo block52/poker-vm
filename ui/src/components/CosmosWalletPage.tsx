@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
@@ -27,6 +28,7 @@ const SeedPhraseGrid = ({ mnemonic, hidden = false }: { mnemonic: string; hidden
 };
 
 const CosmosWalletPage = () => {
+    const navigate = useNavigate();
     const [mnemonic, setMnemonic] = useState<string>("");
     const [address, setAddress] = useState<string>("");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -214,6 +216,13 @@ const CosmosWalletPage = () => {
                                 style={{ backgroundColor: colors.accent.danger }}
                             >
                                 Clear Wallet
+                            </button>
+                            <button
+                                onClick={() => navigate("/")}
+                                className="w-full text-white px-6 py-3 rounded-xl font-semibold mt-3 transition-all hover:opacity-80"
+                                style={{ backgroundColor: colors.brand.primary }}
+                            >
+                                Return to Dashboard
                             </button>
                         </div>
                     </div>
