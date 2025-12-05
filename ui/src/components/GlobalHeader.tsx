@@ -14,19 +14,32 @@ interface MenuItem {
     newTab?: boolean; // Open link in new tab
 }
 
-// Handler for logo image error - safely creates fallback text element
-const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    img.style.display = "none";
-    
-    // Create fallback span element safely
-    const fallbackText = document.createElement("span");
-    fallbackText.textContent = "Block 52";
-    fallbackText.style.color = colors.brand.primary;
-    fallbackText.style.fontWeight = "bold";
-    fallbackText.style.fontSize = "1.25rem";
-    
-    img.insertAdjacentElement("afterend", fallbackText);
+// Logo component with error handling - uses React state instead of direct DOM manipulation
+const LogoComponent: React.FC = () => {
+    const [imageError, setImageError] = useState(false);
+
+    if (imageError) {
+        return (
+            <span 
+                style={{ 
+                    color: colors.brand.primary, 
+                    fontWeight: "bold", 
+                    fontSize: "1.25rem" 
+                }}
+            >
+                Block 52
+            </span>
+        );
+    }
+
+    return (
+        <img 
+            src="/block52.png" 
+            alt="Block52 Logo" 
+            className="h-8 w-auto object-contain"
+            onError={() => setImageError(true)}
+        />
+    );
 };
 
 // Reusable component for network status and selector (extracted to avoid recreation on every render)
@@ -125,12 +138,7 @@ export const GlobalHeader: React.FC = () => {
                     {/* Left: Logo + Navigation */}
                     <div className="flex items-center gap-6">
                         <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
-                            <img 
-                                src="/block52.png" 
-                                alt="Block52 Logo" 
-                                className="h-8 w-auto object-contain"
-                                onError={handleLogoError}
-                            />
+                            <LogoComponent />
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -192,12 +200,7 @@ export const GlobalHeader: React.FC = () => {
                 <div className="flex lg:hidden items-center justify-between">
                     {/* Left side - Logo/Title */}
                     <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
-                        <img 
-                            src="/block52.png" 
-                            alt="Block52 Logo" 
-                            className="h-8 w-auto object-contain"
-                            onError={handleLogoError}
-                        />
+                        <LogoComponent />
                     </Link>
 
                     {/* Right side - Network Selector & Mobile Menu */}
