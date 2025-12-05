@@ -210,20 +210,22 @@ const CosmosWalletPage = () => {
                                 </div>
                             )}
 
-                            <button
-                                onClick={handleClearWallet}
-                                className="w-full text-white px-6 py-3 rounded-xl font-semibold mt-4 transition-all hover:opacity-80"
-                                style={{ backgroundColor: colors.accent.danger }}
-                            >
-                                Clear Wallet
-                            </button>
-                            <button
-                                onClick={() => navigate("/")}
-                                className="w-full text-white px-6 py-3 rounded-xl font-semibold mt-3 transition-all hover:opacity-80"
-                                style={{ backgroundColor: colors.brand.primary }}
-                            >
-                                Return to Dashboard
-                            </button>
+                            <div className="flex gap-3 mt-4">
+                                <button
+                                    onClick={handleClearWallet}
+                                    className="flex-1 text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
+                                    style={{ backgroundColor: colors.accent.danger }}
+                                >
+                                    Clear Wallet
+                                </button>
+                                <button
+                                    onClick={() => navigate("/")}
+                                    className="flex-1 text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
+                                    style={{ backgroundColor: colors.brand.primary }}
+                                >
+                                    Return to Dashboard
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
