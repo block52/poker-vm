@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for a multiplayer scenario.
 describe("Texas Holdem - Multiplayer", () => {
@@ -16,10 +16,10 @@ describe("Texas Holdem - Multiplayer", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
-            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4", getNextTestTimestamp());
         });
 
         it("should have the correct players pre flop", () => {
@@ -37,7 +37,7 @@ describe("Texas Holdem - Multiplayer", () => {
         });
 
         it("should have correct legal actions after posting the blinds", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 5, ONE_TOKEN);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 5, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Get legal actions for the next player
@@ -53,13 +53,13 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(nextToAct?.address).toEqual(PLAYER_2);
 
             // Perform the big blind action
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 6, TWO_TOKENS);
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 6, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
             // Now deal the cards
             actual = game.getLegalActions(PLAYER_1);
 
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 7, undefined, "seed");
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 7, undefined, "seed", getNextTestTimestamp());
             actual = game.getLegalActions(PLAYER_1);
 
             // Should be players 3 turn
@@ -73,7 +73,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Open the action for player 3
-            game.performAction(PLAYER_3, PlayerActionType.RAISE, 8, TWO_TOKENS);
+            game.performAction(PLAYER_3, PlayerActionType.RAISE, 8, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.pot).toEqual(500000000000000000n);
 
             // Should be players 4 turn
@@ -87,7 +87,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Call from player 4
-            game.performAction(PLAYER_4, PlayerActionType.CALL, 9, TWO_TOKENS);
+            game.performAction(PLAYER_4, PlayerActionType.CALL, 9, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.pot).toEqual(700000000000000000n);
 
             // Should be players 1 turn
@@ -102,7 +102,7 @@ describe("Texas Holdem - Multiplayer", () => {
             expect(actual[2].action).toEqual(PlayerActionType.RAISE);
 
             // Call from player 1
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 10, TWO_TOKENS);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 10, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.pot).toEqual(900000000000000000n);
 
             // Should be players 2 turn

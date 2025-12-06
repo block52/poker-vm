@@ -9,7 +9,7 @@ import {
     TexasHoldemStateDTO
 } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
-import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN } from "./testConstants";
+import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN, getNextTestTimestamp } from "./testConstants";
 import { Player } from "../models/player";
 import { SitAndGoStatusManager } from "./managers/statusManager";
 import { PayoutManager } from "./managers/payoutManager";
@@ -62,11 +62,11 @@ describe.skip("Sit and Go - Full Game", () => {
             // Phase 1: Player Registration
 
             // Players join the tournament
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
-            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
-            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4", getNextTestTimestamp());
+            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5", getNextTestTimestamp());
 
             // Verify we're waiting for the last player
             expect(game.getPlayerCount()).toBe(5);
@@ -75,7 +75,7 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(statusManager.getState()).toBe(GameStatus.WAITING_FOR_PLAYERS);
 
             // Last player joins - tournament should be ready to start
-            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6");
+            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6", getNextTestTimestamp());
             expect(game.getPlayerCount()).toBe(6);
 
             const finalLivePlayers = game.findLivePlayers();
@@ -103,11 +103,11 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
 
             // Post blinds (Player 1 = small blind, Player 2 = big blind)
-            game.performAction(seatMap[1], PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
-            game.performAction(seatMap[2], PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
+            game.performAction(seatMap[1], PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[2], PlayerActionType.BIG_BLIND, 8, TWO_TOKENS, undefined, getNextTestTimestamp());
 
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
-            game.performAction(seatMap[3], NonPlayerActionType.DEAL, 9);
+            game.performAction(seatMap[3], NonPlayerActionType.DEAL, 9, undefined, undefined, getNextTestTimestamp());
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
             // Action starts with Player 3 (UTG)
@@ -115,11 +115,11 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(nextToAct?.address).toBe(seatMap[3]);
 
             // Simulate some early game action - conservative play
-            game.performAction(seatMap[3], PlayerActionType.FOLD, 10);
+            game.performAction(seatMap[3], PlayerActionType.FOLD, 10, undefined, undefined, getNextTestTimestamp());
             let previousActions = game.getPreviousActions();
             expect(previousActions.length).toBe(10);
 
-            game.performAction(seatMap[4], PlayerActionType.ALL_IN, 11);
+            game.performAction(seatMap[4], PlayerActionType.ALL_IN, 11, undefined, undefined, getNextTestTimestamp());
             previousActions = game.getPreviousActions();
             expect(previousActions.length).toBe(11);
 
@@ -127,17 +127,17 @@ describe.skip("Sit and Go - Full Game", () => {
             const legalActionsPlayer4 = game.getLegalActions(seatMap[4]);
             expect(legalActionsPlayer4.length).toEqual(0); // Player 4 should have no legal actions after going all-in
 
-            game.performAction(seatMap[5], PlayerActionType.ALL_IN, 12);
-            game.performAction(seatMap[6], PlayerActionType.ALL_IN, 13);
-            game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14);
+            game.performAction(seatMap[5], PlayerActionType.ALL_IN, 12, undefined, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[6], PlayerActionType.ALL_IN, 13, undefined, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[1], PlayerActionType.ALL_IN, 14, undefined, undefined, getNextTestTimestamp());
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP); // Should still be preflop
 
-            // game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15);
+            // game.performAction(seatMap[2], PlayerActionType.ALL_IN, 15, undefined, undefined, getNextTestTimestamp());
             // Check the legal actions of player 2
             const legalActionsPlayer2 = game.getLegalActions(seatMap[2]);
             expect(legalActionsPlayer2.length).toBeGreaterThan(0); // Player 2 should have legal actions
 
-            game.performAction(seatMap[2], PlayerActionType.FOLD, 15);
+            game.performAction(seatMap[2], PlayerActionType.FOLD, 15, undefined, undefined, getNextTestTimestamp());
 
             expect(game.communityCards.length).toBe(5); // All community cards should be dealt
             expect(game.currentRound).toBe(TexasHoldemRound.END); // Should jump to end
@@ -169,11 +169,11 @@ describe.skip("Sit and Go - Full Game", () => {
             // Phase 1: Player Registration
 
             // Players join the tournament
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
-            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
-            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4", getNextTestTimestamp());
+            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5", getNextTestTimestamp());
 
             // Verify we're waiting for the last player
             expect(game.getPlayerCount()).toBe(5);
@@ -182,7 +182,7 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(statusManager.getState()).toBe(GameStatus.WAITING_FOR_PLAYERS);
 
             // Last player joins - tournament should be ready to start
-            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6");
+            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6", getNextTestTimestamp());
             expect(game.getPlayerCount()).toBe(6);
 
             const finalLivePlayers = game.findLivePlayers();
@@ -209,11 +209,11 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
 
             // Post blinds (Player 1 = small blind, Player 2 = big blind)
-            game.performAction(seatMap[1], PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN);
-            game.performAction(seatMap[2], PlayerActionType.BIG_BLIND, 8, TWO_TOKENS);
+            game.performAction(seatMap[1], PlayerActionType.SMALL_BLIND, 7, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[2], PlayerActionType.BIG_BLIND, 8, TWO_TOKENS, undefined, getNextTestTimestamp());
 
             expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
-            game.performAction(seatMap[3], NonPlayerActionType.DEAL, 9);
+            game.performAction(seatMap[3], NonPlayerActionType.DEAL, 9, undefined, undefined, getNextTestTimestamp());
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
             // Action starts with Player 3 (UTG)
@@ -221,12 +221,12 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(nextToAct?.address).toBe(seatMap[3]);
 
             // Simulate some early game action - conservative play
-            game.performAction(seatMap[3], PlayerActionType.FOLD, 10);
-            game.performAction(seatMap[4], PlayerActionType.CALL, 11, TWO_TOKENS);
-            game.performAction(seatMap[5], PlayerActionType.FOLD, 12);
-            game.performAction(seatMap[6], PlayerActionType.FOLD, 13);
-            game.performAction(seatMap[1], PlayerActionType.CALL, 14, ONE_TOKEN); // Complete small blind
-            game.performAction(seatMap[2], PlayerActionType.CHECK, 15);
+            game.performAction(seatMap[3], PlayerActionType.FOLD, 10, undefined, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[4], PlayerActionType.CALL, 11, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[5], PlayerActionType.FOLD, 12, undefined, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[6], PlayerActionType.FOLD, 13, undefined, undefined, getNextTestTimestamp());
+            game.performAction(seatMap[1], PlayerActionType.CALL, 14, ONE_TOKEN, undefined, getNextTestTimestamp()); // Complete small blind
+            game.performAction(seatMap[2], PlayerActionType.CHECK, 15, undefined, undefined, getNextTestTimestamp());
 
             expect(game.pot).toBeGreaterThan(0n);
 
@@ -258,7 +258,7 @@ describe.skip("Sit and Go - Full Game", () => {
                     for (const action of legalActions) {
                         if (action.action === PlayerActionType.BET) {
                             const betAmount = BigInt(action.max || 0n);
-                            game.performAction(nextPlayer.address, PlayerActionType.BET, index, betAmount);
+                            game.performAction(nextPlayer.address, PlayerActionType.BET, index, betAmount, undefined, getNextTestTimestamp());
                             index++;
                         }
                     }
@@ -273,7 +273,7 @@ describe.skip("Sit and Go - Full Game", () => {
                     for (const action of legalActions2) {
                         if (action.action === PlayerActionType.CALL) {
                             const betAmount = BigInt(action.max || 0n);
-                            game.performAction(nextPlayer2.address, PlayerActionType.CALL, index, betAmount);
+                            game.performAction(nextPlayer2.address, PlayerActionType.CALL, index, betAmount, undefined, getNextTestTimestamp());
                             index++;
                         }
                     }
@@ -281,7 +281,7 @@ describe.skip("Sit and Go - Full Game", () => {
                     // Now fold out all remaining players for simplicity
                     let foldingPlayer = game.getNextPlayerToAct();
                     while (foldingPlayer) {
-                        game.performAction(foldingPlayer.address, PlayerActionType.FOLD, index);
+                        game.performAction(foldingPlayer.address, PlayerActionType.FOLD, index, undefined, undefined, getNextTestTimestamp());
                         foldingPlayer = game.getNextPlayerToAct();
                         index++;
                     }
@@ -289,7 +289,7 @@ describe.skip("Sit and Go - Full Game", () => {
 
                     // // Bet their entire stack if they can
                     // if (legalActions.includes(PlayerActionType.BET)) {
-                    //     game.performAction(nextPlayer!.address, PlayerActionType.BET, handsPlayed + 20, nextPlayer!.chips);
+                    //     game.performAction(nextPlayer!.address, PlayerActionType.BET, handsPlayed + 20, nextPlayer!.chips, undefined, getNextTestTimestamp());
                     // }
 
                     // // Get current active players
@@ -311,7 +311,7 @@ describe.skip("Sit and Go - Full Game", () => {
                     //     const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, activePlayers, 6);
                     //     const payout = payoutManager.calculateCurrentPayout();
 
-                    //     game.performAction(playerToEliminate.address, NonPlayerActionType.LEAVE, handsPlayed + 20);
+                    //     game.performAction(playerToEliminate.address, NonPlayerActionType.LEAVE, handsPlayed + 20, undefined, undefined, getNextTestTimestamp());
 
                     //     console.log(`✓ Player eliminated - ${game.getPlayerCount()} players remaining`);
 
@@ -343,7 +343,7 @@ describe.skip("Sit and Go - Full Game", () => {
                 const payoutManager = new PayoutManager(ONE_HUNDRED_TOKENS, finalPlayers);
                 const _thirdPlacePayout = payoutManager.calculatePayout(3);
 
-                game.performAction(thirdPlacePlayer.address, NonPlayerActionType.LEAVE, 100);
+                game.performAction(thirdPlacePlayer.address, NonPlayerActionType.LEAVE, 100, undefined, undefined, getNextTestTimestamp());
             }
 
             const remainingPlayers = game.findLivePlayers();
@@ -362,7 +362,7 @@ describe.skip("Sit and Go - Full Game", () => {
                 expect(secondPlacePayout).toBe((ONE_HUNDRED_TOKENS * 6n * 30n) / 100n); // 30% of prize pool
                 expect(firstPlacePayout).toBe((ONE_HUNDRED_TOKENS * 6n * 60n) / 100n); // 60% of prize pool
 
-                game.performAction(secondPlacePlayer.address, NonPlayerActionType.LEAVE, 101);
+                game.performAction(secondPlacePlayer.address, NonPlayerActionType.LEAVE, 101, undefined, undefined, getNextTestTimestamp());
             }
 
             // Final verification
@@ -409,23 +409,23 @@ describe.skip("Sit and Go - Full Game", () => {
 
         it("should track elimination order correctly", () => {
             // Join all players
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
-            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4");
-            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5");
-            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
+            game.performAction(PLAYER_4, NonPlayerActionType.JOIN, 4, ONE_HUNDRED_TOKENS, "seat=4", getNextTestTimestamp());
+            game.performAction(PLAYER_5, NonPlayerActionType.JOIN, 5, ONE_HUNDRED_TOKENS, "seat=5", getNextTestTimestamp());
+            game.performAction(PLAYER_6, NonPlayerActionType.JOIN, 6, ONE_HUNDRED_TOKENS, "seat=6", getNextTestTimestamp());
 
             expect(game.getPlayerCount()).toBe(6);
 
             // Simulate eliminations in specific order
-            game.performAction(PLAYER_6, NonPlayerActionType.LEAVE, 10); // 6th place
+            game.performAction(PLAYER_6, NonPlayerActionType.LEAVE, 10, undefined, undefined, getNextTestTimestamp()); // 6th place
             expect(game.getPlayerCount()).toBe(5);
 
-            game.performAction(PLAYER_5, NonPlayerActionType.LEAVE, 11); // 5th place
+            game.performAction(PLAYER_5, NonPlayerActionType.LEAVE, 11, undefined, undefined, getNextTestTimestamp()); // 5th place
             expect(game.getPlayerCount()).toBe(4);
 
-            game.performAction(PLAYER_4, NonPlayerActionType.LEAVE, 12); // 4th place
+            game.performAction(PLAYER_4, NonPlayerActionType.LEAVE, 12, undefined, undefined, getNextTestTimestamp()); // 4th place
             expect(game.getPlayerCount()).toBe(3);
 
             // At this point, we're at the final table (top 3)
@@ -439,8 +439,8 @@ describe.skip("Sit and Go - Full Game", () => {
             expect(remainingAddresses).toContain(PLAYER_3);
 
             // Final eliminations for podium places
-            game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, 13); // 3rd place
-            game.performAction(PLAYER_2, NonPlayerActionType.LEAVE, 14); // 2nd place
+            game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, 13, undefined, undefined, getNextTestTimestamp()); // 3rd place
+            game.performAction(PLAYER_2, NonPlayerActionType.LEAVE, 14, undefined, undefined, getNextTestTimestamp()); // 2nd place
 
             // Winner
             const winner = game.findLivePlayers();
