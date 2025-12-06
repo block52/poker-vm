@@ -1,33 +1,15 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { colors, getAnimationGradient, hexToRgba } from "../utils/colorConfig";
+import { colors, hexToRgba } from "../utils/colorConfig";
 import { useCosmosWallet } from "../hooks";
+import { AnimatedBackground } from "../components/common/AnimatedBackground";
 
 // Faucet API endpoint - configurable via environment variable
 // Local development: VITE_FAUCET_API_URL=http://localhost:3001
 // Production: defaults to Digital Ocean server
 const FAUCET_API_URL = import.meta.env.VITE_FAUCET_API_URL || "https://seahorse-app-m6569.ondigitalocean.app";
 
-// Hexagon pattern overlay (same as Dashboard)
-const HexagonPattern = () => {
-    return (
-        <div className="absolute inset-0 z-0 opacity-5 overflow-hidden pointer-events-none">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <pattern id="hexagons-faucet" width="50" height="43.4" patternUnits="userSpaceOnUse" patternTransform="scale(5)">
-                        <polygon
-                            points="25,0 50,14.4 50,43.4 25,57.7 0,43.4 0,14.4"
-                            fill="none"
-                            stroke={colors.brand.primary}
-                            strokeWidth="0.5"
-                        />
-                    </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#hexagons-faucet)" />
-            </svg>
-        </div>
-    );
-};
+
 
 interface FaucetInfo {
     configured: boolean;
@@ -61,6 +43,8 @@ export default function FaucetPage() {
         waitTimeMs: 0,
         waitTimeFormatted: null
     });
+
+
 
     // Fetch faucet info on mount
     useEffect(() => {
@@ -133,20 +117,7 @@ export default function FaucetPage() {
         return balance ? (parseInt(balance.amount) / 1000000).toFixed(2) : "0.00";
     }, [cosmosWallet.balance]);
 
-    // Background styles (same as Dashboard)
-    const backgroundStyle1 = useMemo(
-        () => ({
-            background: `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 1)} 0%, ${hexToRgba(colors.ui.bgMedium, 1)} 100%)`
-        }),
-        []
-    );
 
-    const backgroundStyle2 = useMemo(
-        () => ({
-            background: getAnimationGradient(0, 0)
-        }),
-        []
-    );
 
     // Card style matching Dashboard
     const cardStyle = useMemo(
@@ -219,10 +190,8 @@ export default function FaucetPage() {
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden p-8 pb-24">
-            {/* Background animations (same as Dashboard) */}
-            <div className="fixed inset-0 z-0" style={backgroundStyle1} />
-            <HexagonPattern />
-            <div className="fixed inset-0 z-0 opacity-20" style={backgroundStyle2} />
+            {/* Background animations matching Wallet page */}
+            <AnimatedBackground />
 
             {/* Back Button */}
             <div className="fixed top-6 left-6 z-20">
