@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { colors, getAnimationGradient, hexToRgba } from "../utils/colorConfig";
 import { useCosmosWallet } from "../hooks";
@@ -66,19 +66,35 @@ export default function FaucetPage() {
 
     // Mouse position tracking for dynamic backgrounds (same as Dashboard)
     const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+    const animationFrameRef = useRef<number | undefined>(undefined);
 
-    // Track mouse movement for dynamic background
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            setMousePosition({
-                x: (e.clientX / window.innerWidth) * 100,
-                y: (e.clientY / window.innerHeight) * 100
+    // Track mouse movement for dynamic background - throttled to reduce re-renders
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!animationFrameRef.current) {
+            animationFrameRef.current = requestAnimationFrame(() => {
+                const x = Math.round((e.clientX / window.innerWidth) * 100);
+                const y = Math.round((e.clientY / window.innerHeight) * 100);
+                // Only update if position changed significantly (2% threshold)
+                setMousePosition(prev => {
+                    if (Math.abs(prev.x - x) > 2 || Math.abs(prev.y - y) > 2) {
+                        return { x, y };
+                    }
+                    return prev;
+                });
+                animationFrameRef.current = undefined;
             });
-        };
-
-        window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
+        }
     }, []);
+
+    useEffect(() => {
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, [handleMouseMove]);
 
     // Fetch faucet info on mount
     useEffect(() => {
@@ -159,7 +175,7 @@ export default function FaucetPage() {
             filter: "blur(40px)",
             transition: "all 0.3s ease-out"
         }),
-        [mousePosition]
+        [mousePosition.x, mousePosition.y]
     );
 
     const backgroundStyle2 = useMemo(
@@ -168,17 +184,17 @@ export default function FaucetPage() {
             repeating-linear-gradient(
                 ${45 + mousePosition.x / 10}deg,
                 ${hexToRgba(colors.animation.color2, 0.1)} 0%,
-                ${hexToRgba(colors.animation.color1, 0.1)} 10%,
-                transparent 20%,
-                ${hexToRgba(colors.animation.color4, 0.1)} 30%,
-                transparent 40%
+                ${hexToRgba(colors.animation.color1, 0.1)} 25%,
+                ${hexToRgba(colors.animation.color4, 0.1)} 50%,
+                ${hexToRgba(colors.animation.color5, 0.1)} 75%,
+                ${hexToRgba(colors.animation.color2, 0.1)} 100%
             )
         `,
             backgroundSize: "400% 400%",
-            animation: "moveGradient 20s ease infinite",
+            animation: "gradient 15s ease infinite",
             transition: "background 0.5s ease"
         }),
-        [mousePosition]
+        [mousePosition.x]
     );
 
     const backgroundStyle3 = useMemo(
@@ -188,7 +204,7 @@ export default function FaucetPage() {
                 0.1
             )} 75%, rgba(0,0,0,0) 100%)`,
             backgroundSize: "200% 100%",
-            animation: "moveLight 8s linear infinite"
+            animation: "shimmer 8s infinite linear"
         }),
         []
     );
