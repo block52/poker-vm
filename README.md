@@ -3,6 +3,7 @@
 [![PVM UnitTests](https://github.com/block52/poker-vm/actions/workflows/main.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/main.yml)
 [![UI Build](https://github.com/block52/poker-vm/actions/workflows/ui-build.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/ui-build.yml)
 [![UI Tests](https://github.com/block52/poker-vm/actions/workflows/ui-test.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/ui-test.yml)
+[![CVE-2025-55182](https://img.shields.io/badge/CVE--2025--55182-Not%20Affected-brightgreen)](docs/SECURITY-CVE-2025-55182.md)
 
 A stateless execution layer for poker game logic on the Block52 blockchain network.
 
@@ -433,6 +434,24 @@ oPuzYpZKmjINX3Ap1yD/XIiN8W+8HpoPU+ddZIHbiv+fX46C7UsaPFHl/dhgq2AK
 =XIiJ
 -----END PGP PUBLIC KEY BLOCK-----
 ```
+
+## Security
+
+### CVE-2025-55182 (React2Shell) Status: ✅ Not Affected
+
+This repository has been analyzed for the critical CVE-2025-55182 vulnerability affecting React Server Components and Next.js. **The poker-vm repository is NOT vulnerable** as it uses React 18.3.1 and does not use Next.js or React Server Components.
+
+For full details, see [SECURITY-CVE-2025-55182.md](docs/SECURITY-CVE-2025-55182.md).
+
+#### Running Security Checks
+
+To verify the repository remains free of CVE-2025-55182 vulnerabilities:
+
+```bash
+./scripts/check-react-cve-2025-55182.sh
+```
+
+This script checks all package.json and lock files for vulnerable React Server or Next.js versions.
 
 ## Contributing
 
