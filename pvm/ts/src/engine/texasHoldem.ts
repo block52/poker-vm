@@ -849,6 +849,39 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
+     * Determines if game should auto-runout remaining streets
+     * This happens when no more betting action is possible
+     */
+    private shouldAutoRunout(): boolean {
+        const livePlayers = this.findLivePlayers();
+        const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
+        const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
+
+        // All remaining players are all-in
+        if (activePlayers.length === 0 && allInPlayers.length > 1) {
+            return true;
+        }
+
+        // Heads-up: one player all-in, other player active and has matched the bet
+        if (livePlayers.length === 2 && allInPlayers.length === 1 && activePlayers.length === 1) {
+            const allInPlayer = allInPlayers[0];
+            const activePlayer = activePlayers[0];
+
+            // Get total bets for this round (include blinds for preflop)
+            const includeBlinds = this._currentRound === TexasHoldemRound.PREFLOP;
+            const activePlayerBet = this.getPlayerTotalBets(activePlayer.address, this._currentRound, includeBlinds);
+            const allInPlayerBet = this.getPlayerTotalBets(allInPlayer.address, this._currentRound, includeBlinds);
+
+            // Active player has matched or exceeded all-in amount
+            if (activePlayerBet >= allInPlayerBet) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Determines if the current betting round has ended
      */
     hasRoundEnded(round: TexasHoldemRound): boolean {
@@ -868,7 +901,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return true;
         }
 
-        // Step 3: Get active players (can still act - excludes all-in players)
+        // Step 3: Check if we should auto-runout (heads-up all-in or all players all-in)
+        if (this.shouldAutoRunout() && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
+            // Auto-runout: round ends immediately to trigger automatic progression
+            // The nextRound() method will be called repeatedly until we reach showdown
+            return true;
+        }
+
+        // Step 4: Get active players (can still act - excludes all-in players)
         const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
         if (activePlayers.length === 0) {
             // No active players remain, round ends
@@ -1190,7 +1230,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         player.addAction({ playerId: address, action, amount, index }, this._actionTimestamp!);
 
         // Check if the round has ended and advance if needed
-        if (this.hasRoundEnded(this.currentRound)) {
+        // Loop through remaining rounds if auto-runout is triggered (all-in scenario)
+        // Continue until we reach END round
+        while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.END) {
             this.nextRound();
         }
     }
