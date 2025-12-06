@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { colors, getAnimationGradient, hexToRgba } from "../utils/colorConfig";
 import { useCosmosWallet } from "../hooks";
 
+import "./FaucetPage.css"; // Import animations
+
 // Faucet API endpoint - configurable via environment variable
 // Local development: VITE_FAUCET_API_URL=http://localhost:3001
 // Production: defaults to Digital Ocean server
@@ -61,6 +63,22 @@ export default function FaucetPage() {
         waitTimeMs: 0,
         waitTimeFormatted: null
     });
+
+    // Mouse position tracking for dynamic backgrounds (same as Dashboard)
+    const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+
+    // Track mouse movement for dynamic background
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            setMousePosition({
+                x: (e.clientX / window.innerWidth) * 100,
+                y: (e.clientY / window.innerHeight) * 100
+            });
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
+    }, []);
 
     // Fetch faucet info on mount
     useEffect(() => {
@@ -136,14 +154,41 @@ export default function FaucetPage() {
     // Background styles (same as Dashboard)
     const backgroundStyle1 = useMemo(
         () => ({
-            background: `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 1)} 0%, ${hexToRgba(colors.ui.bgMedium, 1)} 100%)`
+            backgroundImage: getAnimationGradient(mousePosition.x, mousePosition.y),
+            backgroundColor: colors.table.bgBase,
+            filter: "blur(40px)",
+            transition: "all 0.3s ease-out"
         }),
-        []
+        [mousePosition]
     );
 
     const backgroundStyle2 = useMemo(
         () => ({
-            background: getAnimationGradient(0, 0)
+            backgroundImage: `
+            repeating-linear-gradient(
+                ${45 + mousePosition.x / 10}deg,
+                ${hexToRgba(colors.animation.color2, 0.1)} 0%,
+                ${hexToRgba(colors.animation.color1, 0.1)} 10%,
+                transparent 20%,
+                ${hexToRgba(colors.animation.color4, 0.1)} 30%,
+                transparent 40%
+            )
+        `,
+            backgroundSize: "400% 400%",
+            animation: "moveGradient 20s ease infinite",
+            transition: "background 0.5s ease"
+        }),
+        [mousePosition]
+    );
+
+    const backgroundStyle3 = useMemo(
+        () => ({
+            backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0) 0%, ${hexToRgba(colors.brand.primary, 0.1)} 25%, rgba(0,0,0,0) 50%, ${hexToRgba(
+                colors.brand.primary,
+                0.1
+            )} 75%, rgba(0,0,0,0) 100%)`,
+            backgroundSize: "200% 100%",
+            animation: "moveLight 8s linear infinite"
         }),
         []
     );
@@ -223,6 +268,7 @@ export default function FaucetPage() {
             <div className="fixed inset-0 z-0" style={backgroundStyle1} />
             <HexagonPattern />
             <div className="fixed inset-0 z-0 opacity-20" style={backgroundStyle2} />
+            <div className="fixed inset-0 z-0 opacity-30" style={backgroundStyle3} />
 
             {/* Back Button */}
             <div className="fixed top-6 left-6 z-20">
