@@ -25,10 +25,11 @@ export const formatPlayerId = (playerId: string) => {
 };
 
 /**
- * Format amount from wei to dollars
- * @param amount The amount in wei
+ * Format amount from micro-units to dollars (USDC format)
+ * @param amount The amount in micro-units (6 decimals)
  * @returns Formatted string with dollar sign and 2 decimal places
  */
 export const formatAmount = (amount: string) => {
-    return `$${(Number(amount) / 10 ** 18).toFixed(2)}`;
+    // USDC uses 6 decimals, not 18 (wei)
+    return `$${(Number(amount) / 10 ** 6).toFixed(2)}`;
 };
