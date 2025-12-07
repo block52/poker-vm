@@ -17,13 +17,21 @@ module.exports = {
       }
     }]
   },
+  // Transform ESM packages that Jest can't parse by default
+  transformIgnorePatterns: [
+    'node_modules/(?!(@reown|@walletconnect|uint8arrays|multiformats|@noble)/)'
+  ],
   moduleNameMapper: {
     // Handle CSS imports (with CSS modules)
     '\\.css$': 'identity-obj-proxy',
     // Handle image imports
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/src/__mocks__/fileMock.js',
     // Handle module aliases if needed
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    // Mock WalletConnect/Reown packages that have ESM issues
+    '^@reown/appkit/react$': '<rootDir>/src/__mocks__/reownAppkit.js',
+    // Mock wagmi (ESM package)
+    '^wagmi$': '<rootDir>/src/__mocks__/wagmi.js'
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
