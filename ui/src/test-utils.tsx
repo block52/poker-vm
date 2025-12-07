@@ -63,12 +63,12 @@ export { customRender as render };
 // Mock Factories
 // ============================================================================
 
-// Standard bech32 test addresses for Block52 (b52 prefix)
+// Standard bech32 test addresses for Block52 (b521 HRP)
 export const TEST_ADDRESSES = {
     PLAYER_1: "b521qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqer",
     PLAYER_2: "b521qz4sdj8gfx9w9r8h8xvnkkl0xhucqhqv39gtr7",
     PLAYER_3: "b521q8h9jkl3mn4op5qr6st7uv8wx9yz0abc1def2gh",
-    GAME: "b521game1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5lmn4op"
+    GAME: "b521qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5lmn4op"
 };
 
 /**
