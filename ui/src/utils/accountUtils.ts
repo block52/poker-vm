@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { formatMicroAsUsdc } from "../constants/currency";
 
 /**
  * Get public key from private key
@@ -26,10 +27,10 @@ export const formatPlayerId = (playerId: string) => {
 
 /**
  * Format amount from micro-units to dollars (USDC format)
+ * Delegates to the centralized formatMicroAsUsdc helper for consistent formatting.
  * @param amount The amount in micro-units (6 decimals)
  * @returns Formatted string with dollar sign and 2 decimal places
  */
-export const formatAmount = (amount: string) => {
-    // USDC uses 6 decimals, not 18 (wei)
-    return `$${(Number(amount) / 10 ** 6).toFixed(2)}`;
+export const formatAmount = (amount: string): string => {
+    return `$${formatMicroAsUsdc(amount, 2)}`;
 };
