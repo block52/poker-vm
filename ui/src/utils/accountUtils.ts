@@ -26,11 +26,18 @@ export const formatPlayerId = (playerId: string) => {
 };
 
 /**
- * Format amount from micro-units to dollars (USDC format)
+ * Format amount from micro-units to display format
  * Delegates to the centralized formatMicroAsUsdc helper for consistent formatting.
  * @param amount The amount in micro-units (6 decimals)
- * @returns Formatted string with dollar sign and 2 decimal places
+ * @param denom Optional denomination (e.g., "usdc"). If provided, appends uppercase denom instead of $ prefix.
+ * @returns Formatted string (e.g., "$1.50" or "1.50 USDC")
  */
-export const formatAmount = (amount: string): string => {
-    return `$${formatMicroAsUsdc(amount, 2)}`;
+export const formatAmount = (amount: string, denom?: string): string => {
+    const formatted = formatMicroAsUsdc(amount, 2);
+    if (denom) {
+        // Remove "u" prefix for micro-denominations (e.g., "uusdc" -> "USDC")
+        const displayDenom = denom.startsWith("u") ? denom.slice(1) : denom;
+        return `${formatted} ${displayDenom.toUpperCase()}`;
+    }
+    return `$${formatted}`;
 };
