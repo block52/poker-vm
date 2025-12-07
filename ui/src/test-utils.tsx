@@ -20,13 +20,11 @@ export const mockNetworkEndpoints = {
     ws: "ws://localhost:8585/ws"
 };
 
-// Mock network context value
+// Mock network context value - matches NetworkContextType interface
 export const mockNetworkContext = {
     currentNetwork: mockNetworkEndpoints,
-    networks: [mockNetworkEndpoints],
-    setCurrentNetwork: jest.fn(),
-    networkIndex: 0,
-    setNetworkIndex: jest.fn()
+    availableNetworks: [mockNetworkEndpoints],
+    setNetwork: jest.fn()
 };
 
 // Mock game state context value

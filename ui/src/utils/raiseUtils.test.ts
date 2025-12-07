@@ -7,18 +7,21 @@ describe("getRaiseToAmount", () => {
     const USER_ADDRESS = "b521qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqer";
     const OTHER_ADDRESS = "b521qz4sdj8gfx9w9r8h8xvnkkl0xhucqhqv39gtr7";
 
-    // Helper to create mock actions with ethers-formatted amounts (18 decimals)
+    // Helper to create mock actions with all required SDK fields
     const createAction = (
         action: PlayerActionType,
         amountInUnits: number,
         round: TexasHoldemRound,
-        playerId: string = USER_ADDRESS
+        playerId: string = USER_ADDRESS,
+        seat: number = 1
     ): ActionDTO => ({
         playerId,
+        seat,
         action,
         amount: ethers.parseUnits(amountInUnits.toString(), 18).toString(),
+        round,
         index: 0,
-        round
+        timestamp: Date.now()
     });
 
     describe("basic raise calculation", () => {
@@ -144,10 +147,12 @@ describe("getRaiseToAmount", () => {
             const actions: ActionDTO[] = [
                 {
                     playerId: USER_ADDRESS.toUpperCase(),
+                    seat: 1,
                     action: PlayerActionType.BET,
                     amount: ethers.parseUnits("50", 18).toString(),
+                    round: TexasHoldemRound.FLOP,
                     index: 0,
-                    round: TexasHoldemRound.FLOP
+                    timestamp: Date.now()
                 }
             ];
 
@@ -188,19 +193,13 @@ describe("getRaiseToAmount", () => {
             expect(result).toBe(50);
         });
 
-        it("should handle actions with undefined amount", () => {
+        it("should handle actions with zero amount (like CHECK)", () => {
             const actions: ActionDTO[] = [
-                {
-                    playerId: USER_ADDRESS,
-                    action: PlayerActionType.CHECK,
-                    amount: undefined,
-                    index: 0,
-                    round: TexasHoldemRound.FLOP
-                }
+                createAction(PlayerActionType.CHECK, 0, TexasHoldemRound.FLOP, USER_ADDRESS)
             ];
 
             const result = getRaiseToAmount(100, actions, TexasHoldemRound.FLOP, USER_ADDRESS);
-            // CHECK with undefined amount shouldn't affect result
+            // CHECK with zero amount shouldn't affect result
             expect(result).toBe(100);
         });
 

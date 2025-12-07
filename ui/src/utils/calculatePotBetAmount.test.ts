@@ -7,18 +7,21 @@ describe("calculatePotBetAmount", () => {
     const PLAYER_2 = "b521qz4sdj8gfx9w9r8h8xvnkkl0xhucqhqv39gtr7";
     const PLAYER_3 = "b521q8h9jkl3mn4op5qr6st7uv8wx9yz0abc1def2gh";
 
-    // Helper to create mock actions
+    // Helper to create mock actions with all required SDK fields
     const createAction = (
         action: PlayerActionType,
         amount: string,
         round: TexasHoldemRound,
-        playerId: string = PLAYER_1
+        playerId: string = PLAYER_1,
+        seat: number = 1
     ): ActionDTO => ({
         playerId,
+        seat,
         action,
         amount,
+        round,
         index: 0,
-        round
+        timestamp: Date.now()
     });
 
     describe("basic pot bet calculation", () => {
@@ -204,9 +207,9 @@ describe("calculatePotBetAmount", () => {
             expect(result).toBe(40_000_000_000_000n);
         });
 
-        it("should handle actions with undefined amount", () => {
+        it("should handle actions with zero amount (like CHECK)", () => {
             const previousActions: ActionDTO[] = [
-                { playerId: PLAYER_1, action: PlayerActionType.CHECK, amount: undefined, index: 0, round: TexasHoldemRound.FLOP },
+                createAction(PlayerActionType.CHECK, "0", TexasHoldemRound.FLOP),
                 createAction(PlayerActionType.BET, "25000000", TexasHoldemRound.FLOP)
             ];
 
