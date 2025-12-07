@@ -3,8 +3,9 @@ import { ethers } from "ethers";
 import { getRaiseToAmount } from "./raiseUtils";
 
 describe("getRaiseToAmount", () => {
-    const USER_ADDRESS = "0x1234567890abcdef1234567890abcdef12345678";
-    const OTHER_ADDRESS = "0xabcdef1234567890abcdef1234567890abcdef12";
+    // Cosmos bech32 addresses (b52 prefix for Block52 chain)
+    const USER_ADDRESS = "b521qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqer";
+    const OTHER_ADDRESS = "b521qz4sdj8gfx9w9r8h8xvnkkl0xhucqhqv39gtr7";
 
     // Helper to create mock actions with ethers-formatted amounts (18 decimals)
     const createAction = (

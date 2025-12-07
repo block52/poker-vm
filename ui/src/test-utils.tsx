@@ -65,11 +65,20 @@ export { customRender as render };
 // Mock Factories
 // ============================================================================
 
+// Standard bech32 test addresses for Block52 (b52 prefix)
+export const TEST_ADDRESSES = {
+    PLAYER_1: "b521qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqer",
+    PLAYER_2: "b521qz4sdj8gfx9w9r8h8xvnkkl0xhucqhqv39gtr7",
+    PLAYER_3: "b521q8h9jkl3mn4op5qr6st7uv8wx9yz0abc1def2gh",
+    GAME: "b521game1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5lmn4op"
+};
+
 /**
  * Create a mock player for testing
+ * Uses Cosmos bech32 address format (b52 prefix)
  */
 export const createMockPlayer = (overrides = {}) => ({
-    address: "b521234567890abcdef",
+    address: TEST_ADDRESSES.PLAYER_1,
     seat: 1,
     stack: "1000000000", // 1000 USDC in micro units
     status: "active",
@@ -79,10 +88,11 @@ export const createMockPlayer = (overrides = {}) => ({
 
 /**
  * Create a mock game state for testing
+ * Uses Cosmos bech32 address format for game address
  */
 export const createMockGameState = (overrides = {}) => ({
     type: "cash",
-    address: "0x1234567890abcdef",
+    address: TEST_ADDRESSES.GAME,
     players: [],
     communityCards: [],
     pots: ["0"],
@@ -96,9 +106,10 @@ export const createMockGameState = (overrides = {}) => ({
 
 /**
  * Create a mock action for testing
+ * Uses Cosmos bech32 address format for playerId
  */
 export const createMockAction = (overrides = {}) => ({
-    playerId: "b521234567890abcdef",
+    playerId: TEST_ADDRESSES.PLAYER_1,
     action: "call",
     amount: "20000000",
     index: 0,

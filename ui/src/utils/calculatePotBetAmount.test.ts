@@ -2,12 +2,17 @@ import { PlayerActionType, ActionDTO, TexasHoldemRound } from "@bitcoinbrisbane/
 import { calculatePotBetAmount } from "./calculatePotBetAmount";
 
 describe("calculatePotBetAmount", () => {
+    // Cosmos bech32 addresses (b52 prefix for Block52 chain)
+    const PLAYER_1 = "b521qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5z5tpwxqer";
+    const PLAYER_2 = "b521qz4sdj8gfx9w9r8h8xvnkkl0xhucqhqv39gtr7";
+    const PLAYER_3 = "b521q8h9jkl3mn4op5qr6st7uv8wx9yz0abc1def2gh";
+
     // Helper to create mock actions
     const createAction = (
         action: PlayerActionType,
         amount: string,
         round: TexasHoldemRound,
-        playerId: string = "player1"
+        playerId: string = PLAYER_1
     ): ActionDTO => ({
         playerId,
         action,
@@ -47,9 +52,9 @@ describe("calculatePotBetAmount", () => {
 
         it("should use highest raise amount when multiple raises exist", () => {
             const previousActions: ActionDTO[] = [
-                createAction(PlayerActionType.BET, "20000000", TexasHoldemRound.FLOP, "player1"),
-                createAction(PlayerActionType.RAISE, "60000000", TexasHoldemRound.FLOP, "player2"),
-                createAction(PlayerActionType.RAISE, "150000000", TexasHoldemRound.FLOP, "player3")
+                createAction(PlayerActionType.BET, "20000000", TexasHoldemRound.FLOP, PLAYER_1),
+                createAction(PlayerActionType.RAISE, "60000000", TexasHoldemRound.FLOP, PLAYER_2),
+                createAction(PlayerActionType.RAISE, "150000000", TexasHoldemRound.FLOP, PLAYER_3)
             ];
 
             const result = calculatePotBetAmount({
@@ -201,7 +206,7 @@ describe("calculatePotBetAmount", () => {
 
         it("should handle actions with undefined amount", () => {
             const previousActions: ActionDTO[] = [
-                { playerId: "player1", action: PlayerActionType.CHECK, amount: undefined, index: 0, round: TexasHoldemRound.FLOP },
+                { playerId: PLAYER_1, action: PlayerActionType.CHECK, amount: undefined, index: 0, round: TexasHoldemRound.FLOP },
                 createAction(PlayerActionType.BET, "25000000", TexasHoldemRound.FLOP)
             ];
 
@@ -255,7 +260,7 @@ describe("calculatePotBetAmount", () => {
             const previousActions: ActionDTO[] = [
                 createAction(PlayerActionType.SMALL_BLIND, "10000000", TexasHoldemRound.PREFLOP),
                 createAction(PlayerActionType.BIG_BLIND, "20000000", TexasHoldemRound.PREFLOP),
-                createAction(PlayerActionType.RAISE, "60000000", TexasHoldemRound.PREFLOP, "player3")
+                createAction(PlayerActionType.RAISE, "60000000", TexasHoldemRound.PREFLOP, PLAYER_3)
             ];
 
             const result = calculatePotBetAmount({
