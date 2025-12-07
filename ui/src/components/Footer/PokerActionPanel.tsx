@@ -152,20 +152,48 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
     const totalPot = Number(formattedTotalPot) || 0;
     const totalPotMicro = useMemo(() => usdcToMicroBigInt(totalPot), [totalPot]);
 
-    // Blind amounts - use action min if available, otherwise fall back to gameOptions
+    // Blind amounts - use action min if available, otherwise fall back to gameOptions or gameState
     const smallBlindMicro = useMemo(() => {
+        // Try action amount first
         const actionAmount = parseMicroToBigInt(smallBlindAction?.min);
         if (actionAmount > 0n) return actionAmount;
-        // Fallback to gameOptions if action amount is missing
-        return parseMicroToBigInt(gameOptions?.smallBlind);
-    }, [smallBlindAction?.min, gameOptions?.smallBlind]);
+        // Fallback to gameOptions
+        const optionsAmount = parseMicroToBigInt(gameOptions?.smallBlind);
+        if (optionsAmount > 0n) return optionsAmount;
+        // Fallback to gameState.smallBlind
+        const stateAmount = parseMicroToBigInt(gameState?.smallBlind);
+        return stateAmount;
+    }, [smallBlindAction?.min, gameOptions?.smallBlind, gameState?.smallBlind]);
 
     const bigBlindMicro = useMemo(() => {
+        // Try action amount first
         const actionAmount = parseMicroToBigInt(bigBlindAction?.min);
         if (actionAmount > 0n) return actionAmount;
-        // Fallback to gameOptions if action amount is missing
-        return parseMicroToBigInt(gameOptions?.bigBlind);
-    }, [bigBlindAction?.min, gameOptions?.bigBlind]);
+        // Fallback to gameOptions
+        const optionsAmount = parseMicroToBigInt(gameOptions?.bigBlind);
+        if (optionsAmount > 0n) return optionsAmount;
+        // Fallback to gameState.bigBlind
+        const stateAmount = parseMicroToBigInt(gameState?.bigBlind);
+        return stateAmount;
+    }, [bigBlindAction?.min, gameOptions?.bigBlind, gameState?.bigBlind]);
+
+    // 🔍 DEBUG: Log blind amount sources
+    useEffect(() => {
+        if (hasSmallBlindAction || hasBigBlindAction) {
+            console.log("🎯 [PokerActionPanel] Blind amounts debug:", {
+                smallBlindAction_min: smallBlindAction?.min,
+                bigBlindAction_min: bigBlindAction?.min,
+                gameOptions_smallBlind: gameOptions?.smallBlind,
+                gameOptions_bigBlind: gameOptions?.bigBlind,
+                gameState_smallBlind: gameState?.smallBlind,
+                gameState_bigBlind: gameState?.bigBlind,
+                computed_smallBlindMicro: smallBlindMicro.toString(),
+                computed_bigBlindMicro: bigBlindMicro.toString(),
+                formatted_smallBlind: microBigIntToUsdc(smallBlindMicro).toFixed(2),
+                formatted_bigBlind: microBigIntToUsdc(bigBlindMicro).toFixed(2)
+            });
+        }
+    }, [hasSmallBlindAction, hasBigBlindAction, smallBlindAction, bigBlindAction, gameOptions, gameState, smallBlindMicro, bigBlindMicro]);
 
     const formattedSmallBlindAmount = useMemo(() => microBigIntToUsdc(smallBlindMicro).toFixed(2), [smallBlindMicro]);
     const formattedBigBlindAmount = useMemo(() => microBigIntToUsdc(bigBlindMicro).toFixed(2), [bigBlindMicro]);
