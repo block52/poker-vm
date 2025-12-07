@@ -86,7 +86,7 @@ const ActionsLog: React.FC = () => {
                 className="flex justify-between items-center p-2 border-b"
                 style={{ borderColor: "rgba(255,255,255,0.2)" }}
             >
-                <h3 className="text-sm font-semibold">Action Log</h3>
+                <h3 className="text-sm font-semibold">History</h3>
             </div>
             
             {previousActions && previousActions.length > 0 ? (
