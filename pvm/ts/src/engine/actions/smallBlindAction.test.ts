@@ -2,7 +2,7 @@ import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisba
 import { Player } from "../../models/player";
 import SmallBlindAction from "./smallBlindAction";
 import TexasHoldemGame from "../texasHoldem";
-import { getDefaultGame } from "../testConstants";
+import { getDefaultGame, DETERMINISTIC_TIMESTAMP } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("SmallBlindAction", () => {
@@ -24,6 +24,7 @@ describe("SmallBlindAction", () => {
         playerStates.set(1, initialPlayer);
 
         game = getDefaultGame(playerStates);
+        game.setActionTimestamp(DETERMINISTIC_TIMESTAMP);
 
         updateMock = {
             addAction: jest.fn(action => {

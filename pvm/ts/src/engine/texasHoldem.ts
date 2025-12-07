@@ -68,6 +68,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private _winners = new Map<string, Winner>();
     private _currentRound: TexasHoldemRound;
     private readonly _autoExpire: number = Number(process.env.AUTO_EXPIRE || 0);
+    // Stores the current action's timestamp during performAction for deterministic consensus
+    private _actionTimestamp?: number;
 
     // Constructor
     constructor(
@@ -1091,6 +1093,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         //     throw new Error("Invalid action index.");
         // }
 
+        // Store timestamp for use by addAction/addNonPlayerAction during this action
+        // Timestamp must be provided from Cosmos block time for deterministic consensus
+        if (timestamp === undefined) {
+            throw new Error("Timestamp is required for deterministic consensus. Blockchain timestamp must be provided.");
+        }
+        this._actionTimestamp = timestamp;
+
         // Convert amount to BigInt if provided
         const _amount: bigint = amount ? BigInt(amount) : 0n;
 
@@ -1177,10 +1186,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Record the action in the player's history
-        // Use provided timestamp (from Cosmos block time) or fall back to Date.now() for legacy support
-        // In production with Cosmos, timestamp should ALWAYS be provided for determinism
-        const actionTimestamp = timestamp ?? Date.now();
-        player.addAction({ playerId: address, action, amount, index }, actionTimestamp);
+        // Use _actionTimestamp which was set at the start of performAction (from Cosmos block time or Date.now() fallback)
+        player.addAction({ playerId: address, action, amount, index }, this._actionTimestamp!);
 
         // Check if the round has ended and advance if needed
         if (this.hasRoundEnded(this.currentRound)) {
@@ -1193,8 +1200,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     addAction(turn: Turn, round: TexasHoldemRound = this.currentRound): void {
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        const timestamp = Date.now();
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        // Use stored action timestamp from performAction for deterministic consensus
+        if (this._actionTimestamp === undefined) {
+            throw new Error("Action timestamp not set. performAction must be called with a timestamp.");
+        }
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp: this._actionTimestamp };
 
         this.setAction(turnWithSeat, round);
     }
@@ -1203,11 +1213,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Adds a non-player action to the game state
      */
     addNonPlayerAction(turn: Turn, data?: string): void {
-        const timestamp = Date.now();
+        // Use stored action timestamp from performAction for deterministic consensus
+        if (this._actionTimestamp === undefined) {
+            throw new Error("Action timestamp not set. performAction must be called with a timestamp.");
+        }
         const seat = data ? Number(data) : this.getPlayerSeatNumber(turn.playerId);
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp: this._actionTimestamp };
 
         this.setAction(turnWithSeat, this.currentRound);
+    }
+
+    /**
+     * Sets the action timestamp for testing purposes.
+     * In production, this is set automatically by performAction from the blockchain timestamp.
+     * @internal For testing only
+     */
+    setActionTimestamp(timestamp: number): void {
+        this._actionTimestamp = timestamp;
     }
 
     /**
