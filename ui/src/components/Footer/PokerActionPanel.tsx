@@ -136,25 +136,25 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
         // Try action amount first
         const actionAmount = parseMicroToBigInt(smallBlindAction?.min);
         if (actionAmount > 0n) return actionAmount;
-        // Fallback to gameOptions
+        // Fallback to gameOptions (from hook or gameState)
         const optionsAmount = parseMicroToBigInt(gameOptions?.smallBlind);
         if (optionsAmount > 0n) return optionsAmount;
-        // Fallback to gameState.smallBlind
-        const stateAmount = parseMicroToBigInt(gameState?.smallBlind);
+        // Fallback to gameState.gameOptions.smallBlind
+        const stateAmount = parseMicroToBigInt(gameState?.gameOptions?.smallBlind);
         return stateAmount;
-    }, [smallBlindAction?.min, gameOptions?.smallBlind, gameState?.smallBlind]);
+    }, [smallBlindAction?.min, gameOptions?.smallBlind, gameState?.gameOptions?.smallBlind]);
 
     const bigBlindMicro = useMemo(() => {
         // Try action amount first
         const actionAmount = parseMicroToBigInt(bigBlindAction?.min);
         if (actionAmount > 0n) return actionAmount;
-        // Fallback to gameOptions
+        // Fallback to gameOptions (from hook or gameState)
         const optionsAmount = parseMicroToBigInt(gameOptions?.bigBlind);
         if (optionsAmount > 0n) return optionsAmount;
-        // Fallback to gameState.bigBlind
-        const stateAmount = parseMicroToBigInt(gameState?.bigBlind);
+        // Fallback to gameState.gameOptions.bigBlind
+        const stateAmount = parseMicroToBigInt(gameState?.gameOptions?.bigBlind);
         return stateAmount;
-    }, [bigBlindAction?.min, gameOptions?.bigBlind, gameState?.bigBlind]);
+    }, [bigBlindAction?.min, gameOptions?.bigBlind, gameState?.gameOptions?.bigBlind]);
 
     const formattedSmallBlindAmount = useMemo(() => microBigIntToUsdc(smallBlindMicro).toFixed(2), [smallBlindMicro]);
     const formattedBigBlindAmount = useMemo(() => microBigIntToUsdc(bigBlindMicro).toFixed(2), [bigBlindMicro]);
