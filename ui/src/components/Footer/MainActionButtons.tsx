@@ -46,7 +46,7 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
                         isMobileLandscape
                             ? "px-2 py-0.5 text-[10px] min-w-[70px]"
                             : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[110px] lg:min-w-[130px]"
-                    } ${loading === "fold" ? "min-w-[110px] lg:min-w-[130px]" : ""}`}
+                    }`}
                     onClick={onFold}
                     disabled={loading !== null}
                 >
