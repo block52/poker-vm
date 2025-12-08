@@ -269,6 +269,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             if (this._gameOptions.type !== GameType.CASH && player.chips === 0n) {
                 player.updateStatus(PlayerStatus.BUSTED);
             }
+
+            // Activate players who were SITTING_OUT (waiting for next hand)
+            if (player.status === PlayerStatus.SITTING_OUT) {
+                player.updateStatus(PlayerStatus.ACTIVE);
+            }
         }
 
         const newDealerPosition: number = this.dealerManager.handleNewHand();
@@ -532,7 +537,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
+     * Checks if a hand is currently in progress
+     * A hand is in progress if we're past ANTE but haven't reached END
+     */
+    private isHandInProgress(): boolean {
+        return this._currentRound !== TexasHoldemRound.ANTE &&
+               this._currentRound !== TexasHoldemRound.END;
+    }
+
+    /**
      * Adds a player to the game at a specific seat
+     * If a hand is in progress, player is set to SITTING_OUT and will join the next hand
      */
     joinAtSeat(player: Player, seat: number): void {
         // Ensure the seat is valid
@@ -542,7 +557,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Add player to the table
         this._playersMap.set(seat, player);
-        player.updateStatus(PlayerStatus.ACTIVE);
+
+        // If a hand is in progress, set player to SITTING_OUT
+        // They will become ACTIVE when the next hand starts
+        if (this.isHandInProgress()) {
+            player.updateStatus(PlayerStatus.SITTING_OUT);
+        } else {
+            player.updateStatus(PlayerStatus.ACTIVE);
+        }
     }
 
     /**
