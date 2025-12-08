@@ -42,10 +42,10 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
         <div className={`flex justify-between ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
             {canFold && (
                 <button
-                    className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 ${
+                    className={`btn-fold cursor-pointer active:scale-105 rounded-lg border transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                         isMobileLandscape
-                            ? "px-2 py-0.5 text-[10px] min-w-[50px]"
-                            : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[80px] lg:min-w-[100px]"
+                            ? "px-2 py-0.5 text-[10px] min-w-[70px]"
+                            : "px-3 lg:px-6 py-1.5 lg:py-2 text-xs lg:text-sm min-w-[110px] lg:min-w-[130px]"
                     }`}
                     onClick={onFold}
                     disabled={loading !== null}
