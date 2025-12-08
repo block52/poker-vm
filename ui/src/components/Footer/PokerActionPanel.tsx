@@ -189,16 +189,7 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
         async (actionName: string, actionFn: () => Promise<string | null>) => {
             try {
                 setLoadingAction(actionName);
-                const startTime = Date.now();
                 const txHash = await actionFn();
-                
-                // Ensure spinner is visible for at least 300ms for better UX
-                const elapsedTime = Date.now() - startTime;
-                const minDisplayTime = 300;
-                if (elapsedTime < minDisplayTime) {
-                    await new Promise(resolve => setTimeout(resolve, minDisplayTime - elapsedTime));
-                }
-                
                 if (txHash && onTransactionSubmitted) {
                     onTransactionSubmitted(txHash);
                 }
