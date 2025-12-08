@@ -54,10 +54,33 @@ export const useTablePlayerCounts = (tableAddresses: string[]) => {
                         if (data.game_state) {
                             const gameState = JSON.parse(data.game_state);
 
-                            // Count players with valid addresses (same logic as Table component)
-                            const activePlayers = gameState.players?.filter((p: any) => 
-                                p && isValidPlayerAddress(p.address)
-                            ).length || 0;
+                            // Debug logging to diagnose player count issues
+                            console.log("🔍 [useTablePlayerCounts] REST API game_state response:", {
+                                gameId,
+                                rawPlayersCount: gameState.players?.length,
+                                players: gameState.players?.map((p: any, idx: number) => ({
+                                    index: idx,
+                                    hasPlayer: !!p,
+                                    address: p?.address,
+                                    addressType: typeof p?.address,
+                                    hasAddress: !!p?.address,
+                                    addressLength: p?.address?.length,
+                                    isValidAddress: p?.address ? isValidPlayerAddress(p.address) : false
+                                }))
+                            });
+
+                            // Count players with valid addresses (defensive checks)
+                            const activePlayers = gameState.players?.filter((p: any) => {
+                                // Must have player object
+                                if (!p) return false;
+                                // Must have address property
+                                if (!p.address) return false;
+                                // Must pass address validation
+                                return isValidPlayerAddress(p.address);
+                            }).length || 0;
+
+                            console.log(`🔍 [useTablePlayerCounts] Table ${gameId.substring(0, 16)}... : ${activePlayers} active players found`);
+
                             const maxPlayers = gameState.gameOptions?.maxPlayers || 0;
 
                             return {

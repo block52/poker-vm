@@ -11,11 +11,22 @@ export const isEmptyAddress = (address: string | null | undefined): boolean => {
     if (!address) return true;
     if (address === "") return true;
 
+    // Trim whitespace
+    const trimmed = address.trim();
+    if (trimmed === "") return true;
+
     // Ethereum zero address
     if (address === ethers.ZeroAddress) return true;
 
     // Check for any all-zero address patterns (lowercase or checksum)
     if (address.toLowerCase() === "0x0000000000000000000000000000000000000000") return true;
+
+    // Check for placeholder/empty patterns that might come from the API
+    // Empty string after "0x" prefix
+    if (address === "0x") return true;
+
+    // All zeros of any length (some APIs might return shorter zero addresses)
+    if (/^0x0+$/.test(address)) return true;
 
     return false;
 };

@@ -42,6 +42,21 @@ describe("addressUtils", () => {
         it("should return false for checksum address", () => {
             expect(isEmptyAddress("0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed")).toBe(false);
         });
+
+        // New edge case tests
+        it("should return true for whitespace-only string", () => {
+            expect(isEmptyAddress("   ")).toBe(true);
+        });
+
+        it("should return true for '0x' prefix only", () => {
+            expect(isEmptyAddress("0x")).toBe(true);
+        });
+
+        it("should return true for short zero addresses", () => {
+            expect(isEmptyAddress("0x0")).toBe(true);
+            expect(isEmptyAddress("0x00")).toBe(true);
+            expect(isEmptyAddress("0x000")).toBe(true);
+        });
     });
 
     describe("isValidPlayerAddress", () => {
