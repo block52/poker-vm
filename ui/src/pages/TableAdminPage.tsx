@@ -579,6 +579,8 @@ export default function TableAdminPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <Link
                                                     to={`/table/${table.gameId}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
                                                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
                                                 >
                                                     Join Table
@@ -646,14 +648,12 @@ export default function TableAdminPage() {
                         </div>
 
                         <div className="flex gap-3">
-                            <a
-                                href={`/explorer/tx/${successTxHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <Link
+                                to={`/explorer/tx/${successTxHash}`}
                                 className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
                             >
                                 View on Explorer
-                            </a>
+                            </Link>
                             <button
                                 onClick={() => {
                                     setShowSuccessModal(false);
