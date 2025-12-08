@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { useNewTable } from "../hooks/useNewTable";
 import { useFindGames } from "../hooks/useFindGames";
-import { useTablePlayerCounts } from "../hooks/useTablePlayerCounts";
+// Player counts are now obtained directly from useFindGames (list_games endpoint)
+// instead of making separate API calls via useTablePlayerCounts
 import { toast } from "react-toastify";
 import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
@@ -28,6 +29,7 @@ interface TableData {
     gameType: string;
     minPlayers: number;
     maxPlayers: number;
+    currentPlayers: number; // Player count from list_games endpoint
     minBuyIn: string;
     maxBuyIn: string;
     smallBlind: string;
@@ -81,6 +83,8 @@ export default function TableAdminPage() {
                 gameType: game.gameType || game.game_type || "texas-holdem",
                 minPlayers: game.minPlayers || game.min_players || 2,
                 maxPlayers: game.maxPlayers || game.max_players || 6,
+                // Get player count directly from list_games response
+                currentPlayers: game.currentPlayers || game.players?.length || 0,
                 minBuyIn: game.minBuyIn || game.min_buy_in || "0",
                 maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
                 smallBlind: game.smallBlind || game.small_blind || "0",
@@ -96,12 +100,6 @@ export default function TableAdminPage() {
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
     }, [fetchedGames]);
-
-    // Get table addresses for player count hook
-    const tableAddresses = useMemo(() => tables.map(t => t.gameId), [tables]);
-
-    // Use the dedicated hook to fetch player counts
-    const { playerCounts: playerCountsMap, isLoading: isLoadingPlayerCounts } = useTablePlayerCounts(tableAddresses);
 
     // Create a new table using the useNewTable hook
     const handleCreateTable = async () => {
@@ -492,10 +490,7 @@ export default function TableAdminPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    tables.map(table => {
-                                        const playerCount = playerCountsMap.get(table.gameId);
-                                        const currentPlayers = playerCount?.currentPlayers;
-                                        return (
+                                    tables.map(table => (
                                             <tr key={table.gameId} className="hover:bg-gray-700/50 transition-colors">
                                                 <td className="px-6 py-4 text-center">
                                                     <div className="flex items-center justify-center gap-2">
@@ -525,7 +520,7 @@ export default function TableAdminPage() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     <span className="text-white font-semibold">
-                                                        {currentPlayers !== undefined ? `${currentPlayers}/${table.maxPlayers}` : isLoadingPlayerCounts ? "..." : `0/${table.maxPlayers}`}
+                                                        {table.currentPlayers}/{table.maxPlayers}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -547,8 +542,7 @@ export default function TableAdminPage() {
                                                     </Link>
                                                 </td>
                                             </tr>
-                                        );
-                                    })
+                                    ))
                                 )}
                             </tbody>
                         </table>
