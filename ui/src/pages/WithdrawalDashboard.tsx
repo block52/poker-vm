@@ -322,27 +322,30 @@ export default function WithdrawalDashboard() {
                             >
                                 + New Withdrawal
                             </button>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <label className="text-white text-sm">Filter:</label>
+                                <select
+                                    value={filter}
+                                    onChange={e => setFilter(e.target.value as any)}
+                                    className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
+                                >
+                                    <option value="all">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="signed">Signed</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+
                             <button
                                 onClick={loadWithdrawals}
                                 disabled={isLoading}
-                                className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600"
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:bg-gray-600"
                             >
                                 {isLoading ? "Loading..." : "Refresh"}
                             </button>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <label className="text-white text-sm">Filter:</label>
-                            <select
-                                value={filter}
-                                onChange={e => setFilter(e.target.value as any)}
-                                className="px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white"
-                            >
-                                <option value="all">All</option>
-                                <option value="pending">Pending</option>
-                                <option value="signed">Signed</option>
-                                <option value="completed">Completed</option>
-                            </select>
                         </div>
                     </div>
                 </div>

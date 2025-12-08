@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useNetwork } from "../context/NetworkContext";
 import { PokerActionPanel } from "./Footer/PokerActionPanel";
+import "./Footer.css";
 
 interface FooterProps {
     onTransactionSubmitted?: (txHash: string | null) => void;

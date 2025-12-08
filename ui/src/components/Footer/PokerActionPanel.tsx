@@ -131,9 +131,31 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
     const totalPot = Number(formattedTotalPot) || 0;
     const totalPotMicro = useMemo(() => usdcToMicroBigInt(totalPot), [totalPot]);
 
-    // Blind amounts
-    const smallBlindMicro = useMemo(() => parseMicroToBigInt(smallBlindAction?.min), [smallBlindAction?.min]);
-    const bigBlindMicro = useMemo(() => parseMicroToBigInt(bigBlindAction?.min), [bigBlindAction?.min]);
+    // Blind amounts - use action min if available, otherwise fall back to gameOptions or gameState
+    const smallBlindMicro = useMemo(() => {
+        // Try action amount first
+        const actionAmount = parseMicroToBigInt(smallBlindAction?.min);
+        if (actionAmount > 0n) return actionAmount;
+        // Fallback to gameOptions (from hook or gameState)
+        const optionsAmount = parseMicroToBigInt(gameOptions?.smallBlind);
+        if (optionsAmount > 0n) return optionsAmount;
+        // Fallback to gameState.gameOptions.smallBlind
+        const stateAmount = parseMicroToBigInt(gameState?.gameOptions?.smallBlind);
+        return stateAmount;
+    }, [smallBlindAction?.min, gameOptions?.smallBlind, gameState?.gameOptions?.smallBlind]);
+
+    const bigBlindMicro = useMemo(() => {
+        // Try action amount first
+        const actionAmount = parseMicroToBigInt(bigBlindAction?.min);
+        if (actionAmount > 0n) return actionAmount;
+        // Fallback to gameOptions (from hook or gameState)
+        const optionsAmount = parseMicroToBigInt(gameOptions?.bigBlind);
+        if (optionsAmount > 0n) return optionsAmount;
+        // Fallback to gameState.gameOptions.bigBlind
+        const stateAmount = parseMicroToBigInt(gameState?.gameOptions?.bigBlind);
+        return stateAmount;
+    }, [bigBlindAction?.min, gameOptions?.bigBlind, gameState?.gameOptions?.bigBlind]);
+
     const formattedSmallBlindAmount = useMemo(() => microBigIntToUsdc(smallBlindMicro).toFixed(2), [smallBlindMicro]);
     const formattedBigBlindAmount = useMemo(() => microBigIntToUsdc(bigBlindMicro).toFixed(2), [bigBlindMicro]);
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
