@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
 interface TransactionPopupProps {
@@ -74,14 +75,12 @@ const TransactionPopup: React.FC<TransactionPopupProps> = ({ txHash, onClose }) 
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
-                        <a
-                            href={`/explorer/tx/${txHash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <Link
+                            to={`/explorer/tx/${txHash}`}
                             className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors text-center"
                         >
                             View on Explorer
-                        </a>
+                        </Link>
                         <button
                             onClick={onClose}
                             className="flex-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold rounded transition-colors"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
@@ -442,10 +442,8 @@ export default function BlockDetailPage() {
                                                     {txHashValue !== "Computing..." && (
                                                         <div className="mt-2">
                                                             <p className="text-gray-400 text-xs mb-1">Transaction Hash</p>
-                                                            <a
-                                                                href={`/explorer/tx/${txHashValue}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
+                                                            <Link
+                                                                to={`/explorer/tx/${txHashValue}`}
                                                                 className="font-mono text-xs cursor-pointer transition-colors duration-200 break-all"
                                                                 style={{ color: colors.brand.primary }}
                                                                 onMouseEnter={e => (e.currentTarget.style.color = colors.accent.glow)}
@@ -453,7 +451,7 @@ export default function BlockDetailPage() {
                                                                 title="Click to view transaction details"
                                                             >
                                                                 {txHashValue}
-                                                            </a>
+                                                            </Link>
                                                         </div>
                                                     )}
                                                 </div>
