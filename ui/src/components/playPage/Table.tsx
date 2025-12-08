@@ -985,7 +985,7 @@ const Table = React.memo(() => {
                                         <span className="ml-2">Actions # {actionCount}</span>
                                     </span>
                                     <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
-                                        <span className="sm:ml-2">Seat {nextToAct}</span>
+                                        <span className="sm:ml-2">Next to act: Seat {nextToAct}</span>
                                     </span>
                                 </div>
                             </div>
