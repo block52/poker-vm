@@ -303,18 +303,18 @@ export class PokerSolver {
             handType = HandType.PAIR;
         } else if (isSuited) {
             if (gap === 1) {
-                description = `${this.formatRank(highRank)}, ${this.formatRank(lowRank)} Suited Connectors`;
+                description = `${this.formatRank(highRank)}${this.formatRank(lowRank)} Suited Connectors`;
             } else if (gap === 2) {
-                description = `${this.formatRank(highRank)}, ${this.formatRank(lowRank)} Suited One-Gapper`;
+                description = `${this.formatRank(highRank)}${this.formatRank(lowRank)} Suited One-Gapper`;
             } else {
-                description = `${this.formatRank(highRank)}, ${this.formatRank(lowRank)} Suited`;
+                description = `${this.formatRank(highRank)}${this.formatRank(lowRank)} Suited`;
             }
             handType = HandType.HIGH_CARD;
         } else {
             if (gap === 1) {
-                description = `${this.formatRank(highRank)}, ${this.formatRank(lowRank)} Connectors`;
+                description = `${this.formatRank(highRank)}${this.formatRank(lowRank)} Connectors`;
             } else {
-                description = `${this.formatRank(highRank)}, ${this.formatRank(lowRank)} Offsuit`;
+                description = `${this.formatRank(highRank)}${this.formatRank(lowRank)} Offsuit`;
             }
             handType = HandType.HIGH_CARD;
         }
