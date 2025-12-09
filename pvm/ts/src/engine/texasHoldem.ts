@@ -37,7 +37,8 @@ import {
     ShowAction,
     SmallBlindAction,
     SitOutAction,
-    SitInAction
+    SitInAction,
+    TopUpAction
 } from "./actions";
 
 import JoinActionSitAndGo from "./actions/sitAndGo/joinAction";
@@ -350,6 +351,34 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     get maxBuyIn(): bigint {
         return this._gameOptions.maxBuyIn;
+    }
+
+    /**
+     * Calculate maximum allowed top-up amount for a player
+     * @param playerAddress The address of the player
+     * @returns The maximum amount the player can add to their stack
+     */
+    getMaxTopUpAmount(playerAddress: string): bigint {
+        const player = this.getPlayer(playerAddress);
+        if (!player) return 0n;
+
+        // Cannot top up while in active hand
+        if (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.ALL_IN) {
+            return 0n;
+        }
+
+        // Maximum top-up is the difference between max buy-in and current chips
+        const maxTopUp = this.maxBuyIn - player.chips;
+        return maxTopUp > 0n ? maxTopUp : 0n;
+    }
+
+    /**
+     * Check if a player can top up their stack
+     * @param playerAddress The address of the player
+     * @returns True if the player can add chips to their stack
+     */
+    canTopUp(playerAddress: string): boolean {
+        return this.getMaxTopUpAmount(playerAddress) > 0n;
     }
 
     get minPlayers(): number {
@@ -1148,6 +1177,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 return;
             case NonPlayerActionType.NEW_HAND:
                 new NewHandAction(this, this._update, data || "").execute(this.getPlayer(address), index);
+                return;
+            case NonPlayerActionType.TOP_UP:
+                if (!this.exists(address)) {
+                    throw new Error("Player not found.");
+                }
+                new TopUpAction(this, this._update).execute(this.getPlayer(address), index, _amount);
                 return;
             case NonPlayerActionType.SIT_OUT:
                 if (!this.exists(address)) {

@@ -15,6 +15,7 @@ import ShowAction from "./showAction";
 import SmallBlindAction from "./smallBlindAction";
 import SitInAction from "./sitInAction";
 import SitOutAction from "./sitOutAction";
+import TopUpAction from "./topUpAction";
 
 // Export individual action classes
 export {
@@ -34,7 +35,8 @@ export {
     ShowAction,
     SmallBlindAction,
     SitInAction,
-    SitOutAction
+    SitOutAction,
+    TopUpAction
 };
 
 // Legacy export for backwards compatibility
