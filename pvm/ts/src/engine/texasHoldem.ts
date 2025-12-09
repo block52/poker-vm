@@ -855,25 +855,16 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
         const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
 
-        // All remaining players are all-in
-        if (activePlayers.length === 0 && allInPlayers.length > 1) {
+        // Case 1: All remaining live players are all-in (2 or more players)
+        // No more betting action possible - auto-runout remaining streets
+        if (allInPlayers.length >= 2 && allInPlayers.length === livePlayers.length) {
             return true;
         }
 
-        // Heads-up: one player all-in, other player active and has matched the bet
-        if (livePlayers.length === 2 && allInPlayers.length === 1 && activePlayers.length === 1) {
-            const allInPlayer = allInPlayers[0];
-            const activePlayer = activePlayers[0];
-
-            // Get total bets for this round (include blinds for preflop)
-            const includeBlinds = this._currentRound === TexasHoldemRound.PREFLOP;
-            const activePlayerBet = this.getPlayerTotalBets(activePlayer.address, this._currentRound, includeBlinds);
-            const allInPlayerBet = this.getPlayerTotalBets(allInPlayer.address, this._currentRound, includeBlinds);
-
-            // Active player has matched or exceeded all-in amount
-            if (activePlayerBet >= allInPlayerBet) {
-                return true;
-            }
+        // Case 2: No active players remain (all are all-in)
+        // This catches edge cases where only 1 player is all-in but no actives
+        if (activePlayers.length === 0 && allInPlayers.length > 0) {
+            return true;
         }
 
         return false;
@@ -1225,8 +1216,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Check if the round has ended and advance if needed
         // Loop through remaining rounds if auto-runout is triggered (all-in scenario)
         // Continue until we reach END round
-        while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.END) {
+        // Safety counter prevents infinite loops (max 6 rounds: ANTE->PREFLOP->FLOP->TURN->RIVER->SHOWDOWN->END)
+        let safetyCounter = 0;
+        const MAX_ROUND_ADVANCES = 6;
+        while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.END && safetyCounter < MAX_ROUND_ADVANCES) {
             this.nextRound();
+            safetyCounter++;
         }
     }
 
