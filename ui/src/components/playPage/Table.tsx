@@ -128,6 +128,9 @@ import { useTableLayout } from "../../hooks/useTableLayout";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { getViewportMode } from "../../config/tableLayoutConfig";
 
+// Turn Notification
+import { useTurnNotification } from "../../hooks/useTurnNotification";
+
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
 //* PREFLOP - Players get their hole cards, betting round
@@ -278,6 +281,13 @@ const Table = React.memo(() => {
         availableActions: _nextToActAvailableActions,
         timeRemaining: _timeRemaining
     } = useNextToActInfo(id);
+
+    // Enable turn-to-act notifications (tab flashing + optional sound)
+    useTurnNotification(isCurrentUserTurn, {
+        enableSound: true,
+        soundVolume: 0.3,
+        flashInterval: 1000
+    });
 
     // Add the useTableState hook to get table state properties
     const { tableSize } = useTableState();
