@@ -26,7 +26,7 @@ class TopUpAction extends BaseAction {
      */
     verify(player: Player, amount?: bigint): Range {
         // Player must not be in an active hand
-        if (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.ALL_IN) {
+        if (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.ALL_IN || player.status === PlayerStatus.SHOWING) {
             throw new Error("Cannot top up while in an active hand");
         }
 
