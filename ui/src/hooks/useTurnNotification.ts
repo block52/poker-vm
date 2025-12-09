@@ -7,6 +7,19 @@ import { colors } from "../utils/colorConfig";
 const DEFAULT_FAVICON_PATH = "/b52favicon.svg";
 
 /**
+ * Musical note frequencies for notification tone
+ */
+const NOTIFICATION_TONE_A5 = 880; // Hz
+const NOTIFICATION_TONE_C6 = 1046.5; // Hz
+
+/**
+ * Validation constraints for notification options
+ */
+const MIN_FLASH_INTERVAL = 200; // milliseconds
+const MAX_VOLUME = 1.0;
+const MIN_VOLUME = 0.0;
+
+/**
  * Custom hook to provide turn-to-act notifications
  * - Flashes browser tab title when it's the user's turn
  * - Optional audible notification tone
@@ -22,9 +35,13 @@ export const useTurnNotification = (
 ) => {
     const {
         enableSound = true,
-        soundVolume = 0.3,
-        flashInterval = 1000
+        soundVolume: rawVolume = 0.3,
+        flashInterval: rawInterval = 1000
     } = options;
+
+    // Validate and constrain input values
+    const soundVolume = Math.max(MIN_VOLUME, Math.min(MAX_VOLUME, rawVolume));
+    const flashInterval = Math.max(MIN_FLASH_INTERVAL, rawInterval);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const originalTitleRef = useRef<string>(document.title);
@@ -61,8 +78,8 @@ export const useTurnNotification = (
 
             // Configure tone - a pleasant two-note chime
             oscillator.type = "sine";
-            oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
-            oscillator.frequency.setValueAtTime(1046.5, audioContext.currentTime + 0.1); // C6
+            oscillator.frequency.setValueAtTime(NOTIFICATION_TONE_A5, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(NOTIFICATION_TONE_C6, audioContext.currentTime + 0.1);
 
             // Configure volume envelope
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);

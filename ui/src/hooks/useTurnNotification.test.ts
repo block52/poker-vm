@@ -210,12 +210,48 @@ describe("useTurnNotification", () => {
         
         expect(document.title).toBe("Block 52");
     });
+
+    it("should constrain soundVolume to valid range", () => {
+        Object.defineProperty(document, "hidden", {
+            configurable: true,
+            get: () => true
+        });
+
+        // Test with volume > 1
+        renderHook(() => useTurnNotification(true, { soundVolume: 2.0 }));
+        expect((global as any).AudioContext).toHaveBeenCalled();
+
+        // Test with volume < 0
+        jest.clearAllMocks();
+        renderHook(() => useTurnNotification(true, { soundVolume: -0.5 }));
+        expect((global as any).AudioContext).toHaveBeenCalled();
+    });
+
+    it("should constrain flashInterval to minimum value", () => {
+        Object.defineProperty(document, "hidden", {
+            configurable: true,
+            get: () => true
+        });
+
+        // Test with very small interval (should be constrained to 200ms minimum)
+        renderHook(() => useTurnNotification(true, { flashInterval: 50 }));
+        
+        expect(document.title).toBe("Block 52");
+        
+        // Should use minimum interval of 200ms, not 50ms
+        jest.advanceTimersByTime(50);
+        expect(document.title).toBe("Block 52");
+        
+        jest.advanceTimersByTime(150);
+        expect(document.title).toBe("🃏 Your Turn! 🃏");
+    });
 });
 
 describe("createFaviconNotification", () => {
     let mockFavicon: HTMLLinkElement;
     let mockCanvas: any;
     let mockContext: any;
+    let originalCreateElement: typeof document.createElement;
 
     beforeEach(() => {
         // Create mock favicon
@@ -242,8 +278,8 @@ describe("createFaviconNotification", () => {
             toDataURL: jest.fn(() => "data:image/png;base64,mock")
         };
 
-        // Save original createElement
-        const originalCreateElement = document.createElement.bind(document);
+        // Save original createElement for restoration
+        originalCreateElement = document.createElement.bind(document);
         
         document.createElement = jest.fn((tag: string) => {
             if (tag === "canvas") {
@@ -255,6 +291,8 @@ describe("createFaviconNotification", () => {
 
     afterEach(() => {
         mockFavicon.remove();
+        // Explicitly restore createElement
+        document.createElement = originalCreateElement;
         jest.restoreAllMocks();
     });
 
