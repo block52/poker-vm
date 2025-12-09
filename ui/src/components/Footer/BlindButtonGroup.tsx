@@ -37,9 +37,11 @@ export const BlindButtonGroup: React.FC<BlindButtonGroupProps> = ({
                     disabled={loading !== null}
                     className="btn-small-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                 >
-                    {loading === "small-blind" && <LoadingSpinner size="sm" />}
                     {loading === "small-blind" ? (
-                        <span>Posting...</span>
+                        <>
+                            <LoadingSpinner size="sm" />
+                            <span>Posting...</span>
+                        </>
                     ) : (
                         <>
                             <span className="mr-1">Post Small Blind</span>
@@ -57,9 +59,11 @@ export const BlindButtonGroup: React.FC<BlindButtonGroupProps> = ({
                     disabled={loading !== null}
                     className="btn-big-blind text-white font-medium py-1.5 lg:py-2 px-2 lg:px-4 rounded-lg shadow-md transition-all duration-200 text-xs lg:text-sm border flex items-center transform hover:scale-105 mr-1 lg:mr-2 disabled:opacity-50 disabled:cursor-not-allowed gap-1"
                 >
-                    {loading === "big-blind" && <LoadingSpinner size="sm" />}
                     {loading === "big-blind" ? (
-                        <span>Posting...</span>
+                        <>
+                            <LoadingSpinner size="sm" />
+                            <span>Posting...</span>
+                        </>
                     ) : (
                         <>
                             <span className="mr-1">Post Big Blind</span>
@@ -79,8 +83,14 @@ export const BlindButtonGroup: React.FC<BlindButtonGroupProps> = ({
                     onClick={onFold}
                     disabled={loading !== null}
                 >
-                    {loading === "fold" && <LoadingSpinner size="sm" />}
-                    {loading === "fold" ? "FOLDING..." : "FOLD"}
+                    {loading === "fold" ? (
+                        <>
+                            <LoadingSpinner size="sm" />
+                            FOLDING...
+                        </>
+                    ) : (
+                        "FOLD"
+                    )}
                 </button>
             )}
 
