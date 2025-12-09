@@ -44,7 +44,8 @@ export enum PlayerStatus {
     SEATED = "seated",
     SITTING_OUT = "sitting-out",
     SITTING_IN = "sitting-in",
-    SHOWING = "showing"
+    SHOWING = "showing",
+    WAITING = "waiting"
 }
 
 export enum TexasHoldemRound {

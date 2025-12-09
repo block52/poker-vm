@@ -572,11 +572,30 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     /**
      * Checks if a hand is currently in progress
-     * A hand is in progress if we're past ANTE but haven't reached END
+     * A hand is in progress if:
+     * 1. We're past ANTE but haven't reached END, OR
+     * 2. We're in ANTE but blinds have been posted (hand has started)
      */
     private isHandInProgress(): boolean {
-        return this._currentRound !== TexasHoldemRound.ANTE &&
-               this._currentRound !== TexasHoldemRound.END;
+        // If we're past ANTE but not at END, hand is definitely in progress
+        if (this._currentRound !== TexasHoldemRound.ANTE &&
+            this._currentRound !== TexasHoldemRound.END) {
+            return true;
+        }
+
+        // If we're at END, hand is not in progress
+        if (this._currentRound === TexasHoldemRound.END) {
+            return false;
+        }
+
+        // We're in ANTE - check if blinds have been posted
+        const actions = this._rounds.get(TexasHoldemRound.ANTE) || [];
+        const hasBlinds = actions.some(
+            a => a.action === PlayerActionType.SMALL_BLIND ||
+                 a.action === PlayerActionType.BIG_BLIND
+        );
+
+        return hasBlinds;
     }
 
     /**
@@ -660,7 +679,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         //     throw new Error("Cards have already been dealt for this hand.");
         // }
 
-        const players = this.getSeatedPlayers();
+        // Only deal to ACTIVE players (excludes SITTING_OUT/waiting players)
+        const players = this.findActivePlayers();
 
         // Deal first card to each player
         for (const player of players) {
