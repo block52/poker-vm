@@ -2,6 +2,11 @@ import { useEffect, useRef, useCallback } from "react";
 import { colors } from "../utils/colorConfig";
 
 /**
+ * Default favicon path - can be overridden via environment variable if needed
+ */
+const DEFAULT_FAVICON_PATH = "/b52favicon.svg";
+
+/**
  * Custom hook to provide turn-to-act notifications
  * - Flashes browser tab title when it's the user's turn
  * - Optional audible notification tone
@@ -37,7 +42,12 @@ export const useTurnNotification = (
         try {
             // Create audio context if it doesn't exist
             if (!audioContextRef.current) {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+                const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+                if (!AudioContextClass) {
+                    console.warn("AudioContext is not supported in this browser");
+                    return;
+                }
+                audioContextRef.current = new AudioContextClass();
             }
 
             const audioContext = audioContextRef.current;
@@ -151,7 +161,24 @@ export const useTurnNotification = (
 
 /**
  * Utility function to create a visual notification using favicon
- * This provides an additional visual cue in the browser tab
+ * 
+ * This function draws a notification indicator (colored dot) on the favicon
+ * to provide an additional visual cue in the browser tab. This is an alternative
+ * or complementary approach to tab title flashing.
+ * 
+ * Note: Currently not used in the main implementation as tab title flashing
+ * provides a more noticeable notification. This function is exported for
+ * potential future use or customization by implementers who prefer favicon
+ * notification over title flashing.
+ * 
+ * @param shouldNotify - Whether to show the notification indicator
+ * 
+ * Usage example:
+ * ```typescript
+ * useEffect(() => {
+ *   createFaviconNotification(isUserTurn && document.hidden);
+ * }, [isUserTurn]);
+ * ```
  */
 export const createFaviconNotification = (shouldNotify: boolean) => {
     const favicon = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -177,7 +204,7 @@ export const createFaviconNotification = (shouldNotify: boolean) => {
 
         favicon.href = canvas.toDataURL("image/png");
     } else {
-        // Reset to original favicon
-        favicon.href = "/b52favicon.svg";
+        // Reset to original favicon using constant
+        favicon.href = DEFAULT_FAVICON_PATH;
     }
 };
