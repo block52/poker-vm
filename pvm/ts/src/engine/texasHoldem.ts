@@ -61,6 +61,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private readonly _communityCards: Card[] = [];
     private readonly _communityCards2: Card[] = [];
     private readonly _actions: IAction[];
+    private readonly _nonPlayerActions: IAction[];
     private readonly _gameOptions: GameOptions;
     private readonly _address: string;
     private _deck: Deck;
@@ -174,8 +175,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         })(this);
 
         // Initialize action handlers
-        // Note: SitOutAction is NOT included here as it's now a NonPlayerActionType
-        // and is handled separately in performAction()
         this._actions = [
             new DealAction(this, this._update),
             new SmallBlindAction(this, this._update),
@@ -189,6 +188,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, ""),
             new SitInAction(this, this._update)
+        ];
+
+        // Initialize non-player action handlers that can be returned in getLegalActions
+        this._nonPlayerActions = [
+            new SitOutAction(this, this._update),
+            new TopUpAction(this, this._update)
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
@@ -1095,9 +1100,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         };
 
-        // Get all valid actions for this player
-        const actions = this._actions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
-        return actions;
+        // Get all valid player actions
+        const playerActions = this._actions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
+
+        // Get all valid non-player actions (SIT_OUT, TOP_UP, etc.)
+        const nonPlayerActions = this._nonPlayerActions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
+
+        // Combine and return all legal actions
+        return [...playerActions, ...nonPlayerActions];
     }
 
     /**
