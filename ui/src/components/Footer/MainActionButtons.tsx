@@ -50,8 +50,14 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
                     onClick={onFold}
                     disabled={loading !== null}
                 >
-                    {loading === "fold" && <LoadingSpinner size="sm" />}
-                    {loading === "fold" ? "FOLDING..." : "FOLD"}
+                    {loading === "fold" ? (
+                        <>
+                            <LoadingSpinner size="sm" />
+                            FOLDING...
+                        </>
+                    ) : (
+                        "FOLD"
+                    )}
                 </button>
             )}
 
@@ -70,8 +76,14 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
                     onClick={onCheck}
                     disabled={loading !== null}
                 >
-                    {loading === "check" && <LoadingSpinner size="sm" />}
-                    {loading === "check" ? "CHECKING..." : "CHECK"}
+                    {loading === "check" ? (
+                        <>
+                            <LoadingSpinner size="sm" />
+                            CHECKING...
+                        </>
+                    ) : (
+                        "CHECK"
+                    )}
                 </button>
             )}
 
@@ -84,9 +96,11 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
                     onClick={onCall}
                     disabled={loading !== null}
                 >
-                    {loading === "call" && <LoadingSpinner size="sm" />}
                     {loading === "call" ? (
-                        "CALLING..."
+                        <>
+                            <LoadingSpinner size="sm" />
+                            CALLING...
+                        </>
                     ) : (
                         <>
                             CALL <span style={{ color: colors.brand.primary }}>${callAmount}</span>
@@ -103,13 +117,11 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
                         isMobileLandscape ? "px-2 py-0.5 text-[10px]" : "px-2 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm"
                     }`}
                 >
-                    {(loading === "raise" || loading === "bet") && <LoadingSpinner size="sm" />}
                     {loading === "raise" || loading === "bet" ? (
-                        canRaise ? (
-                            "RAISING..."
-                        ) : (
-                            "BETTING..."
-                        )
+                        <>
+                            <LoadingSpinner size="sm" />
+                            {canRaise ? "RAISING..." : "BETTING..."}
+                        </>
                     ) : (
                         <>
                             {canRaise ? "RAISE" : "BET"}{" "}

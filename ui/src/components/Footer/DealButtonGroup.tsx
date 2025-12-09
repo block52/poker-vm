@@ -54,11 +54,16 @@ export const DealButtonGroup: React.FC<DealButtonGroupProps> = ({
                     className="btn-deal text-white font-bold py-2 lg:py-3 px-6 lg:px-8 rounded-lg shadow-md text-sm lg:text-base backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? (
-                        <LoadingSpinner size="sm" />
+                        <>
+                            <LoadingSpinner size="sm" />
+                            DEALING...
+                        </>
                     ) : (
-                        dealIcon
+                        <>
+                            {dealIcon}
+                            DEAL
+                        </>
                     )}
-                    {loading ? "DEALING..." : "DEAL"}
                 </button>
 
                 <button
