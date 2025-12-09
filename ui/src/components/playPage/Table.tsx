@@ -265,7 +265,7 @@ const Table = React.memo(() => {
 
     // Check if sit out/sit in actions are available
     const hasSitOutAction = hasAction(playerLegalActions, NonPlayerActionType.SIT_OUT);
-    const hasSitInAction = hasAction(playerLegalActions, PlayerActionType.SIT_IN);
+    const hasSitInAction = hasAction(playerLegalActions, NonPlayerActionType.SIT_IN);
 
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat } = usePlayerSeatInfo();

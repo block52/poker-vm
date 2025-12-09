@@ -18,8 +18,8 @@ export const OptimisticAction = {
     RAISE: PlayerActionType.RAISE,
     MUCK: PlayerActionType.MUCK,
     SHOW: PlayerActionType.SHOW,
-    SIT_IN: PlayerActionType.SIT_IN,
     // Non-player actions (from NonPlayerActionType)
+    SIT_IN: NonPlayerActionType.SIT_IN,
     SIT_OUT: NonPlayerActionType.SIT_OUT,
 } as const;
 

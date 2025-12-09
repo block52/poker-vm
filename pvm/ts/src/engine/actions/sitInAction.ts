@@ -1,10 +1,10 @@
-import { PlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { IAction, Range } from "../types";
 
 class SitInAction extends BaseAction implements IAction {
-    get type(): PlayerActionType { return PlayerActionType.SIT_IN }
+    get type(): NonPlayerActionType { return NonPlayerActionType.SIT_IN }
 
     /**
      * Verify if a player can sit in. In poker, sitting in is allowed regardless of player status
@@ -40,7 +40,7 @@ class SitInAction extends BaseAction implements IAction {
 
         // Add the action to the game
         const round = this.game.currentRound;
-        this.game.addAction({ playerId: player.address, action: PlayerActionType.SIT_IN, index: index }, round);
+        this.game.addAction({ playerId: player.address, action: NonPlayerActionType.SIT_IN, index: index }, round);
     }
 }
 
