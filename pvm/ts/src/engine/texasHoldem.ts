@@ -1247,7 +1247,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             case PlayerActionType.SHOW:
                 new ShowAction(this, this._update).execute(player, index);
                 break;
-            case PlayerActionType.SIT_IN:
+            case NonPlayerActionType.SIT_IN:
                 player.updateStatus(PlayerStatus.ACTIVE);
                 break;
         }
