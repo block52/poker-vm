@@ -2,9 +2,11 @@
 
 ## Overview
 The turn notification feature alerts players when it's their turn to act by:
-1. **Flashing the browser tab title** - Alternates between the regular title and "🃏 Your Turn! 🃏"
+1. **Flashing the browser tab favicon color** - The tab icon alternates between the original and a bright colored version using the app's color palette
 2. **Playing an audible tone** - A pleasant two-note chime (A5 to C6)
 3. **Auto-stopping** - Notifications stop when the user returns to the tab or their turn ends
+
+**Note:** The tab title remains as "Block 52" at all times - only the favicon (tab icon) color changes to provide a visual notification.
 
 ## How to Test
 
@@ -15,15 +17,16 @@ The turn notification feature alerts players when it's their turn to act by:
 
 ### Test Scenarios
 
-#### Scenario 1: Tab Flashing When User's Turn Starts
+#### Scenario 1: Favicon Color Flash When User's Turn Starts
 1. Have your poker game open in **Tab A** and be seated at the table
 2. Switch to **Tab B** (another tab/window)
 3. Wait for it to be your turn in the game
 4. **Expected Result**: 
-   - Tab A's title should start flashing between:
-     - "Block 52" (original title)
-     - "🃏 Your Turn! 🃏" (notification)
+   - Tab A's favicon (tab icon) should start flashing between:
+     - Original favicon (Block 52 logo)
+     - Colored square using the brand primary color (#3b82f6 by default)
    - The flashing should occur every 1 second (default interval)
+   - **Tab title remains "Block 52" throughout**
 
 #### Scenario 2: Audible Notification
 1. Ensure your browser audio is enabled
@@ -35,25 +38,26 @@ The turn notification feature alerts players when it's their turn to act by:
    - Volume is set to 0.3 (30% of maximum)
 
 #### Scenario 3: Notification Stops When Returning to Tab
-1. Let the notification start (tab flashing + sound)
+1. Let the notification start (favicon flashing + sound)
 2. Click on the poker game tab to bring it to focus
 3. **Expected Result**:
-   - Tab title immediately stops flashing
-   - Title returns to "Block 52"
+   - Favicon immediately stops flashing
+   - Favicon returns to original Block 52 logo
+   - Tab title remains "Block 52"
    - No more notifications until your next turn
 
 #### Scenario 4: Notification Stops When Turn Ends
 1. Have notification running (tab is in background during your turn)
 2. Let your turn time out or have someone else act
 3. **Expected Result**:
-   - Tab title stops flashing
-   - Title returns to normal
+   - Favicon stops flashing
+   - Favicon returns to original
    - No sound plays
 
 #### Scenario 5: No Notification When Tab is Active
 1. Be on the poker game tab when it's your turn
 2. **Expected Result**:
-   - No tab flashing occurs (you're already on the tab)
+   - No favicon flashing occurs (you're already on the tab)
    - No sound plays
    - Game operates normally
 
@@ -65,23 +69,24 @@ The notification can be configured in `Table.tsx`:
 useTurnNotification(isCurrentUserTurn, {
     enableSound: true,        // Enable/disable sound
     soundVolume: 0.3,         // Volume level (0.0 to 1.0)
-    flashInterval: 1000       // Milliseconds between title changes
+    flashInterval: 1000       // Milliseconds between favicon color changes
 });
 ```
 
 ### Browser Compatibility
 
-- **Chrome/Edge**: Full support
-- **Firefox**: Full support
-- **Safari**: Full support
-- **Mobile browsers**: Title flashing may not work as expected due to OS limitations
+- **Chrome/Edge**: Full support for favicon flashing
+- **Firefox**: Full support for favicon flashing
+- **Safari**: Full support for favicon flashing
+- **Mobile browsers**: Favicon flashing may have limited visibility due to OS tab management
 
 ### Troubleshooting
 
-**Tab not flashing?**
+**Favicon not flashing?**
 - Ensure `document.hidden` API is supported by your browser
 - Check that the tab is actually in the background
 - Verify `isCurrentUserTurn` is `true` in the game state
+- Check browser console for any errors
 
 **No sound?**
 - Check browser audio permissions

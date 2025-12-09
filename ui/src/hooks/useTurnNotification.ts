@@ -21,7 +21,7 @@ const MIN_VOLUME = 0.0;
 
 /**
  * Custom hook to provide turn-to-act notifications
- * - Flashes browser tab title when it's the user's turn
+ * - Flashes browser tab favicon color when it's the user's turn
  * - Optional audible notification tone
  * - Automatically stops when user returns to tab or turn ends
  */
@@ -30,7 +30,7 @@ export const useTurnNotification = (
     options: {
         enableSound?: boolean;
         soundVolume?: number; // 0 to 1
-        flashInterval?: number; // milliseconds between title changes
+        flashInterval?: number; // milliseconds between favicon color changes
     } = {}
 ) => {
     const {
@@ -44,14 +44,17 @@ export const useTurnNotification = (
     const flashInterval = Math.max(MIN_FLASH_INTERVAL, rawInterval);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const originalTitleRef = useRef<string>(document.title);
+    const originalFaviconRef = useRef<string>("");
     const isFlashingRef = useRef<boolean>(false);
     const hasSoundedRef = useRef<boolean>(false);
     const audioContextRef = useRef<AudioContext | null>(null);
 
-    // Initialize original title
+    // Store original favicon
     useEffect(() => {
-        originalTitleRef.current = document.title;
+        const favicon = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (favicon) {
+            originalFaviconRef.current = favicon.href;
+        }
     }, []);
 
     // Play notification sound using Web Audio API
@@ -94,19 +97,45 @@ export const useTurnNotification = (
         }
     }, [soundVolume]);
 
-    // Start flashing the tab title
+    // Create a colored favicon for notification
+    const createColoredFavicon = useCallback(() => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext("2d");
+        
+        if (ctx) {
+            // Fill entire canvas with brand color for a strong visual flash
+            ctx.fillStyle = colors.brand.primary;
+            ctx.fillRect(0, 0, 32, 32);
+            
+            // Add a white border for contrast
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(0, 0, 32, 32);
+        }
+        
+        return canvas.toDataURL("image/png");
+    }, []);
+
+    // Start flashing the favicon color
     const startFlashing = useCallback(() => {
         if (isFlashingRef.current) return;
         isFlashingRef.current = true;
 
+        const coloredFavicon = createColoredFavicon();
         let isAlternate = false;
+        
         intervalRef.current = setInterval(() => {
-            document.title = isAlternate ? originalTitleRef.current : "🃏 Your Turn! 🃏";
-            isAlternate = !isAlternate;
+            const favicon = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+            if (favicon) {
+                favicon.href = isAlternate ? originalFaviconRef.current : coloredFavicon;
+                isAlternate = !isAlternate;
+            }
         }, flashInterval);
-    }, [flashInterval]);
+    }, [flashInterval, createColoredFavicon]);
 
-    // Stop flashing and restore original title
+    // Stop flashing and restore original favicon
     const stopFlashing = useCallback(() => {
         if (!isFlashingRef.current) return;
         isFlashingRef.current = false;
@@ -115,7 +144,13 @@ export const useTurnNotification = (
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         }
-        document.title = originalTitleRef.current;
+        
+        // Restore original favicon
+        const favicon = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (favicon && originalFaviconRef.current) {
+            favicon.href = originalFaviconRef.current;
+        }
+        
         hasSoundedRef.current = false;
     }, []);
 

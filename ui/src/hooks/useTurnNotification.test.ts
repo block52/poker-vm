@@ -44,10 +44,17 @@ jest.useFakeTimers();
 describe("useTurnNotification", () => {
     let originalTitle: string;
     let mockAudioContext: any;
+    let mockFavicon: HTMLLinkElement;
 
     beforeEach(() => {
         originalTitle = document.title;
         document.title = "Block 52";
+        
+        // Create mock favicon
+        mockFavicon = document.createElement("link");
+        mockFavicon.rel = "icon";
+        mockFavicon.href = "/b52favicon.svg";
+        document.head.appendChild(mockFavicon);
         
         // Mock AudioContext
         mockAudioContext = {
@@ -78,38 +85,42 @@ describe("useTurnNotification", () => {
 
     afterEach(() => {
         document.title = originalTitle;
+        mockFavicon.remove();
         jest.clearAllTimers();
         jest.clearAllMocks();
     });
 
-    it("should not flash title when isUserTurn is false", () => {
+    it("should not flash favicon when isUserTurn is false", () => {
+        const originalHref = mockFavicon.href;
         renderHook(() => useTurnNotification(false));
         
         // Advance timers
         jest.advanceTimersByTime(2000);
         
-        expect(document.title).toBe("Block 52");
+        // Favicon should remain unchanged
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
     });
 
-    it("should flash title when isUserTurn is true and tab is hidden", () => {
+    it("should flash favicon when isUserTurn is true and tab is hidden", () => {
         // Mock document.hidden
         Object.defineProperty(document, "hidden", {
             configurable: true,
             get: () => true
         });
 
+        const originalHref = mockFavicon.href;
         renderHook(() => useTurnNotification(true));
         
-        // Initial title should still be original
-        expect(document.title).toBe("Block 52");
+        // Initial favicon should still be original
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
         
-        // After flash interval, title should change
+        // After flash interval, favicon should change to colored version
         jest.advanceTimersByTime(1000);
-        expect(document.title).toBe("🃏 Your Turn! 🃏");
+        expect(mockFavicon.href).toContain("data:image/png");
         
-        // After another interval, title should alternate back
+        // After another interval, favicon should alternate back
         jest.advanceTimersByTime(1000);
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
     });
 
     it("should stop flashing when turn ends", () => {
@@ -124,17 +135,17 @@ describe("useTurnNotification", () => {
         );
         
         jest.advanceTimersByTime(1000);
-        expect(document.title).toBe("🃏 Your Turn! 🃏");
+        expect(mockFavicon.href).toContain("data:image/png");
         
         // Turn ends
         rerender({ isUserTurn: false });
         
-        // Title should be restored
-        expect(document.title).toBe("Block 52");
+        // Favicon should be restored
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
         
         // Should not continue flashing
         jest.advanceTimersByTime(2000);
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
     });
 
     it("should play notification sound when enabled", () => {
@@ -171,14 +182,14 @@ describe("useTurnNotification", () => {
 
         renderHook(() => useTurnNotification(true, { flashInterval: 500 }));
         
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
         
         // Should flash after custom interval
         jest.advanceTimersByTime(500);
-        expect(document.title).toBe("🃏 Your Turn! 🃏");
+        expect(mockFavicon.href).toContain("data:image/png");
         
         jest.advanceTimersByTime(500);
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
     });
 
     it("should not flash when tab is visible", () => {
@@ -192,10 +203,10 @@ describe("useTurnNotification", () => {
         jest.advanceTimersByTime(2000);
         
         // Should not flash when tab is visible
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
     });
 
-    it("should restore title on unmount", () => {
+    it("should restore favicon on unmount", () => {
         Object.defineProperty(document, "hidden", {
             configurable: true,
             get: () => true
@@ -204,11 +215,11 @@ describe("useTurnNotification", () => {
         const { unmount } = renderHook(() => useTurnNotification(true));
         
         jest.advanceTimersByTime(1000);
-        expect(document.title).toBe("🃏 Your Turn! 🃏");
+        expect(mockFavicon.href).toContain("data:image/png");
         
         unmount();
         
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
     });
 
     it("should constrain soundVolume to valid range", () => {
@@ -236,14 +247,14 @@ describe("useTurnNotification", () => {
         // Test with very small interval (should be constrained to 200ms minimum)
         renderHook(() => useTurnNotification(true, { flashInterval: 50 }));
         
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
         
         // Should use minimum interval of 200ms, not 50ms
         jest.advanceTimersByTime(50);
-        expect(document.title).toBe("Block 52");
+        expect(mockFavicon.href).toContain("/b52favicon.svg");
         
         jest.advanceTimersByTime(150);
-        expect(document.title).toBe("🃏 Your Turn! 🃏");
+        expect(mockFavicon.href).toContain("data:image/png");
     });
 });
 
