@@ -1,6 +1,7 @@
-import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus, GameType } from "@bitcoinbrisbane/block52";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, mnemonic, getNextTestTimestamp } from "./testConstants";
+import { Player } from "../models/player";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in a heads-up scenario.
 describe("Texas Holdem - Reinit", () => {
@@ -83,6 +84,84 @@ describe("Texas Holdem - Reinit", () => {
             const player1 = game.getPlayer(PLAYER_2);
             expect(player1).toBeDefined();
             expect(player1?.holeCards).toBeUndefined();
+        });
+    });
+
+    describe("Busted Players", () => {
+        it("should mark cash game players with 0 chips as BUSTED on reInit", () => {
+            const cashGameOptions = {
+                ...gameOptions,
+                type: GameType.CASH
+            };
+
+            const game = TexasHoldemGame.fromJson(baseGameConfig, cashGameOptions);
+
+            const PLAYER_1 = "0x1111111111111111111111111111111111111111";
+            const PLAYER_2 = "0x2222222222222222222222222222222222222222";
+
+            // Join two players
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
+
+            // Post blinds and complete a hand
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.FOLD, 6, undefined, undefined, getNextTestTimestamp());
+
+            // After hand ends, manually set player 1's chips to 0 to simulate being busted
+            const player1 = game.getPlayer(PLAYER_1);
+            expect(player1).toBeDefined();
+            player1!.chips = 0n;
+
+            // Start new hand - this triggers reInit which should mark player 1 as BUSTED
+            game.performAction(PLAYER_2, NonPlayerActionType.NEW_HAND, 7, undefined, `deck=${mnemonic}`, getNextTestTimestamp());
+
+            // Verify player 1 is now BUSTED
+            const player1AfterReinit = game.getPlayer(PLAYER_1);
+            expect(player1AfterReinit?.status).toBe(PlayerStatus.BUSTED);
+
+            // Verify player 2 is still ACTIVE
+            const player2 = game.getPlayer(PLAYER_2);
+            expect(player2?.status).toBe(PlayerStatus.ACTIVE);
+        });
+
+        it("should mark tournament players with 0 chips as BUSTED on reInit", () => {
+            const tournamentGameOptions = {
+                ...gameOptions,
+                type: GameType.TOURNAMENT
+            };
+
+            const game = TexasHoldemGame.fromJson(baseGameConfig, tournamentGameOptions);
+
+            const PLAYER_1 = "0x1111111111111111111111111111111111111111";
+            const PLAYER_2 = "0x2222222222222222222222222222222222222222";
+
+            // Join two players
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
+
+            // Post blinds and complete a hand
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.FOLD, 6, undefined, undefined, getNextTestTimestamp());
+
+            // After hand ends, manually set player 1's chips to 0 to simulate being busted
+            const player1 = game.getPlayer(PLAYER_1);
+            expect(player1).toBeDefined();
+            player1!.chips = 0n;
+
+            // Start new hand - this triggers reInit which should mark player 1 as BUSTED
+            game.performAction(PLAYER_2, NonPlayerActionType.NEW_HAND, 7, undefined, `deck=${mnemonic}`, getNextTestTimestamp());
+
+            // Verify player 1 is now BUSTED
+            const player1AfterReinit = game.getPlayer(PLAYER_1);
+            expect(player1AfterReinit?.status).toBe(PlayerStatus.BUSTED);
+
+            // Verify player 2 is still ACTIVE
+            const player2 = game.getPlayer(PLAYER_2);
+            expect(player2?.status).toBe(PlayerStatus.ACTIVE);
         });
     });
 });

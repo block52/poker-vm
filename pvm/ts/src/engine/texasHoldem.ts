@@ -265,8 +265,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
 
-            // In tournament games, players with 0 chips should be marked as BUSTED
-            if (this._gameOptions.type !== GameType.CASH && player.chips === 0n) {
+            // Players with 0 chips should be marked as BUSTED
+            if (player.chips === 0n) {
                 player.updateStatus(PlayerStatus.BUSTED);
             }
 
