@@ -880,8 +880,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Step 2: If only one live player remains, they win - move to showdown
         // IMPORTANT: In ANTE round, we must wait for both blinds to be posted even if only one player is live
         // This prevents the game from advancing to PREFLOP prematurely in heads-up scenarios
+        // Also don't force SHOWDOWN if we're already at or past SHOWDOWN
         if (livePlayers.length <= 1 && round !== TexasHoldemRound.ANTE) {
-            if (this.currentRound !== TexasHoldemRound.ANTE && livePlayers.length === 1) {
+            if (this.currentRound !== TexasHoldemRound.ANTE &&
+                this.currentRound !== TexasHoldemRound.SHOWDOWN &&
+                this.currentRound !== TexasHoldemRound.END &&
+                livePlayers.length === 1) {
                 // Check community cards, deal the remaining
                 this._currentRound = TexasHoldemRound.SHOWDOWN;
                 this.dealCommunityCards();
@@ -898,8 +902,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Step 4: Get active players (can still act - excludes all-in players)
+        // Skip this check if we're already at SHOWDOWN or END - those rounds have their own logic
         const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
-        if (activePlayers.length === 0) {
+        if (activePlayers.length === 0 && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
             // No active players remain, round ends
             this._currentRound = TexasHoldemRound.SHOWDOWN;
             this.dealCommunityCards();
@@ -922,6 +927,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Special case for SHOWDOWN round
         if (round === TexasHoldemRound.SHOWDOWN) {
+            // If only one player remains (everyone else folded), no need to show - advance to END
+            if (livePlayers.length <= 1) {
+                return true;
+            }
+
             // Check if all live players have either shown or mucked
             const showdownActions = actions.filter(a => a.action === PlayerActionType.SHOW || a.action === PlayerActionType.MUCK);
             const playersWhoActedInShowdown = new Set(showdownActions.map(a => a.playerId));
