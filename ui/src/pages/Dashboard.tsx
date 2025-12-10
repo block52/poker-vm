@@ -1043,7 +1043,15 @@ const Dashboard: React.FC = () => {
                                         </button>
                                     </div>
                                     {transferError && <p className="text-red-500 text-sm">{transferError}</p>}
-                                    <div className="flex justify-end space-x-3">
+                                    <div className="flex flex-col space-y-3">
+                                        <button
+                                            onClick={handleCosmosTransfer}
+                                            disabled={isTransferring}
+                                            className="w-full px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90 disabled:opacity-50"
+                                            style={{ backgroundColor: transferTokenType === "usdc" ? colors.brand.primary : colors.accent.success }}
+                                        >
+                                            {isTransferring ? "Sending..." : `Send ${transferTokenType.toUpperCase()}`}
+                                        </button>
                                         <button
                                             onClick={() => {
                                                 setShowCosmosTransferModal(false);
@@ -1052,17 +1060,9 @@ const Dashboard: React.FC = () => {
                                                 setTransferError("");
                                                 setTransferTokenType("usdc");
                                             }}
-                                            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                            className="w-full px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
                                         >
                                             Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleCosmosTransfer}
-                                            disabled={isTransferring}
-                                            className="px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90 disabled:opacity-50"
-                                            style={{ backgroundColor: transferTokenType === "usdc" ? colors.brand.primary : colors.accent.success }}
-                                        >
-                                            {isTransferring ? "Sending..." : `Send ${transferTokenType.toUpperCase()}`}
                                         </button>
                                     </div>
                                 </div>

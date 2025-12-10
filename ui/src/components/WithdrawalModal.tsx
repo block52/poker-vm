@@ -142,8 +142,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 
     const cancelButtonStyle = useMemo(
         () => ({
-            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5),
-            border: `1px solid ${hexToRgba(colors.ui.textSecondary, 0.3)}`
+            background: `linear-gradient(135deg, ${colors.accent.danger} 0%, ${hexToRgba(colors.accent.danger, 0.8)} 100%)`
         }),
         []
     );
@@ -468,25 +467,25 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-3">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 py-2 px-4 rounded-lg font-semibold transition hover:opacity-80"
-                        style={cancelButtonStyle}
-                        disabled={isWithdrawing}
-                    >
-                        Cancel
-                    </button>
+                <div className="flex flex-col space-y-3">
                     {!success && (
                         <button
                             onClick={handleWithdraw}
-                            className="flex-1 py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                            className="w-full py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
                             style={buttonStyle}
                             disabled={isWithdrawing || !isWeb3Connected || !web3Address || !amount}
                         >
                             {isWithdrawing ? "Processing..." : !isWeb3Connected ? "Connect Wallet First" : "Withdraw"}
                         </button>
                     )}
+                    <button
+                        onClick={onClose}
+                        className="w-full py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-80"
+                        style={cancelButtonStyle}
+                        disabled={isWithdrawing}
+                    >
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
