@@ -142,8 +142,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 
     const cancelButtonStyle = useMemo(
         () => ({
-            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5),
-            border: `1px solid ${hexToRgba(colors.ui.textSecondary, 0.3)}`
+            background: `linear-gradient(135deg, ${colors.accent.danger} 0%, ${hexToRgba(colors.accent.danger, 0.8)} 100%)`
         }),
         []
     );
@@ -482,9 +481,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                     <button
                         onClick={onClose}
                         className="w-full py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-80"
-                        style={{
-                            background: `linear-gradient(135deg, ${colors.accent.danger} 0%, ${hexToRgba(colors.accent.danger, 0.8)} 100%)`
-                        }}
+                        style={cancelButtonStyle}
                         disabled={isWithdrawing}
                     >
                         Cancel
