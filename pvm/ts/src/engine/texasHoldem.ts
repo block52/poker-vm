@@ -925,6 +925,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
+     * Determines if game should auto-runout remaining streets
+     * This happens when no more betting action is possible
+     */
+    private shouldAutoRunout(): boolean {
+        const livePlayers = this.findLivePlayers();
+        const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
+
+        // All remaining live players are all-in (2 or more players)
+        // No more betting action possible - auto-runout remaining streets
+        if (allInPlayers.length >= 2 && allInPlayers.length === livePlayers.length) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Determines if the current betting round has ended
      */
     hasRoundEnded(round: TexasHoldemRound): boolean {
@@ -934,8 +951,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Step 2: If only one live player remains, they win - move to showdown
         // IMPORTANT: In ANTE round, we must wait for both blinds to be posted even if only one player is live
         // This prevents the game from advancing to PREFLOP prematurely in heads-up scenarios
+        // Also don't force SHOWDOWN if we're already at or past SHOWDOWN
         if (livePlayers.length <= 1 && round !== TexasHoldemRound.ANTE) {
-            if (this.currentRound !== TexasHoldemRound.ANTE && livePlayers.length === 1) {
+            if (this.currentRound !== TexasHoldemRound.ANTE &&
+                this.currentRound !== TexasHoldemRound.SHOWDOWN &&
+                this.currentRound !== TexasHoldemRound.END &&
+                livePlayers.length === 1) {
                 // Check community cards, deal the remaining
                 this._currentRound = TexasHoldemRound.SHOWDOWN;
                 this.dealCommunityCards();
@@ -944,9 +965,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return true;
         }
 
-        // Step 3: Get active players (can still act - excludes all-in players)
+        // Step 3: Check if we should auto-runout (all live players all-in, 2+)
+        if (this.shouldAutoRunout() && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
+            // Auto-runout: round ends immediately to trigger automatic progression
+            // The nextRound() method will be called repeatedly until we reach showdown
+            return true;
+        }
+
+        // Step 4: Get active players (can still act - excludes all-in players)
+        // Skip this check if we're already at SHOWDOWN or END - those rounds have their own logic
         const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
-        if (activePlayers.length === 0) {
+        if (activePlayers.length === 0 && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
             // No active players remain, round ends
             this._currentRound = TexasHoldemRound.SHOWDOWN;
             this.dealCommunityCards();
@@ -957,7 +986,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Get actions for this round
         const actions = this._rounds.get(round) || [];
 
-        // Step 4: Special case for ANTE round
+        // Step 5: Special case for ANTE round
         if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
@@ -969,6 +998,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Special case for SHOWDOWN round
         if (round === TexasHoldemRound.SHOWDOWN) {
+            // If only one player remains (everyone else folded), no need to show - advance to END
+            if (livePlayers.length <= 1) {
+                return true;
+            }
+
             // Check if all live players have either shown or mucked
             const showdownActions = actions.filter(a => a.action === PlayerActionType.SHOW || a.action === PlayerActionType.MUCK);
             const playersWhoActedInShowdown = new Set(showdownActions.map(a => a.playerId));
@@ -983,14 +1017,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        // Step 5: If all live players are all-in, skip to showdown
+        // Step 6: If all live players are all-in, skip to showdown
         const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
         if (allInPlayers.length === livePlayers.length && livePlayers.length > 1) {
             // All remaining players are all-in, round ends immediately
             return true;
         }
 
-        // Step 6: If no active players remain (all are all-in), round ends
+        // Step 7: If no active players remain (all are all-in), round ends
         if (activePlayers.length === 0) {
             return true;
         }
@@ -1009,7 +1043,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        // Step 7: Check that all active players have acted
+        // Step 8: Check that all active players have acted
         const playersWhoActed = new Set(bettingActions.map(a => a.playerId));
 
         for (const player of activePlayers) {
@@ -1018,7 +1052,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 8: Check if all players have acted AFTER the last bet/raise/all-in
+        // Step 9: Check if all players have acted AFTER the last bet/raise/all-in
         let lastBetOrRaiseIndex = -1;
         let lastBetOrRaisePlayerId = "";
         for (let i = actions.length - 1; i >= 0; i--) {
@@ -1045,7 +1079,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 9: For PREFLOP, check if it's just checks/calls (no bets/raises)
+        // Step 10: For PREFLOP, check if it's just checks/calls (no bets/raises)
         if (round === TexasHoldemRound.PREFLOP) {
             const preflopBetsOrRaises = bettingActions.filter(a => a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE);
 
@@ -1055,10 +1089,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
 
             // If there were bets/raises, fall through to normal logic below
-            // (don't return here - let it continue to Steps 4b and 6)
+            // (don't return here - let it continue to Steps 5 and 7)
         }
 
-        // Step 10: Calculate each active player's total bets and check if they're equal
+        // Step 11: Calculate each active player's total bets and check if they're equal
         // Note: We only check active players, not all live players, because all-in players
         // cannot contribute more to the current round and shouldn't be included in equality check
         const playerBets: bigint[] = [];
@@ -1277,8 +1311,20 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         player.addAction({ playerId: address, action, amount, index }, this._actionTimestamp!);
 
         // Check if the round has ended and advance if needed
-        if (this.hasRoundEnded(this.currentRound)) {
+        // Loop through remaining rounds if auto-runout is triggered (all-in scenario)
+        // Continue until we reach END round
+        // Safety counter prevents infinite loops (max 6 advances / 7 rounds: ANTE->PREFLOP->FLOP->TURN->RIVER->SHOWDOWN->END)
+        let safetyCounter = 0;
+        const MAX_ROUND_ADVANCES = 6;
+        while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.END && safetyCounter < MAX_ROUND_ADVANCES) {
             this.nextRound();
+            safetyCounter++;
+        }
+        if (safetyCounter >= MAX_ROUND_ADVANCES && this._currentRound !== TexasHoldemRound.END) {
+            LoggerFactory.getInstance().log(
+                `Safety counter reached ${MAX_ROUND_ADVANCES} advances in round ${this._currentRound}. Possible infinite loop.`,
+                "error"
+            );
         }
     }
 
