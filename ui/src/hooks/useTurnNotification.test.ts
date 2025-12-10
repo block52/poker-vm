@@ -45,17 +45,51 @@ describe("useTurnNotification", () => {
     let originalTitle: string;
     let mockAudioContext: any;
     let mockFavicon: HTMLLinkElement;
+    let mockCanvas: any;
+    let mockContext: any;
+    let originalCreateElement: typeof document.createElement;
 
     beforeEach(() => {
         originalTitle = document.title;
         document.title = "Block 52";
-        
+
         // Create mock favicon
         mockFavicon = document.createElement("link");
         mockFavicon.rel = "icon";
         mockFavicon.href = "/b52favicon.svg";
         document.head.appendChild(mockFavicon);
-        
+
+        // Mock canvas context
+        mockContext = {
+            beginPath: jest.fn(),
+            arc: jest.fn(),
+            fill: jest.fn(),
+            stroke: jest.fn(),
+            fillRect: jest.fn(),
+            strokeRect: jest.fn(),
+            fillStyle: "",
+            strokeStyle: "",
+            lineWidth: 0
+        };
+
+        mockCanvas = {
+            width: 0,
+            height: 0,
+            getContext: jest.fn(() => mockContext),
+            toDataURL: jest.fn(() => "data:image/png;base64,mock")
+        };
+
+        // Save original createElement
+        originalCreateElement = document.createElement.bind(document);
+
+        // Mock createElement to return mock canvas
+        document.createElement = jest.fn((tag: string) => {
+            if (tag === "canvas") {
+                return mockCanvas as any;
+            }
+            return originalCreateElement(tag);
+        }) as any;
+
         // Mock AudioContext
         mockAudioContext = {
             createOscillator: jest.fn(() => ({
@@ -79,13 +113,15 @@ describe("useTurnNotification", () => {
             currentTime: 0,
             close: jest.fn()
         };
-        
+
         (global as any).AudioContext = jest.fn(() => mockAudioContext);
     });
 
     afterEach(() => {
         document.title = originalTitle;
         mockFavicon.remove();
+        // Restore original createElement
+        document.createElement = originalCreateElement;
         jest.clearAllTimers();
         jest.clearAllMocks();
     });
