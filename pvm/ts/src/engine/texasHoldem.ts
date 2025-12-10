@@ -1232,7 +1232,6 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 "error"
             );
         }
-        }
     }
 
     /**
