@@ -1203,16 +1203,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: string, timestamp?: number): void {
         // Check action index for replay protection
-        // const actionIndex = this.getActionIndex();
-        // if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
-        //     throw new Error("Invalid action index.");
-        // }
+        const actionIndex = this.getActionIndex();
+        if (index !== actionIndex) {
+            throw new Error("Invalid action index.");
+        }
 
         // Store timestamp for use by addAction/addNonPlayerAction during this action
         // Timestamp must be provided from Cosmos block time for deterministic consensus
         if (timestamp === undefined) {
             throw new Error("Timestamp is required for deterministic consensus. Blockchain timestamp must be provided.");
         }
+        
         this._actionTimestamp = timestamp;
 
         // Convert amount to BigInt if provided
