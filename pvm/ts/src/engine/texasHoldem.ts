@@ -1226,6 +1226,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             this.nextRound();
             safetyCounter++;
         }
+        if (safetyCounter >= MAX_ROUND_ADVANCES && this._currentRound !== TexasHoldemRound.END) {
+            LoggerFactory.getInstance().log(
+                `Safety counter reached ${MAX_ROUND_ADVANCES} advances in round ${this._currentRound}. Possible infinite loop.`,
+                "error"
+            );
+        }
+        }
     }
 
     /**
