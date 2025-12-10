@@ -1219,7 +1219,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Check if the round has ended and advance if needed
         // Loop through remaining rounds if auto-runout is triggered (all-in scenario)
         // Continue until we reach END round
-        // Safety counter prevents infinite loops (max 6 rounds: ANTE->PREFLOP->FLOP->TURN->RIVER->SHOWDOWN->END)
+        // Safety counter prevents infinite loops (max 6 advances / 7 rounds: ANTE->PREFLOP->FLOP->TURN->RIVER->SHOWDOWN->END)
         let safetyCounter = 0;
         const MAX_ROUND_ADVANCES = 6;
         while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.END && safetyCounter < MAX_ROUND_ADVANCES) {
