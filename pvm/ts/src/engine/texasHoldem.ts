@@ -852,18 +852,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     private shouldAutoRunout(): boolean {
         const livePlayers = this.findLivePlayers();
-        const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
         const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
 
-        // Case 1: All remaining live players are all-in (2 or more players)
+        // All remaining live players are all-in (2 or more players)
         // No more betting action possible - auto-runout remaining streets
         if (allInPlayers.length >= 2 && allInPlayers.length === livePlayers.length) {
-            return true;
-        }
-
-        // Case 2: No active players remain (all are all-in)
-        // This catches edge cases where only 1 player is all-in but no actives
-        if (activePlayers.length === 0 && allInPlayers.length > 0) {
             return true;
         }
 
