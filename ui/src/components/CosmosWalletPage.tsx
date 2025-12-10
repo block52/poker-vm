@@ -210,20 +210,20 @@ const CosmosWalletPage = () => {
                                 </div>
                             )}
 
-                            <div className="flex gap-3 mt-4">
-                                <button
-                                    onClick={handleClearWallet}
-                                    className="flex-1 text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
-                                    style={{ backgroundColor: colors.accent.danger }}
-                                >
-                                    Clear Wallet
-                                </button>
+                            <div className="flex flex-col space-y-3 mt-4">
                                 <button
                                     onClick={() => navigate("/")}
-                                    className="flex-1 text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
+                                    className="w-full text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
                                     style={{ backgroundColor: colors.brand.primary }}
                                 >
                                     Return to Dashboard
+                                </button>
+                                <button
+                                    onClick={handleClearWallet}
+                                    className="w-full text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
+                                    style={{ backgroundColor: colors.accent.danger }}
+                                >
+                                    Clear Wallet
                                 </button>
                             </div>
                         </div>
