@@ -220,13 +220,114 @@ The PVM tracks various player states throughout the game:
 
 **Status Transitions:**
 
--   `SITTING_OUT` → `ACTIVE` (new hand starts, or sit-in action)
--   `ACTIVE` → `FOLDED` (fold action)
--   `ACTIVE` → `ALL_IN` (bet all chips)
--   `ACTIVE` → `SITTING_OUT` (sit out action, or 0 chips in cash game)
--   `ACTIVE` → `SHOWING` (showdown phase)
--   `ACTIVE` → `BUSTED` (lose all chips in tournament)
--   `ALL_IN` → `SHOWING` (automatic at showdown)
+```mermaid
+stateDiagram-v2
+    [*] --> SITTING_OUT : Join mid-hand
+    [*] --> ACTIVE : Join before hand
+
+    SITTING_OUT --> ACTIVE : New hand starts\nor Sit-in action
+
+    ACTIVE --> FOLDED : Fold
+    ACTIVE --> ALL_IN : Bet all chips
+    ACTIVE --> SITTING_OUT : Sit out action\nor 0 chips (cash)
+    ACTIVE --> SHOWING : Showdown
+    ACTIVE --> BUSTED : Lose all chips\n(tournament)
+
+    ALL_IN --> SHOWING : Showdown
+
+    FOLDED --> ACTIVE : New hand starts
+    SHOWING --> ACTIVE : New hand starts
+    ALL_IN --> ACTIVE : New hand starts\n(if chips won)
+
+    BUSTED --> [*] : Eliminated
+```
+
+### Game Round Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> ANTE : Game starts
+
+    ANTE --> PREFLOP : Blinds posted\n& cards dealt
+
+    PREFLOP --> FLOP : Betting complete
+    PREFLOP --> SHOWDOWN : All-in called
+    PREFLOP --> END : All fold
+
+    FLOP --> TURN : Betting complete
+    FLOP --> SHOWDOWN : All-in called
+    FLOP --> END : All fold
+
+    TURN --> RIVER : Betting complete
+    TURN --> SHOWDOWN : All-in called
+    TURN --> END : All fold
+
+    RIVER --> SHOWDOWN : Betting complete
+    RIVER --> END : All fold
+
+    SHOWDOWN --> END : Winner determined
+
+    END --> ANTE : New hand
+    END --> [*] : Game over
+```
+
+### Join Timing Flow
+
+```mermaid
+flowchart TD
+    A[Player Requests Join] --> B{Hand in Progress?}
+
+    B -->|No - ANTE before blinds| C[Set ACTIVE]
+    B -->|No - END round| C
+    B -->|Yes - Blinds posted| D[Set SITTING_OUT]
+    B -->|Yes - Any betting round| D
+
+    C --> E[✅ Participate in current/next hand]
+    D --> F[⏳ Wait for next hand]
+
+    F --> G{New Hand Starts}
+    G --> H[reInit activates player]
+    H --> I[Set ACTIVE]
+    I --> E
+```
+
+### Hand Lifecycle Sequence
+
+```mermaid
+sequenceDiagram
+    participant P1 as Player 1 (SB)
+    participant P2 as Player 2 (BB)
+    participant P3 as Player 3 (joins mid-hand)
+    participant Game as Texas Holdem
+
+    Note over Game: Round: ANTE
+    P1->>Game: POST SMALL_BLIND
+    P2->>Game: POST BIG_BLIND
+    P1->>Game: DEAL
+    Note over Game: Round: PREFLOP
+
+    P3->>Game: JOIN (mid-hand)
+    Game-->>P3: Status: SITTING_OUT
+    Note over P3: No cards dealt
+
+    P1->>Game: CALL
+    P2->>Game: CHECK
+    Note over Game: Round: FLOP
+
+    P1->>Game: CHECK
+    P2->>Game: BET
+    P1->>Game: FOLD
+    Note over P1: Status: FOLDED
+
+    Note over Game: Round: END
+    Game-->>P2: Winner!
+
+    P2->>Game: NEW_HAND
+    Note over Game: reInit() called
+    Game-->>P1: Status: ACTIVE
+    Game-->>P3: Status: ACTIVE
+    Note over P3: Now eligible for cards
+```
 
 ### Join Timing Matrix
 
