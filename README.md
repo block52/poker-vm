@@ -209,14 +209,14 @@ Response:
 
 The PVM tracks various player states throughout the game:
 
-| Status        | Description                              | Can Act | Receives Cards | Notes                                     |
-| ------------- | ---------------------------------------- | ------- | -------------- | ----------------------------------------- |
-| `ACTIVE`      | Player is actively participating         | ✅      | ✅             | Default status for players in a hand      |
-| `FOLDED`      | Player has folded their hand             | ❌      | ❌             | Cannot act until next hand                |
-| `ALL_IN`      | Player has bet all their chips           | ❌      | ✅             | Eligible for side pots                    |
-| `SITTING_OUT` | Player is temporarily away or joined mid-hand | ❌  | ❌             | Preserves seat, skipped in dealing        |
-| `SHOWING`     | Player is showing cards at showdown      | ❌      | ✅             | Cards revealed to table                   |
-| `BUSTED`      | Player has no chips left                 | ❌      | ❌             | Eliminated from tournament/cash game      |
+| Status        | Description                                  | Can Act | Receives Cards | In Dealer Rotation | Notes                                |
+| ------------- | -------------------------------------------- | ------- | -------------- | ------------------ | ------------------------------------ |
+| `ACTIVE`      | Player is actively participating             | ✅      | ✅             | ✅                 | Default status for players in a hand |
+| `FOLDED`      | Player has folded their hand                 | ❌      | ❌             | ❌                 | Cannot act until next hand           |
+| `ALL_IN`      | Player has bet all their chips               | ❌      | ✅             | ❌                 | Eligible for side pots               |
+| `SITTING_OUT` | Player is away or joined mid-hand            | ❌      | ❌             | ❌                 | Skipped in dealing and betting       |
+| `SHOWING`     | Player is showing cards at showdown          | ❌      | ✅             | ✅                 | Cards revealed to table              |
+| `BUSTED`      | Player has no chips left                     | ❌      | ❌             | ❌                 | Eliminated from tournament           |
 
 **Status Transitions:**
 
@@ -224,9 +224,50 @@ The PVM tracks various player states throughout the game:
 -   `ACTIVE` → `FOLDED` (fold action)
 -   `ACTIVE` → `ALL_IN` (bet all chips)
 -   `ACTIVE` → `SITTING_OUT` (sit out action, or 0 chips in cash game)
--   `ACTIVE` → `SHOWING` (showdown phase for all-in players)
+-   `ACTIVE` → `SHOWING` (showdown phase)
 -   `ACTIVE` → `BUSTED` (lose all chips in tournament)
 -   `ALL_IN` → `SHOWING` (automatic at showdown)
+
+### Join Timing Matrix
+
+Players joining at different game phases receive different initial statuses:
+
+| Current Round | Blinds Posted | Player Status on Join | Can Play This Hand |
+| ------------- | ------------- | --------------------- | ------------------ |
+| `ANTE`        | No            | `ACTIVE`              | ✅ Yes             |
+| `ANTE`        | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `PREFLOP`     | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `FLOP`        | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `TURN`        | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `RIVER`       | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `SHOWDOWN`    | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `END`         | N/A           | `ACTIVE`              | ✅ Yes (next hand) |
+
+### Dealer Manager Behavior
+
+The dealer manager uses player status to determine positions and turn order:
+
+| Player Status | Eligible for Dealer | Eligible for Blinds | Included in Turn Order | Receives Cards |
+| ------------- | ------------------- | ------------------- | ---------------------- | -------------- |
+| `ACTIVE`      | ✅                  | ✅                  | ✅                     | ✅             |
+| `FOLDED`      | ❌                  | ❌                  | ❌                     | ❌             |
+| `ALL_IN`      | ❌                  | ❌                  | ❌                     | ✅ (already)   |
+| `SITTING_OUT` | ❌                  | ❌                  | ❌                     | ❌             |
+| `SHOWING`     | ✅                  | ✅                  | ✅                     | ✅ (already)   |
+| `BUSTED`      | ❌                  | ❌                  | ❌                     | ❌             |
+
+### Action Validation by Status
+
+Which actions each player status can perform:
+
+| Player Status | Bet/Raise | Call | Check | Fold | All-In | Show | Muck | Sit Out | Sit In |
+| ------------- | --------- | ---- | ----- | ---- | ------ | ---- | ---- | ------- | ------ |
+| `ACTIVE`      | ✅        | ✅   | ✅    | ✅   | ✅     | ❌   | ❌   | ✅      | ❌     |
+| `FOLDED`      | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ❌     |
+| `ALL_IN`      | ❌        | ❌   | ❌    | ❌   | ❌     | ✅   | ✅   | ❌      | ❌     |
+| `SITTING_OUT` | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ✅     |
+| `SHOWING`     | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ❌     |
+| `BUSTED`      | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ❌     |
 
 ### WebSocket Connection
 
