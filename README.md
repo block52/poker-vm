@@ -209,27 +209,24 @@ Response:
 
 The PVM tracks various player states throughout the game:
 
-| Status        | Description                          | Can Act | Receives Cards | Notes                                |
-| ------------- | ------------------------------------ | ------- | -------------- | ------------------------------------ |
-| `SEATED`      | Player has joined but not yet active | ❌      | ❌             | Waiting for next hand to start       |
-| `ACTIVE`      | Player is actively participating     | ✅      | ✅             | Default status for joined players    |
-| `BUSTED`      | Player has no chips left             | ❌      | ❌             | Eliminated from tournament/cash game |
-| `FOLDED`      | Player has folded their hand         | ❌      | ❌             | Cannot act until next hand           |
-| `ALL_IN`      | Player has bet all their chips       | ❌      | ✅             | Eligible for side pots               |
-| `SITTING_OUT` | Player is temporarily away           | ❌      | ❌             | Preserves seat, skipped in dealing   |
-| `SITTING_IN`  | Player is returning from sitting out | ✅      | ✅             | Transitioning back to active         |
-| `SHOWING`     | Player is showing cards at showdown  | ❌      | ✅             | Cards revealed to table              |
+| Status        | Description                              | Can Act | Receives Cards | Notes                                     |
+| ------------- | ---------------------------------------- | ------- | -------------- | ----------------------------------------- |
+| `ACTIVE`      | Player is actively participating         | ✅      | ✅             | Default status for players in a hand      |
+| `FOLDED`      | Player has folded their hand             | ❌      | ❌             | Cannot act until next hand                |
+| `ALL_IN`      | Player has bet all their chips           | ❌      | ✅             | Eligible for side pots                    |
+| `SITTING_OUT` | Player is temporarily away or joined mid-hand | ❌  | ❌             | Preserves seat, skipped in dealing        |
+| `SHOWING`     | Player is showing cards at showdown      | ❌      | ✅             | Cards revealed to table                   |
+| `BUSTED`      | Player has no chips left                 | ❌      | ❌             | Eliminated from tournament/cash game      |
 
 **Status Transitions:**
 
--   `SEATED` → `ACTIVE` (when hand begins)
+-   `SITTING_OUT` → `ACTIVE` (new hand starts, or sit-in action)
 -   `ACTIVE` → `FOLDED` (fold action)
 -   `ACTIVE` → `ALL_IN` (bet all chips)
--   `ACTIVE` → `SITTING_OUT` (sit out action)
--   `SITTING_OUT` → `SITTING_IN` (sit in action)
--   `SITTING_IN` → `ACTIVE` (next hand starts)
--   `ACTIVE` → `SHOWING` (showdown phase)
--   `ACTIVE` → `BUSTED` (lose all chips)
+-   `ACTIVE` → `SITTING_OUT` (sit out action, or 0 chips in cash game)
+-   `ACTIVE` → `SHOWING` (showdown phase for all-in players)
+-   `ACTIVE` → `BUSTED` (lose all chips in tournament)
+-   `ALL_IN` → `SHOWING` (automatic at showdown)
 
 ### WebSocket Connection
 

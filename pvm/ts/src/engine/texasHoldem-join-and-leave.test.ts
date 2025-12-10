@@ -89,8 +89,9 @@ describe("Texas Holdem - Join and Leave", () => {
             // Verify we're past ANTE
             expect(game.currentRound).not.toBe(TexasHoldemRound.ANTE);
 
-            // Third player joins mid-hand
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
+            // Third player joins mid-hand - JOIN doesn't require sequential index check
+            const joinIndex = game.getActionIndex();
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, joinIndex, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
 
             const player = game.getPlayer(PLAYER_3);
             expect(player?.status).toBe(PlayerStatus.SITTING_OUT);
@@ -113,7 +114,8 @@ describe("Texas Holdem - Join and Leave", () => {
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, dealIndex, undefined, undefined, getNextTestTimestamp());
 
             // Third player joins mid-hand
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
+            let joinIndex = game.getActionIndex();
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, joinIndex, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
 
             let player3 = game.getPlayer(PLAYER_3);
             expect(player3?.status).toBe(PlayerStatus.SITTING_OUT);
@@ -148,7 +150,8 @@ describe("Texas Holdem - Join and Leave", () => {
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, dealIndex, undefined, undefined, getNextTestTimestamp());
 
             // Third player joins mid-hand
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
+            const joinIndex = game.getActionIndex();
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, joinIndex, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
 
             const player3 = game.getPlayer(PLAYER_3);
             expect(player3).toBeDefined();
