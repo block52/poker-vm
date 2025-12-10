@@ -910,7 +910,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Get actions for this round
         const actions = this._rounds.get(round) || [];
 
-        // Step 4: Special case for ANTE round
+        // Step 5: Special case for ANTE round
         if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
@@ -936,14 +936,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        // Step 5: If all live players are all-in, skip to showdown
+        // Step 6: If all live players are all-in, skip to showdown
         const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
         if (allInPlayers.length === livePlayers.length && livePlayers.length > 1) {
             // All remaining players are all-in, round ends immediately
             return true;
         }
 
-        // Step 6: If no active players remain (all are all-in), round ends
+        // Step 7: If no active players remain (all are all-in), round ends
         if (activePlayers.length === 0) {
             return true;
         }
@@ -962,7 +962,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        // Step 7: Check that all active players have acted
+        // Step 8: Check that all active players have acted
         const playersWhoActed = new Set(bettingActions.map(a => a.playerId));
 
         for (const player of activePlayers) {
@@ -971,7 +971,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 8: Check if all players have acted AFTER the last bet/raise/all-in
+        // Step 9: Check if all players have acted AFTER the last bet/raise/all-in
         let lastBetOrRaiseIndex = -1;
         let lastBetOrRaisePlayerId = "";
         for (let i = actions.length - 1; i >= 0; i--) {
@@ -998,7 +998,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 9: For PREFLOP, check if it's just checks/calls (no bets/raises)
+        // Step 10: For PREFLOP, check if it's just checks/calls (no bets/raises)
         if (round === TexasHoldemRound.PREFLOP) {
             const preflopBetsOrRaises = bettingActions.filter(a => a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE);
 
@@ -1008,10 +1008,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
 
             // If there were bets/raises, fall through to normal logic below
-            // (don't return here - let it continue to Steps 4b and 6)
+            // (don't return here - let it continue to Steps 5 and 7)
         }
 
-        // Step 10: Calculate each active player's total bets and check if they're equal
+        // Step 11: Calculate each active player's total bets and check if they're equal
         // Note: We only check active players, not all live players, because all-in players
         // cannot contribute more to the current round and shouldn't be included in equality check
         const playerBets: bigint[] = [];
