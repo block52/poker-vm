@@ -253,7 +253,7 @@ The dealer manager uses player status to determine positions and turn order:
 | `FOLDED`      | ❌                  | ❌                  | ❌                     | ❌             |
 | `ALL_IN`      | ❌                  | ❌                  | ❌                     | ✅ (already)   |
 | `SITTING_OUT` | ❌                  | ❌                  | ❌                     | ❌             |
-| `SHOWING`     | ✅                  | ❌                  | ❌                     | ✅ (already)   |
+| `SHOWING`     | ✅                  | ✅                  | ✅                     | ✅ (already)   |
 | `BUSTED`      | ❌                  | ❌                  | ❌                     | ❌             |
 
 ### Action Validation by Status
