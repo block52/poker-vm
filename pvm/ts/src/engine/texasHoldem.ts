@@ -894,7 +894,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return true;
         }
 
-        // Step 3: Check if we should auto-runout (heads-up all-in or all players all-in)
+        // Step 3: Check if we should auto-runout (all live players all-in, 2+)
         if (this.shouldAutoRunout() && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
             // Auto-runout: round ends immediately to trigger automatic progression
             // The nextRound() method will be called repeatedly until we reach showdown
