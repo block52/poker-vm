@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import "./SeatNotification.css";
 
 interface SeatNotificationProps {
     seatNumber: number | null;

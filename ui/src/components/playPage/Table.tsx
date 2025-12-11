@@ -57,7 +57,6 @@ import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
 import TransactionPopup from "./common/TransactionPopup";
 import SeatNotification from "./common/SeatNotification";
-import "./common/SeatNotification.css";
 
 import Chip from "./common/Chip";
 import TurnAnimation from "./Animations/TurnAnimation";

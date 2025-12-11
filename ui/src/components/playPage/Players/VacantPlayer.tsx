@@ -206,8 +206,8 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 setIsJoining(false);
 
                 // Call onSeatJoined to show notification
-                if (onSeatJoined && color) {
-                    onSeatJoined(index, color);
+                if (onSeatJoined) {
+                    onSeatJoined(index, color || '#6b7280');
                 }
 
                 // Call onJoin after successful join
