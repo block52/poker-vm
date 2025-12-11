@@ -56,7 +56,6 @@ import VacantPlayer from "./Players/VacantPlayer";
 import OppositePlayer from "./Players/OppositePlayer";
 import Player from "./Players/Player";
 import TransactionPopup from "./common/TransactionPopup";
-import SeatNotification from "./common/SeatNotification";
 
 import Chip from "./common/Chip";
 import TurnAnimation from "./Animations/TurnAnimation";
@@ -247,9 +246,6 @@ const Table = React.memo(() => {
     // Transaction popup state
     const [recentTxHash, setRecentTxHash] = useState<string | null>(null);
 
-    // Seat notification state
-    const [seatNotificationData, setSeatNotificationData] = useState<{ seatNumber: number; color: string } | null>(null);
-
     // Callback to show transaction popup
     const handleTransactionSubmitted = useCallback(
         (txHash: string | null) => {
@@ -265,19 +261,6 @@ const Table = React.memo(() => {
     // Callback to close transaction popup
     const handleCloseTransactionPopup = useCallback(() => {
         setRecentTxHash(null);
-    }, []);
-
-    // Callback to show seat notification
-    const handleSeatJoined = useCallback((seatNumber: number, seatColor: string) => {
-        console.log("🪑 TABLE - Showing seat notification for seat:", seatNumber, "color:", seatColor);
-        setSeatNotificationData({ seatNumber, color: seatColor });
-        // Auto-refresh balance after joining
-        fetchAccountBalance();
-    }, [fetchAccountBalance]);
-
-    // Callback to close seat notification
-    const handleCloseSeatNotification = useCallback(() => {
-        setSeatNotificationData(null);
     }, []);
 
     // Use the hook directly instead of getting it from context
@@ -711,9 +694,7 @@ const Table = React.memo(() => {
                         uiPosition={positionIndex}
                         left={tableLayout.positions.vacantPlayers[positionIndex]?.left || "0px"}
                         top={tableLayout.positions.vacantPlayers[positionIndex]?.top || "0px"}
-                        color={position.color || "#6b7280"}
                         onJoin={updateBalanceOnPlayerJoin}
-                        onSeatJoined={handleSeatJoined}
                     />
                 );
             }
@@ -1453,13 +1434,6 @@ const Table = React.memo(() => {
 
             {/* Transaction Popup - Bottom Right */}
             <TransactionPopup txHash={recentTxHash} onClose={handleCloseTransactionPopup} />
-
-            {/* Seat Notification */}
-            <SeatNotification 
-                seatNumber={seatNotificationData?.seatNumber ?? null} 
-                playerColor={seatNotificationData?.color}
-                onClose={handleCloseSeatNotification} 
-            />
 
             {/* Leave Table Modal */}
             <LeaveTableModal

@@ -126,9 +126,7 @@ export interface VacantPlayerProps {
     index: number;
     left: string;
     top: string;
-    color?: string;
     onJoin?: () => void;
-    onSeatJoined?: (seatNumber: number, seatColor: string) => void;
 }
 
 // Type for PlayerCard component props
