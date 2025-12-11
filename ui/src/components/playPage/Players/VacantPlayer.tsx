@@ -66,7 +66,7 @@ import { microToUsdc } from "../../../constants/currency";
 import { useNetwork } from "../../../context/NetworkContext";
 
 const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo(
-    ({ left, top, index, onJoin, uiPosition }) => {
+    ({ left, top, index, color, onJoin, onSeatJoined, uiPosition }) => {
         const { isUserAlreadyPlaying, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
@@ -204,6 +204,11 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 setJoinSuccess(true);
                 setShowBuyInModal(false);
                 setIsJoining(false);
+
+                // Call onSeatJoined to show notification
+                if (onSeatJoined && color) {
+                    onSeatJoined(index, color);
+                }
 
                 // Call onJoin after successful join
                 if (onJoin) {

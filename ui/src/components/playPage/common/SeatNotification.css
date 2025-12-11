@@ -1,0 +1,97 @@
+/* Seat Notification Styles */
+.seat-notification-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    animation: seatNotificationDropDown 0.3s ease-out forwards;
+}
+
+.seat-notification-box {
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-width: 2px;
+    border-style: solid;
+    border-opacity: 0.8;
+    backdrop-filter: blur(4px);
+    min-width: 200px;
+    animation: seatNotificationPulse 1s ease-in-out;
+}
+
+.seat-notification-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.seat-notification-label {
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.seat-notification-number-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.seat-notification-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 800;
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Performance optimized animations */
+@keyframes seatNotificationDropDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes seatNotificationPulse {
+    0%, 100% { 
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3); 
+    }
+    50% { 
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4); 
+    }
+}
+
+/* Fade out animation */
+@keyframes seatNotificationFadeOut {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .seat-notification-container,
+    .seat-notification-box {
+        animation: none;
+    }
+}
