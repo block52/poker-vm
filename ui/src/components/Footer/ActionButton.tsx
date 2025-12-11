@@ -37,14 +37,20 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
         <button
             onClick={onClick}
             disabled={disabled || loading}
-            className={`${baseClass} ${className} flex items-center justify-center gap-1 lg:gap-2 rounded-lg border shadow-md backdrop-blur-sm transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${baseClass} ${className} flex items-center justify-center gap-1 rounded-lg border shadow-md backdrop-blur-sm transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
             data-action={action}
         >
-            {loading && <LoadingSpinner size="sm" />}
-            {icon}
-            <span>{loading ? `${label}...` : label}</span>
-            {amount && !loading && (
-                <span className="font-bold ml-1">${amount}</span>
+            {loading ? (
+                <>
+                    <LoadingSpinner size="sm" />
+                    {label.toUpperCase()}...
+                </>
+            ) : (
+                <>
+                    {icon}
+                    {label}
+                    {amount && <span className="font-bold ml-1">${amount}</span>}
+                </>
             )}
         </button>
     );
