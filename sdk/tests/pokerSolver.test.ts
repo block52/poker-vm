@@ -292,4 +292,202 @@ describe("Custom PokerSolver", () => {
             expect(tie).toBe(0);
         });
     });
+
+    describe("Multi-Player Equity Calculation", () => {
+        test("should calculate equity for 3 players preflop", () => {
+            // AA vs KK vs QQ preflop
+            const hands = [createCards(["AS", "AH"]), createCards(["KS", "KH"]), createCards(["QS", "QH"])];
+
+            const result = PokerSolver.calculateMultiPlayerEquity(hands, [], 1000);
+
+            // AA should have highest equity (around 65-70%)
+            // KK should have middle equity (around 17-20%)
+            // QQ should have lowest equity (around 15-18%)
+            expect(result.winPercentages[0]).toBeGreaterThan(60);
+            expect(result.winPercentages[0]).toBeLessThan(75);
+            expect(result.winPercentages[1]).toBeGreaterThan(15);
+            expect(result.winPercentages[1]).toBeLessThan(25);
+            expect(result.winPercentages[2]).toBeGreaterThan(10);
+            expect(result.winPercentages[2]).toBeLessThan(20);
+
+            // All percentages should sum to approximately 100
+            const total = result.winPercentages.reduce((sum, pct) => sum + pct, 0);
+            expect(Math.abs(total - 100)).toBeLessThan(2);
+        });
+
+        test("should calculate equity for 4 players preflop", () => {
+            // AA vs KK vs QQ vs JJ
+            const hands = [createCards(["AS", "AH"]), createCards(["KS", "KH"]), createCards(["QS", "QH"]), createCards(["JS", "JH"])];
+
+            const result = PokerSolver.calculateMultiPlayerEquity(hands, [], 1000);
+
+            // AA should have highest equity
+            expect(result.winPercentages[0]).toBeGreaterThan(result.winPercentages[1]);
+            expect(result.winPercentages[0]).toBeGreaterThan(result.winPercentages[2]);
+            expect(result.winPercentages[0]).toBeGreaterThan(result.winPercentages[3]);
+
+            // All percentages should sum to approximately 100
+            const total = result.winPercentages.reduce((sum, pct) => sum + pct, 0);
+            expect(Math.abs(total - 100)).toBeLessThan(2);
+        });
+
+        test("should calculate equity with community cards", () => {
+            // 3 players with ace on flop
+            const hands = [
+                createCards(["AS", "AH"]), // Set of aces
+                createCards(["KS", "KH"]), // Pocket kings
+                createCards(["QS", "QH"]) // Pocket queens
+            ];
+            const community = createCards(["AC", "8D", "2S"]);
+
+            const result = PokerSolver.calculateMultiPlayerEquity(hands, community, 1000);
+
+            // AA should have very high equity with set
+            expect(result.winPercentages[0]).toBeGreaterThan(90);
+            expect(result.winPercentages[1]).toBeLessThan(8);
+            expect(result.winPercentages[2]).toBeLessThan(8);
+        });
+
+        test("should handle multiple flush draws scenario", () => {
+            // 3 players with flush draws
+            const hands = [
+                createCards(["TH", "9H"]), // Hearts flush draw
+                createCards(["KD", "QD"]), // Diamonds flush draw
+                createCards(["8S", "8C"]) // Pocket 8s
+            ];
+            const community = createCards(["2H", "5H", "6D"]); // Two hearts, one diamond
+
+            const result = PokerSolver.calculateMultiPlayerEquity(hands, community, 1000);
+
+            // All players should have reasonable equity
+            expect(result.winPercentages[0]).toBeGreaterThan(20);
+            expect(result.winPercentages[1]).toBeGreaterThan(20);
+            expect(result.winPercentages[2]).toBeGreaterThan(20);
+
+            // Total should be approximately 100%
+            const total = result.winPercentages.reduce((sum, pct) => sum + pct, 0);
+            expect(Math.abs(total - 100)).toBeLessThan(2);
+        });
+
+        test("should handle completed board scenario", () => {
+            // Complete board with clear winner
+            const hands = [
+                createCards(["AS", "AH"]), // Quads
+                createCards(["KS", "KH"]), // Full house
+                createCards(["QS", "QH"]) // Full house
+            ];
+            const community = createCards(["AC", "AD", "KC", "KD", "2S"]);
+
+            const result = PokerSolver.calculateMultiPlayerEquity(hands, community, 100);
+
+            // AA has quads, should win 100%
+            expect(result.winPercentages[0]).toBe(100);
+            expect(result.winPercentages[1]).toBe(0);
+            expect(result.winPercentages[2]).toBe(0);
+            expect(result.tiePercentage).toBe(0);
+        });
+
+        test("should handle tie scenario", () => {
+            // Two players with identical board-playing hands
+            const hands = [
+                createCards(["2S", "3S"]), // Low cards
+                createCards(["4H", "5H"]) // Low cards
+            ];
+            const community = createCards(["AS", "AH", "KC", "KD", "QS"]); // Board plays (two pair A-K)
+
+            const result = PokerSolver.calculateMultiPlayerEquity(hands, community, 100);
+
+            // Should be 50/50 tie
+            expect(result.winPercentages[0]).toBe(50);
+            expect(result.winPercentages[1]).toBe(50);
+            expect(result.tiePercentage).toBe(100);
+        });
+
+        test("should throw error for invalid number of hands", () => {
+            const hands = [createCards(["AS", "AH"])]; // Only 1 hand
+
+            expect(() => {
+                PokerSolver.calculateMultiPlayerEquity(hands);
+            }).toThrow("Need at least 2 hands to calculate equity");
+        });
+
+        test("should throw error for invalid hand size", () => {
+            const hands = [createCards(["AS"]), createCards(["KS", "KH"])]; // First hand has only 1 card
+
+            expect(() => {
+                PokerSolver.calculateMultiPlayerEquity(hands);
+            }).toThrow("Hand 0 must have exactly 2 cards");
+        });
+
+        test("should throw error for duplicate cards", () => {
+            const hands = [createCards(["AS", "AH"]), createCards(["AS", "KH"])]; // Duplicate AS
+
+            expect(() => {
+                PokerSolver.calculateMultiPlayerEquity(hands);
+            }).toThrow("Duplicate cards detected in input");
+        });
+
+        test("should throw error for too many community cards", () => {
+            const hands = [createCards(["AS", "AH"]), createCards(["KS", "KH"])];
+            const community = createCards(["2S", "3S", "4S", "5S", "6S", "7S"]); // 6 cards
+
+            expect(() => {
+                PokerSolver.calculateMultiPlayerEquity(hands, community);
+            }).toThrow("Community cards cannot exceed 5 cards");
+        });
+
+        test("should handle maximum players", () => {
+            // Test with 10 players (max table size in poker)
+            const hands = [
+                createCards(["AS", "AH"]),
+                createCards(["KS", "KH"]),
+                createCards(["QS", "QH"]),
+                createCards(["JS", "JH"]),
+                createCards(["TS", "TH"]),
+                createCards(["9S", "9H"]),
+                createCards(["8S", "8H"]),
+                createCards(["7S", "7D"]),
+                createCards(["6S", "6D"]),
+                createCards(["5S", "5D"])
+            ];
+
+            const result = PokerSolver.calculateMultiPlayerEquity(hands, [], 500);
+
+            // AA should have highest equity
+            expect(result.winPercentages[0]).toBeGreaterThan(result.winPercentages[1]);
+
+            // All percentages should sum to approximately 100
+            const total = result.winPercentages.reduce((sum, pct) => sum + pct, 0);
+            expect(Math.abs(total - 100)).toBeLessThan(3);
+
+            // Each player should have some equity
+            result.winPercentages.forEach(pct => {
+                expect(pct).toBeGreaterThan(0);
+            });
+        });
+
+        test("should throw error for more than 10 players", () => {
+            const hands = Array(11)
+                .fill(null)
+                .map((_, i) => createCards([`${(i % 13) + 1}S`, `${(i % 13) + 1}H`]));
+
+            expect(() => {
+                PokerSolver.calculateMultiPlayerEquity(hands);
+            }).toThrow("Maximum 10 hands supported");
+        });
+
+        test("should be consistent with 2-player calculateWinPercentages", () => {
+            // Compare multi-player method with 2-player method
+            const handA = createCards(["AS", "AH"]);
+            const handB = createCards(["KS", "KH"]);
+            const community = createCards(["2H", "5S", "8D"]);
+
+            const [aWin, bWin] = PokerSolver.calculateWinPercentages(handA, handB, community, 1000);
+            const multiResult = PokerSolver.calculateMultiPlayerEquity([handA, handB], community, 1000);
+
+            // Results should be very similar (within 5% due to Monte Carlo variance)
+            expect(Math.abs(multiResult.winPercentages[0] - aWin)).toBeLessThan(5);
+            expect(Math.abs(multiResult.winPercentages[1] - bWin)).toBeLessThan(5);
+        });
+    });
 });

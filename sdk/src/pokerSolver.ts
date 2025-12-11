@@ -714,4 +714,103 @@ export class PokerSolver {
             Math.round(tiePercent * 100) / 100
         ];
     }
+
+    /**
+     * Calculate win percentages for multiple players (2+) using Monte Carlo simulation
+     * @param hands Array of hole cards for each player (each must have exactly 2 cards)
+     * @param communityCards Current community cards (0-5 cards)
+     * @param simulations Number of simulations to run (default: 10000)
+     * @returns Object containing win percentages for each player and overall tie percentage
+     */
+    public static calculateMultiPlayerEquity(
+        hands: Card[][],
+        communityCards: Card[] = [],
+        simulations: number = 10000
+    ): {
+        winPercentages: number[];
+        tiePercentage: number;
+    } {
+        // Validate inputs
+        if (hands.length < 2) {
+            throw new Error("Need at least 2 hands to calculate equity");
+        }
+
+        if (hands.length > 10) {
+            throw new Error("Maximum 10 hands supported");
+        }
+
+        for (let i = 0; i < hands.length; i++) {
+            if (hands[i].length !== 2) {
+                throw new Error(`Hand ${i} must have exactly 2 cards`);
+            }
+        }
+
+        if (communityCards.length > 5) {
+            throw new Error("Community cards cannot exceed 5 cards");
+        }
+
+        // Get all known cards
+        const knownCards = [...communityCards, ...hands.flat()];
+
+        // Validate no duplicate cards
+        const cardStrings = knownCards.map(card => `${card.rank}-${card.suit}`);
+        if (new Set(cardStrings).size !== cardStrings.length) {
+            throw new Error("Duplicate cards detected in input");
+        }
+
+        // Get available cards for simulation
+        const availableCards = this.getAvailableCards(knownCards);
+        const cardsNeeded = 5 - communityCards.length;
+
+        // Initialize win counters for each player
+        const wins = new Array(hands.length).fill(0);
+        let ties = 0;
+
+        // Run Monte Carlo simulations
+        for (let sim = 0; sim < simulations; sim++) {
+            // Shuffle available cards
+            const shuffledDeck = [...availableCards];
+            this.shuffleArray(shuffledDeck);
+
+            // Deal remaining community cards
+            const fullCommunityCards = [...communityCards, ...shuffledDeck.slice(0, cardsNeeded)];
+
+            // Evaluate all hands
+            const evaluations: HandEvaluation[] = hands.map(hand => {
+                const fullHand = [...hand, ...fullCommunityCards];
+                return this.findBestHand(fullHand);
+            });
+
+            // Find winners using existing findWinners method
+            const winnerIndices = this.findWinners(evaluations);
+
+            // Update win counters
+            if (winnerIndices.length === 1) {
+                // Single winner
+                wins[winnerIndices[0]]++;
+            } else {
+                // Multiple winners (tie) - credit each winner equally
+                // Note: In poker, tied players split the pot, so we count this as a partial win
+                // For display purposes, we'll track overall tie percentage separately
+                const tieValue = 1 / winnerIndices.length;
+                for (const winnerIndex of winnerIndices) {
+                    wins[winnerIndex] += tieValue;
+                }
+                ties++;
+            }
+        }
+
+        // Convert to percentages
+        const winPercentages = wins.map(winCount => {
+            const percent = (winCount / simulations) * 100;
+            return Math.round(percent * 100) / 100; // Round to 2 decimal places
+        });
+
+        const tiePercentage = Math.round((ties / simulations) * 100 * 100) / 100;
+
+        return {
+            winPercentages,
+            tiePercentage
+        };
+    }
 }
