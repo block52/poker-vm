@@ -96,18 +96,38 @@ const ActionsLog: React.FC = () => {
             })
             .join("\n");
 
-        // Copy to clipboard
-        navigator.clipboard
-            .writeText(logText)
-            .then(() => {
+        // Copy to clipboard with fallback for older browsers
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+                .writeText(logText)
+                .then(() => {
+                    setCopied(true);
+                    toast.success("Action log copied to clipboard!");
+                    setTimeout(() => setCopied(false), 2000);
+                })
+                .catch((err) => {
+                    console.error("Failed to copy:", err);
+                    toast.error("Failed to copy log");
+                });
+        } else {
+            // Fallback for older browsers or non-HTTPS contexts
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = logText;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
                 setCopied(true);
                 toast.success("Action log copied to clipboard!");
                 setTimeout(() => setCopied(false), 2000);
-            })
-            .catch((err) => {
+            } catch (err) {
                 console.error("Failed to copy:", err);
                 toast.error("Failed to copy log");
-            });
+            }
+        }
     };
 
     return (
