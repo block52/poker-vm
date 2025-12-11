@@ -201,11 +201,6 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                                 ALL IN
                             </span>
                         )}
-                        {isShowingCards && !isWinner && (
-                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
-                                SHOWING
-                            </span>
-                        )}
                         {isWinner && winnerAmount && (
                             <span className="font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base" style={{ color: "white" }}>
                                 WINS: {winnerAmount}
