@@ -1,6 +1,6 @@
 {
     "name": "@bitcoinbrisbane/block52",
-    "version": "3.1.8",
+    "version": "3.1.9",
     "description": "TypeScript SDK for Block52 Poker VM",
     "main": "dist/index.js",
     "module": "dist/index.esm.js",
