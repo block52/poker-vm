@@ -942,8 +942,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Case 2: Heads-up or multi-way with one or more all-in and one active player who has matched the bet
         // If there's only 1 active player left and others are all-in, check if active player has matched the largest all-in
         if (allInPlayers.length >= 1 && activePlayers.length === 1) {
-            const actions = this._rounds.get(this._currentRound) || [];
-            const betManager = new BetManager(actions);
+            // IMPORTANT: Check ALL rounds, not just current round
+            // After advancing from FLOP to TURN, the TURN round has no actions yet
+            // But we still need to detect auto-runout based on previous betting
+            const allActions: Turn[] = [];
+            for (const [, actions] of this._rounds.entries()) {
+                allActions.push(...actions);
+            }
+            const betManager = new BetManager(allActions);
 
             const activePlayer = activePlayers[0];
             const activePlayerBet = betManager.getTotalBetsForPlayer(activePlayer.address);
