@@ -79,7 +79,7 @@ const SeatJoinDisplay: React.FC<{ notification: SeatJoinNotification; playerColo
             >
                 <div className="action-display-content">
                     <span className="action-display-text">
-                        YOUR SEAT {notification.seatNumber}
+                        YOUR SEAT
                     </span>
                 </div>
             </div>
