@@ -14,26 +14,30 @@ interface MenuItem {
     newTab?: boolean; // Open link in new tab
 }
 
-// Logo component with error handling - uses React state instead of direct DOM manipulation
+// Logo component with error handling - uses VITE_CLUB_LOGO env variable
+// Falls back to /logo1080.png if not set, then to text if image fails
 // Memoized to prevent unnecessary re-renders
 const LogoComponent: React.FC = React.memo(() => {
     const [imageError, setImageError] = useState(false);
+    const clubLogo = import.meta.env.VITE_CLUB_LOGO;
+    const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
+    const logoSrc = clubLogo || "/logo1080.png";
 
     if (imageError) {
         return (
-            <span 
+            <span
                 className="text-xl font-bold"
                 style={{ color: colors.brand.primary }}
             >
-                Block 52
+                {clubName}
             </span>
         );
     }
 
     return (
-        <img 
-            src="/logo1080.png" 
-            alt="Block52 Logo" 
+        <img
+            src={logoSrc}
+            alt={`${clubName} Logo`}
             className="h-8 w-auto object-contain"
             onError={() => setImageError(true)}
         />
