@@ -6,12 +6,17 @@ import { BetManager } from "../managers/betManager";
 
 abstract class BaseAction {
     private readonly zeroChipsAllowed = [NonPlayerActionType.SIT_OUT, PlayerActionType.FOLD, NonPlayerActionType.DEAL, PlayerActionType.ALL_IN, PlayerActionType.SHOW, PlayerActionType.MUCK];
+    // Actions that are allowed for ALL_IN players (in addition to ACTIVE players)
+    private readonly allInAllowed = [PlayerActionType.SHOW, PlayerActionType.MUCK];
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
-        if (this.type !== NonPlayerActionType.DEAL) {
+        // Skip "next to act" check for SHOW and MUCK at showdown (any live player can show/muck in any order)
+        const skipNextToActCheck = this.allInAllowed.includes(this.type as PlayerActionType);
+
+        if (this.type !== NonPlayerActionType.DEAL && !skipNextToActCheck) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();
             if (nextPlayerAddress?.address !== player.address) throw new Error("Must be currently active player.");
         }
@@ -20,9 +25,15 @@ abstract class BaseAction {
             throw new Error("Player has no chips left and cannot perform this action.");
         }
 
-        // 3. Player status check: Player must be active (not folded/all-in)
+        // 3. Player status check: Player must be active (or all-in for certain actions)
         const playerStatus = this.game.getPlayerStatus(player.address);
-        if (playerStatus !== PlayerStatus.ACTIVE) throw new Error(`Only active player can ${this.type}.`);
+        const allowedStatuses = [PlayerStatus.ACTIVE];
+        if (this.allInAllowed.includes(this.type as PlayerActionType)) {
+            allowedStatuses.push(PlayerStatus.ALL_IN);
+        }
+        if (!allowedStatuses.includes(playerStatus)) {
+            throw new Error(`Only active player can ${this.type}.`);
+        }
 
         return undefined;
     }

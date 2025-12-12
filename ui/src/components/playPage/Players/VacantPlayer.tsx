@@ -205,6 +205,14 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 setShowBuyInModal(false);
                 setIsJoining(false);
 
+                // Trigger seat join notification via global window object
+                // Small delay to ensure player component is rendered
+                setTimeout(() => {
+                    if (window.seatJoinNotifications && window.seatJoinNotifications[index]) {
+                        window.seatJoinNotifications[index]();
+                    }
+                }, 100);
+
                 // Call onJoin after successful join
                 if (onJoin) {
                     onJoin();

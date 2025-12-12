@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useGameProgress } from "../hooks/useGameProgress";
 import { formatPlayerId, formatAmount } from "../utils/accountUtils";
 import { ActionDTO } from "@bitcoinbrisbane/block52";
 import { colors } from "../utils/colorConfig";
+import { FaCopy, FaCheck } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 // Function to format action names with proper capitalization and spacing
 const formatActionName = (action: string): string => {
@@ -73,6 +75,60 @@ const formatRoundName = (round: string): string => {
 const ActionsLog: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { previousActions } = useGameProgress(id);
+    const [copied, setCopied] = useState(false);
+
+    // Function to copy action log to clipboard
+    const handleCopyLog = () => {
+        if (!previousActions || previousActions.length === 0) {
+            toast.info("No actions to copy");
+            return;
+        }
+
+        // Format actions for clipboard
+        const logText = previousActions
+            .map((action: ActionDTO) => {
+                const player = formatPlayerId(action.playerId);
+                const actionName = formatActionName(action.action);
+                const amount = action.amount ? ` ${formatAmount(action.amount)}` : "";
+                const round = formatRoundName(action.round);
+                const seat = action.seat;
+                return `${player} (Seat ${seat}): ${actionName}${amount} - ${round}`;
+            })
+            .join("\n");
+
+        // Copy to clipboard with fallback for older browsers
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+                .writeText(logText)
+                .then(() => {
+                    setCopied(true);
+                    toast.success("Action log copied to clipboard!");
+                    setTimeout(() => setCopied(false), 2000);
+                })
+                .catch((err) => {
+                    console.error("Failed to copy:", err);
+                    toast.error("Failed to copy log");
+                });
+        } else {
+            // Fallback for older browsers or non-HTTPS contexts
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = logText;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                setCopied(true);
+                toast.success("Action log copied to clipboard!");
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                console.error("Failed to copy:", err);
+                toast.error("Failed to copy log");
+            }
+        }
+    };
 
     return (
         <div 
@@ -87,6 +143,14 @@ const ActionsLog: React.FC = () => {
                 style={{ borderColor: "rgba(255,255,255,0.2)" }}
             >
                 <h3 className="text-sm font-semibold">History</h3>
+                <button
+                    onClick={handleCopyLog}
+                    className="p-1.5 rounded hover:bg-white/10 transition-colors duration-200"
+                    title="Copy history to clipboard"
+                    style={{ color: copied ? colors.accent.success : colors.brand.primary }}
+                >
+                    {copied ? <FaCheck size={12} /> : <FaCopy size={12} />}
+                </button>
             </div>
             
             {previousActions && previousActions.length > 0 ? (

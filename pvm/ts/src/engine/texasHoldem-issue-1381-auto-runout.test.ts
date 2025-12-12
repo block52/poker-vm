@@ -223,7 +223,72 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
     });
 
     /**
-     * Test 5: Negative test - should NOT auto-runout when both players still have chips
+     * Test 5: All-in player should have SHOW option at showdown
+     */
+    it("should allow all-in player to show cards at showdown", () => {
+        const game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+
+        // Setup: Players with different stacks
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, FIVE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
+
+        // Blinds
+        game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, undefined, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
+
+        // Deal
+        game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
+
+        // Preflop: Player 1 calls, Player 2 checks
+        game.performAction(PLAYER_1, PlayerActionType.CALL, 6, ONE_TOKEN, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n, undefined, getNextTestTimestamp());
+
+        expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
+
+        // Flop: Player 2 checks, Player 1 goes all-in
+        game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
+
+        const player1Chips = game.getPlayer(PLAYER_1).chips;
+        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 9, player1Chips, undefined, getNextTestTimestamp());
+
+        // Verify Player 1 is all-in
+        expect(game.getPlayer(PLAYER_1).status).toBe(PlayerStatus.ALL_IN);
+
+        // Player 2 calls
+        game.performAction(PLAYER_2, PlayerActionType.CALL, 10, player1Chips, undefined, getNextTestTimestamp());
+
+        // Should auto-progress to SHOWDOWN
+        expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
+        expect(game.communityCards.length).toBe(5);
+
+        // CRITICAL: All-in player (Player 1) should have SHOW option
+        const player1LegalActions = game.getLegalActions(PLAYER_1);
+        const player1ActionTypes = player1LegalActions.map(a => a.action);
+        expect(player1ActionTypes).toContain(PlayerActionType.SHOW);
+        // Note: MUCK is not available until someone shows first (poker rules)
+
+        // Player 2 should also have SHOW option (both players can show in any order)
+        const player2LegalActions = game.getLegalActions(PLAYER_2);
+        const player2ActionTypes = player2LegalActions.map(a => a.action);
+        expect(player2ActionTypes).toContain(PlayerActionType.SHOW);
+
+        // Verify Player 1 (all-in player) can actually perform SHOW action
+        expect(() => {
+            game.performAction(PLAYER_1, PlayerActionType.SHOW, 11, undefined, undefined, getNextTestTimestamp());
+        }).not.toThrow();
+
+        // Verify Player 1's status changed to SHOWING
+        expect(game.getPlayer(PLAYER_1).status).toBe(PlayerStatus.SHOWING);
+
+        // Now that Player 1 has shown, Player 2 should have SHOW option (and MUCK if not winning)
+        const player2LegalActionsAfterShow = game.getLegalActions(PLAYER_2);
+        const player2ActionTypesAfterShow = player2LegalActionsAfterShow.map(a => a.action);
+        expect(player2ActionTypesAfterShow).toContain(PlayerActionType.SHOW);
+        // Note: MUCK might not be available if Player 2 has the winning hand
+    });
+
+    /**
+     * Test 6: Negative test - should NOT auto-runout when both players still have chips
      * NOTE: This test is skipped due to an unrelated issue with legal actions on river
      */
     it.skip("should NOT auto-runout when both players still have chips and can bet", () => {

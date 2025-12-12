@@ -26,7 +26,7 @@ export default function AddressPage() {
             const searchAddress = addressToSearch || address;
 
             if (!searchAddress.trim()) {
-                setError("Please enter a Cosmos address");
+                setError("Please enter a Block 52 address");
                 return;
             }
 
@@ -187,7 +187,7 @@ export default function AddressPage() {
                             value={address}
                             onChange={e => setAddress(e.target.value)}
                             onKeyDown={handleKeyPress}
-                            placeholder="Enter Cosmos address (e.g., b521234...)"
+                            placeholder="Enter Block 52 address (e.g., b521234...)"
                             className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
                             style={{
                                 ...inputStyle,
