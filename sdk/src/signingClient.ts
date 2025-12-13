@@ -319,6 +319,52 @@ export class SigningCosmosClient extends CosmosClient {
     }
 
     /**
+     * Leave a poker game
+     */
+    public async leaveGame(gameId: string): Promise<string> {
+        await this.initializeSigningClient();
+
+        if (!this.signingClient || !this.wallet) {
+            throw new Error("Signing client not initialized");
+        }
+
+        const [account] = await this.wallet.getAccounts();
+        const creator = account.address;
+
+        // Create the message object
+        const msgLeaveGame = {
+            creator,
+            gameId
+        };
+
+        // Create the transaction message
+        const msg: EncodeObject = {
+            typeUrl: "/pokerchain.poker.v1.MsgLeaveGame",
+            value: msgLeaveGame
+        };
+
+        const fee = gaslessFee();
+        const memo = "Leave poker game via SDK";
+
+        console.log("🚪 Leaving game:", { gameId });
+
+        try {
+            const result = await this.signingClient.signAndBroadcast(
+                creator,
+                [msg],
+                fee,
+                memo
+            );
+
+            console.log("✅ Leave game transaction successful:", result.transactionHash);
+            return result.transactionHash;
+        } catch (error) {
+            console.error("❌ Leave game failed:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Perform a game action (fold, call, raise, etc.)
      * The keeper calculates the action index automatically
      *

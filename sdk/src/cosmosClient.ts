@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { COSMOS_CONSTANTS } from "./sdkTypes";
+import { COSMOS_CONSTANTS, EquityResult, EquityResponse } from "./sdkTypes";
 import { IClient } from "./IClient";
 
 export class CosmosClient implements IClient {
@@ -361,6 +361,80 @@ export class CosmosClient implements IClient {
     }
 
     /**
+     * Calculate equity for multiple hands using Monte Carlo simulation
+     * Used when players are all-in and showing to display win percentages
+     *
+     * @param hands - Array of hole cards for each player, e.g., [["AS", "KS"], ["QH", "QD"]]
+     * @param board - Community cards (0-5 cards), e.g., ["AH", "7C", "2D"]
+     * @param dead - Optional dead/mucked cards
+     * @param simulations - Number of Monte Carlo simulations (default 10000)
+     * @returns Array of equity results for each hand
+     */
+    async calculateEquity(
+        hands: string[][],
+        board: string[] = [],
+        dead: string[] = [],
+        simulations: number = 10000
+    ): Promise<EquityResult[]> {
+        try {
+            console.log("🎲 Calculating equity:", {
+                hands,
+                board,
+                dead,
+                simulations
+            });
+
+            const response = await this.restClient.post<EquityResponse>(
+                "/block52/pokerchain/poker/v1/equity",
+                {
+                    hands: hands.map(cards => ({ cards })),
+                    board,
+                    dead,
+                    simulations
+                }
+            );
+
+            console.log("✅ Equity calculation complete:", {
+                stage: response.data.stage,
+                duration_ms: response.data.duration_ms,
+                hands_per_sec: response.data.hands_per_sec
+            });
+
+            return response.data.results;
+        } catch (error) {
+            console.error("❌ Error calculating equity:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Calculate equity and return full response including metadata
+     */
+    async calculateEquityFull(
+        hands: string[][],
+        board: string[] = [],
+        dead: string[] = [],
+        simulations: number = 10000
+    ): Promise<EquityResponse> {
+        try {
+            const response = await this.restClient.post<EquityResponse>(
+                "/block52/pokerchain/poker/v1/equity",
+                {
+                    hands: hands.map(cards => ({ cards })),
+                    board,
+                    dead,
+                    simulations
+                }
+            );
+
+            return response.data;
+        } catch (error) {
+            console.error("❌ Error calculating equity:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Disconnect - no-op for REST client
      */
     async disconnect(): Promise<void> {
@@ -412,5 +486,9 @@ export {
     type GameStateResponse,
     type GameResponse,
     type ListGamesResponse,
-    type PlayerGamesResponse
+    type PlayerGamesResponse,
+    type EquityHand,
+    type EquityResult,
+    type EquityRequest,
+    type EquityResponse
 } from "./sdkTypes";
