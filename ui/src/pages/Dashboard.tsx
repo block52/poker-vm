@@ -1060,7 +1060,10 @@ const Dashboard: React.FC = () => {
                                                 setTransferError("");
                                                 setTransferTokenType("usdc");
                                             }}
-                                            className="w-full px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                            className="w-full px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90"
+                                            style={{ 
+                                                background: `linear-gradient(135deg, ${colors.accent.danger} 0%, ${hexToRgba(colors.accent.danger, 0.8)} 100%)`
+                                            }}
                                         >
                                             Cancel
                                         </button>

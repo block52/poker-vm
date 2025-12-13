@@ -298,15 +298,8 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                     border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
                 }}
             >
-                <div className="flex justify-between items-center mb-6">
+                <div className="mb-6">
                     <h2 className="text-2xl font-bold text-white">Deposit USDC</h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-white transition-colors"
-                        disabled={isApproving || isDepositing}
-                    >
-                        ✕
-                    </button>
                 </div>
 
                 <div className="space-y-4">
@@ -379,12 +372,12 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3">
+                    <div className="flex flex-col gap-3">
                         {needsApproval ? (
                             <button
                                 onClick={handleApprove}
                                 disabled={isApproving || !amount || parseFloat(amount) <= 0}
-                                className="flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{
                                     background: isApproving 
                                         ? hexToRgba(colors.brand.primary, 0.5)
@@ -397,7 +390,7 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                             <button
                                 onClick={handleDeposit}
                                 disabled={isDepositing || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > parseFloat(usdcBalance)}
-                                className="flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{
                                     background: isDepositing 
                                         ? hexToRgba(colors.accent.success, 0.5)
@@ -407,6 +400,16 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                                 {isDepositing ? "Depositing..." : "Deposit"}
                             </button>
                         )}
+                        <button
+                            onClick={onClose}
+                            disabled={isApproving || isDepositing}
+                            className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{
+                                background: `linear-gradient(135deg, ${colors.accent.danger} 0%, ${hexToRgba(colors.accent.danger, 0.8)} 100%)`
+                            }}
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </div>
             </div>

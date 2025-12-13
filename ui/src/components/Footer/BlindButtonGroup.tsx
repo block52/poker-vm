@@ -1,6 +1,7 @@
 import React from "react";
 import { LoadingSpinner } from "../common";
 import { PlayerStatus } from "@bitcoinbrisbane/block52";
+import { FoldButton } from "./FoldButton";
 
 interface BlindButtonGroupProps {
     showSmallBlind: boolean;
@@ -40,7 +41,7 @@ export const BlindButtonGroup: React.FC<BlindButtonGroupProps> = ({
                     {loading === "small-blind" ? (
                         <>
                             <LoadingSpinner size="sm" />
-                            <span>Posting...</span>
+                            POSTING...
                         </>
                     ) : (
                         <>
@@ -62,7 +63,7 @@ export const BlindButtonGroup: React.FC<BlindButtonGroupProps> = ({
                     {loading === "big-blind" ? (
                         <>
                             <LoadingSpinner size="sm" />
-                            <span>Posting...</span>
+                            POSTING...
                         </>
                     ) : (
                         <>
@@ -75,23 +76,14 @@ export const BlindButtonGroup: React.FC<BlindButtonGroupProps> = ({
                 </button>
             )}
 
-            {canFold && (
-                <button
-                    className={`btn-fold cursor-pointer active:scale-105 px-3 lg:px-6 py-1.5 lg:py-2 rounded-lg border text-xs lg:text-sm transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
-                        loading === "fold" ? "min-w-[110px] lg:min-w-[130px]" : "min-w-[80px] lg:min-w-[100px]"
-                    }`}
-                    onClick={onFold}
+            {/* Show fold button if canFold OR if currently folding (to show spinner) */}
+            {(canFold || loading === "fold") && (
+                <FoldButton
+                    loading={loading === "fold"}
                     disabled={loading !== null}
-                >
-                    {loading === "fold" ? (
-                        <>
-                            <LoadingSpinner size="sm" />
-                            FOLDING...
-                        </>
-                    ) : (
-                        "FOLD"
-                    )}
-                </button>
+                    isMobileLandscape={isMobileLandscape}
+                    onClick={onFold}
+                />
             )}
 
             {playerStatus === PlayerStatus.FOLDED && (

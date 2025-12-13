@@ -1,5 +1,6 @@
 import React from "react";
 import { usePlayerActionDropBox, PlayerActionDisplay } from "../../../hooks/usePlayerActionDropBox";
+import { useSeatJoinNotification, SeatJoinNotification } from "../../../hooks/useSeatJoinNotification";
 import { useGameOptions } from "../../../hooks/useGameOptions";
 import { GameType } from "@bitcoinbrisbane/block52";
 import { formatForSitAndGo, formatForCashGame, formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
@@ -48,6 +49,44 @@ const ActionDisplay: React.FC<{ actionDisplay: PlayerActionDisplay; playerColor?
     );
 };
 
+// Seat join notification display component
+const SeatJoinDisplay: React.FC<{ notification: SeatJoinNotification; playerColor?: string }> = ({ 
+    notification, 
+    playerColor = "#3b82f6" 
+}) => {
+    if (!notification.isVisible && !notification.isAnimatingOut) {
+        return null;
+    }
+
+    return (
+        <div
+            className={`action-display-container ${
+                notification.isAnimatingOut 
+                    ? "action-display-exit" 
+                    : "action-display-enter"
+            }`}
+        >
+            {/* Seat Join Box */}
+            <div
+                className={`action-display-box ${
+                    !notification.isAnimatingOut ? "action-display-pulse" : ""
+                }`}
+                style={{
+                    backgroundColor: `${playerColor}dd`,
+                    borderColor: playerColor,
+                    boxShadow: `0 4px 12px ${playerColor}40, 0 2px 4px rgba(0,0,0,0.3)`
+                }}
+            >
+                <div className="action-display-content">
+                    <span className="action-display-text">
+                        YOUR SEAT
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 type BadgeProps = {
     count: number; // The number displayed in the badge
     value: number; // The larger number displayed next to the badge
@@ -72,6 +111,9 @@ const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend
 
     // Get action display data for this player
     const actionDisplay = usePlayerActionDropBox(count);
+    
+    // Get seat join notification data for this player
+    const seatJoinNotification = useSeatJoinNotification(count);
 
     // Get place suffix (1st, 2nd, 3rd, 4th)
     const getPlaceSuffix = (place: number) => {
@@ -113,6 +155,12 @@ const Badge: React.FC<BadgeProps> = React.memo(({ count, value, color, canExtend
             {/* Player Action Drop Box - positioned below the price */}
             <ActionDisplay 
                 actionDisplay={actionDisplay}
+                playerColor={color}
+            />
+
+            {/* Seat Join Notification - positioned below the price */}
+            <SeatJoinDisplay 
+                notification={seatJoinNotification}
                 playerColor={color}
             />
             

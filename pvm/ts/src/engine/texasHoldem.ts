@@ -931,11 +931,42 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private shouldAutoRunout(): boolean {
         const livePlayers = this.findLivePlayers();
         const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
+        const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
 
-        // All remaining live players are all-in (2 or more players)
+        // Case 1: All remaining live players are all-in (2 or more players)
         // No more betting action possible - auto-runout remaining streets
         if (allInPlayers.length >= 2 && allInPlayers.length === livePlayers.length) {
             return true;
+        }
+
+        // Case 2: Heads-up or multi-way with one or more all-in and one active player who has matched the bet
+        // If there's only 1 active player left and others are all-in, check if active player has matched the largest all-in
+        if (allInPlayers.length >= 1 && activePlayers.length === 1) {
+            // IMPORTANT: Check ALL rounds, not just current round
+            // After advancing from FLOP to TURN, the TURN round has no actions yet
+            // But we still need to detect auto-runout based on previous betting
+            const allActions: Turn[] = [];
+            for (const [, actions] of this._rounds.entries()) {
+                allActions.push(...actions);
+            }
+            const betManager = new BetManager(allActions);
+
+            const activePlayer = activePlayers[0];
+            const activePlayerBet = betManager.getTotalBetsForPlayer(activePlayer.address);
+
+            // Find the largest all-in bet
+            let largestAllInBet = 0n;
+            for (const allInPlayer of allInPlayers) {
+                const allInBet = betManager.getTotalBetsForPlayer(allInPlayer.address);
+                if (allInBet > largestAllInBet) {
+                    largestAllInBet = allInBet;
+                }
+            }
+
+            // If active player has matched or exceeded the largest all-in, no more betting possible
+            if (activePlayerBet >= largestAllInBet) {
+                return true;
+            }
         }
 
         return false;
