@@ -183,6 +183,25 @@ export interface MsgSignWithdrawalResponse {
   signature: Uint8Array;
 }
 
+/**
+ * MsgTopUp defines the MsgTopUp message.
+ * Allows a player to add chips to their stack when not in an active hand.
+ * Player must be in BUSTED, SITTING_OUT, or FOLDED status.
+ * Total chips after top-up cannot exceed max_buy_in.
+ */
+export interface MsgTopUp {
+  player: string;
+  gameId: string;
+  /** Amount of chips to add (in micro-units, 6 decimals) */
+  amount: Long;
+}
+
+/** MsgTopUpResponse defines the MsgTopUpResponse message. */
+export interface MsgTopUpResponse {
+  /** Player's new stack after top-up */
+  newStack: Long;
+}
+
 function createBaseMsgUpdateParams(): MsgUpdateParams {
   return { authority: "", params: undefined };
 }
@@ -1993,6 +2012,160 @@ export const MsgSignWithdrawalResponse: MessageFns<MsgSignWithdrawalResponse> = 
   },
 };
 
+function createBaseMsgTopUp(): MsgTopUp {
+  return { player: "", gameId: "", amount: Long.UZERO };
+}
+
+export const MsgTopUp: MessageFns<MsgTopUp> = {
+  encode(message: MsgTopUp, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.player !== "") {
+      writer.uint32(10).string(message.player);
+    }
+    if (message.gameId !== "") {
+      writer.uint32(18).string(message.gameId);
+    }
+    if (!message.amount.equals(Long.UZERO)) {
+      writer.uint32(24).uint64(message.amount.toString());
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): MsgTopUp {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgTopUp();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.player = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.gameId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.amount = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgTopUp {
+    return {
+      player: isSet(object.player) ? globalThis.String(object.player) : "",
+      gameId: isSet(object.gameId) ? globalThis.String(object.gameId) : "",
+      amount: isSet(object.amount) ? Long.fromValue(object.amount) : Long.UZERO,
+    };
+  },
+
+  toJSON(message: MsgTopUp): unknown {
+    const obj: any = {};
+    if (message.player !== "") {
+      obj.player = message.player;
+    }
+    if (message.gameId !== "") {
+      obj.gameId = message.gameId;
+    }
+    if (!message.amount.equals(Long.UZERO)) {
+      obj.amount = (message.amount || Long.UZERO).toString();
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<MsgTopUp>, I>>(base?: I): MsgTopUp {
+    return MsgTopUp.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<MsgTopUp>, I>>(object: I): MsgTopUp {
+    const message = createBaseMsgTopUp();
+    message.player = object.player ?? "";
+    message.gameId = object.gameId ?? "";
+    message.amount = (object.amount !== undefined && object.amount !== null)
+      ? Long.fromValue(object.amount)
+      : Long.UZERO;
+    return message;
+  },
+};
+
+function createBaseMsgTopUpResponse(): MsgTopUpResponse {
+  return { newStack: Long.UZERO };
+}
+
+export const MsgTopUpResponse: MessageFns<MsgTopUpResponse> = {
+  encode(message: MsgTopUpResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (!message.newStack.equals(Long.UZERO)) {
+      writer.uint32(8).uint64(message.newStack.toString());
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): MsgTopUpResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgTopUpResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.newStack = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgTopUpResponse {
+    return { newStack: isSet(object.newStack) ? Long.fromValue(object.newStack) : Long.UZERO };
+  },
+
+  toJSON(message: MsgTopUpResponse): unknown {
+    const obj: any = {};
+    if (!message.newStack.equals(Long.UZERO)) {
+      obj.newStack = (message.newStack || Long.UZERO).toString();
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<MsgTopUpResponse>, I>>(base?: I): MsgTopUpResponse {
+    return MsgTopUpResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<MsgTopUpResponse>, I>>(object: I): MsgTopUpResponse {
+    const message = createBaseMsgTopUpResponse();
+    message.newStack = (object.newStack !== undefined && object.newStack !== null)
+      ? Long.fromValue(object.newStack)
+      : Long.UZERO;
+    return message;
+  },
+};
+
 /** Msg defines the Msg service. */
 export interface Msg {
   /**
@@ -2029,6 +2202,11 @@ export interface Msg {
    * Manually signs a pending withdrawal request (for validators only).
    */
   SignWithdrawal(request: MsgSignWithdrawal): Promise<MsgSignWithdrawalResponse>;
+  /**
+   * TopUp defines the TopUp RPC.
+   * Allows a player to add chips to their stack when not in an active hand.
+   */
+  TopUp(request: MsgTopUp): Promise<MsgTopUpResponse>;
 }
 
 export const MsgServiceName = "pokerchain.poker.v1.Msg";
@@ -2049,6 +2227,7 @@ export class MsgClientImpl implements Msg {
     this.ProcessDeposit = this.ProcessDeposit.bind(this);
     this.InitiateWithdrawal = this.InitiateWithdrawal.bind(this);
     this.SignWithdrawal = this.SignWithdrawal.bind(this);
+    this.TopUp = this.TopUp.bind(this);
   }
   UpdateParams(request: MsgUpdateParams): Promise<MsgUpdateParamsResponse> {
     const data = MsgUpdateParams.encode(request).finish();
@@ -2114,6 +2293,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgSignWithdrawal.encode(request).finish();
     const promise = this.rpc.request(this.service, "SignWithdrawal", data);
     return promise.then((data) => MsgSignWithdrawalResponse.decode(new BinaryReader(data)));
+  }
+
+  TopUp(request: MsgTopUp): Promise<MsgTopUpResponse> {
+    const data = MsgTopUp.encode(request).finish();
+    const promise = this.rpc.request(this.service, "TopUp", data);
+    return promise.then((data) => MsgTopUpResponse.decode(new BinaryReader(data)));
   }
 }
 
