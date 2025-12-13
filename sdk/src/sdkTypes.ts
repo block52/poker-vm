@@ -134,3 +134,34 @@ export interface ListGamesResponse {
 export interface PlayerGamesResponse {
     games: string; // JSON string containing player's games
 }
+
+// Equity calculation types
+export interface EquityHand {
+    cards: string[]; // e.g., ["AS", "KS"]
+}
+
+export interface EquityResult {
+    hand_index: number;
+    hand: string[];
+    wins: number;
+    ties: number;
+    losses: number;
+    equity: string;      // e.g., "0.7234" (win probability)
+    tie_equity: string;  // e.g., "0.0023" (tie probability)
+    total: string;       // e.g., "0.7257" (win + tie equity)
+}
+
+export interface EquityRequest {
+    hands: EquityHand[];
+    board?: string[];     // 0-5 community cards
+    dead?: string[];      // optional dead/mucked cards
+    simulations?: number; // number of Monte Carlo simulations (default 10000)
+}
+
+export interface EquityResponse {
+    results: EquityResult[];
+    simulations: number;
+    stage: string;         // e.g., "Preflop", "Flop", "Turn", "River"
+    duration_ms: string;
+    hands_per_sec: string;
+}

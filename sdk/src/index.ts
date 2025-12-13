@@ -105,6 +105,9 @@ export { PokerGameIntegration } from './pokerGameIntegration'
 export { CosmosClient, getDefaultCosmosConfig, COSMOS_CONSTANTS } from './cosmosClient'
 export { SigningCosmosClient, createSigningClientFromMnemonic, type RakeConfig } from './signingClient'
 
+// Re-export equity types
+export type { EquityHand, EquityResult, EquityRequest, EquityResponse } from './sdkTypes'
+
 // Re-export generated client and helpers
 export {
   Client,
