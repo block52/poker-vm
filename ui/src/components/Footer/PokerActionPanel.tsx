@@ -280,6 +280,12 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
         return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
     };
 
+    // Slider step - use small blind for smooth, poker-appropriate increments
+    const getSliderStep = (): number => {
+        const smallBlind = microBigIntToUsdc(smallBlindMicro);
+        return smallBlind > 0 ? smallBlind : 0.01;
+    };
+
     const handleRaiseIncrement = () => {
         const step = getStep();
         const maxAmount = hasBetAction ? maxBet : maxRaise;
@@ -390,7 +396,7 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
                                         minAmount={hasBetAction ? minBet : minRaise}
                                         maxAmount={hasBetAction ? maxBet : maxRaise}
                                         formattedMaxAmount={formattedMaxBetAmount}
-                                        step={0.01}
+                                        step={getSliderStep()}
                                         totalPot={totalPot}
                                         totalPotMicro={totalPotMicro}
                                         callAmountMicro={callAmountMicro}
