@@ -1,5 +1,5 @@
 import { SitAndGoStatusManager } from "./statusManager";
-import { GameOptions, GameStatus, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { GameOptions, GameStatus, PlayerStatus } from "@block52/poker-vm-sdk";
 import { Player } from "../../models/player";
 
 describe("SitAndGoStatusManager", () => {

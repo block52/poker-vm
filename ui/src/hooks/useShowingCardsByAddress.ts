@@ -1,6 +1,6 @@
 import { useMemo} from "react";
 import { useGameStateContext } from "../context/GameStateContext";
-import { PlayerDTO, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerDTO, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { ShowingCardsByAddressReturn, ShowingCardData } from "../types/index";
 
 /**

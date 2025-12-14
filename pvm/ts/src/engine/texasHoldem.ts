@@ -17,7 +17,7 @@ import {
     PokerSolver,
     PokerGameIntegration,
     Deck as SDKDeck
-} from "@bitcoinbrisbane/block52";
+} from "@block52/poker-vm-sdk";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 

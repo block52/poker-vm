@@ -1,5 +1,5 @@
 import { useGameStateContext } from "../context/GameStateContext";
-import { PlayerDTO, TexasHoldemStateDTO, WinnerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerDTO, TexasHoldemStateDTO, WinnerDTO } from "@block52/poker-vm-sdk";
 import { formatUSDCToSimpleDollars } from "../utils/numberUtils";
 import { WinnerInfoReturn } from "../types/index";
 

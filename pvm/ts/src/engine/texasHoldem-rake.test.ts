@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, GameType } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
 import { ethers } from "ethers";
 import { getNextTestTimestamp } from "./testConstants";

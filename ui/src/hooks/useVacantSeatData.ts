@@ -1,6 +1,6 @@
 import React from "react";
 import { useGameStateContext } from "../context/GameStateContext";
-import { PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerDTO } from "@block52/poker-vm-sdk";
 import { VacantSeatResponse } from "../types/index";
 import { isValidPlayerAddress } from "../utils/addressUtils";
 

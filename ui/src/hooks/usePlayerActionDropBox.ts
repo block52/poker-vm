@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useGameProgress } from "./useGameProgress";
-import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import { formatUSDCToSimpleDollars } from "../utils/numberUtils";
 
 export interface PlayerActionDisplay {

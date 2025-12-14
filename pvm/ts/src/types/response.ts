@@ -1,5 +1,5 @@
 import crypto from "../utils/crypto";
-import { RPCResponse } from "@bitcoinbrisbane/block52";
+import { RPCResponse } from "@block52/poker-vm-sdk";
 
 export function makeErrorRPCResponse(id: string, message: string): RPCResponse<unknown> {
     return {

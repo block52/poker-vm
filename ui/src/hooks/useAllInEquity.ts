@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useGameStateContext } from "../context/GameStateContext";
 import { useNetwork } from "../context/NetworkContext";
 import { useShowingCardsByAddress } from "./useShowingCardsByAddress";
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerStatus } from "@block52/poker-vm-sdk";
 
 /**
  * Equity result for a single hand

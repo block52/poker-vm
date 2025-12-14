@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ResultDTO } from "@bitcoinbrisbane/block52";
+import { ResultDTO } from "@block52/poker-vm-sdk";
 import { useGameStateContext } from "../context/GameStateContext";
 
 // Hook return type for individual player result

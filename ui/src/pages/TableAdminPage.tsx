@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { GameType, CosmosClient, getDefaultCosmosConfig } from "@bitcoinbrisbane/block52";
+import { GameType, CosmosClient, getDefaultCosmosConfig } from "@block52/poker-vm-sdk";
 import { Link } from "react-router-dom";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { isValidPlayerAddress } from "../utils/addressUtils";

@@ -1,4 +1,4 @@
-import { LegalActionDTO, NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, NonPlayerActionType, PlayerActionType } from "@block52/poker-vm-sdk";
 
 export const hasAction = (legalActions: LegalActionDTO[], action: PlayerActionType | NonPlayerActionType): boolean => {
     return legalActions.some(legalAction => legalAction.action === action);

@@ -3,7 +3,7 @@ import { useGameStateContext } from "../../context/GameStateContext";
 import { useNetwork, NetworkEndpoints } from "../../context/NetworkContext";
 import { getSigningClient } from "../../utils/cosmos/client";
 import type { PlayerActionResult } from "../../types";
-import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@block52/poker-vm-sdk";
 
 /**
  * Actions that can be performed optimistically.

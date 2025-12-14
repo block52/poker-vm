@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useGameStateContext } from "../context/GameStateContext";
-import { GameOptionsDTO } from "@bitcoinbrisbane/block52";
+import { GameOptionsDTO } from "@block52/poker-vm-sdk";
 import { GameOptionsReturn } from "../types/index";
 
 /**

@@ -1,6 +1,6 @@
 import { useGameStateContext } from "../context/GameStateContext";
 import { GameProgressReturn } from "../types/index";
-import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerDTO, PlayerStatus } from "@block52/poker-vm-sdk";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information

@@ -1,4 +1,4 @@
-import { COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { COSMOS_CONSTANTS } from "@block52/poker-vm-sdk";
 import { getSigningClient } from "../../utils/cosmos/client";
 import type { JoinTableOptions } from "./types";
 import type { NetworkEndpoints } from "../../context/NetworkContext";

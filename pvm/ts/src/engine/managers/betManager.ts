@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType } from "@block52/poker-vm-sdk";
 import { Turn } from "../types";
 import { IBetManager } from "../../types/interfaces";
 

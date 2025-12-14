@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { GameOptionsResponse } from "@bitcoinbrisbane/block52";
+import { GameOptionsResponse } from "@block52/poker-vm-sdk";
 import { FindGamesReturn } from "../types/index";
 import { getCosmosClient } from "../utils/cosmos/client";
 import { useNetwork } from "../context/NetworkContext";

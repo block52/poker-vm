@@ -9,7 +9,7 @@ export function TestSdk() {
     useEffect(() => {
         console.log("=== Testing SDK imports ===");
 
-        import("@bitcoinbrisbane/block52")
+        import("@block52/poker-vm-sdk")
             .then(sdk => {
                 console.log("✅ SDK imported successfully!", sdk);
                 setStatus({

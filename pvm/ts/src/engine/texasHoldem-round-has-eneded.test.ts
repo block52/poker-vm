@@ -1,5 +1,5 @@
 import TexasHoldemGame from "../engine/texasHoldem";
-import { PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@block52/poker-vm-sdk";
 import { Player } from "../models/player";
 import { gameOptions, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp, resetTestTimestamp } from "./testConstants";
 import { ethers } from "ethers";

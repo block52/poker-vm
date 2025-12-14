@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, getSigningClient } from "../utils/cosmos/client";
 import { getCosmosMnemonic, setCosmosMnemonic } from "../utils/cosmos/storage";
-import { getAddressFromMnemonic } from "@bitcoinbrisbane/block52";
+import { getAddressFromMnemonic } from "@block52/poker-vm-sdk";
 import { useNetwork } from "../context/NetworkContext";
 
 interface Balance {

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNetwork } from "./NetworkContext";
-import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO } from "@block52/poker-vm-sdk";
 import { createAuthPayload } from "../utils/cosmos/signing";
 
 /**

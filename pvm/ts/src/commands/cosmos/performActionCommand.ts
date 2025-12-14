@@ -1,4 +1,4 @@
-import { GameOptions, KEYS, NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { GameOptions, KEYS, NonPlayerActionType, PlayerActionType, TexasHoldemStateDTO } from "@block52/poker-vm-sdk";
 
 import { ICommand } from "../interfaces";
 import TexasHoldemGame from "../../engine/texasHoldem";

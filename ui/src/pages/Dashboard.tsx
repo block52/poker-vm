@@ -19,7 +19,7 @@ import USDCDepositModal from "../components/USDCDepositModal";
 
 // Game wallet and SDK imports
 // ...existing code...
-import { GameType, generateWallet as generateWalletSDK } from "@bitcoinbrisbane/block52";
+import { GameType, generateWallet as generateWalletSDK } from "@block52/poker-vm-sdk";
 
 // Hook imports from barrel file
 import { useUserWalletConnect, useNewTable, useCosmosWallet } from "../hooks";
