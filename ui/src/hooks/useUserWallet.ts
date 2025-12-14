@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Wallet } from "ethers";
-import { AccountDTO } from "@bitcoinbrisbane/block52";
+import { AccountDTO } from "@block52/poker-vm-sdk";
 import { getClient } from "../utils/b52AccountUtils";
 
 // Key for storing last API call time in localStorage

@@ -1,4 +1,4 @@
-import { PlayerStatus, NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerStatus, NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
 import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, getNextTestTimestamp } from "./testConstants";
 import { Player } from "../models/player";

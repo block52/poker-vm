@@ -5,7 +5,7 @@
  * with singleton pattern for the frontend.
  */
 
-import { CosmosClient, createSigningClientFromMnemonic, getDefaultCosmosConfig as getDefaultCosmosConfigSDK, COSMOS_CONSTANTS } from "@bitcoinbrisbane/block52";
+import { CosmosClient, createSigningClientFromMnemonic, getDefaultCosmosConfig as getDefaultCosmosConfigSDK, COSMOS_CONSTANTS } from "@block52/poker-vm-sdk";
 import { getCosmosAddress, getCosmosMnemonic } from "./storage";
 import { getCosmosUrls, type NetworkEndpoints } from "./urls";
 

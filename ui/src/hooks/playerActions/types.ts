@@ -1,4 +1,4 @@
-import { LegalActionDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerStatus } from "@block52/poker-vm-sdk";
 import { BaseHookReturn } from "../../types/index";
 
 export interface PlayerLegalActionsResult extends BaseHookReturn {

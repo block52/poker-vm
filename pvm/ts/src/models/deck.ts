@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { ethers } from "ethers";
 import { IJSONModel } from "./interfaces";
-import { Card, SUIT } from "@bitcoinbrisbane/block52";
+import { Card, SUIT } from "@block52/poker-vm-sdk";
 
 /**
  * Deck DTO - Data Transfer Object for deck state

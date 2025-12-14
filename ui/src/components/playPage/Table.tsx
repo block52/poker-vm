@@ -44,7 +44,7 @@
  */
 
 import { useEffect, useState, useMemo, useCallback, memo } from "react";
-import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@block52/poker-vm-sdk";
 // Position arrays now come from useTableLayout hook
 // // Position arrays now come from useTableLayout hook
 // import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
@@ -115,7 +115,7 @@ import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { useNetwork } from "../../context/NetworkContext";
-import { PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerDTO } from "@block52/poker-vm-sdk";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
 // Game Start Countdown

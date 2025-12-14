@@ -324,10 +324,10 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitcoinbrisbane/block52@3.1.7":
-  version "3.1.7"
-  resolved "https://registry.yarnpkg.com/@bitcoinbrisbane/block52/-/block52-3.1.7.tgz#c8aa0573ce8ed2cee99e6a6e89a8d2b084ab9251"
-  integrity sha512-BLPesH0c0nC2WBFnWdCyiUSGD4dCdvo7uemWl8dbKYFVYB/rGcKpmtmhMpaKe+qU+gfRUg52g8qCxxYJAXqqhg==
+"@block52/poker-vm-sdk@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@block52/poker-vm-sdk/-/poker-vm-sdk-1.0.0.tgz#14d557e41a9866136f90b95d6c9bfcd0e851a1b1"
+  integrity sha512-teHgckkkvgtrOalyagqypUBielU4/uvaKIo0pYR8o1/ohOeNIo3duJMjtJQlNaVtTvYp1OYBv/pW0/C/VBrwkQ==
   dependencies:
     "@bufbuild/protobuf" "^2.10.0"
     "@cosmjs/crypto" "^0.32.4"

@@ -1,5 +1,5 @@
 import React from "react";
-import { TexasHoldemRound, ActionDTO } from "@bitcoinbrisbane/block52";
+import { TexasHoldemRound, ActionDTO } from "@block52/poker-vm-sdk";
 import { calculatePotBetAmount } from "../../utils/calculatePotBetAmount";
 import { microBigIntToUsdc } from "../../constants/currency";
 

@@ -319,6 +319,52 @@ export class SigningCosmosClient extends CosmosClient {
     }
 
     /**
+     * Leave a poker game
+     */
+    public async leaveGame(gameId: string): Promise<string> {
+        await this.initializeSigningClient();
+
+        if (!this.signingClient || !this.wallet) {
+            throw new Error("Signing client not initialized");
+        }
+
+        const [account] = await this.wallet.getAccounts();
+        const creator = account.address;
+
+        // Create the message object
+        const msgLeaveGame = {
+            creator,
+            gameId
+        };
+
+        // Create the transaction message
+        const msg: EncodeObject = {
+            typeUrl: "/pokerchain.poker.v1.MsgLeaveGame",
+            value: msgLeaveGame
+        };
+
+        const fee = gaslessFee();
+        const memo = "Leave poker game via SDK";
+
+        console.log("🚪 Leaving game:", { gameId });
+
+        try {
+            const result = await this.signingClient.signAndBroadcast(
+                creator,
+                [msg],
+                fee,
+                memo
+            );
+
+            console.log("✅ Leave game transaction successful:", result.transactionHash);
+            return result.transactionHash;
+        } catch (error) {
+            console.error("❌ Leave game failed:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Perform a game action (fold, call, raise, etc.)
      * The keeper calculates the action index automatically
      *
@@ -378,6 +424,62 @@ export class SigningCosmosClient extends CosmosClient {
             return result.transactionHash;
         } catch (error) {
             console.error("❌ Action failed:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Top up a player's stack at a table
+     * The player must be seated at the table and have sufficient wallet balance.
+     * Total chips after top-up cannot exceed the table's max_buy_in.
+     *
+     * @param gameId - The game/table ID
+     * @param amount - The amount to add to the player's stack (in microunits, 6 decimals)
+     */
+    public async topUp(gameId: string, amount: bigint): Promise<string> {
+        await this.initializeSigningClient();
+
+        if (!this.signingClient || !this.wallet) {
+            throw new Error("Signing client not initialized");
+        }
+
+        const [account] = await this.wallet.getAccounts();
+        const player = account.address;
+
+        // Create the message object
+        const msgTopUp = {
+            player,
+            gameId,
+            amount: Long.fromString(amount.toString(), true)
+        };
+
+        // Create the transaction message
+        const msg: EncodeObject = {
+            typeUrl: "/pokerchain.poker.v1.MsgTopUp",
+            value: msgTopUp
+        };
+
+        const fee = gaslessFee();
+        const memo = "Top up poker stack via SDK";
+
+        console.log("💰 Topping up stack:", {
+            gameId,
+            player,
+            amount: amount.toString()
+        });
+
+        try {
+            const result = await this.signingClient.signAndBroadcast(
+                player,
+                [msg],
+                fee,
+                memo
+            );
+
+            console.log("✅ Top-up transaction successful:", result.transactionHash);
+            return result.transactionHash;
+        } catch (error) {
+            console.error("❌ Top-up failed:", error);
             throw error;
         }
     }

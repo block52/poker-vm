@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { SigningCosmosClient } from "@bitcoinbrisbane/block52";
+import { SigningCosmosClient } from "@block52/poker-vm-sdk";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";

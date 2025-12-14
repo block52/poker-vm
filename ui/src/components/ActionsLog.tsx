@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useGameProgress } from "../hooks/useGameProgress";
 import { formatPlayerId, formatAmount } from "../utils/accountUtils";
-import { ActionDTO } from "@bitcoinbrisbane/block52";
+import { ActionDTO } from "@block52/poker-vm-sdk";
 import { colors } from "../utils/colorConfig";
 import { FaCopy, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";

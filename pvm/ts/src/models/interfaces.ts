@@ -1,4 +1,4 @@
-import { GameOptions } from "@bitcoinbrisbane/block52";
+import { GameOptions } from "@block52/poker-vm-sdk";
 
 export interface IJSONModel {
     toJson(): unknown;

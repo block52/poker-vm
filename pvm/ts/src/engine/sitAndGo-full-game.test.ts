@@ -7,7 +7,7 @@ import {
     GameType,
     GameStatus,
     TexasHoldemStateDTO
-} from "@bitcoinbrisbane/block52";
+} from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
 import { ONE_HUNDRED_TOKENS, TWO_TOKENS, ONE_TOKEN, getNextTestTimestamp } from "./testConstants";
 import { Player } from "../models/player";

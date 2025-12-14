@@ -1,4 +1,5 @@
 // Main hooks (named exports)
+export { useAllInEquity } from "./useAllInEquity";
 export { useCardAnimations } from "./useCardAnimations";
 export { useCardsForHandStrength } from "./useCardsForHandStrength";
 export { useChipPositions } from "./useChipPositions";

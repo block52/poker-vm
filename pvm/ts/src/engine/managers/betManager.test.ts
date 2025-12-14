@@ -1,6 +1,6 @@
 import { BetManager } from "./betManager";
 import { Turn } from "../types";
-import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@block52/poker-vm-sdk";
 
 describe("Bet Manager Tests", () => {
     const mockGame = {

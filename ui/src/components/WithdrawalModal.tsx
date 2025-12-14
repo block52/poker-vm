@@ -5,7 +5,7 @@ import useUserWallet from "../hooks/useUserWallet";
 import { formatBalance } from "../utils/numberUtils";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
-import { WithdrawResponseDTO } from "@bitcoinbrisbane/block52";
+import { WithdrawResponseDTO } from "@block52/poker-vm-sdk";
 import useWithdraw from "../hooks/DepositPage/useWithdraw";
 
 /**
@@ -25,7 +25,7 @@ import useWithdraw from "../hooks/DepositPage/useWithdraw";
  * 7. User receives funds on Ethereum mainnet
  *
  * DEPENDENCIES:
- * - @bitcoinbrisbane/block52 SDK for withdrawal proof generation
+ * - @block52/poker-vm-sdk SDK for withdrawal proof generation
  * - ethers.js for address validation and amount conversion
  * - wagmi/viem for Web3 transaction execution
  * - MetaMask (REQUIRED) for transaction signing and gas payment

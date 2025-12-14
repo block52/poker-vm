@@ -1,4 +1,4 @@
-import { LegalActionDTO, PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import { hasAction, getActionByType } from "./actionUtils";
 
 describe("actionUtils", () => {

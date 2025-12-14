@@ -1,6 +1,6 @@
 import React from "react";
 import { LoadingSpinner } from "../common";
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerStatus } from "@block52/poker-vm-sdk";
 import { colors } from "../../utils/colorConfig";
 import { FoldButton } from "./FoldButton";
 

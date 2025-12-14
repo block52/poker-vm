@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { usePlayerData } from "./usePlayerData";
 import { useTableData } from "./useTableData";
-import { PokerSolver, PokerGameIntegration, Deck } from "@bitcoinbrisbane/block52";
+import { PokerSolver, PokerGameIntegration, Deck } from "@block52/poker-vm-sdk";
 
 export interface HandStrength {
   name: string;

@@ -1,4 +1,4 @@
-import { TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { TexasHoldemRound } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
 
 import { ethers } from "ethers";

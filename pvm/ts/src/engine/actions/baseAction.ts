@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import { IUpdate, Range } from "../types";

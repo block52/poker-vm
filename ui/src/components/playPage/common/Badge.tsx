@@ -2,7 +2,7 @@ import React from "react";
 import { usePlayerActionDropBox, PlayerActionDisplay } from "../../../hooks/usePlayerActionDropBox";
 import { useSeatJoinNotification, SeatJoinNotification } from "../../../hooks/useSeatJoinNotification";
 import { useGameOptions } from "../../../hooks/useGameOptions";
-import { GameType } from "@bitcoinbrisbane/block52";
+import { GameType } from "@block52/poker-vm-sdk";
 import { formatForSitAndGo, formatForCashGame, formatUSDCToSimpleDollars } from "../../../utils/numberUtils";
 import "./Badge.css";
 

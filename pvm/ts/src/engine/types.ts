@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, PlayerStatus, TexasHoldemRound, Card, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 

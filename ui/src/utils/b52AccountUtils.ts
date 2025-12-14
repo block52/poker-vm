@@ -3,7 +3,7 @@
  */
 
 // NodeRpcClient removed from SDK - using CosmosClient instead
-// import { NodeRpcClient } from "@bitcoinbrisbane/block52";
+// import { NodeRpcClient } from "@block52/poker-vm-sdk";
 
 // Singleton instance for NodeRpcClient
 let clientInstance: any | null = null;

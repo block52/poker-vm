@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { PlayerDTO, LegalActionDTO } from "@bitcoinbrisbane/block52";
+import { PlayerDTO, LegalActionDTO } from "@block52/poker-vm-sdk";
 import { NextToActInfoReturn } from "../types/index";
 import { useGameStateContext } from "../context/GameStateContext";
 

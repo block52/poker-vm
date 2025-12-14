@@ -4,7 +4,7 @@
  * This module provides all Cosmos-related utilities for wallet management,
  * client creation, and blockchain interactions.
  *
- * Most functionality is delegated to @bitcoinbrisbane/block52 SDK.
+ * Most functionality is delegated to @block52/poker-vm-sdk SDK.
  * This module provides frontend-specific wrappers and utilities.
  */
 
