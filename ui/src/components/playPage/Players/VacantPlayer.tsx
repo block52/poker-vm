@@ -323,13 +323,9 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 border: `1px solid ${colors.ui.borderColor}`
                             }}
                         >
-                            <h3 className="text-xl font-bold mb-4" style={{ color: "white" }}>
-                                Join Seat {index}
+                            <h3 className="text-xl font-bold mb-4 text-center" style={{ color: "white" }}>
+                                Join at Seat {index}
                             </h3>
-
-                            <p className="mb-6 text-center" style={{ color: colors.ui.textSecondary + "dd" }}>
-                                Ready to join at seat {index}?
-                            </p>
 
                             <div className="flex flex-col space-y-3">
                                 <button
