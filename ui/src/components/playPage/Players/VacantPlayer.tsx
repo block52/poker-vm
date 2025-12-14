@@ -455,13 +455,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             >
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-white font-semibold">USDC</span>
-                                                    <span
-                                                        className={`text-lg font-bold ${
-                                                            usdcAmount >= parseFloat(formatUSDCToSimpleDollars(gameOptions.maxBuyIn))
-                                                                ? "text-green-400"
-                                                                : "text-red-400"
-                                                        }`}
-                                                    >
+                                                    <span className="text-lg font-bold text-white">
                                                         ${usdcAmount.toFixed(2)}
                                                     </span>
                                                 </div>
@@ -522,7 +516,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                     onClick={() => setShowBuyInModal(false)}
                                     className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300"
                                     style={{
-                                        backgroundColor: colors.ui.textSecondary,
+                                        backgroundColor: colors.accent.danger,
                                         color: "white"
                                     }}
                                     disabled={isJoining}
