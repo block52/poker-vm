@@ -9,7 +9,9 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const axios = require("axios");
 const connectDB = require("./db");
+const packageJson = require("../package.json");
 
 const swaggerSetup = require("./swagger/setup");
 
@@ -66,9 +68,50 @@ swaggerSetup(app);
 // ===================================
 // 8. Register Routes
 // ===================================
-// Base route for health check
+// Base route
 app.get("/", (req, res) => {
-    res.send("Hello World!");
+    res.send(`Block52 Proxy v${packageJson.version}`);
+});
+
+// Version endpoint
+app.get("/version", (req, res) => {
+    res.json({
+        name: packageJson.name,
+        version: packageJson.version,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Health check endpoint - checks proxy and PVM status
+app.get("/health", async (req, res) => {
+    const PVM_URL = process.env.PVM_URL || "http://localhost:8545";
+
+    const health = {
+        status: "healthy",
+        version: packageJson.version,
+        timestamp: new Date().toISOString(),
+        services: {
+            proxy: { status: "healthy", version: packageJson.version }
+        }
+    };
+
+    // Check PVM health
+    try {
+        const pvmResponse = await axios.get(`${PVM_URL}/health`, { timeout: 5000 });
+        health.services.pvm = {
+            status: pvmResponse.data.status || "healthy",
+            version: pvmResponse.data.version || "unknown"
+        };
+    } catch (error) {
+        health.services.pvm = {
+            status: "unhealthy",
+            error: error.message
+        };
+        health.status = "degraded";
+    }
+
+    const statusCode = health.status === "healthy" ? 200 : 503;
+    res.status(statusCode).json(health);
 });
 
 // Mount feature-specific routes
