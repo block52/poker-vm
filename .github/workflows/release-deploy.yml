@@ -1,0 +1,97 @@
+name: Release Deploy
+
+on:
+  release:
+    types: [published]
+
+env:
+  RELEASE_VERSION: ${{ github.event.release.tag_name }}
+
+jobs:
+  deploy:
+    name: Deploy Release ${{ github.event.release.tag_name }}
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+        working-directory: ./pvm/ts
+
+      - name: Build PVM
+        run: yarn build
+        working-directory: ./pvm/ts
+
+      - name: Run tests
+        run: yarn test
+        working-directory: ./pvm/ts
+
+      - name: Deploy to Texas Hodl Node
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: "node.texashodl.net"
+          username: "root"
+          key: ${{ secrets.DEPLOY }}
+          script: |
+            echo "Deploying release ${{ env.RELEASE_VERSION }}"
+            cd /root/poker-vm
+            git fetch --tags
+            git checkout ${{ env.RELEASE_VERSION }}
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
+            docker image prune -af
+            echo "Deployment complete"
+
+      - name: Deploy to Block52 Node
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: "node1.block52.xyz"
+          username: "root"
+          key: ${{ secrets.DEPLOY }}
+          script: |
+            echo "Deploying release ${{ env.RELEASE_VERSION }}"
+            cd /root/poker-vm
+            git fetch --tags
+            git checkout ${{ env.RELEASE_VERSION }}
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
+            docker image prune -af
+            echo "Deployment complete"
+
+      - name: Verify deployments
+        run: |
+          echo "Waiting for services to start..."
+          sleep 30
+
+          echo "Checking Texas Hodl PVM health..."
+          curl -sf https://node.texashodl.net:8545/health || echo "Texas Hodl health check failed"
+
+          echo "Checking Block52 PVM health..."
+          curl -sf https://node1.block52.xyz:8545/health || echo "Block52 health check failed"
+
+          echo "Deployment verification complete"
+
+      - name: Notify Discord
+        if: always()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          title: "Release Deployment"
+          description: |
+            Version: ${{ env.RELEASE_VERSION }}
+            Status: ${{ job.status }}
+          color: ${{ job.status == 'success' && '0x00ff00' || '0xff0000' }}

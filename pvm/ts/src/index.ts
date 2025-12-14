@@ -2,12 +2,17 @@ import http from "http";
 import express, { Request, Response } from "express";
 import { RPC } from "./rpc";
 import cors from "cors";
+import { readFileSync } from "fs";
+import { join } from "path";
+
+// Read version from package.json as single source of truth
+const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
+const VERSION = packageJson.version;
 
 const app = express();
 app.use(express.json());
 app.use(cors()); // Add this line to enable CORS for all routes
 const PORT = 8545;
-const VERSION = "0.1.1";
 
 // Initialize Socket.IO server
 // Create HTTP server
@@ -25,6 +30,17 @@ app.get("/health", (req: Request, res: Response) => {
         version: VERSION,
         timestamp: new Date().toISOString(),
         service: "pvm-rpc-server"
+    });
+});
+
+// Version endpoint for detailed version info
+app.get("/version", (req: Request, res: Response) => {
+    res.json({
+        name: packageJson.name,
+        version: VERSION,
+        description: packageJson.description || "Poker Virtual Machine",
+        nodeVersion: process.version,
+        timestamp: new Date().toISOString()
     });
 });
 

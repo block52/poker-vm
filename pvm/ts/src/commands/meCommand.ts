@@ -1,6 +1,10 @@
 import { ISignedCommand, ISignedResponse } from "./interfaces";
+import { readFileSync } from "fs";
+import { join } from "path";
 
-const VERSION = "1.0.3";
+// Read version from package.json as single source of truth
+const packageJson = JSON.parse(readFileSync(join(__dirname, "../../package.json"), "utf-8"));
+const VERSION = packageJson.version;
 const PORT = 8545;
 
 interface ServerInfo {

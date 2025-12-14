@@ -45,11 +45,19 @@ interface SyncStatus {
     syncing: boolean;
 }
 
+interface PvmHealth {
+    status: string;
+    version: string;
+    timestamp: string;
+    service: string;
+}
+
 interface NodeStatus {
     online: boolean;
     nodeInfo: NodeInfo | null;
     latestBlock: LatestBlock | null;
     syncStatus: SyncStatus | null;
+    pvmHealth: PvmHealth | null;
     error: string | null;
     lastChecked: Date;
 }
@@ -83,6 +91,7 @@ export default function NodeStatusPage() {
         nodeInfo: null,
         latestBlock: null,
         syncStatus: null,
+        pvmHealth: null,
         error: null,
         lastChecked: new Date()
     });
@@ -94,12 +103,28 @@ export default function NodeStatusPage() {
         n => n.name.toLowerCase() === decodedName.toLowerCase()
     );
 
+    // Derive PVM URL based on network
+    const getPvmUrl = useCallback((networkConfig: NetworkEndpoints): string => {
+        // Map network names to PVM endpoints
+        if (networkConfig.name === "Localhost") {
+            return "http://localhost:8545";
+        } else if (networkConfig.name === "Texas Hodl") {
+            return "https://node.texashodl.net:8545";
+        } else if (networkConfig.name === "Block52") {
+            return "https://node1.block52.xyz:8545";
+        }
+        // Fallback to env variable or default
+        return import.meta.env.VITE_NODE_RPC_URL || "https://node1.block52.xyz:8545";
+    }, []);
+
     const fetchNodeStatus = useCallback(async (networkConfig: NetworkEndpoints) => {
         setLoading(true);
 
         try {
-            // Fetch node info, latest block, and sync status in parallel
-            const [nodeInfoRes, latestBlockRes, syncRes] = await Promise.allSettled([
+            const pvmUrl = getPvmUrl(networkConfig);
+
+            // Fetch node info, latest block, sync status, and PVM health in parallel
+            const [nodeInfoRes, latestBlockRes, syncRes, pvmHealthRes] = await Promise.allSettled([
                 fetch(`${networkConfig.rest}/cosmos/base/tendermint/v1beta1/node_info`, {
                     signal: AbortSignal.timeout(10000)
                 }),
@@ -108,12 +133,16 @@ export default function NodeStatusPage() {
                 }),
                 fetch(`${networkConfig.rest}/cosmos/base/tendermint/v1beta1/syncing`, {
                     signal: AbortSignal.timeout(10000)
+                }),
+                fetch(`${pvmUrl}/health`, {
+                    signal: AbortSignal.timeout(10000)
                 })
             ]);
 
             let nodeInfo: NodeInfo | null = null;
             let latestBlock: LatestBlock | null = null;
             let syncStatus: SyncStatus | null = null;
+            let pvmHealth: PvmHealth | null = null;
             let online = false;
 
             // Parse node info
@@ -133,11 +162,17 @@ export default function NodeStatusPage() {
                 syncStatus = await syncRes.value.json();
             }
 
+            // Parse PVM health
+            if (pvmHealthRes.status === "fulfilled" && pvmHealthRes.value.ok) {
+                pvmHealth = await pvmHealthRes.value.json();
+            }
+
             setStatus({
                 online,
                 nodeInfo,
                 latestBlock,
                 syncStatus,
+                pvmHealth,
                 error: online ? null : "Node is not responding",
                 lastChecked: new Date()
             });
@@ -147,13 +182,14 @@ export default function NodeStatusPage() {
                 nodeInfo: null,
                 latestBlock: null,
                 syncStatus: null,
+                pvmHealth: null,
                 error: err.message || "Failed to connect to node",
                 lastChecked: new Date()
             });
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [getPvmUrl]);
 
     useEffect(() => {
         if (network) {
@@ -298,6 +334,22 @@ export default function NodeStatusPage() {
                                     </span>
                                 </div>
                             )}
+
+                            {/* PVM Version */}
+                            <div className="flex justify-between items-center py-3 border-b border-gray-700">
+                                <span className="text-gray-400">PVM Version</span>
+                                <span className={`font-mono text-sm ${status.pvmHealth ? "text-white" : "text-gray-500"}`}>
+                                    {status.pvmHealth?.version || "N/A"}
+                                </span>
+                            </div>
+
+                            {/* PVM Status */}
+                            <div className="flex justify-between items-center py-3 border-b border-gray-700">
+                                <span className="text-gray-400">PVM Status</span>
+                                <span className={`font-mono text-sm ${status.pvmHealth?.status === "healthy" ? "text-green-400" : "text-red-400"}`}>
+                                    {status.pvmHealth?.status || "Offline"}
+                                </span>
+                            </div>
 
                             {/* Moniker */}
                             {status.nodeInfo?.default_node_info?.moniker && (
