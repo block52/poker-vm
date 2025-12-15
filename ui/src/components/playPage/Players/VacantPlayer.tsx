@@ -142,6 +142,12 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             };
         }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
 
+        // Memoize slider value to avoid inline function recreation
+        const sliderValue = useMemo(() => {
+            const val = parseFloat(buyInAmount);
+            return isNaN(val) ? minBuyInNum : val;
+        }, [buyInAmount, minBuyInNum]);
+
         // Step 2: Handle buy-in confirmation and join
         const handleBuyInConfirm = useCallback(async () => {
             if (!tableId) {
@@ -411,13 +417,15 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                         </div>
                                         <input
                                             type="range"
-                                            value={(() => {
-                                                const val = parseFloat(buyInAmount);
-                                                return isNaN(val) ? minBuyInNum : val;
-                                            })()}
-                                            onChange={e => setBuyInAmount(parseFloat(e.target.value).toFixed(2))}
-                                            min={minBuyInNum}
-                                            max={maxBuyInNum}
+                                            value={sliderValue}
+                                            onChange={e => {
+                                                const val = parseFloat(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    setBuyInAmount(val.toFixed(2));
+                                                }
+                                            }}
+                                            min={minBuyInNum.toString()}
+                                            max={maxBuyInNum.toString()}
                                             step="0.01"
                                             className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                                             style={{
@@ -439,8 +447,8 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             border: `1px solid ${colors.ui.borderColor}`
                                         }}
                                         step="0.01"
-                                        min={minBuyInNum}
-                                        max={maxBuyInNum}
+                                        min={minBuyInNum.toString()}
+                                        max={maxBuyInNum.toString()}
                                     />
                                 </div>
                             )}
