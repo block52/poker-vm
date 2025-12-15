@@ -22,7 +22,7 @@ const TableList: React.FC = () => {
             await navigator.clipboard.writeText(text);
             // Could add a toast notification here in the future
         } catch (err) {
-            console.error('Failed to copy to clipboard:', err);
+            console.error("Failed to copy to clipboard:", err);
         }
     };
 
