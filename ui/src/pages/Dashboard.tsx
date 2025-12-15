@@ -1425,11 +1425,7 @@ const Dashboard: React.FC = () => {
 
                             {/* Right column: Table List (takes remaining space) */}
                             <div className="flex-1 min-w-0">
-                                <TableList
-                                    onJoinTable={(tableId) => {
-                                        navigate(`/table/${tableId}`);
-                                    }}
-                                />
+                                <TableList />
                             </div>
                         </div>
                     </div>

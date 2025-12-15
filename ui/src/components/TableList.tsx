@@ -3,15 +3,12 @@ import { useFindGames } from "../hooks/useFindGames";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
-interface TableListProps {
-    onJoinTable: (tableId: string, minBuyIn?: string, maxBuyIn?: string) => void;
-}
-
 /**
  * TableList - Displays available poker tables in a table format
  * Used on the landing page RHS
+ * Join buttons open tables in a new tab for better user experience
  */
-const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
+const TableList: React.FC = () => {
     const { games, isLoading, error, refetch } = useFindGames();
 
     // Button style using standard blue
@@ -184,13 +181,16 @@ const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
                                         </span>
                                     </td>
                                     <td className="px-4 py-4 text-center">
-                                        <button
-                                            onClick={() => onJoinTable(game.address, game.minBuyIn, game.maxBuyIn)}
-                                            className="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
+                                        <a
+                                            href={`/table/${game.address}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={`Join ${game.gameType || 'poker'} table with ${game.currentPlayers || 0} of ${game.maxPlayers || 9} players, blinds $${formatMicroAsUsdc(game.smallBlind || "0", 2)}/$${formatMicroAsUsdc(game.bigBlind || "0", 2)}`}
+                                            className="inline-block px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
                                             style={buttonStyle}
                                         >
                                             Join
-                                        </button>
+                                        </a>
                                     </td>
                                 </tr>
                             ))
