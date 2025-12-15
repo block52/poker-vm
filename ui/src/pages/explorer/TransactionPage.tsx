@@ -146,7 +146,7 @@ export default function TransactionPage() {
                                         background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
                                     }}
                                 >
-                                    ← Back to Address Lookup
+                                    Back to Address Lookup
                                 </button>
                             )}
                         </div>
