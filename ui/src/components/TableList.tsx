@@ -12,6 +12,8 @@ const TableList: React.FC = () => {
     const { games, isLoading, error, refetch } = useFindGames();
 
     // Use environment variables for club branding
+    // Defaults to poker.svg icon for table listings (appropriate for poker context)
+    // Clubs can override by setting VITE_CLUB_LOGO and VITE_CLUB_NAME in .env
     const clubLogo = import.meta.env.VITE_CLUB_LOGO || "/poker.svg";
     const clubName = import.meta.env.VITE_CLUB_NAME || "Texas Hodl";
 
