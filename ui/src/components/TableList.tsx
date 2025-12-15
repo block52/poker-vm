@@ -3,15 +3,12 @@ import { useFindGames } from "../hooks/useFindGames";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
-interface TableListProps {
-    // No props needed - Join button opens in new tab directly
-}
-
 /**
  * TableList - Displays available poker tables in a table format
  * Used on the landing page RHS
+ * Join buttons open tables in a new tab for better user experience
  */
-const TableList: React.FC<TableListProps> = () => {
+const TableList: React.FC = () => {
     const { games, isLoading, error, refetch } = useFindGames();
 
     // Button style using standard blue
@@ -188,6 +185,7 @@ const TableList: React.FC<TableListProps> = () => {
                                             href={`/table/${game.address}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
+                                            aria-label={`Join table ${game.address}`}
                                             className="inline-block px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
                                             style={buttonStyle}
                                         >
