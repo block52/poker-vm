@@ -247,7 +247,7 @@ const Deposit: React.FC = () => {
 
                     {/* Balances */}
                     <div className="space-y-3 mb-6">
-                        {balance && (
+                        {balance !== undefined && balance !== null && (
                             <div className="p-3 rounded-lg bg-gray-900 border border-gray-700 flex items-center justify-between">
                                 <span className="text-gray-400 text-sm">Web3 Wallet Balance</span>
                                 <span className="text-white font-semibold">${formatUSDCToSimpleDollars(balance)} USDC</span>
@@ -255,7 +255,7 @@ const Deposit: React.FC = () => {
                         )}
                         <div className="p-3 rounded-lg bg-gray-900 border border-gray-700 flex items-center justify-between">
                             <span className="text-gray-400 text-sm">Game Wallet Balance</span>
-                            <span className="text-white font-semibold">${formatUSDCToSimpleDollars(b52Balance || "0")} USDC</span>
+                            <span className="text-white font-semibold">${formatUSDCToSimpleDollars(b52Balance ?? "0")} USDC</span>
                         </div>
                     </div>
 
@@ -275,7 +275,7 @@ const Deposit: React.FC = () => {
                             />
                             <button
                                 onClick={() => {
-                                    if (balance && decimals) {
+                                    if (balance !== undefined && balance !== null && decimals) {
                                         setAmount(formatUSDCToSimpleDollars(balance));
                                     }
                                 }}
