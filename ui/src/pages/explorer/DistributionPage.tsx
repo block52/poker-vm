@@ -43,37 +43,48 @@ export default function DistributionPage() {
             // Process each game
             for (const game of games) {
                 try {
-                    // Fetch game state (contains deck)
-                    const gameStateResponse = await cosmosClient.getGameState(game.gameId);
-                    console.log(`🎮 Game ${game.gameId} raw response:`, gameStateResponse);
+                    // Fetch game info (contains gameState with communityCards)
+                    const gameResponse = await cosmosClient.getGame(game.gameId);
+                    console.log(`🎮 Game ${game.gameId} raw response:`, gameResponse);
 
-                    // Parse the game_state JSON string
-                    if (!gameStateResponse || !gameStateResponse.game_state) {
-                        console.warn(`⚠️ No game_state found for game ${game.gameId}`);
+                    // Parse the game JSON string
+                    if (!gameResponse || !gameResponse.game) {
+                        console.warn(`⚠️ No game found for ${game.gameId}`);
                         continue;
                     }
 
-                    const gameState = JSON.parse(gameStateResponse.game_state);
+                    const gameData = JSON.parse(gameResponse.game);
+                    const gameState = gameData?.gameState;
                     console.log(`🎮 Game ${game.gameId} parsed state:`, gameState);
-                    console.log("🃏 Deck field:", gameState?.deck);
 
-                    if (gameState && gameState.deck) {
-                        console.log(`✅ Found deck for game ${game.gameId}: ${gameState.deck.substring(0, 50)}...`);
-                        // Parse deck string
-                        const cards = parseDeck(gameState.deck);
+                    if (gameState) {
+                        // Count community cards (these are publicly visible dealt cards)
+                        const communityCards = gameState.communityCards || [];
+                        console.log(`🃏 Community cards for game ${game.gameId}:`, communityCards);
 
-                        // Count dealt cards (only cards before the "[" marker, if present)
-                        const dealtCards = getDealtCards(cards, gameState.deck);
-
-                        dealtCards.forEach(card => {
-                            if (cardCounts[card] !== undefined) {
+                        communityCards.forEach((card: string) => {
+                            // Skip masked cards (X) and validate card format
+                            if (card && card !== "X" && card.length === 2 && cardCounts[card] !== undefined) {
                                 cardCounts[card]++;
                                 totalCardsProcessed++;
                             }
                         });
+
+                        // Also count visible hole cards from previous actions (showdown)
+                        // Players' holeCards are masked as "X" unless at showdown
+                        const players = gameState.players || [];
+                        players.forEach((player: any) => {
+                            const holeCards = player.holeCards || [];
+                            holeCards.forEach((card: string) => {
+                                if (card && card !== "X" && card.length === 2 && cardCounts[card] !== undefined) {
+                                    cardCounts[card]++;
+                                    totalCardsProcessed++;
+                                }
+                            });
+                        });
                     }
                 } catch (error) {
-                    console.warn(`Failed to fetch game state for ${game.gameId}:`, error);
+                    console.warn(`Failed to fetch game for ${game.gameId}:`, error);
                 }
             }
 
@@ -106,27 +117,6 @@ export default function DistributionPage() {
         }
 
         return counts;
-    }
-
-    // Parse deck string into array of card mnemonics
-    function parseDeck(deckString: string): string[] {
-        // Remove brackets if present (e.g., "AS-KD-[QH]-JC" -> "AS-KD-QH-JC")
-        const cleanDeck = deckString.replace(/[[\]]/g, "");
-        return cleanDeck.split("-").filter(card => card.length === 2);
-    }
-
-    // Get only the dealt cards (before the "[" marker in deck string)
-    function getDealtCards(cards: string[], deckString: string): string[] {
-        // If deck has "[" marker, only count cards before it
-        const bracketIndex = deckString.indexOf("[");
-        if (bracketIndex !== -1) {
-            // Count number of cards before "["
-            const beforeBracket = deckString.substring(0, bracketIndex);
-            const dealtCount = beforeBracket.split("-").filter(c => c.length === 2).length;
-            return cards.slice(0, dealtCount);
-        }
-        // Otherwise, count all cards (or you could count only hole cards + community cards dealt)
-        return cards;
     }
 
     // Prepare data for Chart.js
