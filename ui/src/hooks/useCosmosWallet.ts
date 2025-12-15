@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, getSigningClient } from "../utils/cosmos/client";
-import { getCosmosMnemonic, setCosmosMnemonic } from "../utils/cosmos/storage";
+import { getCosmosMnemonic, setCosmosMnemonic, setCosmosAddress } from "../utils/cosmos/storage";
 import { getAddressFromMnemonic } from "@block52/poker-vm-sdk";
 import { useNetwork } from "../context/NetworkContext";
 
@@ -47,6 +47,8 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
             try {
                 const addr = await getAddressFromMnemonic(mnemonic, "b52");
                 setAddress(addr);
+                // Also persist to localStorage for other components that read it directly
+                setCosmosAddress(addr);
             } catch (err) {
                 console.error("Error loading Cosmos address:", err);
                 setAddress(null);
@@ -95,8 +97,9 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
             // Get address from mnemonic
             const addr = await getAddressFromMnemonic(mnemonic, "b52");
 
-            // Store mnemonic
+            // Store mnemonic and address
             setCosmosMnemonic(mnemonic);
+            setCosmosAddress(addr);
 
             // Update state
             setAddress(addr);

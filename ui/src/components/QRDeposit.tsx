@@ -5,7 +5,8 @@ import { ethers } from "ethers";
 import axios from "axios";
 import { DEPOSIT_ADDRESS, PROXY_URL, TOKEN_ADDRESS } from "../config/constants";
 import useUserWallet from "../hooks/useUserWallet";
-import { formatBalance } from "../utils/numberUtils"; // Import formatBalance utility function
+import { formatBalance } from "../utils/numberUtils";
+import { USDC_ABI } from "../constants/currency";
 import { DepositSession, EtherscanTransaction, TransactionStatus } from "./types";
 import spinner from "../assets/spinning-circles.svg";
 import { v4 as uuidv4 } from "uuid";
@@ -16,13 +17,6 @@ const RPC_URL = import.meta.env.VITE_MAINNET_RPC_URL || "https://eth.llamarpc.co
 const BITCOIN_PAYMENTS = import.meta.env.VITE_BTCPAY_SERVER_URL;
 const basic_auth = import.meta.env.VITE_BTCPAY_BASIC_AUTH;
 const CLUB_NAME = import.meta.env.VITE_CLUB_NAME || "Block 52";
-
-// Add USDC contract ABI (just the transfer method)
-const USDC_ABI = [
-    "function transfer(address to, uint256 amount) returns (bool)",
-    "function approve(address spender, uint256 amount) returns (bool)",
-    "function balanceOf(address account) view returns (uint256)"
-];
 
 // Add hexagon pattern SVG background
 const HexagonPattern = () => {

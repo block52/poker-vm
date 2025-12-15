@@ -9,6 +9,14 @@
  * Convert to number only for display purposes.
  */
 
+/** USDC ERC20 contract ABI (minimal interface for common operations) */
+export const USDC_ABI = [
+    "function transfer(address to, uint256 amount) returns (bool)",
+    "function approve(address spender, uint256 amount) returns (bool)",
+    "function balanceOf(address account) view returns (uint256)",
+    "function allowance(address owner, address spender) view returns (uint256)"
+];
+
 /** Number of micro-units per 1 USDC (10^6) */
 export const USDC_DECIMALS = 6;
 
