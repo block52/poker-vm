@@ -17,6 +17,7 @@ import WithdrawalModal from "../components/WithdrawalModal";
 import USDCDepositModal from "../components/USDCDepositModal";
 import TableList from "../components/TableList";
 import WalletPanel from "../components/WalletPanel";
+import TransactionPanel from "../components/TransactionPanel";
 
 // Game wallet and SDK imports
 // ...existing code...
@@ -1259,8 +1260,8 @@ const Dashboard: React.FC = () => {
                     {/* Two-column layout: Wallet (fixed width) on left, Tables (flex) on right */}
                     <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 z-10 mt-8 sm:mt-12 lg:mt-16">
                         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                            {/* Left column: Wallet (fixed width) */}
-                            <div className="w-full lg:w-[400px] flex-shrink-0">
+                            {/* Left column: Wallet and Transactions (fixed width) */}
+                            <div className="w-full lg:w-[400px] flex-shrink-0 space-y-4">
                                 <WalletPanel
                                     onDeposit={handleDepositClick}
                                     onWithdraw={handleWithdrawClick}
@@ -1268,6 +1269,7 @@ const Dashboard: React.FC = () => {
                                     onCreateWallet={() => setShowCosmosImportModal(true)}
                                     onImportWallet={() => setShowCosmosImportModal(true)}
                                 />
+                                <TransactionPanel />
                             </div>
 
                             {/* Right column: Table List (takes remaining space) */}
