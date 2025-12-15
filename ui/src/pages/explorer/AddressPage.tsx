@@ -302,10 +302,16 @@ export default function AddressPage() {
                                     <p className="text-gray-400 text-center py-8">No transactions found for this address</p>
                                 ) : (
                                     <div className="space-y-3">
-                                        {transactions.map((tx: any, index) => (
+                                        {transactions.map((tx: any, index) => {
+                                            const currentAddress = urlAddress || address;
+                                            return (
                                             <div
                                                 key={index}
-                                                onClick={() => navigate(`/explorer/tx/${tx.txhash}`)}
+                                                onClick={() =>
+                                                    navigate(`/explorer/tx/${tx.txhash}`, {
+                                                        state: { fromAddress: currentAddress }
+                                                    })
+                                                }
                                                 className="p-4 rounded-lg cursor-pointer hover:opacity-80 transition-all"
                                                 style={{
                                                     backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5),
@@ -339,7 +345,8 @@ export default function AddressPage() {
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
