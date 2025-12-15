@@ -209,21 +209,21 @@ const WalletPanel: React.FC<WalletPanelProps> = ({
                 <div className="flex gap-2">
                     <button
                         onClick={onDeposit}
-                        className="flex-1 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90"
-                        style={buttonStyle(colors.accent.success)}
+                        className="flex-1 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90 hover:scale-105"
+                        style={buttonStyle(colors.brand.primary)}
                     >
                         Deposit
                     </button>
                     <button
                         onClick={onWithdraw}
-                        className="flex-1 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90"
-                        style={buttonStyle(colors.accent.withdraw)}
+                        className="flex-1 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90 hover:scale-105"
+                        style={buttonStyle(colors.brand.primary)}
                     >
                         Withdraw
                     </button>
                     <button
                         onClick={onTransfer}
-                        className="flex-1 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90"
+                        className="flex-1 py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90 hover:scale-105"
                         style={buttonStyle(colors.brand.primary)}
                     >
                         Transfer

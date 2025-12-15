@@ -52,7 +52,7 @@ const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () =
         () => ({
             background: disabled
                 ? `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 0.5)} 0%, ${hexToRgba(colors.ui.bgDark, 0.3)} 100%)`
-                : `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)`
+                : `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
         }),
         [disabled]
     );
@@ -83,7 +83,7 @@ const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () =
 const WithdrawButton = React.memo(({ onClick }: { onClick: () => void }) => {
     const buttonStyle = useMemo(
         () => ({
-            background: `linear-gradient(135deg, ${colors.accent.withdraw} 0%, ${hexToRgba(colors.accent.withdraw, 0.8)} 100%)`
+            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
         }),
         []
     );
