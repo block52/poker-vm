@@ -1092,7 +1092,7 @@ const Dashboard: React.FC = () => {
                                                         ? "text-white"
                                                         : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                                 }`}
-                                                style={transferTokenType === "stake" ? { backgroundColor: colors.accent.success } : {}}
+                                                style={transferTokenType === "stake" ? { backgroundColor: colors.brand.primary } : {}}
                                             >
                                                 STAKE
                                             </button>
@@ -1104,7 +1104,7 @@ const Dashboard: React.FC = () => {
                                         className="p-3 rounded-lg"
                                         style={{
                                             backgroundColor: hexToRgba(colors.ui.bgMedium, 0.6),
-                                            border: `1px solid ${hexToRgba(transferTokenType === "usdc" ? colors.brand.primary : colors.accent.success, 0.3)}`
+                                            border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
                                         }}
                                     >
                                         <div className="flex justify-between items-center">
@@ -1159,22 +1159,6 @@ const Dashboard: React.FC = () => {
                                             onChange={e => setTransferAmount(e.target.value)}
                                             className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                         />
-                                        <button
-                                            onClick={() => {
-                                                if (transferTokenType === "stake" && transferRecipient) {
-                                                    // For STAKE, limit to remaining allowance
-                                                    const balance = parseFloat(getTransferTokenBalance());
-                                                    const remaining = getRemainingStakeAllowance(transferRecipient);
-                                                    setTransferAmount(Math.min(balance, remaining).toString());
-                                                } else {
-                                                    setTransferAmount(getTransferTokenBalance());
-                                                }
-                                            }}
-                                            className="text-xs mt-1 underline transition duration-300 hover:opacity-80"
-                                            style={{ color: colors.brand.primary }}
-                                        >
-                                            {transferTokenType === "stake" ? "Use Max (rate limited)" : "Use Max"}
-                                        </button>
                                     </div>
                                     {transferError && <p className="text-red-500 text-sm">{transferError}</p>}
                                     <div className="flex flex-col space-y-3">
@@ -1182,7 +1166,7 @@ const Dashboard: React.FC = () => {
                                             onClick={handleCosmosTransfer}
                                             disabled={isTransferring}
                                             className="w-full px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90 disabled:opacity-50"
-                                            style={{ backgroundColor: transferTokenType === "usdc" ? colors.brand.primary : colors.accent.success }}
+                                            style={{ backgroundColor: colors.brand.primary }}
                                         >
                                             {isTransferring ? "Sending..." : `Send ${transferTokenType.toUpperCase()}`}
                                         </button>

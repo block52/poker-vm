@@ -393,8 +393,8 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                                 className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{
                                     background: isDepositing 
-                                        ? hexToRgba(colors.accent.success, 0.5)
-                                        : `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)`
+                                        ? hexToRgba(colors.brand.primary, 0.5)
+                                        : `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
                                 }}
                             >
                                 {isDepositing ? "Depositing..." : "Deposit"}
