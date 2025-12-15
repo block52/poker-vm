@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
@@ -11,19 +11,21 @@ export default function TransactionPage() {
     // Check if hash is provided via URL params (for /explorer/tx/:hash route)
     const { hash: urlHash } = useParams<{ hash: string }>();
     const { currentNetwork } = useNetwork();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const [txHash, setTxHash] = useState(urlHash || "");
+    // Get the previous address from location state (passed from AddressPage)
+    const previousAddress = location.state?.fromAddress;
+
     const [transaction, setTransaction] = useState<CosmosTransaction | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showEventExplanation, setShowEventExplanation] = useState(false);
 
     const handleSearch = useCallback(
-        async (hashToSearch?: string) => {
-            const searchHash = hashToSearch || txHash;
-
-            if (!searchHash.trim()) {
-                setError("Please enter a transaction hash");
+        async (hashToSearch: string) => {
+            if (!hashToSearch.trim()) {
+                setError("No transaction hash provided");
                 return;
             }
 
@@ -36,7 +38,7 @@ export default function TransactionPage() {
                     throw new Error("Cosmos client not initialized. Please check your wallet connection.");
                 }
 
-                const tx = await cosmosClient.getTx(searchHash.trim());
+                const tx = await cosmosClient.getTx(hashToSearch.trim());
 
                 console.log("Raw transaction response:", tx);
 
@@ -63,14 +65,10 @@ export default function TransactionPage() {
                 setLoading(false);
             }
         },
-        [txHash, currentNetwork]
+        [currentNetwork]
     );
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-            handleSearch();
-        }
-    };
+
 
     // Auto-search if hash is in URL
     useEffect(() => {
@@ -86,7 +84,7 @@ export default function TransactionPage() {
             const shortHash = urlHash.substring(0, 8);
             document.title = `Tx ${shortHash}... - Block52 Explorer`;
         } else {
-            document.title = "Transaction Search - Block52 Explorer";
+            document.title = "Transaction Details - Block52 Explorer";
         }
 
         // Cleanup: reset title when component unmounts
@@ -104,78 +102,12 @@ export default function TransactionPage() {
         []
     );
 
-    const inputStyle = useMemo(
-        () => ({
-            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.8),
-            border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
-        }),
-        []
-    );
-
-    const buttonStyle = useMemo(
-        () => ({
-            background: loading
-                ? `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 0.5)} 0%, ${hexToRgba(colors.ui.bgDark, 0.3)} 100%)`
-                : `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-        }),
-        [loading]
-    );
-
     return (
         <div className="min-h-screen flex flex-col items-center relative overflow-hidden p-6">
             <AnimatedBackground />
             <div className="w-full max-w-4xl relative z-10">
-                {/* Header Card */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <h1 className="text-4xl font-extrabold text-white mb-2">Transaction Search</h1>
-                    <p className="text-gray-300">Enter a transaction hash to view its details</p>
-                </div>
-
-                {/* Search Card */}
-                <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                    <div className="space-y-4">
-                        <input
-                            type="text"
-                            value={txHash}
-                            onChange={e => setTxHash(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            placeholder="Enter transaction hash (e.g., 6DC1920A33244C65505CEA60DD86961A89DB31689772B78420F493F99FC17682)"
-                            className="w-full p-3 rounded-lg backdrop-blur-sm text-white focus:outline-none transition-all duration-200 font-mono text-sm"
-                            style={inputStyle}
-                            onFocus={e => (e.target.style.border = `1px solid ${colors.brand.primary}`)}
-                            onBlur={e => (e.target.style.border = `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`)}
-                        />
-                        <button
-                            onClick={() => handleSearch()}
-                            disabled={loading}
-                            className={`w-full py-3 px-6 text-white font-bold rounded-lg transition duration-300 shadow-md ${
-                                loading ? "cursor-not-allowed opacity-50" : "transform hover:scale-105 hover:opacity-90"
-                            }`}
-                            style={buttonStyle}
-                        >
-                            {loading ? (
-                                <div className="flex items-center justify-center">
-                                    <svg
-                                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                    Searching...
-                                </div>
-                            ) : (
-                                "Search Transaction"
-                            )}
-                        </button>
-                    </div>
-                </div>
+                {/* Centered Title - Not in a box */}
+                <h1 className="text-4xl font-extrabold text-white mb-6 text-center">Transaction Details</h1>
 
                 {/* Error Display */}
                 {error && (
@@ -204,7 +136,20 @@ export default function TransactionPage() {
                 {/* Transaction Details */}
                 {transaction && transaction.tx_response && (
                     <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl" style={containerStyle}>
-                        <h2 className="text-2xl font-bold text-white mb-6">Transaction Details</h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white">Transaction Details</h2>
+                            {previousAddress && (
+                                <button
+                                    onClick={() => navigate(`/explorer/address/${previousAddress}`)}
+                                    className="px-4 py-2 rounded-lg text-white font-semibold transition-all hover:opacity-90"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                                    }}
+                                >
+                                    ← Back to Address Lookup
+                                </button>
+                            )}
+                        </div>
 
                         <div className="space-y-6">
                             {/* Transaction Hash */}

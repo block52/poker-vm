@@ -305,7 +305,11 @@ export default function AddressPage() {
                                         {transactions.map((tx: any, index) => (
                                             <div
                                                 key={index}
-                                                onClick={() => navigate(`/explorer/tx/${tx.txhash}`)}
+                                                onClick={() =>
+                                                    navigate(`/explorer/tx/${tx.txhash}`, {
+                                                        state: { fromAddress: urlAddress || address }
+                                                    })
+                                                }
                                                 className="p-4 rounded-lg cursor-pointer hover:opacity-80 transition-all"
                                                 style={{
                                                     backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5),
