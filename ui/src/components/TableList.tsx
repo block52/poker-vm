@@ -11,6 +11,12 @@ import { colors, hexToRgba } from "../utils/colorConfig";
 const TableList: React.FC = () => {
     const { games, isLoading, error, refetch } = useFindGames();
 
+    // Use environment variables for club branding
+    // Defaults to poker.svg icon for table listings (appropriate for poker context)
+    // Clubs can override by setting VITE_CLUB_LOGO and VITE_CLUB_NAME in .env
+    const clubLogo = import.meta.env.VITE_CLUB_LOGO || "/poker.svg";
+    const clubName = import.meta.env.VITE_CLUB_NAME || "Texas Hodl";
+
     // Button style using standard blue
     const buttonStyle = {
         background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
@@ -31,6 +37,29 @@ const TableList: React.FC = () => {
             <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
                 <div className="px-6 py-4 bg-gray-900 border-b border-gray-700 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-white">Available Tables</h2>
+                    <button
+                        onClick={refetch}
+                        disabled={isLoading}
+                        className="p-2 rounded-lg text-white transition-all hover:opacity-90 disabled:opacity-50"
+                        style={{
+                            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                        }}
+                        title="Refresh tables"
+                    >
+                        <svg
+                            className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                    </button>
                 </div>
                 <div className="flex items-center justify-center py-12">
                     <svg
@@ -55,8 +84,31 @@ const TableList: React.FC = () => {
     if (error) {
         return (
             <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-                <div className="px-6 py-4 bg-gray-900 border-b border-gray-700">
+                <div className="px-6 py-4 bg-gray-900 border-b border-gray-700 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-white">Available Tables</h2>
+                    <button
+                        onClick={refetch}
+                        disabled={isLoading}
+                        className="p-2 rounded-lg text-white transition-all hover:opacity-90 disabled:opacity-50"
+                        style={{
+                            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                        }}
+                        title="Refresh tables"
+                    >
+                        <svg
+                            className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                    </button>
                 </div>
                 <div className="text-center py-12">
                     <div className="text-red-400 mb-4">
@@ -85,8 +137,31 @@ const TableList: React.FC = () => {
     return (
         <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 bg-gray-900 border-b border-gray-700">
+            <div className="px-6 py-4 bg-gray-900 border-b border-gray-700 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white">Available Tables</h2>
+                <button
+                    onClick={refetch}
+                    disabled={isLoading}
+                    className="p-2 rounded-lg text-white transition-all hover:opacity-90 disabled:opacity-50"
+                    style={{
+                        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                    }}
+                    title="Refresh tables"
+                >
+                    <svg
+                        className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                    </svg>
+                </button>
             </div>
 
             {/* Table */}
@@ -94,9 +169,9 @@ const TableList: React.FC = () => {
                 <table className="w-full">
                     <thead className="bg-gray-900">
                         <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Club</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Table ID</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Stakes</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Club</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Table ID</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Stakes</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Type</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Players</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Buy-In</th>
@@ -133,17 +208,17 @@ const TableList: React.FC = () => {
                                     className="hover:bg-gray-700/50 transition-colors"
                                 >
                                     <td className="px-4 py-4">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center justify-center gap-2">
                                             <img 
-                                                src="/block52.png" 
-                                                alt="Texas Hodl" 
+                                                src={clubLogo} 
+                                                alt={clubName} 
                                                 className="w-6 h-6 object-contain"
                                             />
-                                            <span className="text-white">Texas Hodl</span>
+                                            <span className="text-white">{clubName}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center justify-center gap-2">
                                             <span className="text-gray-300 font-mono text-sm">
                                                 {game.address ? `${game.address.slice(0, 4)}...${game.address.slice(-4)}` : "-"}
                                             </span>
@@ -160,7 +235,7 @@ const TableList: React.FC = () => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 text-center">
                                         <span className="text-white font-bold">
                                             ${formatMicroAsUsdc(game.smallBlind || "0", 2)} / ${formatMicroAsUsdc(game.bigBlind || "0", 2)}
                                         </span>
