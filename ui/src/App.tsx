@@ -9,6 +9,7 @@ import { base } from "@reown/appkit/networks";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./pages/Dashboard";
 import QRDeposit from "./components/QRDeposit";
+import BuyPage from "./pages/BuyPage";
 import CosmosWalletPage from "./components/CosmosWalletPage";
 import BlocksPage from "./pages/explorer/BlocksPage";
 import BlockDetailPage from "./pages/explorer/BlockDetailPage";
@@ -32,6 +33,7 @@ import { generateCSSVariables } from "./utils/colorConfig";
 import { useEffect } from "react";
 import FaviconSetter from "./components/FaviconSetter";
 import { GlobalHeader } from "./components/GlobalHeader";
+import { ThirdwebProvider } from "thirdweb/react";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +76,7 @@ function AppContent() {
                 <Route path="/table/admin" element={<TableAdminPage />} /> {/* Legacy - keep for backwards compat */}
                 <Route path="/deposit" element={<Deposit />} />
                 <Route path="/qr-deposit" element={<QRDeposit />} />
+                <Route path="/buy" element={<BuyPage />} />
                 <Route path="/wallet" element={<CosmosWalletPage />} />
                 {/* User-facing routes */}
                 <Route path="/bridge/withdrawals" element={<WithdrawalDashboard />} />
@@ -124,13 +127,15 @@ function App() {
     return (
         // Router should be the outermost wrapper
         <Router>
-            <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-                    <GameStateProvider>
-                        <AppContent />
-                    </GameStateProvider>
-                </WagmiProvider>
-            </QueryClientProvider>
+            <ThirdwebProvider>
+                <QueryClientProvider client={queryClient}>
+                    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+                        <GameStateProvider>
+                            <AppContent />
+                        </GameStateProvider>
+                    </WagmiProvider>
+                </QueryClientProvider>
+            </ThirdwebProvider>
         </Router>
     );
 }

@@ -44,7 +44,7 @@
  */
 
 import { useEffect, useState, useMemo, useCallback, memo } from "react";
-import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType } from "@block52/poker-vm-sdk";
 // Position arrays now come from useTableLayout hook
 // // Position arrays now come from useTableLayout hook
 // import { playerPosition, dealerPosition, vacantPlayerPosition } from "../../utils/PositionArray";
