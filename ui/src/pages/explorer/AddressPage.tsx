@@ -189,14 +189,14 @@ export default function AddressPage() {
                 {/* Search Card */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                     <div className="space-y-4">
-                        <div className="relative">
+                        <div className="flex gap-3">
                             <input
                                 type="text"
                                 value={address}
                                 onChange={e => setAddress(e.target.value)}
                                 onKeyDown={handleKeyPress}
                                 placeholder="Enter Block 52 address (e.g., b521234...)"
-                                className="w-full px-4 py-3 pr-12 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
+                                className="flex-1 px-4 py-3 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
                                 style={{
                                     ...inputStyle,
                                     boxShadow: `0 0 20px ${hexToRgba(colors.brand.primary, 0.3)}`
@@ -205,7 +205,7 @@ export default function AddressPage() {
                             {address && (
                                 <button
                                     onClick={() => copyToClipboard(address)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-all hover:opacity-90"
+                                    className="px-4 py-3 rounded-lg text-white font-medium transition-all hover:opacity-90"
                                     style={{
                                         backgroundColor: hexToRgba(colors.brand.primary, 0.5),
                                         border: `1px solid ${colors.brand.primary}`
