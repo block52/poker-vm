@@ -18,7 +18,7 @@ import { useAllInEquity } from "../../../hooks/useAllInEquity";
 const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
     ({ left, top, index, currentIndex: _currentIndex, color, status: _status, uiPosition }) => {
         const { id } = useParams<{ id: string }>();
-        const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
+        const { playerData, stackValue, isFolded, isAllIn, isSittingOut, isBusted, holeCards, round } = usePlayerData(index);
         const { winnerInfo } = useWinnerInfo();
 
         // Debug logging for Player component stack value
@@ -34,13 +34,14 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
                             status: playerData?.status,
                             isFolded: isFolded,
                             isAllIn: isAllIn,
-                            isSittingOut: isSittingOut
-                        },
-                        null,
-                        2
-                    )
+                        isSittingOut: isSittingOut,
+                        isBusted: isBusted
+                    },
+                    null,
+                    2
+                )
             );
-        }, [playerData, stackValue, index, isFolded, isAllIn, isSittingOut]);
+        }, [playerData, stackValue, index, isFolded, isAllIn, isSittingOut, isBusted]);
         const { extendTime, canExtend, isCurrentUserTurn } = usePlayerTimer(id, index);
 
         const { dealerSeat } = useDealerPosition();
@@ -97,8 +98,8 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
         // 2) memoize winner check
         const isWinner = useMemo(() => !!winnerInfo?.some((w: any) => w.seat === index), [winnerInfo, index]);
 
-        // 3) dim non-winners when someone has won
-        const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : isSittingOut ? "opacity-50" : isFolded ? "opacity-60" : "opacity-100";
+        // 3) dim non-winners when someone has won, also dim busted players like sitting out
+        const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : (isSittingOut || isBusted) ? "opacity-50" : isFolded ? "opacity-60" : "opacity-100";
 
         // 4) memoize winner amount
         const winnerAmount = useMemo(() => {

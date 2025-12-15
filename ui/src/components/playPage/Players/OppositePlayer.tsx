@@ -71,7 +71,7 @@ type OppositePlayerProps = {
 };
 
 const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition, cardBackStyle }) => {
-    const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
+    const { playerData, stackValue, isFolded, isAllIn, isSittingOut, isBusted, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
     const { equities, shouldShow: shouldShowEquity } = useAllInEquity();
 
@@ -93,9 +93,10 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
             lastAction: playerData?.lastAction,
             isFolded: isFolded,
             isAllIn: isAllIn,
-            isSittingOut: isSittingOut
+            isSittingOut: isSittingOut,
+            isBusted: isBusted
         }, null, 2));
-    }, [playerData, stackValue, index, isFolded, isAllIn, isSittingOut]);
+    }, [playerData, stackValue, index, isFolded, isAllIn, isSittingOut, isBusted]);
     const { showingPlayers } = useShowingCardsByAddress();
     const { dealerSeat } = useDealerPosition();
 
@@ -117,8 +118,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
         return winnerInfo.some((winner: any) => winner.seat === index);
     }, [winnerInfo, index]);
 
-    // 2) dim non-winners when someone has won
-    const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : isSittingOut ? "opacity-50" : isFolded ? "opacity-60" : "opacity-100";
+    // 2) dim non-winners when someone has won, also dim busted players like sitting out
+    const opacityClass = hasWinner ? (isWinner ? "opacity-100" : "opacity-40") : (isSittingOut || isBusted) ? "opacity-50" : isFolded ? "opacity-60" : "opacity-100";
 
     // Get winner amount if this player is a winner
     const winnerAmount = React.useMemo(() => {
