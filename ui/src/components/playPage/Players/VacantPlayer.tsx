@@ -324,7 +324,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             }}
                         >
                             <h3 className="text-xl font-bold mb-4 text-center" style={{ color: "white" }}>
-                                Join at Seat {index}
+                                Join at Seat {index}?
                             </h3>
 
                             <div className="flex flex-col space-y-3">
