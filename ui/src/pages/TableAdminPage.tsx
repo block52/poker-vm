@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { GameType, CosmosClient, getDefaultCosmosConfig } from "@block52/poker-vm-sdk";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useCosmosWallet from "../hooks/useCosmosWallet";
 import { isValidPlayerAddress } from "../utils/addressUtils";
 import { useNewTable } from "../hooks/useNewTable";
@@ -8,6 +8,7 @@ import { useFindGames } from "../hooks/useFindGames";
 import { toast } from "react-toastify";
 import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
+import TableList from "../components/TableList";
 
 // Game creation fee in base units (1 usdc = 0.000001 USDC)
 // This matches GameCreationCost in pokerchain/x/poker/types/types.go
@@ -39,6 +40,7 @@ interface TableData {
 }
 
 export default function TableAdminPage() {
+    const navigate = useNavigate();
     const cosmosWallet = useCosmosWallet();
     const { createTable, isCreating, error: createError } = useNewTable();
     const { games: fetchedGames, isLoading, error: gamesError, refetch } = useFindGames();
@@ -509,90 +511,11 @@ export default function TableAdminPage() {
                 </div>
 
                 {/* Tables List */}
-                <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-                    <div className="px-6 py-4 bg-gray-900 border-b border-gray-700">
-                        <h2 className="text-xl font-bold text-white">Tables</h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-900">
-                                <tr>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Table ID</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Game Type</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Players</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Buy In</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Blinds</th>
-                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-400 tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-700">
-                                {tables.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
-                                            {isLoading ? "Loading tables..." : "No tables found. Create your first table!"}
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    tables.map(table => (
-                                        <tr key={table.gameId} className="hover:bg-gray-700/50 transition-colors">
-                                            <td className="px-6 py-4 text-center">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <span className="text-white font-mono text-xs break-all max-w-[200px]" title={table.gameId}>
-                                                        {table.gameId.substring(0, 16)}...
-                                                    </span>
-                                                    <button
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(table.gameId);
-                                                            toast.success("Table ID copied!");
-                                                        }}
-                                                        className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth="2"
-                                                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white capitalize">{table.gameType.replace("-", " ")}</span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white font-semibold">
-                                                    {playerCounts[table.gameId] ?? "-"}/{table.maxPlayers}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white font-mono text-sm">
-                                                    ${formatMicroAsUsdc(table.minBuyIn, 2)} - ${formatMicroAsUsdc(table.maxBuyIn, 2)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span className="text-white font-mono text-sm">
-                                                    ${formatMicroAsUsdc(table.smallBlind, 2)} / ${formatMicroAsUsdc(table.bigBlind, 2)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <Link
-                                                    to={`/table/${table.gameId}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
-                                                >
-                                                    Join Table
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <TableList
+                    onJoinTable={(tableId) => {
+                        navigate(`/table/${tableId}`);
+                    }}
+                />
 
                 {/* Info Box */}
                 <div className="mt-6 bg-blue-900/20 border border-blue-700 rounded-lg p-4">
