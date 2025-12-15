@@ -19,10 +19,14 @@ const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
         background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
     };
 
-    // Copy to clipboard utility
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        // Could add a toast notification here in the future
+    // Copy to clipboard utility with error handling
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            // Could add a toast notification here in the future
+        } catch (err) {
+            console.error('Failed to copy to clipboard:', err);
+        }
     };
 
     if (isLoading) {
@@ -148,10 +152,7 @@ const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
                                             </span>
                                             {game.address && (
                                                 <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        copyToClipboard(game.address);
-                                                    }}
+                                                    onClick={() => copyToClipboard(game.address)}
                                                     className="text-gray-400 hover:text-white transition-colors"
                                                     title="Copy full address"
                                                 >
@@ -184,10 +185,7 @@ const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
                                     </td>
                                     <td className="px-4 py-4 text-center">
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onJoinTable(game.address, game.minBuyIn, game.maxBuyIn);
-                                            }}
+                                            onClick={() => onJoinTable(game.address, game.minBuyIn, game.maxBuyIn)}
                                             className="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
                                             style={buttonStyle}
                                         >
