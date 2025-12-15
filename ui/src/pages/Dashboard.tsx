@@ -1164,7 +1164,7 @@ const Dashboard: React.FC = () => {
                                     <div className="flex flex-col space-y-3">
                                         <button
                                             onClick={handleCosmosTransfer}
-                                            disabled={isTransferring}
+                                            disabled={isTransferring || !transferRecipient || !transferAmount}
                                             className="w-full px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90 disabled:opacity-50"
                                             style={{ backgroundColor: colors.brand.primary }}
                                         >
