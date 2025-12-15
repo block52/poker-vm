@@ -73,7 +73,6 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const cosmosWallet = useCosmosWallet();
         const { currentNetwork } = useNetwork();
 
-        const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [showBuyInModal, setShowBuyInModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
@@ -94,11 +93,17 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const handleJoinClick = useCallback(() => {
             console.log("🪑 VacantPlayer - handleJoinClick called for seat:", index);
             if (!canJoinThisSeat) return;
-            setShowConfirmModal(true);
+            
+            // Initialize buy-in amount with minBuyIn for Cash games
+            const minBuyInDollars = formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0");
+            setBuyInAmount(minBuyInDollars);
+            
+            // Open buy-in modal directly (skip confirmation modal)
+            setShowBuyInModal(true);
             setJoinError(null);
             setJoinSuccess(false);
             setJoinResponse(null);
-        }, [canJoinThisSeat, index]);
+        }, [canJoinThisSeat, index, gameOptions?.minBuyIn]);
 
         const handleSeatClick = useCallback(() => {
             console.log("🪑 VacantPlayer - handleSeatClick called:", {
@@ -118,16 +123,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             }
         }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick, index, gameOptions]);
 
-        // Step 1: Confirm seat selection
-        const handleConfirmSeatYes = useCallback(() => {
-            // Initialize buy-in amount with minBuyIn for Cash games
-            const minBuyInDollars = formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0");
-            setBuyInAmount(minBuyInDollars);
 
-            // Close confirmation modal and open buy-in modal
-            setShowConfirmModal(false);
-            setShowBuyInModal(true);
-        }, [gameOptions?.minBuyIn]);
 
         // Detect if this is Sit & Go (fixed buy-in) or Cash game (variable buy-in)
         const isSitAndGo = useMemo(() => {
@@ -148,7 +144,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             return isNaN(val) ? minBuyInNum : val;
         }, [buyInAmount, minBuyInNum]);
 
-        // Step 2: Handle buy-in confirmation and join
+        // Handle buy-in confirmation and join
         const handleBuyInConfirm = useCallback(async () => {
             if (!tableId) {
                 setJoinError("Missing table ID");
@@ -323,52 +319,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                     </div>
                 )}
 
-                {/* Step 1: Simple confirmation modal - using portal to render at document body */}
-                {showConfirmModal && createPortal(
-                    <div className="fixed inset-0 z-50 flex items-center justify-center">
-                        {/* Backdrop */}
-                        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => !isJoining && setShowConfirmModal(false)} />
-
-                        {/* Modal */}
-                        <div
-                            className="relative p-6 rounded-xl w-96 shadow-2xl"
-                            style={{
-                                backgroundColor: colors.ui.bgDark,
-                                border: `1px solid ${colors.ui.borderColor}`
-                            }}
-                        >
-                            <h3 className="text-xl font-bold mb-4 text-center" style={{ color: "white" }}>
-                                Join at Seat {index}
-                            </h3>
-
-                            <div className="flex flex-col space-y-3">
-                                <button
-                                    onClick={handleConfirmSeatYes}
-                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 transform shadow-md"
-                                    style={{
-                                        background: colors.brand.primary,
-                                        color: "white"
-                                    }}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 shadow-inner"
-                                    style={{
-                                        backgroundColor: colors.ui.textSecondary,
-                                        color: "white"
-                                    }}
-                                >
-                                    No
-                                </button>
-                            </div>
-                        </div>
-                    </div>,
-                    document.body
-                )}
-
-                {/* Step 2: Sit & Go Buy-in modal - using portal to render at document body */}
+                {/* Buy-in modal - using portal to render at document body */}
                 {showBuyInModal && gameOptions && createPortal(
                     <div className="fixed inset-0 z-50 flex items-center justify-center">
                         {/* Backdrop */}
@@ -528,7 +479,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             Joining...
                                         </>
                                     ) : (
-                                        "Confirm & Join"
+                                        `Confirm & Join Seat ${index}`
                                     )}
                                 </button>
                                 <button
@@ -549,7 +500,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 )}
 
                 {/* Placeholder div for potential future loading animation */}
-                {joinSuccess && !showConfirmModal && (
+                {joinSuccess && (
                     <div id="loading-animation-placeholder" style={{ display: "none" }}>
                         {/* Future loading animation will go here */}
                     </div>
