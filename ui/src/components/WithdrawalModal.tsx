@@ -450,17 +450,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                                     style={inputStyle}
                                     disabled={isWithdrawing}
                                 />
-                                <div className="flex justify-between mt-1">
-                                    <p className="text-xs text-gray-500">Minimum: 0.01 USDC</p>
-                                    <button
-                                        onClick={() => setAmount(balanceInUSDC)}
-                                        className="text-xs underline hover:opacity-80"
-                                        style={{ color: colors.brand.primary }}
-                                        disabled={isWithdrawing}
-                                    >
-                                        Max
-                                    </button>
-                                </div>
+                                <p className="text-xs text-gray-500 mt-1">Minimum: 0.01 USDC</p>
                             </div>
                         )}
                     </>
