@@ -319,52 +319,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                     </div>
                 )}
 
-                {/* Step 1: Simple confirmation modal - using portal to render at document body */}
-                {showConfirmModal && createPortal(
-                    <div className="fixed inset-0 z-50 flex items-center justify-center">
-                        {/* Backdrop */}
-                        <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => !isJoining && setShowConfirmModal(false)} />
-
-                        {/* Modal */}
-                        <div
-                            className="relative p-6 rounded-xl w-96 shadow-2xl"
-                            style={{
-                                backgroundColor: colors.ui.bgDark,
-                                border: `1px solid ${colors.ui.borderColor}`
-                            }}
-                        >
-                            <h3 className="text-xl font-bold mb-4 text-center" style={{ color: "white" }}>
-                                Join at Seat {index}?
-                            </h3>
-
-                            <div className="flex flex-col space-y-3">
-                                <button
-                                    onClick={handleConfirmSeatYes}
-                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 transform shadow-md"
-                                    style={{
-                                        background: colors.brand.primary,
-                                        color: "white"
-                                    }}
-                                >
-                                    Yes
-                                </button>
-                                <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 shadow-inner"
-                                    style={{
-                                        backgroundColor: colors.ui.textSecondary,
-                                        color: "white"
-                                    }}
-                                >
-                                    No
-                                </button>
-                            </div>
-                        </div>
-                    </div>,
-                    document.body
-                )}
-
-                {/* Step 2: Sit & Go Buy-in modal - using portal to render at document body */}
+                {/* Buy-in modal - using portal to render at document body */}
                 {showBuyInModal && gameOptions && createPortal(
                     <div className="fixed inset-0 z-50 flex items-center justify-center">
                         {/* Backdrop */}

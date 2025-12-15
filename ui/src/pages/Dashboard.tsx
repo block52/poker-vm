@@ -206,6 +206,11 @@ const Dashboard: React.FC = () => {
     const [showCosmosTransferModal, setShowCosmosTransferModal] = useState(false);
     const [showWalletGeneratedNotification, setShowWalletGeneratedNotification] = useState(false);
     const [showNoStakeNotification, setShowNoStakeNotification] = useState(false);
+    const [showNewWalletModal, setShowNewWalletModal] = useState(false);
+    const [newWalletSeedPhrase, setNewWalletSeedPhrase] = useState("");
+    const [newWalletAddress, setNewWalletAddress] = useState("");
+    const [isCreatingWallet, setIsCreatingWallet] = useState(false);
+    const [seedPhraseCopied, setSeedPhraseCopied] = useState(false);
 
     // Check if user has STAKE for gas fees
     const hasStakeBalance = useMemo(() => {
@@ -448,6 +453,54 @@ const Dashboard: React.FC = () => {
     };
 
     // Removed: handleUpdateCosmosSeed - now handled on /wallet page
+
+    // Create new wallet handler - generates wallet and shows seed phrase
+    const handleCreateNewWallet = async () => {
+        try {
+            setIsCreatingWallet(true);
+            setSeedPhraseCopied(false);
+
+            // Generate new wallet
+            const walletInfo = await generateWalletSDK("b52", 24);
+
+            // Store the seed phrase and address for display
+            setNewWalletSeedPhrase(walletInfo.mnemonic);
+            setNewWalletAddress(walletInfo.address);
+
+            // Show the modal with seed phrase
+            setShowNewWalletModal(true);
+        } catch (err) {
+            console.error("Failed to generate new wallet:", err);
+        } finally {
+            setIsCreatingWallet(false);
+        }
+    };
+
+    // Confirm and save the new wallet
+    const handleConfirmNewWallet = async () => {
+        try {
+            // Import the generated seed phrase to save it
+            await cosmosWallet.importSeedPhrase(newWalletSeedPhrase);
+
+            // Close modal and reset state
+            setShowNewWalletModal(false);
+            setNewWalletSeedPhrase("");
+            setNewWalletAddress("");
+            setSeedPhraseCopied(false);
+
+            // Show success notification
+            setShowWalletGeneratedNotification(true);
+            setTimeout(() => setShowWalletGeneratedNotification(false), 10000);
+        } catch (err) {
+            console.error("Failed to save new wallet:", err);
+        }
+    };
+
+    // Copy seed phrase to clipboard
+    const handleCopySeedPhrase = () => {
+        navigator.clipboard.writeText(newWalletSeedPhrase);
+        setSeedPhraseCopied(true);
+    };
 
     const handleCosmosTransfer = async () => {
         try {
@@ -910,6 +963,104 @@ const Dashboard: React.FC = () => {
 
                     {/* Removed: Cosmos Update Seed Phrase Modal - now handled on /wallet page */}
 
+                    {/* New Wallet Created Modal - shows seed phrase */}
+                    {showNewWalletModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+                            <div
+                                className="p-6 rounded-xl w-[480px] shadow-2xl border"
+                                style={{ backgroundColor: colors.ui.bgDark, borderColor: hexToRgba(colors.brand.primary, 0.2) }}
+                            >
+                                <h3 className="text-xl font-bold text-white mb-2">New Wallet Created</h3>
+                                <p className="text-gray-400 text-sm mb-4">
+                                    Write down your seed phrase and store it in a safe place. You will need it to recover your wallet.
+                                </p>
+
+                                {/* Warning */}
+                                <div
+                                    className="p-3 rounded-lg mb-4 flex items-start gap-3"
+                                    style={{ backgroundColor: hexToRgba(colors.accent.danger, 0.1), border: `1px solid ${hexToRgba(colors.accent.danger, 0.3)}` }}
+                                >
+                                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: colors.accent.danger }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <p className="text-sm" style={{ color: colors.accent.danger }}>
+                                        Never share your seed phrase with anyone. Anyone with this phrase can access your funds.
+                                    </p>
+                                </div>
+
+                                {/* Address */}
+                                <div className="mb-4">
+                                    <label className="block text-gray-400 text-sm mb-1">Wallet Address</label>
+                                    <div className="p-3 rounded-lg bg-gray-800 border border-gray-700 font-mono text-sm text-white break-all">
+                                        {newWalletAddress}
+                                    </div>
+                                </div>
+
+                                {/* Seed Phrase */}
+                                <div className="mb-4">
+                                    <label className="block text-gray-400 text-sm mb-1">Seed Phrase (24 words)</label>
+                                    <div className="p-3 rounded-lg bg-gray-800 border border-gray-700 font-mono text-sm text-white">
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {newWalletSeedPhrase.split(" ").map((word, index) => (
+                                                <div key={index} className="flex items-center gap-1">
+                                                    <span className="text-gray-500 text-xs w-5">{index + 1}.</span>
+                                                    <span>{word}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Copy Button */}
+                                <button
+                                    onClick={handleCopySeedPhrase}
+                                    className="w-full py-2 mb-4 rounded-lg text-white font-semibold transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                                    style={{ backgroundColor: seedPhraseCopied ? colors.accent.success : colors.ui.bgMedium, border: `1px solid ${colors.ui.borderColor}` }}
+                                >
+                                    {seedPhraseCopied ? (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                            Copy Seed Phrase
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Actions */}
+                                <div className="flex justify-end space-x-3">
+                                    <button
+                                        onClick={() => {
+                                            setShowNewWalletModal(false);
+                                            setNewWalletSeedPhrase("");
+                                            setNewWalletAddress("");
+                                            setSeedPhraseCopied(false);
+                                        }}
+                                        className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleConfirmNewWallet}
+                                        disabled={!seedPhraseCopied}
+                                        className="px-4 py-2 text-sm text-white rounded-lg transition duration-300 shadow-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style={{ backgroundColor: colors.accent.success }}
+                                        title={!seedPhraseCopied ? "Please copy your seed phrase first" : ""}
+                                    >
+                                        I've Saved My Seed Phrase
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Cosmos Transfer Modal */}
                     {showCosmosTransferModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
@@ -1266,7 +1417,7 @@ const Dashboard: React.FC = () => {
                                     onDeposit={handleDepositClick}
                                     onWithdraw={handleWithdrawClick}
                                     onTransfer={() => setShowCosmosTransferModal(true)}
-                                    onCreateWallet={() => setShowCosmosImportModal(true)}
+                                    onCreateWallet={handleCreateNewWallet}
                                     onImportWallet={() => setShowCosmosImportModal(true)}
                                 />
                                 <TransactionPanel />
