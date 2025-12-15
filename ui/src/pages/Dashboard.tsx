@@ -1260,7 +1260,7 @@ const Dashboard: React.FC = () => {
                     <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 z-10 mt-8 sm:mt-12 lg:mt-16">
                         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                             {/* Left column: Wallet (fixed width) */}
-                            <div className="w-full lg:w-[340px] flex-shrink-0">
+                            <div className="w-full lg:w-[400px] flex-shrink-0">
                                 <WalletPanel
                                     onDeposit={handleDepositClick}
                                     onWithdraw={handleWithdrawClick}
