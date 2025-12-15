@@ -836,7 +836,7 @@ const Dashboard: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white hover:opacity-90 transition-colors"
                                     >
                                         {showPassword ? (
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -943,7 +943,7 @@ const Dashboard: React.FC = () => {
                                                 setCosmosSeedPhrase("");
                                                 setCosmosImportError("");
                                             }}
-                                            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 hover:opacity-90 text-white rounded-lg transition duration-300 shadow-inner"
                                         >
                                             Cancel
                                         </button>
@@ -1043,7 +1043,7 @@ const Dashboard: React.FC = () => {
                                             setNewWalletAddress("");
                                             setSeedPhraseCopied(false);
                                         }}
-                                        className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300"
+                                        className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 hover:opacity-90 text-white rounded-lg transition duration-300"
                                     >
                                         Cancel
                                     </button>
@@ -1353,7 +1353,7 @@ const Dashboard: React.FC = () => {
                                                 setShowCreateGameModal(false);
                                                 setCreateGameError("");
                                             }}
-                                            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-300 shadow-inner"
+                                            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 hover:opacity-90 text-white rounded-lg transition duration-300 shadow-inner"
                                         >
                                             Cancel
                                         </button>

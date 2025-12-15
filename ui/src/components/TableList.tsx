@@ -225,7 +225,7 @@ const TableList: React.FC = () => {
                                             {game.address && (
                                                 <button
                                                     onClick={() => copyToClipboard(game.address)}
-                                                    className="text-gray-400 hover:text-white transition-colors"
+                                                    className="text-gray-400 hover:text-white hover:opacity-90 transition-colors"
                                                     title="Copy full address"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

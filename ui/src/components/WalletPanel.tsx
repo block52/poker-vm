@@ -104,7 +104,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({
                     {!hasStakeBalance && (
                         <button
                             onClick={() => navigate("/faucet")}
-                            className="p-2 rounded-lg transition-all hover:bg-gray-700"
+                            className="p-2 rounded-lg transition-all hover:bg-gray-700 hover:opacity-90"
                             title="Get free STAKE for gas fees"
                         >
                             <svg
@@ -125,7 +125,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({
                     {/* Settings Button */}
                     <button
                         onClick={() => navigate("/wallet")}
-                        className="p-2 rounded-lg transition-all hover:bg-gray-700"
+                        className="p-2 rounded-lg transition-all hover:bg-gray-700 hover:opacity-90"
                         title="Manage Wallet"
                     >
                         <svg
@@ -234,7 +234,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({
                 <div className="mt-4 pt-4 border-t border-gray-700">
                     <button
                         onClick={() => navigate("/deposit")}
-                        className="w-full text-center text-sm transition-all hover:opacity-80 flex items-center justify-center gap-2"
+                        className="w-full text-center text-sm transition-all hover:opacity-90 flex items-center justify-center gap-2"
                         style={{ color: colors.brand.primary }}
                     >
                         <span>Bridge from Base Chain</span>
