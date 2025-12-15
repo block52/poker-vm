@@ -581,7 +581,7 @@ export default function TableAdminPage() {
                                                     to={`/table/${table.gameId}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
+                                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors inline-block"
                                                 >
                                                     Join Table
                                                 </Link>
