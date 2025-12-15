@@ -167,8 +167,15 @@ export default function AddressPage() {
     };
 
     const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        alert("Copied to clipboard!");
+        navigator.clipboard
+            .writeText(text)
+            .then(() => {
+                alert("Copied to clipboard!");
+            })
+            .catch(err => {
+                console.error("Failed to copy:", err);
+                alert("Failed to copy address");
+            });
     };
 
     return (
@@ -198,7 +205,7 @@ export default function AddressPage() {
                             {address && (
                                 <button
                                     onClick={() => copyToClipboard(address)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-all hover:opacity-80"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-all hover:opacity-90"
                                     style={{
                                         backgroundColor: hexToRgba(colors.brand.primary, 0.5),
                                         border: `1px solid ${colors.brand.primary}`
