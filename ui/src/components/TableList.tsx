@@ -185,7 +185,7 @@ const TableList: React.FC = () => {
                                             href={`/table/${game.address}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            aria-label={`Join table ${game.address}`}
+                                            aria-label={`Join ${game.gameType || 'poker'} table with ${game.currentPlayers || 0} of ${game.maxPlayers || 9} players, blinds $${formatMicroAsUsdc(game.smallBlind || "0", 2)}/$${formatMicroAsUsdc(game.bigBlind || "0", 2)}`}
                                             className="inline-block px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
                                             style={buttonStyle}
                                         >
