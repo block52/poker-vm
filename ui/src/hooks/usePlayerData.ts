@@ -85,6 +85,10 @@ export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
     return playerData?.status === PlayerStatus.SITTING_OUT;
   }, [playerData]);
   
+  const isBusted = React.useMemo((): boolean => {
+    return playerData?.status === PlayerStatus.BUSTED;
+  }, [playerData]);
+  
   const holeCards = React.useMemo((): string[] => {
     return playerData?.holeCards || [];
   }, [playerData]);
@@ -99,6 +103,7 @@ export const usePlayerData = (seatIndex?: number): PlayerDataReturn => {
     isFolded,
     isAllIn,
     isSittingOut,
+    isBusted,
     holeCards,
     round,
     isLoading,
