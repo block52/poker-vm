@@ -511,11 +511,7 @@ export default function TableAdminPage() {
                 </div>
 
                 {/* Tables List */}
-                <TableList
-                    onJoinTable={(tableId) => {
-                        navigate(`/table/${tableId}`);
-                    }}
-                />
+                <TableList />
 
                 {/* Info Box */}
                 <div className="mt-6 bg-blue-900/20 border border-blue-700 rounded-lg p-4">

@@ -4,14 +4,14 @@ import { formatMicroAsUsdc } from "../constants/currency";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
 interface TableListProps {
-    onJoinTable: (tableId: string, minBuyIn?: string, maxBuyIn?: string) => void;
+    // No props needed - Join button opens in new tab directly
 }
 
 /**
  * TableList - Displays available poker tables in a table format
  * Used on the landing page RHS
  */
-const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
+const TableList: React.FC<TableListProps> = () => {
     const { games, isLoading, error, refetch } = useFindGames();
 
     // Button style using standard blue
@@ -184,13 +184,15 @@ const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
                                         </span>
                                     </td>
                                     <td className="px-4 py-4 text-center">
-                                        <button
-                                            onClick={() => onJoinTable(game.address, game.minBuyIn, game.maxBuyIn)}
-                                            className="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
+                                        <a
+                                            href={`/table/${game.address}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-block px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
                                             style={buttonStyle}
                                         >
                                             Join
-                                        </button>
+                                        </a>
                                     </td>
                                 </tr>
                             ))
