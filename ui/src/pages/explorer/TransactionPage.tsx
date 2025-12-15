@@ -25,7 +25,7 @@ export default function TransactionPage() {
     const handleSearch = useCallback(
         async (hashToSearch: string) => {
             if (!hashToSearch.trim()) {
-                setError("No transaction hash provided");
+                setError("Transaction hash is required");
                 return;
             }
 
