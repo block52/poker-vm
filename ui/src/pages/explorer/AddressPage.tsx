@@ -182,22 +182,36 @@ export default function AddressPage() {
                 {/* Search Card */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
                     <div className="space-y-4">
-                        <input
-                            type="text"
-                            value={address}
-                            onChange={e => setAddress(e.target.value)}
-                            onKeyDown={handleKeyPress}
-                            placeholder="Enter Block 52 address (e.g., b521234...)"
-                            className="w-full px-4 py-3 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
-                            style={{
-                                ...inputStyle,
-                                boxShadow: `0 0 20px ${hexToRgba(colors.brand.primary, 0.3)}`
-                            }}
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={address}
+                                onChange={e => setAddress(e.target.value)}
+                                onKeyDown={handleKeyPress}
+                                placeholder="Enter Block 52 address (e.g., b521234...)"
+                                className="w-full px-4 py-3 pr-12 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all"
+                                style={{
+                                    ...inputStyle,
+                                    boxShadow: `0 0 20px ${hexToRgba(colors.brand.primary, 0.3)}`
+                                }}
+                            />
+                            {address && (
+                                <button
+                                    onClick={() => copyToClipboard(address)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-all hover:opacity-80"
+                                    style={{
+                                        backgroundColor: hexToRgba(colors.brand.primary, 0.5),
+                                        border: `1px solid ${colors.brand.primary}`
+                                    }}
+                                >
+                                    Copy
+                                </button>
+                            )}
+                        </div>
                         <button
                             onClick={() => handleSearch()}
                             disabled={loading}
-                            className="w-full px-6 py-3 rounded-lg text-white font-bold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-6 py-3 rounded-lg text-white font-bold transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                             style={buttonStyle}
                         >
                             {loading ? "Searching..." : "Search Address"}
@@ -215,31 +229,11 @@ export default function AddressPage() {
                 {/* Results */}
                 {!loading && !error && (balances.length > 0 || transactions.length > 0) && (
                     <>
-                        {/* Address Display */}
-                        <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-400 text-sm mb-1">Address</p>
-                                    <p className="text-white font-mono text-lg break-all">{urlAddress || address}</p>
-                                </div>
-                                <button
-                                    onClick={() => copyToClipboard(urlAddress || address)}
-                                    className="px-4 py-2 rounded-lg transition-all"
-                                    style={{
-                                        backgroundColor: hexToRgba(colors.brand.primary, 0.2),
-                                        border: `1px solid ${colors.brand.primary}`
-                                    }}
-                                >
-                                    <span className="text-white">Copy</span>
-                                </button>
-                            </div>
-                        </div>
-
                         {/* Tabs */}
                         <div className="backdrop-blur-md p-2 rounded-xl shadow-2xl mb-6 flex gap-2" style={containerStyle}>
                             <button
                                 onClick={() => setActiveTab("balances")}
-                                className="flex-1 px-6 py-3 rounded-lg font-bold transition-all"
+                                className="flex-1 px-6 py-3 rounded-lg font-bold transition-all hover:opacity-90"
                                 style={{
                                     backgroundColor: activeTab === "balances" ? colors.brand.primary : "transparent",
                                     color: "white"
@@ -249,7 +243,7 @@ export default function AddressPage() {
                             </button>
                             <button
                                 onClick={() => setActiveTab("transactions")}
-                                className="flex-1 px-6 py-3 rounded-lg font-bold transition-all"
+                                className="flex-1 px-6 py-3 rounded-lg font-bold transition-all hover:opacity-90"
                                 style={{
                                     backgroundColor: activeTab === "transactions" ? colors.brand.primary : "transparent",
                                     color: "white"
