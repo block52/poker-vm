@@ -433,7 +433,7 @@ export const turnAnimationPosition = {
 };
 
 export const winAnimationPosition = {
-        two: [
+    two: [
         {
             left: "450px",
             top: "390px",
@@ -487,12 +487,12 @@ export const winAnimationPosition = {
             top: "69px"
         },
         {
-            left: "267px",
-            top: "-10px"
+            left: "300px",
+            top: "-40px"
         },
         {
-            left: "600px",
-            top: "-10px"
+            left: "630px",
+            top: "-40px"
         },
         {
             left: "960px",

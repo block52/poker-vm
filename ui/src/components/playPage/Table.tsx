@@ -1181,7 +1181,8 @@ const Table = React.memo(() => {
                                                     {!hasWinner && <MemoizedTurnAnimation index={seatNum - 1} />}
 
                                                     {/* winner ripple when hand is over and this seat won */}
-                                                    {isWinnerSeat && <WinAnimation index={seatNum - 1} />}
+                                                    {/* positionIndex = visual position, seatNum = logical seat for winner check */}
+                                                    {isWinnerSeat && <WinAnimation positionIndex={positionIndex} seatNumber={seatNum} />}
 
                                                     {componentToRender}
                                                 </div>

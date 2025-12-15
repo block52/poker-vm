@@ -153,7 +153,8 @@ export interface TurnAnimationProps {
 }
 
 export interface WinAnimationProps {
-    index: number;
+    positionIndex: number;  // Visual position index (0-8) for positioning
+    seatNumber: number;     // Logical seat number (1-9) for winner check
 }
 
 // Type for the return value of useGameProgress hook

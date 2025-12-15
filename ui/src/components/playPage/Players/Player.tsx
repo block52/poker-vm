@@ -142,31 +142,31 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
         const statusText = useMemo(() => {
             if (isWinner && winnerAmount) {
                 return (
-                    <span className="font-bold flex items-center justify-center w-full h-8 mt-[22px] gap-1 text-base" style={{ color: "white" }}>
+                    <span className="font-bold flex items-center justify-center w-full h-full gap-1 text-sm" style={{ color: "white" }}>
                         WINS: {winnerAmount}
                     </span>
                 );
             }
             if (isSittingOut) {
                 return (
-                    <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "#ff9800" }}>
+                    <span className="animate-progress delay-2000 flex items-center w-full h-full gap-2 justify-center text-xs" style={{ color: "#ff9800" }}>
                         SITTING OUT
                     </span>
                 );
             }
             if (isFolded) {
                 return (
-                    <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
+                    <span className="animate-progress delay-2000 flex items-center w-full h-full gap-2 justify-center text-xs" style={{ color: "white" }}>
                         FOLD
                     </span>
                 );
             }
             if (isAllIn) {
                 return (
-                    <span className="animate-progress delay-2000 flex flex-col items-center w-full mb-2 mt-auto gap-0 justify-center" style={{ color: "white" }}>
-                        <span>ALL IN</span>
+                    <span className="animate-progress delay-2000 flex flex-col items-center w-full h-full gap-0 justify-center" style={{ color: "white" }}>
+                        <span className="text-xs">ALL IN</span>
                         {playerEquity !== null && (
-                            <span className="text-yellow-400 font-bold text-sm">
+                            <span className="text-yellow-400 font-bold text-xs">
                                 {playerEquity.toFixed(1)}%
                             </span>
                         )}
