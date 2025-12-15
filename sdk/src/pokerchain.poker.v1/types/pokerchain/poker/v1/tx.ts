@@ -37,6 +37,14 @@ export interface MsgCreateGame {
   bigBlind: Long;
   timeout: Long;
   gameType: string;
+  /** Optional rake configuration */
+  rakeFreeThreshold: Long;
+  /** Percentage of pot taken as rake (0-100, e.g., 5 = 5%) */
+  rakePercentage: number;
+  /** Maximum rake amount per hand (in micro-units) */
+  rakeCap: Long;
+  /** Address that receives the rake (defaults to creator if empty) */
+  rakeOwner: string;
 }
 
 /** MsgCreateGameResponse defines the MsgCreateGameResponse message. */
@@ -114,10 +122,17 @@ export interface MsgBurnResponse {
 /**
  * MsgProcessDeposit defines the MsgProcessDeposit message.
  * Processes an Ethereum deposit by querying the bridge contract for the deposit index.
+ * The eth_block_height ensures deterministic replay - all validators query at the same block.
  */
 export interface MsgProcessDeposit {
   creator: string;
   depositIndex: Long;
+  /**
+   * Ethereum block height at which to query the deposit data.
+   * This ensures deterministic replay across all validators.
+   * If 0, the current block height will be fetched and stored.
+   */
+  ethBlockHeight: Long;
 }
 
 /** MsgProcessDepositResponse defines the MsgProcessDepositResponse message. */
@@ -125,6 +140,8 @@ export interface MsgProcessDepositResponse {
   recipient: string;
   amount: string;
   depositIndex: Long;
+  /** The Ethereum block height used to query the deposit data. */
+  ethBlockHeight: Long;
 }
 
 /**
@@ -164,6 +181,25 @@ export interface MsgSignWithdrawal {
 export interface MsgSignWithdrawalResponse {
   /** The generated Ethereum signature (65 bytes) */
   signature: Uint8Array;
+}
+
+/**
+ * MsgTopUp defines the MsgTopUp message.
+ * Allows a player to add chips to their stack when not in an active hand.
+ * Player must be in BUSTED, SITTING_OUT, or FOLDED status.
+ * Total chips after top-up cannot exceed max_buy_in.
+ */
+export interface MsgTopUp {
+  player: string;
+  gameId: string;
+  /** Amount of chips to add (in micro-units, 6 decimals) */
+  amount: Long;
+}
+
+/** MsgTopUpResponse defines the MsgTopUpResponse message. */
+export interface MsgTopUpResponse {
+  /** Player's new stack after top-up */
+  newStack: Long;
 }
 
 function createBaseMsgUpdateParams(): MsgUpdateParams {
@@ -298,6 +334,10 @@ function createBaseMsgCreateGame(): MsgCreateGame {
     bigBlind: Long.UZERO,
     timeout: Long.ZERO,
     gameType: "",
+    rakeFreeThreshold: Long.UZERO,
+    rakePercentage: 0,
+    rakeCap: Long.UZERO,
+    rakeOwner: "",
   };
 }
 
@@ -329,6 +369,18 @@ export const MsgCreateGame: MessageFns<MsgCreateGame> = {
     }
     if (message.gameType !== "") {
       writer.uint32(74).string(message.gameType);
+    }
+    if (!message.rakeFreeThreshold.equals(Long.UZERO)) {
+      writer.uint32(80).uint64(message.rakeFreeThreshold.toString());
+    }
+    if (message.rakePercentage !== 0) {
+      writer.uint32(88).uint32(message.rakePercentage);
+    }
+    if (!message.rakeCap.equals(Long.UZERO)) {
+      writer.uint32(96).uint64(message.rakeCap.toString());
+    }
+    if (message.rakeOwner !== "") {
+      writer.uint32(106).string(message.rakeOwner);
     }
     return writer;
   },
@@ -412,6 +464,38 @@ export const MsgCreateGame: MessageFns<MsgCreateGame> = {
           message.gameType = reader.string();
           continue;
         }
+        case 10: {
+          if (tag !== 80) {
+            break;
+          }
+
+          message.rakeFreeThreshold = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
+        case 11: {
+          if (tag !== 88) {
+            break;
+          }
+
+          message.rakePercentage = reader.uint32();
+          continue;
+        }
+        case 12: {
+          if (tag !== 96) {
+            break;
+          }
+
+          message.rakeCap = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
+        case 13: {
+          if (tag !== 106) {
+            break;
+          }
+
+          message.rakeOwner = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -432,6 +516,10 @@ export const MsgCreateGame: MessageFns<MsgCreateGame> = {
       bigBlind: isSet(object.bigBlind) ? Long.fromValue(object.bigBlind) : Long.UZERO,
       timeout: isSet(object.timeout) ? Long.fromValue(object.timeout) : Long.ZERO,
       gameType: isSet(object.gameType) ? globalThis.String(object.gameType) : "",
+      rakeFreeThreshold: isSet(object.rakeFreeThreshold) ? Long.fromValue(object.rakeFreeThreshold) : Long.UZERO,
+      rakePercentage: isSet(object.rakePercentage) ? globalThis.Number(object.rakePercentage) : 0,
+      rakeCap: isSet(object.rakeCap) ? Long.fromValue(object.rakeCap) : Long.UZERO,
+      rakeOwner: isSet(object.rakeOwner) ? globalThis.String(object.rakeOwner) : "",
     };
   },
 
@@ -464,6 +552,18 @@ export const MsgCreateGame: MessageFns<MsgCreateGame> = {
     if (message.gameType !== "") {
       obj.gameType = message.gameType;
     }
+    if (!message.rakeFreeThreshold.equals(Long.UZERO)) {
+      obj.rakeFreeThreshold = (message.rakeFreeThreshold || Long.UZERO).toString();
+    }
+    if (message.rakePercentage !== 0) {
+      obj.rakePercentage = Math.round(message.rakePercentage);
+    }
+    if (!message.rakeCap.equals(Long.UZERO)) {
+      obj.rakeCap = (message.rakeCap || Long.UZERO).toString();
+    }
+    if (message.rakeOwner !== "") {
+      obj.rakeOwner = message.rakeOwner;
+    }
     return obj;
   },
 
@@ -495,6 +595,14 @@ export const MsgCreateGame: MessageFns<MsgCreateGame> = {
       ? Long.fromValue(object.timeout)
       : Long.ZERO;
     message.gameType = object.gameType ?? "";
+    message.rakeFreeThreshold = (object.rakeFreeThreshold !== undefined && object.rakeFreeThreshold !== null)
+      ? Long.fromValue(object.rakeFreeThreshold)
+      : Long.UZERO;
+    message.rakePercentage = object.rakePercentage ?? 0;
+    message.rakeCap = (object.rakeCap !== undefined && object.rakeCap !== null)
+      ? Long.fromValue(object.rakeCap)
+      : Long.UZERO;
+    message.rakeOwner = object.rakeOwner ?? "";
     return message;
   },
 };
@@ -1393,7 +1501,7 @@ export const MsgBurnResponse: MessageFns<MsgBurnResponse> = {
 };
 
 function createBaseMsgProcessDeposit(): MsgProcessDeposit {
-  return { creator: "", depositIndex: Long.UZERO };
+  return { creator: "", depositIndex: Long.UZERO, ethBlockHeight: Long.UZERO };
 }
 
 export const MsgProcessDeposit: MessageFns<MsgProcessDeposit> = {
@@ -1403,6 +1511,9 @@ export const MsgProcessDeposit: MessageFns<MsgProcessDeposit> = {
     }
     if (!message.depositIndex.equals(Long.UZERO)) {
       writer.uint32(16).uint64(message.depositIndex.toString());
+    }
+    if (!message.ethBlockHeight.equals(Long.UZERO)) {
+      writer.uint32(24).uint64(message.ethBlockHeight.toString());
     }
     return writer;
   },
@@ -1430,6 +1541,14 @@ export const MsgProcessDeposit: MessageFns<MsgProcessDeposit> = {
           message.depositIndex = Long.fromString(reader.uint64().toString(), true);
           continue;
         }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.ethBlockHeight = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1443,6 +1562,7 @@ export const MsgProcessDeposit: MessageFns<MsgProcessDeposit> = {
     return {
       creator: isSet(object.creator) ? globalThis.String(object.creator) : "",
       depositIndex: isSet(object.depositIndex) ? Long.fromValue(object.depositIndex) : Long.UZERO,
+      ethBlockHeight: isSet(object.ethBlockHeight) ? Long.fromValue(object.ethBlockHeight) : Long.UZERO,
     };
   },
 
@@ -1453,6 +1573,9 @@ export const MsgProcessDeposit: MessageFns<MsgProcessDeposit> = {
     }
     if (!message.depositIndex.equals(Long.UZERO)) {
       obj.depositIndex = (message.depositIndex || Long.UZERO).toString();
+    }
+    if (!message.ethBlockHeight.equals(Long.UZERO)) {
+      obj.ethBlockHeight = (message.ethBlockHeight || Long.UZERO).toString();
     }
     return obj;
   },
@@ -1466,12 +1589,15 @@ export const MsgProcessDeposit: MessageFns<MsgProcessDeposit> = {
     message.depositIndex = (object.depositIndex !== undefined && object.depositIndex !== null)
       ? Long.fromValue(object.depositIndex)
       : Long.UZERO;
+    message.ethBlockHeight = (object.ethBlockHeight !== undefined && object.ethBlockHeight !== null)
+      ? Long.fromValue(object.ethBlockHeight)
+      : Long.UZERO;
     return message;
   },
 };
 
 function createBaseMsgProcessDepositResponse(): MsgProcessDepositResponse {
-  return { recipient: "", amount: "", depositIndex: Long.UZERO };
+  return { recipient: "", amount: "", depositIndex: Long.UZERO, ethBlockHeight: Long.UZERO };
 }
 
 export const MsgProcessDepositResponse: MessageFns<MsgProcessDepositResponse> = {
@@ -1484,6 +1610,9 @@ export const MsgProcessDepositResponse: MessageFns<MsgProcessDepositResponse> = 
     }
     if (!message.depositIndex.equals(Long.UZERO)) {
       writer.uint32(24).uint64(message.depositIndex.toString());
+    }
+    if (!message.ethBlockHeight.equals(Long.UZERO)) {
+      writer.uint32(32).uint64(message.ethBlockHeight.toString());
     }
     return writer;
   },
@@ -1519,6 +1648,14 @@ export const MsgProcessDepositResponse: MessageFns<MsgProcessDepositResponse> = 
           message.depositIndex = Long.fromString(reader.uint64().toString(), true);
           continue;
         }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.ethBlockHeight = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1533,6 +1670,7 @@ export const MsgProcessDepositResponse: MessageFns<MsgProcessDepositResponse> = 
       recipient: isSet(object.recipient) ? globalThis.String(object.recipient) : "",
       amount: isSet(object.amount) ? globalThis.String(object.amount) : "",
       depositIndex: isSet(object.depositIndex) ? Long.fromValue(object.depositIndex) : Long.UZERO,
+      ethBlockHeight: isSet(object.ethBlockHeight) ? Long.fromValue(object.ethBlockHeight) : Long.UZERO,
     };
   },
 
@@ -1547,6 +1685,9 @@ export const MsgProcessDepositResponse: MessageFns<MsgProcessDepositResponse> = 
     if (!message.depositIndex.equals(Long.UZERO)) {
       obj.depositIndex = (message.depositIndex || Long.UZERO).toString();
     }
+    if (!message.ethBlockHeight.equals(Long.UZERO)) {
+      obj.ethBlockHeight = (message.ethBlockHeight || Long.UZERO).toString();
+    }
     return obj;
   },
 
@@ -1559,6 +1700,9 @@ export const MsgProcessDepositResponse: MessageFns<MsgProcessDepositResponse> = 
     message.amount = object.amount ?? "";
     message.depositIndex = (object.depositIndex !== undefined && object.depositIndex !== null)
       ? Long.fromValue(object.depositIndex)
+      : Long.UZERO;
+    message.ethBlockHeight = (object.ethBlockHeight !== undefined && object.ethBlockHeight !== null)
+      ? Long.fromValue(object.ethBlockHeight)
       : Long.UZERO;
     return message;
   },
@@ -1868,6 +2012,160 @@ export const MsgSignWithdrawalResponse: MessageFns<MsgSignWithdrawalResponse> = 
   },
 };
 
+function createBaseMsgTopUp(): MsgTopUp {
+  return { player: "", gameId: "", amount: Long.UZERO };
+}
+
+export const MsgTopUp: MessageFns<MsgTopUp> = {
+  encode(message: MsgTopUp, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.player !== "") {
+      writer.uint32(10).string(message.player);
+    }
+    if (message.gameId !== "") {
+      writer.uint32(18).string(message.gameId);
+    }
+    if (!message.amount.equals(Long.UZERO)) {
+      writer.uint32(24).uint64(message.amount.toString());
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): MsgTopUp {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgTopUp();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.player = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.gameId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.amount = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgTopUp {
+    return {
+      player: isSet(object.player) ? globalThis.String(object.player) : "",
+      gameId: isSet(object.gameId) ? globalThis.String(object.gameId) : "",
+      amount: isSet(object.amount) ? Long.fromValue(object.amount) : Long.UZERO,
+    };
+  },
+
+  toJSON(message: MsgTopUp): unknown {
+    const obj: any = {};
+    if (message.player !== "") {
+      obj.player = message.player;
+    }
+    if (message.gameId !== "") {
+      obj.gameId = message.gameId;
+    }
+    if (!message.amount.equals(Long.UZERO)) {
+      obj.amount = (message.amount || Long.UZERO).toString();
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<MsgTopUp>, I>>(base?: I): MsgTopUp {
+    return MsgTopUp.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<MsgTopUp>, I>>(object: I): MsgTopUp {
+    const message = createBaseMsgTopUp();
+    message.player = object.player ?? "";
+    message.gameId = object.gameId ?? "";
+    message.amount = (object.amount !== undefined && object.amount !== null)
+      ? Long.fromValue(object.amount)
+      : Long.UZERO;
+    return message;
+  },
+};
+
+function createBaseMsgTopUpResponse(): MsgTopUpResponse {
+  return { newStack: Long.UZERO };
+}
+
+export const MsgTopUpResponse: MessageFns<MsgTopUpResponse> = {
+  encode(message: MsgTopUpResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (!message.newStack.equals(Long.UZERO)) {
+      writer.uint32(8).uint64(message.newStack.toString());
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): MsgTopUpResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgTopUpResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.newStack = Long.fromString(reader.uint64().toString(), true);
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgTopUpResponse {
+    return { newStack: isSet(object.newStack) ? Long.fromValue(object.newStack) : Long.UZERO };
+  },
+
+  toJSON(message: MsgTopUpResponse): unknown {
+    const obj: any = {};
+    if (!message.newStack.equals(Long.UZERO)) {
+      obj.newStack = (message.newStack || Long.UZERO).toString();
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<MsgTopUpResponse>, I>>(base?: I): MsgTopUpResponse {
+    return MsgTopUpResponse.fromPartial(base ?? ({} as any));
+  },
+  fromPartial<I extends Exact<DeepPartial<MsgTopUpResponse>, I>>(object: I): MsgTopUpResponse {
+    const message = createBaseMsgTopUpResponse();
+    message.newStack = (object.newStack !== undefined && object.newStack !== null)
+      ? Long.fromValue(object.newStack)
+      : Long.UZERO;
+    return message;
+  },
+};
+
 /** Msg defines the Msg service. */
 export interface Msg {
   /**
@@ -1904,6 +2202,11 @@ export interface Msg {
    * Manually signs a pending withdrawal request (for validators only).
    */
   SignWithdrawal(request: MsgSignWithdrawal): Promise<MsgSignWithdrawalResponse>;
+  /**
+   * TopUp defines the TopUp RPC.
+   * Allows a player to add chips to their stack when not in an active hand.
+   */
+  TopUp(request: MsgTopUp): Promise<MsgTopUpResponse>;
 }
 
 export const MsgServiceName = "pokerchain.poker.v1.Msg";
@@ -1924,6 +2227,7 @@ export class MsgClientImpl implements Msg {
     this.ProcessDeposit = this.ProcessDeposit.bind(this);
     this.InitiateWithdrawal = this.InitiateWithdrawal.bind(this);
     this.SignWithdrawal = this.SignWithdrawal.bind(this);
+    this.TopUp = this.TopUp.bind(this);
   }
   UpdateParams(request: MsgUpdateParams): Promise<MsgUpdateParamsResponse> {
     const data = MsgUpdateParams.encode(request).finish();
@@ -1989,6 +2293,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgSignWithdrawal.encode(request).finish();
     const promise = this.rpc.request(this.service, "SignWithdrawal", data);
     return promise.then((data) => MsgSignWithdrawalResponse.decode(new BinaryReader(data)));
+  }
+
+  TopUp(request: MsgTopUp): Promise<MsgTopUpResponse> {
+    const data = MsgTopUp.encode(request).finish();
+    const promise = this.rpc.request(this.service, "TopUp", data);
+    return promise.then((data) => MsgTopUpResponse.decode(new BinaryReader(data)));
   }
 }
 

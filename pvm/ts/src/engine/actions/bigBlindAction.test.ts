@@ -1,8 +1,8 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { Player } from "../../models/player";
 import BigBlindAction from "./bigBlindAction";
 import TexasHoldemGame from "../texasHoldem";
-import { getDefaultGame, ONE_THOUSAND_TOKENS, TWO_TOKENS } from "../testConstants";
+import { getDefaultGame, ONE_THOUSAND_TOKENS, TWO_TOKENS, DETERMINISTIC_TIMESTAMP } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("BigBlindAction", () => {
@@ -24,6 +24,7 @@ describe("BigBlindAction", () => {
         playerStates.set(0, initialPlayer);
 
         game = getDefaultGame(playerStates);
+        game.setActionTimestamp(DETERMINISTIC_TIMESTAMP);
         updateMock = {
             addAction: jest.fn(_action => { })
         };

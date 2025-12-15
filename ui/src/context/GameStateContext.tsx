@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNetwork } from "./NetworkContext";
-import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO } from "@block52/poker-vm-sdk";
 import { createAuthPayload } from "../utils/cosmos/signing";
 
 /**
@@ -17,12 +17,23 @@ import { createAuthPayload } from "../utils/cosmos/signing";
  * - Stable React lifecycle management
  */
 
+// Pending action for optimistic updates
+interface PendingAction {
+    gameId: string;
+    actor: string;
+    action: string;
+    amount?: string;
+    timestamp: number;
+}
+
 interface GameStateContextType {
     gameState: TexasHoldemStateDTO | undefined;
     isLoading: boolean;
     error: Error | null;
+    pendingAction: PendingAction | null;
     subscribeToTable: (tableId: string) => void;
     unsubscribeFromTable: () => void;
+    sendAction: (action: string, amount?: string) => Promise<void>;
 }
 
 const GameStateContext = createContext<GameStateContextType | null>(null);
@@ -99,6 +110,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
     const [gameState, setGameState] = useState<TexasHoldemStateDTO | undefined>(undefined);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
+    const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
     const { currentNetwork } = useNetwork();
 
     // ✅ STABILITY FIX: Use ref instead of state for currentTableId to prevent re-renders
@@ -186,7 +198,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                     signature: authPayload?.signature
                 };
 
-                console.log(`[GameStateContext] 📤 Sending subscription message:`, {
+                console.log("[GameStateContext] 📤 Sending subscription message:", {
                     ...subscriptionMessage,
                     signature: subscriptionMessage.signature ? subscriptionMessage.signature.substring(0, 20) + "..." : undefined
                 });
@@ -277,6 +289,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                         // Update the React state with the extracted game state
                         setGameState(gameStateData);
                         setError(null);
+                        setPendingAction(null); // Clear pending action when confirmed state arrives
 
                         // 🔍 DEBUG: Log immediately after state update (this may still show old state due to async nature)
                         setTimeout(() => {
@@ -335,7 +348,33 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
                         } else {
                             console.warn("⚠️ [GameStateContext] No players data in game state update");
                         }
-                    } else if (message.type === "error") {
+                    } else if (message.event === "pending") {
+                        // Handle optimistic update - action accepted by mempool but not yet confirmed
+                        console.log("⏳ [WebSocket PENDING ACTION]", {
+                            timestamp: new Date().toISOString(),
+                            gameId: message.game_id,
+                            data: message.data
+                        });
+
+                        const pendingData = message.data;
+                        if (pendingData) {
+                            setPendingAction({
+                                gameId: pendingData.game_id || message.game_id,
+                                actor: pendingData.actor,
+                                action: pendingData.action,
+                                amount: pendingData.amount,
+                                timestamp: Date.now()
+                            });
+                        }
+                    } else if (message.event === "action_accepted") {
+                        // Acknowledgment that our action was accepted
+                        console.log("✅ [WebSocket ACTION ACCEPTED]", {
+                            timestamp: new Date().toISOString(),
+                            gameId: message.game_id,
+                            action: message.action,
+                            status: message.status
+                        });
+                    } else if (message.type === "error" || message.event === "error") {
                         // Handle error messages from the backend
                         console.error("[GameStateContext] Received error from backend:", message);
 
@@ -347,6 +386,7 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
 
                         setError(new Error(errorMsg));
                         setIsLoading(false);
+                        setPendingAction(null); // Clear pending on error
 
                         // If it's a game not found error, clear the game state
                         if (message.code === "GAME_NOT_FOUND") {
@@ -414,7 +454,42 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
         setGameState(undefined);
         setIsLoading(false);
         setError(null);
+        setPendingAction(null);
     }, []); // ✅ STABILITY FIX: Empty deps - all refs and setters are stable
+
+    // 🚀 OPTIMISTIC UPDATES: Send action through WebSocket for immediate broadcast
+    const sendAction = useCallback(
+        async (action: string, amount?: string): Promise<void> => {
+            if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+                throw new Error("WebSocket not connected");
+            }
+
+            if (!currentTableIdRef.current) {
+                throw new Error("Not subscribed to a table");
+            }
+
+            // Get player address
+            const cosmosAddress = localStorage.getItem("user_cosmos_address");
+            const ethAddress = localStorage.getItem("user_eth_public_key");
+            const playerAddress = cosmosAddress || ethAddress;
+
+            if (!playerAddress) {
+                throw new Error("No player address found");
+            }
+
+            const actionMessage = {
+                type: "action",
+                game_id: currentTableIdRef.current,
+                player_address: playerAddress,
+                action: action,
+                amount: amount
+            };
+
+            console.log("🎯 [GameStateContext] Sending action via WebSocket:", actionMessage);
+            wsRef.current.send(JSON.stringify(actionMessage));
+        },
+        []
+    );
 
     // Cleanup on unmount
     useEffect(() => {
@@ -431,10 +506,12 @@ export const GameStateProvider: React.FC<GameStateProviderProps> = ({ children }
             gameState,
             isLoading,
             error,
+            pendingAction,
             subscribeToTable,
-            unsubscribeFromTable
+            unsubscribeFromTable,
+            sendAction
         }),
-        [gameState, isLoading, error, subscribeToTable, unsubscribeFromTable]
+        [gameState, isLoading, error, pendingAction, subscribeToTable, unsubscribeFromTable, sendAction]
     );
 
     return <GameStateContext.Provider value={contextValue}>{children}</GameStateContext.Provider>;

@@ -1,5 +1,5 @@
 import React from "react";
-import { PlayerStatus, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerStatus, PlayerDTO } from "@block52/poker-vm-sdk";
 import { PlayerDataReturn } from "../types/index";
 import { useGameStateContext } from "../context/GameStateContext";
 import { convertUSDCToNumber } from "../utils/numberUtils";

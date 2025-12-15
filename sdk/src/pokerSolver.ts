@@ -241,6 +241,240 @@ export class PokerSolver {
     }
 
     /**
+     * Evaluate a hand with any number of cards (2-7)
+     * This is useful for showing hand strength during all betting rounds
+     * @param cards Array of 2-7 cards
+     * @returns HandEvaluation with current best hand or preflop description
+     */
+    public static evaluatePartialHand(cards: Card[]): HandEvaluation {
+        if (cards.length < 2) {
+            throw new Error("Need at least 2 cards to evaluate");
+        }
+
+        if (cards.length > 7) {
+            throw new Error("Cannot have more than 7 cards");
+        }
+
+        // Full hand - use standard evaluation
+        if (cards.length === 7) {
+            return this.findBestHand(cards);
+        }
+
+        // Preflop - just hole cards
+        if (cards.length === 2) {
+            return this.evaluatePreflopHand(cards);
+        }
+
+        // Flop (5 cards) or Turn (6 cards) - find best hand from available cards
+        if (cards.length >= 5) {
+            return this.evaluateBestFromAvailable(cards);
+        }
+
+        // 3-4 cards - shouldn't happen in normal play, but handle gracefully
+        // Just describe what we have
+        return this.evaluateIncompleteHand(cards);
+    }
+
+    /**
+     * Evaluate preflop hand (2 hole cards only)
+     * Returns descriptive hand names like "Pocket Aces", "Suited Connectors"
+     */
+    private static evaluatePreflopHand(cards: Card[]): HandEvaluation {
+        if (cards.length !== 2) {
+            throw new Error("Preflop evaluation requires exactly 2 cards");
+        }
+
+        const [card1, card2] = cards;
+        const rank1 = this.getHighRank(card1.rank);
+        const rank2 = this.getHighRank(card2.rank);
+        const highRank = Math.max(rank1, rank2);
+        const lowRank = Math.min(rank1, rank2);
+        const isPair = rank1 === rank2;
+        const isSuited = card1.suit === card2.suit;
+        const gap = highRank - lowRank;
+
+        let description: string;
+        let handType: HandType;
+
+        if (isPair) {
+            // Pocket pairs
+            const rankName = this.getRankName(rank1);
+            description = `Pocket ${rankName}s`;
+            handType = HandType.PAIR;
+        } else if (isSuited) {
+            if (gap === 1) {
+                description = `${this.formatRank(highRank)} - ${this.formatRank(lowRank)} Suited Connectors`;
+            } else if (gap === 2) {
+                description = `${this.formatRank(highRank)} - ${this.formatRank(lowRank)} Suited One-Gapper`;
+            } else {
+                description = `${this.formatRank(highRank)} - ${this.formatRank(lowRank)} Suited`;
+            }
+            handType = HandType.HIGH_CARD;
+        } else {
+            if (gap === 1) {
+                description = `${this.formatRank(highRank)} - ${this.formatRank(lowRank)} Connectors`;
+            } else {
+                description = `${this.formatRank(highRank)} - ${this.formatRank(lowRank)} Offsuit`;
+            }
+            handType = HandType.HIGH_CARD;
+        }
+
+        // Sort cards by rank for bestHand
+        const sortedCards = [...cards].sort((a, b) =>
+            this.getHighRank(b.rank) - this.getHighRank(a.rank)
+        );
+
+        return {
+            handType,
+            bestHand: sortedCards,
+            rankValues: [highRank, lowRank],
+            description
+        };
+    }
+
+    /**
+     * Get full rank name for pocket pairs
+     */
+    private static getRankName(rank: number): string {
+        switch (rank) {
+            case 14:
+            case 1:
+                return "Ace";
+            case 13:
+                return "King";
+            case 12:
+                return "Queen";
+            case 11:
+                return "Jack";
+            case 10:
+                return "Ten";
+            default:
+                return this.formatRank(rank);
+        }
+    }
+
+    /**
+     * Evaluate best hand from 5-6 available cards
+     * Generates all possible 5-card combinations and finds the best
+     */
+    private static evaluateBestFromAvailable(cards: Card[]): HandEvaluation {
+        if (cards.length < 5 || cards.length > 6) {
+            throw new Error("evaluateBestFromAvailable requires 5-6 cards");
+        }
+
+        // If exactly 5 cards, just evaluate them directly
+        if (cards.length === 5) {
+            return this.evaluateHand(cards);
+        }
+
+        // 6 cards - find best 5-card combination
+        const combinations = this.getCombinationsFlexible(cards, 5);
+        let bestHand: HandEvaluation | null = null;
+
+        for (const combination of combinations) {
+            const evaluation = this.evaluateHand(combination);
+
+            if (!bestHand || this.compareHands(evaluation, bestHand) > 0) {
+                bestHand = evaluation;
+            }
+        }
+
+        if (!bestHand) {
+            throw new Error("Failed to evaluate hand");
+        }
+
+        return bestHand;
+    }
+
+    /**
+     * Get all combinations of k cards from n cards
+     * Generic version of getCombinations
+     */
+    private static getCombinationsFlexible(cards: Card[], k: number): Card[][] {
+        const result: Card[][] = [];
+        const n = cards.length;
+
+        if (k > n) {
+            return result;
+        }
+
+        // Generate combinations using indices
+        const indices: number[] = [];
+        for (let i = 0; i < k; i++) {
+            indices.push(i);
+        }
+
+        while (true) {
+            // Add current combination
+            result.push(indices.map(i => cards[i]));
+
+            // Find rightmost index that can be incremented
+            let i = k - 1;
+            while (i >= 0 && indices[i] === n - k + i) {
+                i--;
+            }
+
+            if (i < 0) {
+                break;
+            }
+
+            // Increment this index and reset all indices to the right
+            indices[i]++;
+            for (let j = i + 1; j < k; j++) {
+                indices[j] = indices[j - 1] + 1;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Handle incomplete hands (3-4 cards) - shouldn't happen in normal play
+     */
+    private static evaluateIncompleteHand(cards: Card[]): HandEvaluation {
+        // Sort cards by rank
+        const sortedCards = [...cards].sort((a, b) =>
+            this.getHighRank(b.rank) - this.getHighRank(a.rank)
+        );
+
+        // Count ranks
+        const rankCounts = new Map<number, number>();
+        for (const card of sortedCards) {
+            const highRank = this.getHighRank(card.rank);
+            rankCounts.set(highRank, (rankCounts.get(highRank) || 0) + 1);
+        }
+
+        const rankCountsArray = Array.from(rankCounts.entries())
+            .sort((a, b) => b[1] - a[1] || b[0] - a[0]);
+
+        let handType: HandType;
+        let description: string;
+
+        if (rankCountsArray[0][1] >= 3) {
+            handType = HandType.THREE_OF_A_KIND;
+            description = "Three of a Kind";
+        } else if (rankCountsArray[0][1] === 2) {
+            if (rankCountsArray.length > 1 && rankCountsArray[1][1] === 2) {
+                handType = HandType.TWO_PAIR;
+                description = "Two Pair";
+            } else {
+                handType = HandType.PAIR;
+                description = "Pair";
+            }
+        } else {
+            handType = HandType.HIGH_CARD;
+            description = `High Card ${this.formatRank(rankCountsArray[0][0])}`;
+        }
+
+        return {
+            handType,
+            bestHand: sortedCards,
+            rankValues: sortedCards.map(card => this.getHighRank(card.rank)),
+            description
+        };
+    }
+
+    /**
      * Compare two hands
      * @returns 1 if hand1 wins, -1 if hand2 wins, 0 if tie
      */
@@ -479,5 +713,104 @@ export class PokerSolver {
             Math.round(handBPercent * 100) / 100,
             Math.round(tiePercent * 100) / 100
         ];
+    }
+
+    /**
+     * Calculate win percentages for multiple players (2+) using Monte Carlo simulation
+     * @param hands Array of hole cards for each player (each must have exactly 2 cards)
+     * @param communityCards Current community cards (0-5 cards)
+     * @param simulations Number of simulations to run (default: 10000)
+     * @returns Object containing win percentages for each player and overall tie percentage
+     */
+    public static calculateMultiPlayerEquity(
+        hands: Card[][],
+        communityCards: Card[] = [],
+        simulations: number = 10000
+    ): {
+        winPercentages: number[];
+        tiePercentage: number;
+    } {
+        // Validate inputs
+        if (hands.length < 2) {
+            throw new Error("Need at least 2 hands to calculate equity");
+        }
+
+        if (hands.length > 10) {
+            throw new Error("Maximum 10 hands supported");
+        }
+
+        for (let i = 0; i < hands.length; i++) {
+            if (hands[i].length !== 2) {
+                throw new Error(`Hand ${i} must have exactly 2 cards`);
+            }
+        }
+
+        if (communityCards.length > 5) {
+            throw new Error("Community cards cannot exceed 5 cards");
+        }
+
+        // Get all known cards
+        const knownCards = [...communityCards, ...hands.flat()];
+
+        // Validate no duplicate cards
+        const cardStrings = knownCards.map(card => `${card.rank}-${card.suit}`);
+        if (new Set(cardStrings).size !== cardStrings.length) {
+            throw new Error("Duplicate cards detected in input");
+        }
+
+        // Get available cards for simulation
+        const availableCards = this.getAvailableCards(knownCards);
+        const cardsNeeded = 5 - communityCards.length;
+
+        // Initialize win counters for each player
+        const wins = new Array(hands.length).fill(0);
+        let ties = 0;
+
+        // Run Monte Carlo simulations
+        for (let sim = 0; sim < simulations; sim++) {
+            // Shuffle available cards
+            const shuffledDeck = [...availableCards];
+            this.shuffleArray(shuffledDeck);
+
+            // Deal remaining community cards
+            const fullCommunityCards = [...communityCards, ...shuffledDeck.slice(0, cardsNeeded)];
+
+            // Evaluate all hands
+            const evaluations: HandEvaluation[] = hands.map(hand => {
+                const fullHand = [...hand, ...fullCommunityCards];
+                return this.findBestHand(fullHand);
+            });
+
+            // Find winners using existing findWinners method
+            const winnerIndices = this.findWinners(evaluations);
+
+            // Update win counters
+            if (winnerIndices.length === 1) {
+                // Single winner
+                wins[winnerIndices[0]]++;
+            } else {
+                // Multiple winners (tie) - credit each winner equally
+                // Note: In poker, tied players split the pot, so we count this as a partial win
+                // For display purposes, we'll track overall tie percentage separately
+                const tieValue = 1 / winnerIndices.length;
+                for (const winnerIndex of winnerIndices) {
+                    wins[winnerIndex] += tieValue;
+                }
+                ties++;
+            }
+        }
+
+        // Convert to percentages
+        const winPercentages = wins.map(winCount => {
+            const percent = (winCount / simulations) * 100;
+            return Math.round(percent * 100) / 100; // Round to 2 decimal places
+        });
+
+        const tiePercentage = Math.round((ties / simulations) * 100 * 100) / 100;
+
+        return {
+            winPercentages,
+            tiePercentage
+        };
     }
 }

@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { useGameStateContext } from "../context/GameStateContext";
-import { TexasHoldemRound, GameType } from "@bitcoinbrisbane/block52";
+import { TexasHoldemRound, GameType } from "@block52/poker-vm-sdk";
 import { TableStateReturn } from "../types/index";
 
 

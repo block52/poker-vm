@@ -53,7 +53,8 @@ import { useDealerPosition } from "../../../hooks/useDealerPosition";
 import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
 import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
-import { getCardImageUrl, getCardBackUrl } from "../../../utils/cardImages";
+import { getCardImageUrl, getCardBackUrl, CardBackStyle } from "../../../utils/cardImages";
+import { useAllInEquity } from "../../../hooks/useAllInEquity";
 
 type OppositePlayerProps = {
     left?: string;
@@ -66,11 +67,19 @@ type OppositePlayerProps = {
     setCardVisible: (index: number) => void;
     setStartIndex: (index: number) => void;
     uiPosition?: number;
+    cardBackStyle?: CardBackStyle;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition }) => {
+const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition, cardBackStyle }) => {
     const { playerData, stackValue, isFolded, isAllIn, isSittingOut, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
+    const { equities, shouldShow: shouldShowEquity } = useAllInEquity();
+
+    // Get equity for this player if available
+    const playerEquity = React.useMemo((): number | null => {
+        if (!shouldShowEquity || !equities.has(index)) return null;
+        return equities.get(index) ?? null;
+    }, [shouldShowEquity, equities, index]);
 
     // Debug logging for OppositePlayer component stack value
     React.useEffect(() => {
@@ -172,8 +181,8 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                         ) : (
                             // Show card backs for opponents (they shouldn't see actual cards)
                             <>
-                                <img src={getCardBackUrl()} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
-                                <img src={getCardBackUrl()} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src={getCardBackUrl(cardBackStyle)} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
+                                <img src={getCardBackUrl(cardBackStyle)} alt="Opposite Player Card" width={60} height={80} className="mb-[11px]"  />
                             </>
                         )
                     ) : (
@@ -196,13 +205,13 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
                             <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>FOLD</span>
                         )}
                         {!isWinner && isAllIn && (
-                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
-                                ALL IN
-                            </span>
-                        )}
-                        {isShowingCards && !isWinner && (
-                            <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
-                                SHOWING
+                            <span className="animate-progress delay-2000 flex flex-col items-center w-full mb-2 mt-auto gap-0 justify-center" style={{ color: "white" }}>
+                                <span>ALL IN</span>
+                                {playerEquity !== null && (
+                                    <span className="text-yellow-400 font-bold text-sm">
+                                        {playerEquity.toFixed(1)}%
+                                    </span>
+                                )}
                             </span>
                         )}
                         {isWinner && winnerAmount && (

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { SigningCosmosClient } from "@bitcoinbrisbane/block52";
+import { Link } from "react-router-dom";
+import { SigningCosmosClient } from "@block52/poker-vm-sdk";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { getCosmosMnemonic } from "../utils/cosmos/storage";
@@ -1465,14 +1466,12 @@ export default function TestSigningPage() {
                             </div>
 
                             <div className="flex gap-3">
-                                <a
-                                    href={`/explorer/tx/${successTxHash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                <Link
+                                    to={`/explorer/tx/${successTxHash}`}
                                     className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
                                 >
                                     View on Explorer
-                                </a>
+                                </Link>
                                 <button
                                     onClick={() => {
                                         setShowSuccessModal(false);

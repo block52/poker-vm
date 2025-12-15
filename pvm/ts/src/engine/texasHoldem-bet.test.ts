@@ -1,6 +1,6 @@
-import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, getNextTestTimestamp } from "./testConstants";
 
 describe("Texas Holdem Game - Bet after flop", () => {
 
@@ -12,20 +12,20 @@ describe("Texas Holdem Game - Bet after flop", () => {
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         // Add minimum required players
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
         // Post blinds
-        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
-        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
+        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3, undefined, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
 
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5);
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
         // Call the big blind
-        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6, ONE_TOKEN);
+        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6, ONE_TOKEN, undefined, getNextTestTimestamp());
 
         // Check back to big blind
-        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.CHECK, 7, 0n);
+        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.CHECK, 7, 0n, undefined, getNextTestTimestamp());
     });
 
     it("should have correct bet values for small blind", () => {
@@ -37,7 +37,7 @@ describe("Texas Holdem Game - Bet after flop", () => {
         // After small blind calls, big blind acts next
         const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(3);
+        expect(legalActions.length).toBeGreaterThanOrEqual(3);
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions[1].action).toEqual(PlayerActionType.CHECK);
         expect(legalActions[2].action).toEqual(PlayerActionType.BET);

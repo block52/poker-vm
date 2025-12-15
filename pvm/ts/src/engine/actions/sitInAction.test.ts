@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import SitInAction from "./sitInAction";
@@ -64,7 +64,7 @@ describe("SitInAction", () => {
 
     describe("type", () => {
         it("should return SIT_IN type", () => {
-            expect(action.type).toBe(PlayerActionType.SIT_IN);
+            expect(action.type).toBe(NonPlayerActionType.SIT_IN);
         });
     });
 
@@ -178,7 +178,7 @@ describe("SitInAction", () => {
             action.execute(sittingOutPlayer, 7, 0n);
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: sittingOutPlayer.address,
-                action: PlayerActionType.SIT_IN,
+                action: NonPlayerActionType.SIT_IN,
                 index: 7
             }, TexasHoldemRound.ANTE);
         });
@@ -187,7 +187,7 @@ describe("SitInAction", () => {
             action.execute(sittingOutPlayer, 99, 0n);
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: sittingOutPlayer.address,
-                action: PlayerActionType.SIT_IN,
+                action: NonPlayerActionType.SIT_IN,
                 index: 99
             }, TexasHoldemRound.ANTE);
         });
@@ -214,7 +214,7 @@ describe("SitInAction", () => {
             action.execute(sittingOutPlayer, 3, 0n);
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: sittingOutPlayer.address,
-                action: PlayerActionType.SIT_IN,
+                action: NonPlayerActionType.SIT_IN,
                 index: 3
             }, TexasHoldemRound.PREFLOP);
         });
@@ -234,7 +234,7 @@ describe("SitInAction", () => {
             expect(sittingOutPlayer.status).toBe(PlayerStatus.ACTIVE);
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: sittingOutPlayer.address,
-                action: PlayerActionType.SIT_IN,
+                action: NonPlayerActionType.SIT_IN,
                 index: 10
             }, TexasHoldemRound.ANTE);
         });
@@ -260,7 +260,7 @@ describe("SitInAction", () => {
                 expect(sittingOutPlayer.status).toBe(PlayerStatus.ACTIVE);
                 expect(game.addAction).toHaveBeenCalledWith({
                     playerId: sittingOutPlayer.address,
-                    action: PlayerActionType.SIT_IN,
+                    action: NonPlayerActionType.SIT_IN,
                     index: index + 20
                 }, round);
             });
@@ -286,7 +286,7 @@ describe("SitInAction", () => {
             expect(brokePlayer.chips).toBe(0n);
             expect(game.addAction).toHaveBeenCalledWith({
                 playerId: brokePlayer.address,
-                action: PlayerActionType.SIT_IN,
+                action: NonPlayerActionType.SIT_IN,
                 index: 15
             }, TexasHoldemRound.ANTE);
         });

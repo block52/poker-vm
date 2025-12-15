@@ -4,7 +4,7 @@
  * This file provides minimal helpers, delegating to SDK where possible.
  */
 
-import { isValidMnemonic } from "@bitcoinbrisbane/block52";
+import { isValidMnemonic } from "@block52/poker-vm-sdk";
 
 /**
  * Validates if a seed phrase is valid BIP39 mnemonic

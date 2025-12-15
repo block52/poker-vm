@@ -17,11 +17,12 @@ import { MsgBurn } from "./types/pokerchain/poker/v1/tx";
 import { MsgProcessDeposit } from "./types/pokerchain/poker/v1/tx";
 import { MsgInitiateWithdrawal } from "./types/pokerchain/poker/v1/tx";
 import { MsgSignWithdrawal } from "./types/pokerchain/poker/v1/tx";
+import { MsgTopUp } from "./types/pokerchain/poker/v1/tx";
 
 import { WithdrawalRequest as typeWithdrawalRequest} from "./types"
 import { Params as typeParams} from "./types"
 
-export { MsgUpdateParams, MsgCreateGame, MsgJoinGame, MsgLeaveGame, MsgDealCards, MsgPerformAction, MsgMint, MsgBurn, MsgProcessDeposit, MsgInitiateWithdrawal, MsgSignWithdrawal };
+export { MsgUpdateParams, MsgCreateGame, MsgJoinGame, MsgLeaveGame, MsgDealCards, MsgPerformAction, MsgMint, MsgBurn, MsgProcessDeposit, MsgInitiateWithdrawal, MsgSignWithdrawal, MsgTopUp };
 
 type sendMsgUpdateParamsParams = {
   value: MsgUpdateParams,
@@ -89,6 +90,12 @@ type sendMsgSignWithdrawalParams = {
   memo?: string
 };
 
+type sendMsgTopUpParams = {
+  value: MsgTopUp,
+  fee?: StdFee,
+  memo?: string
+};
+
 
 type msgUpdateParamsParams = {
   value: MsgUpdateParams,
@@ -134,6 +141,10 @@ type msgSignWithdrawalParams = {
   value: MsgSignWithdrawal,
 };
 
+type msgTopUpParams = {
+  value: MsgTopUp,
+};
+
 
 export const registry = new Registry(msgTypes);
 
@@ -149,9 +160,11 @@ function getStructure(template) {
 	}
 	return structure
 }
+// Gasless transactions - chain has minimum-gas-prices = "0.0stake"
+// Gas limit set to 1,000,000 for safety margin on all poker actions
 const defaultFee = {
   amount: [],
-  gas: "200000",
+  gas: "1000000",
 };
 
 interface TxClientOptions {
@@ -308,8 +321,8 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			if (!signer) {
 					throw new Error('TxClient:sendMsgSignWithdrawal: Unable to sign Tx. Signer is not present.')
 			}
-			try {			
-				const { address } = (await signer.getAccounts())[0]; 
+			try {
+				const { address } = (await signer.getAccounts())[0];
 				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
 				let msg = this.msgSignWithdrawal({ value: MsgSignWithdrawal.fromPartial(value) })
 				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
@@ -317,8 +330,22 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 				throw new Error('TxClient:sendMsgSignWithdrawal: Could not broadcast Tx: '+ e.message)
 			}
 		},
-		
-		
+
+		async sendMsgTopUp({ value, fee, memo }: sendMsgTopUpParams): Promise<DeliverTxResponse> {
+			if (!signer) {
+					throw new Error('TxClient:sendMsgTopUp: Unable to sign Tx. Signer is not present.')
+			}
+			try {
+				const { address } = (await signer.getAccounts())[0];
+				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry});
+				let msg = this.msgTopUp({ value: MsgTopUp.fromPartial(value) })
+				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
+			} catch (e: any) {
+				throw new Error('TxClient:sendMsgTopUp: Could not broadcast Tx: '+ e.message)
+			}
+		},
+
+
 		msgUpdateParams({ value }: msgUpdateParamsParams): EncodeObject {
 			try {
 				return { typeUrl: "/pokerchain.poker.v1.MsgUpdateParams", value: MsgUpdateParams.fromPartial( value ) }  
@@ -401,12 +428,20 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 		
 		msgSignWithdrawal({ value }: msgSignWithdrawalParams): EncodeObject {
 			try {
-				return { typeUrl: "/pokerchain.poker.v1.MsgSignWithdrawal", value: MsgSignWithdrawal.fromPartial( value ) }  
+				return { typeUrl: "/pokerchain.poker.v1.MsgSignWithdrawal", value: MsgSignWithdrawal.fromPartial( value ) }
 			} catch (e: any) {
 				throw new Error('TxClient:MsgSignWithdrawal: Could not create message: ' + e.message)
 			}
 		},
-		
+
+		msgTopUp({ value }: msgTopUpParams): EncodeObject {
+			try {
+				return { typeUrl: "/pokerchain.poker.v1.MsgTopUp", value: MsgTopUp.fromPartial( value ) }
+			} catch (e: any) {
+				throw new Error('TxClient:MsgTopUp: Could not create message: ' + e.message)
+			}
+		},
+
 	}
 };
 

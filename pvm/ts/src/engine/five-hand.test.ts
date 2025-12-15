@@ -1,6 +1,6 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, seed } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, seed, getNextTestTimestamp } from "./testConstants";
 
 describe("Texas Holdem - Play 5 Hands", () => {
     const THREE_TOKENS = 300000000000000000n;
@@ -12,8 +12,8 @@ describe("Texas Holdem - Play 5 Hands", () => {
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         expect(game.handNumber).toEqual(1);
-        game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1");
-        game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2");
+        game.performAction(SMALL_BLIND_PLAYER, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "1", getNextTestTimestamp());
+        game.performAction(BIG_BLIND_PLAYER, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "2", getNextTestTimestamp());
     });
 
     /**
@@ -33,58 +33,58 @@ describe("Texas Holdem - Play 5 Hands", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
         // Post small blind
-        game.performAction(smallBlindPlayer, PlayerActionType.SMALL_BLIND, actionCounter, ONE_TOKEN);
+        game.performAction(smallBlindPlayer, PlayerActionType.SMALL_BLIND, actionCounter, ONE_TOKEN, undefined, getNextTestTimestamp());
         expect(game.pot).toEqual(ONE_TOKEN);
         actionCounter += 1;
 
         // Post big blind
-        game.performAction(bigBlindPlayer, PlayerActionType.BIG_BLIND, actionCounter, TWO_TOKENS);
+        game.performAction(bigBlindPlayer, PlayerActionType.BIG_BLIND, actionCounter, TWO_TOKENS, undefined, getNextTestTimestamp());
         expect(game.pot).toEqual(THREE_TOKENS);
         actionCounter += 1;
 
         // Deal cards (move from ANTE to PREFLOP)
-        game.performAction(smallBlindPlayer, NonPlayerActionType.DEAL, actionCounter);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.DEAL, actionCounter, undefined, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
         actionCounter += 1;
 
         // Call from small blind
-        game.performAction(smallBlindPlayer, PlayerActionType.CALL, actionCounter, ONE_TOKEN);
+        game.performAction(smallBlindPlayer, PlayerActionType.CALL, actionCounter, ONE_TOKEN, undefined, getNextTestTimestamp());
         actionCounter += 1;
 
         // Check from big blind
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
         actionCounter += 1;
 
         // Both check on flop
-        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n, undefined, getNextTestTimestamp());
         actionCounter += 1;
 
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.TURN);
         actionCounter += 1;
 
         // Both check on turn
-        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n, undefined, getNextTestTimestamp());
         actionCounter += 1;
 
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.RIVER);
         actionCounter += 1;
 
         // Both check on river
-        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n, undefined, getNextTestTimestamp());
         actionCounter += 1;
 
-        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.CHECK, actionCounter, 0n, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.SHOWDOWN);
         actionCounter += 1;
 
         // Both show their cards
-        game.performAction(smallBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
+        game.performAction(smallBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n, undefined, getNextTestTimestamp());
         actionCounter += 1;
 
-        game.performAction(bigBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n);
+        game.performAction(bigBlindPlayer, PlayerActionType.SHOW, actionCounter, 0n, undefined, getNextTestTimestamp());
 
         // Verify the game state after showdown
         expect(game.currentRound).toEqual(TexasHoldemRound.END);
@@ -116,7 +116,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(1, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 2
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed, getNextTestTimestamp());
         // actionCounter = 1;
 
         // Hand 2 - buttons should switch positions
@@ -131,7 +131,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(2, smallBlindPlayer, bigBlindPlayer, actionCounter + 1);
 
         // Reinitialize for hand 3
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed, getNextTestTimestamp());
         // actionCounter = 0;
 
         // Hand 3 - buttons should switch positions again
@@ -146,7 +146,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(3, smallBlindPlayer, bigBlindPlayer, actionCounter + 1);
 
         // Reinitialize for hand 4
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed, getNextTestTimestamp());
         // actionCounter = 0;
 
         // Hand 4 - buttons should switch positions again
@@ -161,7 +161,7 @@ describe("Texas Holdem - Play 5 Hands", () => {
         actionCounter = playCompleteHand(4, smallBlindPlayer, bigBlindPlayer, actionCounter);
 
         // Reinitialize for hand 5
-        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed);
+        game.performAction(smallBlindPlayer, NonPlayerActionType.NEW_HAND, actionCounter, undefined, seed, getNextTestTimestamp());
         actionCounter = 0;
 
         // Hand 5 - buttons should switch positions again

@@ -1,4 +1,4 @@
-import { RPCMethods } from "@bitcoinbrisbane/block52";
+import { RPCMethods } from "@block52/poker-vm-sdk";
 
 // RESET_BLOCKCHAIN is now included in the SDK's RPCMethods enum, so we don't need a custom constant
 

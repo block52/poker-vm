@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useGameStateContext } from "../context/GameStateContext";
 import { useNetwork } from "../context/NetworkContext";
-import { PlayerStatus, PlayerDTO, PlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerStatus, PlayerDTO, PlayerActionType } from "@block52/poker-vm-sdk";
 import { PlayerTimerReturn } from "../types/index";
 import { foldHand } from "./playerActions/foldHand";
 import { checkHand } from "./playerActions/checkHand";

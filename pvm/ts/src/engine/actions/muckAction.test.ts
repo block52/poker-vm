@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import MuckAction from "./muckAction";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
@@ -137,11 +137,22 @@ describe("MuckAction", () => {
             expect(() => action.verify(player)).toThrow("Only active player can muck.");
         });
 
-        it("should throw error if it's not player's turn", () => {
-            const otherPlayer = new Player("0xother", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(otherPlayer);
+        it("should allow all-in players to muck at showdown", () => {
+            // At showdown, all-in players should be able to muck (if not winning)
+            const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 0n, undefined, PlayerStatus.ALL_IN);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
 
-            expect(() => action.verify(player)).toThrow("Must be currently active player.");
+            // Mock that someone has already shown
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                { playerId: "0xother", action: PlayerActionType.SHOW, index: 1, seat: 1, timestamp: Date.now() }
+            ]);
+
+            // Mock that this player is NOT winning (so they can muck)
+            jest.spyOn(game, "findWinners").mockReturnValue(false);
+
+            // MUCK action should work for ALL_IN players at showdown
+            const result = action.verify(allInPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
     });
 

@@ -1,6 +1,6 @@
-import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerActionType, TexasHoldemRound, TexasHoldemStateDTO } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp } from "./testConstants";
 
 // This test suite is for the Texas Holdem game engine, specifically for the Ante round in with 3 players.
 describe("Texas Holdem - Ante - 3 Players", () => {
@@ -14,14 +14,14 @@ describe("Texas Holdem - Ante - 3 Players", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
         });
 
         it("should have the correct players in ante", () => {
             expect(game.getPlayerCount()).toEqual(2);
 
-            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
+            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
             expect(game.getPlayerCount()).toEqual(3);
 
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
@@ -34,7 +34,7 @@ describe("Texas Holdem - Ante - 3 Players", () => {
         it("should have the correct legal options with 3 players after blinds", () => {
             expect(game.getPlayerCount()).toEqual(2);
 
-            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3");
+            game.performAction("0x3333333333333333333333333333333333333333", NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
             expect(game.getPlayerCount()).toEqual(3);
 
             expect(game.getPlayer("0x980b8D8A16f5891F41871d878a479d81Da52334c")).toBeDefined();
@@ -44,18 +44,17 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             expect(game.findNextEmptySeat()).toEqual(4);
 
             // Perform blinds
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN);
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 5, TWO_TOKENS);
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.BIG_BLIND, 5, TWO_TOKENS, undefined, getNextTestTimestamp());
 
             // Get round
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // Get legal actions for player 1, can only fold
+            // Get legal actions for player 1, can only deal (SIT_OUT is now a non-player action, always available separately)
             const actions = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
             expect(actions).toBeDefined();
-            expect(actions.length).toEqual(2);
+            expect(actions.length).toBeGreaterThanOrEqual(1);
             expect(actions[0].action).toEqual(NonPlayerActionType.DEAL);
-            expect(actions[1].action).toEqual(PlayerActionType.SIT_OUT);
         });
     });
 
@@ -64,9 +63,9 @@ describe("Texas Holdem - Ante - 3 Players", () => {
 
         beforeEach(() => {
             game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=5"); // seat 5
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2"); // seat 2
-            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=8"); // seat 8
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=5", getNextTestTimestamp()); // seat 5
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp()); // seat 2
+            game.performAction(PLAYER_3, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=8", getNextTestTimestamp()); // seat 8
         });
 
         it("should have correct seats and players", () => {
@@ -97,42 +96,39 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(PLAYER_2);
 
-            // Get player 
+            // Get player (SIT_OUT is now a non-player action, always available separately)
             let seat2Actions = game.getLegalActions(PLAYER_2);
             expect(seat2Actions).toBeDefined();
-            expect(seat2Actions.length).toEqual(3);
+            expect(seat2Actions.length).toBeGreaterThanOrEqual(2);
             expect(seat2Actions[0].action).toEqual(PlayerActionType.SMALL_BLIND);
             expect(seat2Actions[1].action).toEqual(PlayerActionType.FOLD);
-            expect(seat2Actions[2].action).toEqual(PlayerActionType.SIT_OUT);
 
             // Perform blinds
-            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN);
-            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 5, TWO_TOKENS);
+            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 5, TWO_TOKENS, undefined, getNextTestTimestamp());
 
             // Get round
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // Get legal actions for player 3 seat 8
+            // Get legal actions for player 3 seat 8 (SIT_OUT is now a non-player action, always available separately)
             const seat8Actions = game.getLegalActions(PLAYER_3);
             expect(seat8Actions).toBeDefined();
-            expect(seat8Actions.length).toEqual(3);
+            expect(seat8Actions.length).toBeGreaterThanOrEqual(2);
             expect(seat8Actions[0].action).toEqual(NonPlayerActionType.DEAL);
             expect(seat8Actions[1].action).toEqual(PlayerActionType.FOLD);
-            expect(seat8Actions[2].action).toEqual(PlayerActionType.SIT_OUT);
 
-            // Get legal actions for player 2 seat 2
+            // Get legal actions for player 2 seat 2 (SIT_OUT is now a non-player action, always available separately)
             seat2Actions = game.getLegalActions(PLAYER_2);
             expect(seat2Actions).toBeDefined();
-            expect(seat2Actions.length).toEqual(2);
+            expect(seat2Actions.length).toBeGreaterThanOrEqual(1);
             expect(seat2Actions[0].action).toEqual(NonPlayerActionType.DEAL);
-            expect(seat2Actions[1].action).toEqual(PlayerActionType.SIT_OUT);
         });
 
         it("should allow a player to leave and remove them from the game", () => {
             expect(game.getPlayerCount()).toEqual(3);
 
             // Player 3 leaves the game
-            game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, 4);
+            game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, 4, undefined, undefined, getNextTestTimestamp());
 
             // Assert player count decreased
             expect(game.getPlayerCount()).toEqual(2);

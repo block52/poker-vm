@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
 import SitOutAction from "./sitOutAction";
@@ -59,7 +59,7 @@ describe("SitOutAction", () => {
         );
 
         // Mock game methods
-        jest.spyOn(game, "addAction").mockImplementation();
+        jest.spyOn(game, "addNonPlayerAction").mockImplementation();
     });
 
     afterEach(() => {
@@ -68,47 +68,30 @@ describe("SitOutAction", () => {
 
     describe("type", () => {
         it("should return SIT_OUT type", () => {
-            expect(action.type).toBe(PlayerActionType.SIT_OUT);
+            expect(action.type).toBe(NonPlayerActionType.SIT_OUT);
         });
     });
 
     describe("verify", () => {
-        it("should return correct range when player is folded", () => {
+        it("should return correct range - players can always sit out", () => {
             const result = action.verify(foldedPlayer);
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
-        it("should return correct range when in ante round with active player", () => {
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
-            const result = action.verify(activePlayer);
-            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
-        });
-
-        it("should throw error if not in ante round and player not folded", () => {
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-
-            expect(() => action.verify(activePlayer))
-                .toThrow("sit-out can only be performed during ante round.");
-        }); it("should allow sit out in ante round regardless of player status", () => {
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
-
-            const playerStatuses = [
-                PlayerStatus.ACTIVE,
-                PlayerStatus.ALL_IN,
-                PlayerStatus.SHOWING,
-                PlayerStatus.SITTING_OUT
+        it("should allow sit out for active player in any round", () => {
+            const rounds = [
+                TexasHoldemRound.ANTE,
+                TexasHoldemRound.PREFLOP,
+                TexasHoldemRound.FLOP,
+                TexasHoldemRound.TURN,
+                TexasHoldemRound.RIVER,
+                TexasHoldemRound.SHOWDOWN,
+                TexasHoldemRound.END
             ];
 
-            playerStatuses.forEach(status => {
-                const testPlayer = new Player(
-                    `0x${status}123456789abcdef123456789abcdef123456`,
-                    undefined,
-                    ONE_THOUSAND_TOKENS,
-                    undefined,
-                    status
-                );
-
-                const result = action.verify(testPlayer);
+            rounds.forEach(round => {
+                jest.spyOn(game, "currentRound", "get").mockReturnValue(round);
+                const result = action.verify(activePlayer);
                 expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
             });
         });
@@ -142,22 +125,6 @@ describe("SitOutAction", () => {
             const result = action.verify(brokePlayer);
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
-
-        it("should throw error if active player tries to sit out during non-ante rounds", () => {
-            const nonAnteRounds = [
-                TexasHoldemRound.PREFLOP,
-                TexasHoldemRound.FLOP,
-                TexasHoldemRound.TURN,
-                TexasHoldemRound.RIVER,
-                TexasHoldemRound.SHOWDOWN
-            ];
-
-            nonAnteRounds.forEach(round => {
-                jest.spyOn(game, "currentRound", "get").mockReturnValue(round);
-                expect(() => action.verify(activePlayer))
-                    .toThrow("sit-out can only be performed during ante round.");
-            });
-        });
     });
 
     describe("execute", () => {
@@ -172,28 +139,22 @@ describe("SitOutAction", () => {
             expect(foldedPlayer.status).toBe(PlayerStatus.SITTING_OUT);
         });
 
-        it("should add sit out action to game", () => {
+        it("should add sit out as non-player action", () => {
             action.execute(foldedPlayer, 7, 0n);
-            expect(game.addAction).toHaveBeenCalledWith({
+            expect(game.addNonPlayerAction).toHaveBeenCalledWith({
                 playerId: foldedPlayer.address,
-                action: PlayerActionType.SIT_OUT,
+                action: NonPlayerActionType.SIT_OUT,
                 index: 7
-            }, TexasHoldemRound.ANTE);
+            });
         });
 
         it("should handle different index values", () => {
             action.execute(foldedPlayer, 99, 0n);
-            expect(game.addAction).toHaveBeenCalledWith({
+            expect(game.addNonPlayerAction).toHaveBeenCalledWith({
                 playerId: foldedPlayer.address,
-                action: PlayerActionType.SIT_OUT,
+                action: NonPlayerActionType.SIT_OUT,
                 index: 99
-            }, TexasHoldemRound.ANTE);
-        });
-
-        it("should throw error if verification fails", () => {
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            expect(() => action.execute(activePlayer, 1, 0n))
-                .toThrow("sit-out can only be performed during ante round.");
+            });
         });
 
         it("should preserve player chips during sit out", () => {
@@ -208,19 +169,34 @@ describe("SitOutAction", () => {
             expect(foldedPlayer.status).toBe(PlayerStatus.SITTING_OUT);
         });
 
-        it("should add action with current round", () => {
+        it("should fold active player mid-hand before sitting out", () => {
+            // Setup: Active player during PREFLOP (mid-hand)
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.PREFLOP);
-            action.execute(foldedPlayer, 3, 0n);
-            expect(game.addAction).toHaveBeenCalledWith({
-                playerId: foldedPlayer.address,
-                action: PlayerActionType.SIT_OUT,
-                index: 3
-            }, TexasHoldemRound.PREFLOP);
+            activePlayer.holeCards = [{ suit: 1, rank: 14, value: 14, mnemonic: "Ah" }, { suit: 2, rank: 13, value: 13, mnemonic: "Kd" }];
+
+            action.execute(activePlayer, 10, 0n);
+
+            // Player should be sitting out
+            expect(activePlayer.status).toBe(PlayerStatus.SITTING_OUT);
+            // Cards should be mucked
+            expect(activePlayer.holeCards).toBeUndefined();
         });
 
-        it("should work with active player in ante round", () => {
+        it("should not fold player during ANTE round", () => {
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.ANTE);
+
             action.execute(activePlayer, 10, 0n);
+
+            // Player should be sitting out directly (no fold step needed)
+            expect(activePlayer.status).toBe(PlayerStatus.SITTING_OUT);
+        });
+
+        it("should not fold player during END round", () => {
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.END);
+
+            action.execute(activePlayer, 10, 0n);
+
+            // Player should be sitting out directly (no fold step needed)
             expect(activePlayer.status).toBe(PlayerStatus.SITTING_OUT);
         });
     });
@@ -237,11 +213,11 @@ describe("SitOutAction", () => {
             // Verify results
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
             expect(foldedPlayer.status).toBe(PlayerStatus.SITTING_OUT);
-            expect(game.addAction).toHaveBeenCalledWith({
+            expect(game.addNonPlayerAction).toHaveBeenCalledWith({
                 playerId: foldedPlayer.address,
-                action: PlayerActionType.SIT_OUT,
+                action: NonPlayerActionType.SIT_OUT,
                 index: 10
-            }, TexasHoldemRound.ANTE);
+            });
         });
 
         it("should handle sit-out during ante round for active player", () => {
@@ -256,38 +232,30 @@ describe("SitOutAction", () => {
             // Verify results
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
             expect(activePlayer.status).toBe(PlayerStatus.SITTING_OUT);
-            expect(game.addAction).toHaveBeenCalledWith({
+            expect(game.addNonPlayerAction).toHaveBeenCalledWith({
                 playerId: activePlayer.address,
-                action: PlayerActionType.SIT_OUT,
+                action: NonPlayerActionType.SIT_OUT,
                 index: 15
-            }, TexasHoldemRound.ANTE);
+            });
         });
 
-        it("should handle sit-out for folded player during different rounds", () => {
-            // Test sitting out during various game rounds with folded player
-            const testRounds = [
-                TexasHoldemRound.PREFLOP,
-                TexasHoldemRound.FLOP,
-                TexasHoldemRound.TURN,
-                TexasHoldemRound.RIVER,
-                TexasHoldemRound.SHOWDOWN
-            ];
+        it("should handle sit-out for active player during gameplay (auto-fold)", () => {
+            // Setup: Active player tries to sit out during FLOP
+            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
+            activePlayer.holeCards = [{ suit: 1, rank: 14, value: 14, mnemonic: "Ah" }, { suit: 2, rank: 13, value: 13, mnemonic: "Kd" }];
 
-            testRounds.forEach((round, index) => {
-                // Reset player status
-                foldedPlayer.updateStatus(PlayerStatus.FOLDED);
-                jest.spyOn(game, "currentRound", "get").mockReturnValue(round);
+            // Execute sit out - should work (auto-folds the player)
+            const result = action.verify(activePlayer);
+            action.execute(activePlayer, 30, 0n);
 
-                const result = action.verify(foldedPlayer);
-                action.execute(foldedPlayer, index + 20, 0n);
-
-                expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
-                expect(foldedPlayer.status).toBe(PlayerStatus.SITTING_OUT);
-                expect(game.addAction).toHaveBeenCalledWith({
-                    playerId: foldedPlayer.address,
-                    action: PlayerActionType.SIT_OUT,
-                    index: index + 20
-                }, round);
+            // Verify results
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
+            expect(activePlayer.status).toBe(PlayerStatus.SITTING_OUT);
+            expect(activePlayer.holeCards).toBeUndefined(); // Cards mucked
+            expect(game.addNonPlayerAction).toHaveBeenCalledWith({
+                playerId: activePlayer.address,
+                action: NonPlayerActionType.SIT_OUT,
+                index: 30
             });
         });
 
@@ -309,23 +277,11 @@ describe("SitOutAction", () => {
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
             expect(brokePlayer.status).toBe(PlayerStatus.SITTING_OUT);
             expect(brokePlayer.chips).toBe(0n);
-            expect(game.addAction).toHaveBeenCalledWith({
+            expect(game.addNonPlayerAction).toHaveBeenCalledWith({
                 playerId: brokePlayer.address,
-                action: PlayerActionType.SIT_OUT,
+                action: NonPlayerActionType.SIT_OUT,
                 index: 25
-            }, TexasHoldemRound.ANTE);
-        });
-
-        it("should reject active player trying to sit out during gameplay", () => {
-            // Setup: Active player tries to sit out during non-ante round
-            jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
-
-            // Verify it throws error
-            expect(() => action.verify(activePlayer))
-                .toThrow("sit-out can only be performed during ante round.");
-
-            expect(() => action.execute(activePlayer, 30, 0n))
-                .toThrow("sit-out can only be performed during ante round.");
+            });
         });
     });
 });

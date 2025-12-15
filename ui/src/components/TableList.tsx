@@ -1,0 +1,179 @@
+import React from "react";
+import { useFindGames } from "../hooks/useFindGames";
+import { formatMicroAsUsdc } from "../constants/currency";
+import { colors, hexToRgba } from "../utils/colorConfig";
+
+interface TableListProps {
+    onJoinTable: (tableId: string, minBuyIn?: string, maxBuyIn?: string) => void;
+}
+
+/**
+ * TableList - Displays available poker tables in a table format
+ * Used on the landing page RHS
+ */
+const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
+    const { games, isLoading, error, refetch } = useFindGames();
+
+    // Button style matching WalletPanel deposit button
+    const buttonStyle = {
+        background: `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)`
+    };
+
+    if (isLoading) {
+        return (
+            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <div className="px-6 py-4 bg-gray-900 border-b border-gray-700 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white">Available Tables</h2>
+                </div>
+                <div className="flex items-center justify-center py-12">
+                    <svg
+                        className="animate-spin h-8 w-8 mr-3 text-blue-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                    </svg>
+                    <span className="text-white text-lg">Loading tables...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <div className="px-6 py-4 bg-gray-900 border-b border-gray-700">
+                    <h2 className="text-xl font-bold text-white">Available Tables</h2>
+                </div>
+                <div className="text-center py-12">
+                    <div className="text-red-400 mb-4">
+                        <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            />
+                        </svg>
+                    </div>
+                    <p className="text-gray-300 mb-4">{error.message}</p>
+                    <button
+                        onClick={refetch}
+                        className="px-4 py-2 rounded-lg text-white transition-all hover:opacity-90"
+                        style={buttonStyle}
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 bg-gray-900 border-b border-gray-700">
+                <h2 className="text-xl font-bold text-white">Available Tables</h2>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+                <table className="w-full">
+                    <thead className="bg-gray-900">
+                        <tr>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Club</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Table ID</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Stakes</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Type</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Players</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Buy-In</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                        {games.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                                    <div className="mb-4">
+                                        <svg
+                                            className="w-12 h-12 mx-auto text-gray-600"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="1.5"
+                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <p className="text-gray-400 mb-1">No tables available</p>
+                                    <p className="text-gray-500 text-sm">Create the first table to start playing!</p>
+                                </td>
+                            </tr>
+                        ) : (
+                            games.map((game: any) => (
+                                <tr
+                                    key={game.address}
+                                    className="hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                    onClick={() => onJoinTable(game.address, game.minBuyIn, game.maxBuyIn)}
+                                >
+                                    <td className="px-4 py-4">
+                                        <span className="text-white">Texas Hodl</span>
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <span className="text-gray-300 font-mono text-sm">
+                                            {game.address ? `${game.address.slice(0, 4)}...${game.address.slice(-4)}` : "-"}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <span className="text-white font-bold">
+                                            ${formatMicroAsUsdc(game.smallBlind || "0", 2)} / ${formatMicroAsUsdc(game.bigBlind || "0", 2)}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 text-center">
+                                        <span className="text-white capitalize">
+                                            {(game.gameType || "cash").replace("-", " ")}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 text-center">
+                                        <span className="text-white font-semibold">
+                                            {game.currentPlayers || 0}/{game.maxPlayers || 9}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 text-center">
+                                        <span className="text-gray-300 font-mono text-sm">
+                                            ${formatMicroAsUsdc(game.minBuyIn || "0", 2)} - ${formatMicroAsUsdc(game.maxBuyIn || "0", 2)}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 text-center">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onJoinTable(game.address, game.minBuyIn, game.maxBuyIn);
+                                            }}
+                                            className="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90"
+                                            style={buttonStyle}
+                                        >
+                                            Join
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+export default TableList;

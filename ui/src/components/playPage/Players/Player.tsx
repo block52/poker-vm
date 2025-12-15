@@ -13,6 +13,7 @@ import CustomDealer from "../../../assets/CustomDealer.svg";
 import { colors } from "../../../utils/colorConfig";
 import { getCardImageUrl } from "../../../utils/cardImages";
 import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
+import { useAllInEquity } from "../../../hooks/useAllInEquity";
 
 const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
     ({ left, top, index, currentIndex: _currentIndex, color, status: _status, uiPosition }) => {
@@ -43,9 +44,16 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
         const { extendTime, canExtend, isCurrentUserTurn } = usePlayerTimer(id, index);
 
         const { dealerSeat } = useDealerPosition();
+        const { equities, shouldShow: shouldShowEquity } = useAllInEquity();
 
         // Check if this seat is the dealer
         const isDealer = dealerSeat === index;
+
+        // Get equity for this player if available
+        const playerEquity = useMemo((): number | null => {
+            if (!shouldShowEquity || !equities.has(index)) return null;
+            return equities.get(index) ?? null;
+        }, [shouldShowEquity, equities, index]);
 
         // Get tournament results for this seat
         const { getSeatResult, isSitAndGo } = useSitAndGoPlayerResults();
@@ -154,13 +162,18 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
             }
             if (isAllIn) {
                 return (
-                    <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
-                        ALL IN
+                    <span className="animate-progress delay-2000 flex flex-col items-center w-full mb-2 mt-auto gap-0 justify-center" style={{ color: "white" }}>
+                        <span>ALL IN</span>
+                        {playerEquity !== null && (
+                            <span className="text-yellow-400 font-bold text-sm">
+                                {playerEquity.toFixed(1)}%
+                            </span>
+                        )}
                     </span>
                 );
             }
             return null;
-        }, [isWinner, winnerAmount, isSittingOut, isFolded, isAllIn]);
+        }, [isWinner, winnerAmount, isSittingOut, isFolded, isAllIn, playerEquity]);
 
         // 7) container style for positioning
         const containerStyle = useMemo(

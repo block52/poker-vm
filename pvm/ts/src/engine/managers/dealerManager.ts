@@ -1,4 +1,4 @@
-import { PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerStatus } from "@block52/poker-vm-sdk";
 import { Player } from "../../models/player";
 import { IDealerGameInterface, IDealerPositionManager } from "../types";
 

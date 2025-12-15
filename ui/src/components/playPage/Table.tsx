@@ -78,7 +78,7 @@ import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { NetworkSelector } from "../NetworkSelector";
 
 import { isValidPlayerAddress } from "../../utils/addressUtils";
-import { getCardImageUrl, getCardBackUrl } from "../../utils/cardImages";
+import { getCardImageUrl, getCardBackUrl, CardBackStyle } from "../../utils/cardImages";
 
 import "./Table.css"; // Import the Table CSS file
 
@@ -115,7 +115,7 @@ import { hasAction } from "../../utils/actionUtils";
 import { PositionArray } from "../../types/index";
 import { useGameStateContext } from "../../context/GameStateContext";
 import { useNetwork } from "../../context/NetworkContext";
-import { PlayerDTO } from "@bitcoinbrisbane/block52";
+import { PlayerDTO } from "@block52/poker-vm-sdk";
 import LiveHandStrengthDisplay from "./LiveHandStrengthDisplay";
 
 // Game Start Countdown
@@ -127,6 +127,9 @@ import { useGameStartCountdown } from "../../hooks/useGameStartCountdown";
 import { useTableLayout } from "../../hooks/useTableLayout";
 import { useVacantSeatData } from "../../hooks/useVacantSeatData";
 import { getViewportMode } from "../../config/tableLayoutConfig";
+
+// Turn Notification
+import { useTurnNotification } from "../../hooks/useTurnNotification";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -177,6 +180,10 @@ const Table = React.memo(() => {
             subscribeToTable(id);
         }
     }, [id, subscribeToTable]);
+
+    // Card back style configuration - can be customized per club/table
+    // Options: "default", "block52", "custom", or a custom URL
+    const cardBackStyle: CardBackStyle = "default";
 
     // Game Start Countdown
     const { gameStartTime, showCountdown, handleCountdownComplete, handleSkipCountdown } = useGameStartCountdown();
@@ -261,7 +268,7 @@ const Table = React.memo(() => {
 
     // Check if sit out/sit in actions are available
     const hasSitOutAction = hasAction(playerLegalActions, NonPlayerActionType.SIT_OUT);
-    const hasSitInAction = hasAction(playerLegalActions, PlayerActionType.SIT_IN);
+    const hasSitInAction = hasAction(playerLegalActions, NonPlayerActionType.SIT_IN);
 
     // Add the usePlayerSeatInfo hook
     const { currentUserSeat } = usePlayerSeatInfo();
@@ -274,6 +281,13 @@ const Table = React.memo(() => {
         availableActions: _nextToActAvailableActions,
         timeRemaining: _timeRemaining
     } = useNextToActInfo(id);
+
+    // Enable turn-to-act notifications (tab flashing + optional sound)
+    useTurnNotification(isCurrentUserTurn, {
+        enableSound: true,
+        soundVolume: 0.3,
+        flashInterval: 1000
+    });
 
     // Add the useTableState hook to get table state properties
     const { tableSize } = useTableState();
@@ -585,14 +599,14 @@ const Table = React.memo(() => {
                 const card = communityCards[idx];
                 return (
                     <div key={idx} className="card animate-fall">
-                        <OppositePlayerCards frontSrc={getCardImageUrl(card)} backSrc={getCardBackUrl()} flipped />
+                        <OppositePlayerCards frontSrc={getCardImageUrl(card)} backSrc={getCardBackUrl(cardBackStyle)} flipped />
                     </div>
                 );
             } else {
                 return <div key={idx} className="w-[85px] h-[127px] aspect-square border-[0.5px] border-dashed border-white rounded-[5px]" />;
             }
         });
-    }, [tableDataValues.tableDataCommunityCards]);
+    }, [tableDataValues.tableDataCommunityCards, cardBackStyle]);
 
     // Memoize the component renderer
     const getComponentToRender = useCallback(
@@ -699,6 +713,7 @@ const Table = React.memo(() => {
                     setStartIndex={setStartIndex}
                     isCardVisible={isCardVisible}
                     setCardVisible={setCardVisible}
+                    cardBackStyle={cardBackStyle}
                 />
             );
         },
@@ -833,7 +848,7 @@ const Table = React.memo(() => {
             {!isMobileLandscape && (
                 <div className="flex-shrink-0">
                     <div
-                        className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-10 relative overflow-hidden border-b-2"
+                        className="w-[100vw] h-[50px] sm:h-[65px] text-center flex items-center justify-between px-2 sm:px-4 z-[100] relative border-b-2"
                         style={headerStyle}
                     >
                         {/* Subtle animated background */}
@@ -956,7 +971,7 @@ const Table = React.memo(() => {
 
                     {/* SUB HEADER */}
                     <div
-                        className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header"
+                        className="text-white flex justify-between items-center p-1 sm:p-2 h-[28px] sm:h-[35px] relative overflow-hidden shadow-lg sub-header z-[1]"
                         style={subHeaderStyle}
                     >
                         {/* Animated background overlay */}
@@ -980,7 +995,7 @@ const Table = React.memo(() => {
                                         <span className="ml-2">Actions # {actionCount}</span>
                                     </span>
                                     <span className="text-[10px] sm:text-[15px] font-semibold" style={{ color: colors.ui.textSecondary }}>
-                                        <span className="sm:ml-2">Seat {nextToAct}</span>
+                                        <span className="sm:ml-2">Next to act: Seat {nextToAct}</span>
                                     </span>
                                 </div>
                             </div>

@@ -1,6 +1,6 @@
 import { useGameStateContext } from "../context/GameStateContext";
 import { GameProgressReturn } from "../types/index";
-import { PlayerDTO, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerDTO, PlayerStatus } from "@block52/poker-vm-sdk";
 
 /**
  * Custom hook to check if a game is in progress and provide game status information
@@ -55,7 +55,7 @@ export const useGameProgress = (_tableId?: string): GameProgressReturn => {
             activePlayers,
             playerCount: activePlayers.length,
             handNumber: gameState.handNumber || 0,
-            actionCount: gameState.actionCount || 0,
+            actionCount: gameState.previousActions?.length || 0,
             nextToAct: gameState.nextToAct || 0,
             previousActions: gameState.previousActions || [],
             isLoading: false,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useGameProgress } from "./useGameProgress";
 import { PlayerActionType, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { formatUSDCToSimpleDollars } from "../utils/numberUtils";
 
 export interface PlayerActionDisplay {
   action: string;
@@ -22,9 +23,9 @@ const ACTION_DISPLAY_MAP: Record<string, string> = {
   [PlayerActionType.CHECK]: "CHECK",
   [PlayerActionType.SHOW]: "SHOW",
   [PlayerActionType.MUCK]: "MUCK",
-  [PlayerActionType.SIT_IN]: "SIT IN",
 
   // Non-player actions
+  [NonPlayerActionType.SIT_IN]: "SIT IN",
   [NonPlayerActionType.SIT_OUT]: "SITTING OUT",
   [NonPlayerActionType.JOIN]: "JOINED",
   [NonPlayerActionType.LEAVE]: "LEFT",
@@ -39,14 +40,14 @@ const ACTION_DISPLAY_MAP: Record<string, string> = {
 const FILTERED_ACTIONS = ["join", "deal", "new-hand"];
 
 // Format amount for display
-const formatActionAmount = (action: string, amount?: string): string => {
+const formatActionAmount = (_action: string, amount?: string): string => {
   if (!amount || amount === "0") return "";
 
   const numAmount = parseFloat(amount);
   if (numAmount === 0) return "";
 
-  // Convert from wei to readable format (assuming 18 decimals)
-  const formatted = (numAmount / Math.pow(10, 18)).toFixed(2);
+  // Convert from USDC micro format (6 decimals) to readable format
+  const formatted = formatUSDCToSimpleDollars(amount);
   return ` $${formatted}`;
 };
 

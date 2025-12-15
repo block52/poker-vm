@@ -1,6 +1,6 @@
-import { PlayerStatus, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerStatus, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, getNextTestTimestamp } from "./testConstants";
 import { Player } from "../models/player";
 
 describe("Texas Holdem Game - Dealer Position", () => {
@@ -19,8 +19,8 @@ describe("Texas Holdem Game - Dealer Position", () => {
 
         it("should find the next available seat in sequential order", () => {
             // Add players to seats 1 and 2
-            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+            game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+            game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
 
             // Next available seat should be 3
             expect(game.findNextEmptySeat()).toBe(3);

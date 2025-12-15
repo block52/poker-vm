@@ -1,5 +1,5 @@
 import TexasHoldemGame from "../engine/texasHoldem";
-import { PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@block52/poker-vm-sdk";
 import { Player } from "../models/player";
 import { gameOptions, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp, resetTestTimestamp } from "./testConstants";
 import { ethers } from "ethers";
@@ -80,42 +80,42 @@ describe("hasRoundEnded", () => {
     describe("PREFLOP round", () => {
         beforeEach(() => {
             // Set up blinds and deal to get to PREFLOP
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
 
             // Check that we are now in PREFLOP
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
         });
 
         it("should end when both players check", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 5);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 5, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
 
         it("should not end when only one player has acted", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it("should not end when player bets and other hasn't responded", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4);
-            game.performAction(PLAYER_2, PlayerActionType.BET, 5, TWO_TOKENS);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BET, 5, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it.skip("should end when player bets and other calls", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, TWO_TOKENS);
-            game.performAction(PLAYER_2, PlayerActionType.BET, 5, TWO_TOKENS);
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, TWO_TOKENS);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BET, 5, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
 
         it.skip("should end when player raises and other calls", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, TWO_TOKENS);
-            game.performAction(PLAYER_2, PlayerActionType.RAISE, 5, TWO_TOKENS);
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, TWO_TOKENS);
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.RAISE, 5, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
     });
@@ -123,30 +123,30 @@ describe("hasRoundEnded", () => {
     describe("POST-FLOP rounds (FLOP/TURN/RIVER)", () => {
         beforeEach(() => {
             // Set up to get to FLOP
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3);
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 5);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 5, undefined, undefined, getNextTestTimestamp());
             // Now we should be on FLOP
         });
 
         it("should end when both players check", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 7);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.FLOP)).toBe(true);
         });
 
         it("should not end when player checks, other bets, first hasnt responded", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6);
-            game.performAction(PLAYER_2, PlayerActionType.BET, 7, TWO_TOKENS);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BET, 7, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.FLOP)).toBe(false);
         });
 
         it("should end when player checks, other bets, first calls", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6);
-            game.performAction(PLAYER_2, PlayerActionType.BET, 7, TWO_TOKENS);
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 8, TWO_TOKENS);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BET, 7, TWO_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 8, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.FLOP)).toBe(true);
         });
     });
@@ -154,25 +154,25 @@ describe("hasRoundEnded", () => {
     describe("SHOWDOWN round", () => {
         beforeEach(() => {
             // Set up to get to SHOWDOWN by checking through all rounds
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
 
             // PREFLOP - both check
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, 0n);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 5, 0n);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, 0n, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 5, 0n, undefined, getNextTestTimestamp());
 
             // FLOP - both check
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, 0n);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, 0n, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n, undefined, getNextTestTimestamp());
 
             // TURN - both check
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 8, 0n);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 9, 0n);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 9, 0n, undefined, getNextTestTimestamp());
 
             // RIVER - both check
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 10, 0n);
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 11, 0n);
+            game.performAction(PLAYER_1, PlayerActionType.CHECK, 10, 0n, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 11, 0n, undefined, getNextTestTimestamp());
 
             // Should now be at SHOWDOWN
         });
@@ -182,26 +182,26 @@ describe("hasRoundEnded", () => {
         });
 
         it("should not end when only one player has shown", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SHOW, 12);
+            game.performAction(PLAYER_1, PlayerActionType.SHOW, 12, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.SHOWDOWN)).toBe(false);
         });
 
         it("should end when both players show", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SHOW, 12);
-            game.performAction(PLAYER_2, PlayerActionType.SHOW, 13);
+            game.performAction(PLAYER_1, PlayerActionType.SHOW, 12, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.SHOW, 13, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.SHOWDOWN)).toBe(true);
         });
 
         // Not going to allow both players to muck in SHOWDOWN
         it.skip("should end when both players muck", () => {
-            game.performAction(PLAYER_1, PlayerActionType.MUCK, 12);
-            game.performAction(PLAYER_2, PlayerActionType.MUCK, 13);
+            game.performAction(PLAYER_1, PlayerActionType.MUCK, 12, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.MUCK, 13, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.SHOWDOWN)).toBe(true);
         });
 
         it("should end when one shows and one mucks", () => {
-            game.performAction(PLAYER_1, PlayerActionType.SHOW, 12);
-            game.performAction(PLAYER_2, PlayerActionType.MUCK, 13);
+            game.performAction(PLAYER_1, PlayerActionType.SHOW, 12, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.MUCK, 13, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.END)).toBe(true);
         });
     });
@@ -209,10 +209,10 @@ describe("hasRoundEnded", () => {
     describe("Edge cases", () => {
         it("should end immediately if only one player remains", () => {
             // Add players then fold one
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3);
-            game.performAction(PLAYER_1, PlayerActionType.FOLD, 4);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.FOLD, 4, undefined, undefined, getNextTestTimestamp());
 
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
@@ -220,11 +220,11 @@ describe("hasRoundEnded", () => {
         // Not going to allow last player to fold
         it.skip("should end immediately if no active players", () => {
             // Both players fold
-            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1);
-            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2);
-            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3);
-            game.performAction(PLAYER_1, PlayerActionType.FOLD, 4);
-            game.performAction(PLAYER_2, PlayerActionType.FOLD, 5);
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.FOLD, 4, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.FOLD, 5, undefined, undefined, getNextTestTimestamp());
 
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });

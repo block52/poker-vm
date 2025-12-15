@@ -2,6 +2,8 @@
 
 [![PVM UnitTests](https://github.com/block52/poker-vm/actions/workflows/main.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/main.yml)
 [![UI Build](https://github.com/block52/poker-vm/actions/workflows/ui-build.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/ui-build.yml)
+[![UI Tests](https://github.com/block52/poker-vm/actions/workflows/ui-test.yml/badge.svg)](https://github.com/block52/poker-vm/actions/workflows/ui-test.yml)
+[![CVE-2025-55182](https://img.shields.io/badge/CVE--2025--55182-Not%20Affected-brightgreen)](docs/SECURITY-CVE-2025-55182.md)
 
 A stateless execution layer for poker game logic on the Block52 blockchain network.
 
@@ -207,27 +209,166 @@ Response:
 
 The PVM tracks various player states throughout the game:
 
-| Status        | Description                          | Can Act | Receives Cards | Notes                                |
-| ------------- | ------------------------------------ | ------- | -------------- | ------------------------------------ |
-| `SEATED`      | Player has joined but not yet active | ❌      | ❌             | Waiting for next hand to start       |
-| `ACTIVE`      | Player is actively participating     | ✅      | ✅             | Default status for joined players    |
-| `BUSTED`      | Player has no chips left             | ❌      | ❌             | Eliminated from tournament/cash game |
-| `FOLDED`      | Player has folded their hand         | ❌      | ❌             | Cannot act until next hand           |
-| `ALL_IN`      | Player has bet all their chips       | ❌      | ✅             | Eligible for side pots               |
-| `SITTING_OUT` | Player is temporarily away           | ❌      | ❌             | Preserves seat, skipped in dealing   |
-| `SITTING_IN`  | Player is returning from sitting out | ✅      | ✅             | Transitioning back to active         |
-| `SHOWING`     | Player is showing cards at showdown  | ❌      | ✅             | Cards revealed to table              |
+| Status        | Description                                  | Can Act | Receives Cards | In Dealer Rotation | Notes                                |
+| ------------- | -------------------------------------------- | ------- | -------------- | ------------------ | ------------------------------------ |
+| `ACTIVE`      | Player is actively participating             | ✅      | ✅             | ✅                 | Default status for players in a hand |
+| `FOLDED`      | Player has folded their hand                 | ❌      | ❌             | ❌                 | Cannot act until next hand           |
+| `ALL_IN`      | Player has bet all their chips               | ❌      | ✅             | ❌                 | Eligible for side pots               |
+| `SITTING_OUT` | Player is away or joined mid-hand            | ❌      | ❌             | ❌                 | Skipped in dealing and betting       |
+| `SHOWING`     | Player is showing cards at showdown          | ❌      | ✅             | ✅                 | Cards revealed to table              |
+| `BUSTED`      | Player has no chips left                     | ❌      | ❌             | ❌                 | Eliminated from tournament           |
 
 **Status Transitions:**
 
--   `SEATED` → `ACTIVE` (when hand begins)
--   `ACTIVE` → `FOLDED` (fold action)
--   `ACTIVE` → `ALL_IN` (bet all chips)
--   `ACTIVE` → `SITTING_OUT` (sit out action)
--   `SITTING_OUT` → `SITTING_IN` (sit in action)
--   `SITTING_IN` → `ACTIVE` (next hand starts)
--   `ACTIVE` → `SHOWING` (showdown phase)
--   `ACTIVE` → `BUSTED` (lose all chips)
+```mermaid
+stateDiagram-v2
+    [*] --> SITTING_OUT : Join mid-hand
+    [*] --> ACTIVE : Join before hand
+
+    SITTING_OUT --> ACTIVE : New hand starts\nor Sit-in action
+
+    ACTIVE --> FOLDED : Fold
+    ACTIVE --> ALL_IN : Bet all chips
+    ACTIVE --> SITTING_OUT : Sit out action\nor 0 chips (cash)
+    ACTIVE --> SHOWING : Showdown
+    ACTIVE --> BUSTED : Lose all chips\n(tournament)
+
+    ALL_IN --> SHOWING : Showdown
+
+    FOLDED --> ACTIVE : New hand starts
+    SHOWING --> ACTIVE : New hand starts
+    ALL_IN --> ACTIVE : New hand starts\n(if chips won)
+
+    BUSTED --> [*] : Eliminated
+```
+
+### Game Round Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> ANTE : Game starts
+
+    ANTE --> PREFLOP : Blinds posted\n& cards dealt
+
+    PREFLOP --> FLOP : Betting complete
+    PREFLOP --> SHOWDOWN : All-in called
+    PREFLOP --> END : All fold
+
+    FLOP --> TURN : Betting complete
+    FLOP --> SHOWDOWN : All-in called
+    FLOP --> END : All fold
+
+    TURN --> RIVER : Betting complete
+    TURN --> SHOWDOWN : All-in called
+    TURN --> END : All fold
+
+    RIVER --> SHOWDOWN : Betting complete
+    RIVER --> END : All fold
+
+    SHOWDOWN --> END : Winner determined
+
+    END --> ANTE : New hand
+    END --> [*] : Game over
+```
+
+### Join Timing Flow
+
+```mermaid
+flowchart TD
+    A[Player Requests Join] --> B{Hand in Progress?}
+
+    B -->|No - ANTE before blinds| C[Set ACTIVE]
+    B -->|No - END round| C
+    B -->|Yes - Blinds posted| D[Set SITTING_OUT]
+    B -->|Yes - Any betting round| D
+
+    C --> E[✅ Participate in current/next hand]
+    D --> F[⏳ Wait for next hand]
+
+    F --> G{New Hand Starts}
+    G --> H[reInit activates player]
+    H --> I[Set ACTIVE]
+    I --> E
+```
+
+### Hand Lifecycle Sequence
+
+```mermaid
+sequenceDiagram
+    participant P1 as Player 1 (SB)
+    participant P2 as Player 2 (BB)
+    participant P3 as Player 3 (joins mid-hand)
+    participant Game as Texas Holdem
+
+    Note over Game: Round: ANTE
+    P1->>Game: POST SMALL_BLIND
+    P2->>Game: POST BIG_BLIND
+    P1->>Game: DEAL
+    Note over Game: Round: PREFLOP
+
+    P3->>Game: JOIN (mid-hand)
+    Game-->>P3: Status: SITTING_OUT
+    Note over P3: No cards dealt
+
+    P1->>Game: CALL
+    P2->>Game: CHECK
+    Note over Game: Round: FLOP
+
+    P1->>Game: CHECK
+    P2->>Game: BET
+    P1->>Game: FOLD
+    Note over P1: Status: FOLDED
+
+    Note over Game: Round: END
+    Game-->>P2: Winner!
+
+    P2->>Game: NEW_HAND
+    Note over Game: reInit() called
+    Game-->>P1: Status: ACTIVE
+    Game-->>P3: Status: ACTIVE
+    Note over P3: Now eligible for cards
+```
+
+### Join Timing Matrix
+
+Players joining at different game phases receive different initial statuses:
+
+| Current Round | Blinds Posted | Player Status on Join | Can Play This Hand |
+| ------------- | ------------- | --------------------- | ------------------ |
+| `ANTE`        | No            | `ACTIVE`              | ✅ Yes             |
+| `ANTE`        | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `PREFLOP`     | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `FLOP`        | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `TURN`        | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `RIVER`       | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `SHOWDOWN`    | Yes           | `SITTING_OUT`         | ❌ No (next hand)  |
+| `END`         | N/A           | `ACTIVE`              | ✅ Yes (next hand) |
+
+### Dealer Manager Behavior
+
+The dealer manager uses player status to determine positions and turn order:
+
+| Player Status | Eligible for Dealer | Eligible for Blinds | Included in Turn Order | Receives Cards |
+| ------------- | ------------------- | ------------------- | ---------------------- | -------------- |
+| `ACTIVE`      | ✅                  | ✅                  | ✅                     | ✅             |
+| `FOLDED`      | ❌                  | ❌                  | ❌                     | ❌             |
+| `ALL_IN`      | ❌                  | ❌                  | ❌                     | ✅ (already)   |
+| `SITTING_OUT` | ❌                  | ❌                  | ❌                     | ❌             |
+| `SHOWING`     | ✅                  | ✅                  | ✅                     | ✅ (already)   |
+| `BUSTED`      | ❌                  | ❌                  | ❌                     | ❌             |
+
+### Action Validation by Status
+
+Which actions each player status can perform:
+
+| Player Status | Bet/Raise | Call | Check | Fold | All-In | Show | Muck | Sit Out | Sit In |
+| ------------- | --------- | ---- | ----- | ---- | ------ | ---- | ---- | ------- | ------ |
+| `ACTIVE`      | ✅        | ✅   | ✅    | ✅   | ✅     | ❌   | ❌   | ✅      | ❌     |
+| `FOLDED`      | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ❌     |
+| `ALL_IN`      | ❌        | ❌   | ❌    | ❌   | ❌     | ✅   | ✅   | ❌      | ❌     |
+| `SITTING_OUT` | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ✅     |
+| `SHOWING`     | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ❌     |
+| `BUSTED`      | ❌        | ❌   | ❌    | ❌   | ❌     | ❌   | ❌   | ❌      | ❌     |
 
 ### WebSocket Connection
 
@@ -371,6 +512,85 @@ poker-vm/
 │   └── python/          # Python bot framework
 └── tests/               # End-to-end tests
 ```
+
+## Email
+
+pitboss at block 52 dot xyz
+
+```text
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Comment: 406F D0E4 4DC5 B26E F121  58C4 36F2 5F29 0099 78F4
+Comment: Pit Boss <pitboss@block52.xyz>
+
+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
+1MIHZBpp/rvs
+=XIiJ
+-----END PGP PUBLIC KEY BLOCK-----
+```
+
+## Security
+
+### CVE-2025-55182 (React2Shell) Status: ✅ Not Affected
+
+This repository has been analyzed for the critical CVE-2025-55182 vulnerability affecting React Server Components and Next.js. **The poker-vm repository is NOT vulnerable** as it uses React 18.3.1 and does not use Next.js or React Server Components.
+
+For full details, see [SECURITY-CVE-2025-55182.md](docs/SECURITY-CVE-2025-55182.md).
+
+#### Running Security Checks
+
+To verify the repository remains free of CVE-2025-55182 vulnerabilities:
+
+```bash
+./scripts/check-react-cve-2025-55182.sh
+```
+
+This script checks all package.json and lock files for vulnerable React Server or Next.js versions.
 
 ## Contributing
 

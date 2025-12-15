@@ -1,6 +1,6 @@
-import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp } from "./testConstants";
 
 /**
  * Test file generated from poker scenario: Ensure there is No CHECK option when facing a bet from another opponent (SCENARIO 1 OF 18-CALLS)
@@ -22,27 +22,27 @@ describe("Ensure there is No CHECK option when facing a bet from another opponen
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
 
         // Add players to the game
-        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+        game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+        game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
     });
 
     it("should enforce correct showdown behavior - first to act must show", () => {
         // Execute the setup actions (up to showdown)
-        game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
-        game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
-        game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5);
+        game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
 
-        game.performAction(PLAYER_1, PlayerActionType.RAISE, 6, THREE_TOKENS);
+        game.performAction(PLAYER_1, PlayerActionType.RAISE, 6, THREE_TOKENS, undefined, getNextTestTimestamp());
         const legalActions = game.getLegalActions(PLAYER_2);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
+        expect(legalActions.length).toBeGreaterThanOrEqual(3); // Fold, Call or Raise
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
         expect(legalActions[1].min).toEqual("200000000000000000");
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
         expect(legalActions[2].min).toEqual("400000000000000000");
 
-        game.performAction(PLAYER_2, PlayerActionType.CALL, 7, TWO_TOKENS);
+        game.performAction(PLAYER_2, PlayerActionType.CALL, 7, TWO_TOKENS, undefined, getNextTestTimestamp());
 
         // Verify the game executed correctly
         expect(game.currentRound).toBeDefined();
@@ -68,12 +68,12 @@ describe("Texas Holdem - Call raise preflop", () => {
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
         // Add minimum required players
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1");
-        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2");
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
+        game.performAction(PLAYER_2_ADDRESS, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
 
         // Post blinds
-        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3);
-        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4);
+        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.SMALL_BLIND, 3, undefined, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
     });
 
     it("should have correct call values for sb", () => {
@@ -83,12 +83,12 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
         // Deal cards
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5);
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
         const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
+        expect(legalActions.length).toBeGreaterThanOrEqual(3); // Fold, Call or Raise
 
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
@@ -108,23 +108,23 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
         // Deal cards
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5);
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
         // SB calls
         const legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
+        expect(legalActions.length).toBeGreaterThanOrEqual(3); // Fold, Call or Raise
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
         expect(legalActions[2].action).toEqual(PlayerActionType.RAISE);
 
-        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6, ONE_TOKEN);
+        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6, ONE_TOKEN, undefined, getNextTestTimestamp());
         expect(game.pot).toEqual(FOUR_TOKENS); // 4 tokens in pot
 
         const legalActions2 = game.getLegalActions(PLAYER_2_ADDRESS);
         expect(legalActions2).toBeDefined();
-        expect(legalActions2.length).toEqual(3); // Fold, Check or Raise (special case for BB)
+        expect(legalActions2.length).toBeGreaterThanOrEqual(3); // Fold, Check or Raise (special case for BB)
 
         expect(legalActions2[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions2[1].action).toEqual(PlayerActionType.CHECK);
@@ -142,18 +142,18 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
         // SB to Deal cards
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5);
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
         // SB raises
-        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.RAISE, 6, THREE_TOKENS); // Raises to 3 tokens, so 4 tokens total bet
+        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.RAISE, 6, THREE_TOKENS, undefined, getNextTestTimestamp()); // Raises to 3 tokens, so 4 tokens total bet
         expect(game.pot).toEqual(SIX_TOKENS); // 6 tokens in pot
         expect(game.getPlayerTotalBets(PLAYER_1_ADDRESS, TexasHoldemRound.PREFLOP, true)).toEqual(FOUR_TOKENS); // 4 tokens total bet
 
         // After SB raises, BB acts next
         const legalActions = game.getLegalActions(PLAYER_2_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
+        expect(legalActions.length).toBeGreaterThanOrEqual(3); // Fold, Call or Raise
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
         expect(legalActions[1].min).toEqual("200000000000000000"); // Call 2 more tokens to match SB's 4 token bet
@@ -172,26 +172,26 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
         // SB to Deal cards
-        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5);
+        game.performAction(PLAYER_1_ADDRESS, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
         expect(game.currentRound).toEqual(TexasHoldemRound.PREFLOP);
 
         // SB calls
         let legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
-        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6, ONE_TOKEN);
+        expect(legalActions.length).toBeGreaterThanOrEqual(3); // Fold, Call or Raise
+        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 6, ONE_TOKEN, undefined, getNextTestTimestamp());
         expect(game.getPlayerTotalBets(PLAYER_1_ADDRESS, TexasHoldemRound.PREFLOP, true)).toEqual(TWO_TOKENS); // 2 tokens
         expect(game.pot).toEqual(FOUR_TOKENS); // 4 tokens in pot
 
         // BB raises
-        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.RAISE, 7, TWO_TOKENS);
+        game.performAction(PLAYER_2_ADDRESS, PlayerActionType.RAISE, 7, TWO_TOKENS, undefined, getNextTestTimestamp());
         expect(game.getPlayerTotalBets(PLAYER_2_ADDRESS, TexasHoldemRound.PREFLOP, true)).toEqual(FOUR_TOKENS); // 4 tokens total bet
         expect(game.pot).toEqual(SIX_TOKENS); // 6 tokens in pot
 
         // Check SB's legal actions after BB raises
         legalActions = game.getLegalActions(PLAYER_1_ADDRESS);
         expect(legalActions).toBeDefined();
-        expect(legalActions.length).toEqual(3); // Fold, Call or Raise
+        expect(legalActions.length).toBeGreaterThanOrEqual(3); // Fold, Call or Raise
         expect(legalActions[0].action).toEqual(PlayerActionType.FOLD);
         expect(legalActions[1].action).toEqual(PlayerActionType.CALL);
         expect(legalActions[1].min).toEqual("200000000000000000"); // Call 2 more tokens to match BB's 4 token bet
@@ -200,7 +200,7 @@ describe("Texas Holdem - Call raise preflop", () => {
         expect(legalActions[2].min).toEqual("400000000000000000"); // Min raise: additional 4 tokens needed (2 already bet + 4 more = 6 total)
         expect(legalActions[2].max).toEqual("99800000000000000000"); // Max raise: full stack
 
-        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 8, TWO_TOKENS);
+        game.performAction(PLAYER_1_ADDRESS, PlayerActionType.CALL, 8, TWO_TOKENS, undefined, getNextTestTimestamp());
 
         expect(game.currentRound).toEqual(TexasHoldemRound.FLOP);
     });

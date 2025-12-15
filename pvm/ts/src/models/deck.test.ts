@@ -1,5 +1,5 @@
 import { Deck } from "./deck";
-import { Card, SUIT } from "@bitcoinbrisbane/block52";
+import { Card, SUIT } from "@block52/poker-vm-sdk";
 
 describe("Deck", () => {
     let deck: Deck;

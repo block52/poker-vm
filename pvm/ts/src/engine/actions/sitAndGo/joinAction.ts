@@ -1,4 +1,4 @@
-import { NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType } from "@block52/poker-vm-sdk";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
 import { IAction, Range } from "../../types";

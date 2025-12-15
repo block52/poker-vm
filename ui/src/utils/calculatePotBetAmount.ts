@@ -1,4 +1,4 @@
-import { PlayerActionType, ActionDTO, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, ActionDTO, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { parseMicroToBigInt } from "../constants/currency";
 
 type CalculatePotBetAmountParams = {

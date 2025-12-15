@@ -1,6 +1,6 @@
-import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, TexasHoldemRound, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS } from "./testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_TOKEN, TWO_TOKENS, getNextTestTimestamp } from "./testConstants";
 
 /**
  * This test suite was implemented to address and verify the fix for a double increment issue
@@ -32,18 +32,18 @@ describe("Texas Holdem - Action Index", () => {
 
         it("should reset turn index to 0 when game is reinitialized", () => {
             // Add players
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1");
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2", getNextTestTimestamp());
 
             // Post blinds
-            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN);
-            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS);
+            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
 
             // Turn index should be 5 now
             expect(game.getActionIndex()).toBe(5);
 
             // Reinitialize game
-            // game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.NEW_HAND, 5, undefined, mnemonic);
+            // game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", NonPlayerActionType.NEW_HAND, 5, undefined, mnemonic, getNextTestTimestamp());
 
             // Turn index should reset to 0
             // expect(game.getActionIndex()).toBe(0);
@@ -53,8 +53,8 @@ describe("Texas Holdem - Action Index", () => {
     describe("Action Index Increments", () => {
         beforeEach(() => {
             // Add two players for the tests
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1");
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2", getNextTestTimestamp());
         });
 
         it("should increment turn index by exactly 1 for each action", () => {
@@ -62,15 +62,15 @@ describe("Texas Holdem - Action Index", () => {
             expect(game.getActionIndex()).toBe(3);
 
             // Perform first action and check index
-            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3);
+            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, undefined, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(4);
 
             // Perform second action and check index
-            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4);
+            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(5);
 
             // Perform third action and check index
-            game.performAction(PLAYER_2, PlayerActionType.CALL, 5, ONE_TOKEN);
+            game.performAction(PLAYER_2, PlayerActionType.CALL, 5, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(6);
         });
 
@@ -79,8 +79,8 @@ describe("Texas Holdem - Action Index", () => {
     describe("Turn Index in Legal Actions", () => {
         beforeEach(() => {
             // Add two players for the tests
-            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1");
-            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2");
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 1, BUY_IN_AMOUNT, "seat=1", getNextTestTimestamp());
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, 2, BUY_IN_AMOUNT, "seat=2", getNextTestTimestamp());
         });
 
         it("should include current turn index in legal actions", () => {

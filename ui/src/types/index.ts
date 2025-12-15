@@ -8,7 +8,7 @@ import {
     ActionDTO,
     PlayerStatus,
     GameOptionsResponse
-} from "@bitcoinbrisbane/block52";
+} from "@block52/poker-vm-sdk";
 
 // Base type for all hook returns with common loading and error state
 export interface BaseHookReturn {

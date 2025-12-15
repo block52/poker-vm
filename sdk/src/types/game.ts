@@ -8,8 +8,6 @@ export enum PlayerActionType {
     RAISE = "raise",
     ALL_IN = "all-in",
     MUCK = "muck",
-    SIT_IN = "sit-in",
-    SIT_OUT = "sit-out",
     SHOW = "show"
 }
 
@@ -18,6 +16,9 @@ export enum NonPlayerActionType {
     JOIN = "join",
     LEAVE = "leave",
     NEW_HAND = "new-hand",
+    SIT_IN = "sit-in",
+    SIT_OUT = "sit-out",
+    TOP_UP = "top-up"
 }
 
 export const AllPlayerActions = { ...PlayerActionType, ...NonPlayerActionType };
@@ -43,7 +44,8 @@ export enum PlayerStatus {
     SEATED = "seated",
     SITTING_OUT = "sitting-out",
     SITTING_IN = "sitting-in",
-    SHOWING = "showing"
+    SHOWING = "showing",
+    WAITING = "waiting"
 }
 
 export enum TexasHoldemRound {
@@ -60,6 +62,7 @@ export type RakeConfig = {
     rakeFreeThreshold: bigint; // Absolute value below which the hand is rake-free
     rakePercentage: number; // Percentage of the pot that is the rake (e.g., 5 for 5%)
     rakeCap: bigint; // Maximum rake amount (absolute cap)
+    owner: string; // Address that receives the rake
 };
 
 export type RakeConfigDTO = {

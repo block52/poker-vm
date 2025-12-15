@@ -1,4 +1,4 @@
-import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { PlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import ShowAction from "./showAction";
 import { Player } from "../../models/player";
 import TexasHoldemGame from "../texasHoldem";
@@ -86,17 +86,20 @@ describe("ShowAction", () => {
             expect(() => action.verify(player)).toThrow("show can only be performed during showdown round.");
         });
 
-        it("should throw error if player is not active", () => {
+        it("should throw error if player is not active or all-in", () => {
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.FOLDED);
 
             expect(() => action.verify(player)).toThrow("Only active player can show.");
         });
 
-        it("should throw error if it's not player's turn", () => {
-            const otherPlayer = new Player("0xother", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(otherPlayer);
+        it("should allow all-in players to show at showdown", () => {
+            // At showdown, all-in players should be able to show their cards
+            const allInPlayer = new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, 0n, undefined, PlayerStatus.ALL_IN);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
 
-            expect(() => action.verify(player)).toThrow("Must be currently active player.");
+            // SHOW action should work for ALL_IN players at showdown
+            const result = action.verify(allInPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
         it("should handle single live player scenario - correct player", () => {
@@ -311,17 +314,17 @@ describe("ShowAction", () => {
         });
 
         it("should handle show with all-in player", () => {
-            // Test showing with all-in status - but they need to be ACTIVE status to show
+            // Test showing with ALL_IN status - all-in players can show at showdown
             const allInPlayer = new Player(
                 "0x980b8D8A16f5891F41871d878a479d81Da52334c",
                 undefined,
                 0n, // All-in players typically have 0 chips
                 undefined,
-                PlayerStatus.ACTIVE // Must be ACTIVE to show, even if they went all-in
+                PlayerStatus.ALL_IN // ALL_IN players can show at showdown
             );
 
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(allInPlayer);
-            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
 
             const livePlayers = [
                 allInPlayer,

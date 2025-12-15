@@ -1,4 +1,4 @@
-import { TexasHoldemStateDTO } from "@bitcoinbrisbane/block52";
+import { TexasHoldemStateDTO } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "../../engine/texasHoldem";
 import axios from "axios";
 

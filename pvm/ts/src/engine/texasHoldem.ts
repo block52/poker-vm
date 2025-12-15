@@ -17,7 +17,7 @@ import {
     PokerSolver,
     PokerGameIntegration,
     Deck as SDKDeck
-} from "@bitcoinbrisbane/block52";
+} from "@block52/poker-vm-sdk";
 import { Player } from "../models/player";
 import { Deck } from "../models/deck";
 
@@ -37,7 +37,8 @@ import {
     ShowAction,
     SmallBlindAction,
     SitOutAction,
-    SitInAction
+    SitInAction,
+    TopUpAction
 } from "./actions";
 
 import JoinActionSitAndGo from "./actions/sitAndGo/joinAction";
@@ -60,6 +61,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private readonly _communityCards: Card[] = [];
     private readonly _communityCards2: Card[] = [];
     private readonly _actions: IAction[];
+    private readonly _nonPlayerActions: IAction[];
     private readonly _gameOptions: GameOptions;
     private readonly _address: string;
     private _deck: Deck;
@@ -68,6 +70,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     private _winners = new Map<string, Winner>();
     private _currentRound: TexasHoldemRound;
     private readonly _autoExpire: number = Number(process.env.AUTO_EXPIRE || 0);
+    // Stores the current action's timestamp during performAction for deterministic consensus
+    private _actionTimestamp?: number;
 
     // Constructor
     constructor(
@@ -105,7 +109,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             rake: gameOptions.rake ? {
                 rakeFreeThreshold: BigInt(gameOptions.rake.rakeFreeThreshold),
                 rakePercentage: gameOptions.rake.rakePercentage,
-                rakeCap: BigInt(gameOptions.rake.rakeCap)
+                rakeCap: BigInt(gameOptions.rake.rakeCap),
+                owner: gameOptions.rake.owner || gameOptions.owner || ""
             } : undefined,
             owner: gameOptions.owner
         };
@@ -182,8 +187,13 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             new MuckAction(this, this._update),
             new ShowAction(this, this._update),
             new NewHandAction(this, this._update, ""),
-            new SitOutAction(this, this._update),
             new SitInAction(this, this._update)
+        ];
+
+        // Initialize non-player action handlers that can be returned in getLegalActions
+        this._nonPlayerActions = [
+            new SitOutAction(this, this._update),
+            new TopUpAction(this, this._update)
         ];
 
         this.dealerManager = dealerManager || new DealerPositionManager(this);
@@ -261,9 +271,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         for (const player of this.getSeatedPlayers()) {
             player.reinit();
 
-            // In tournament games, players with 0 chips should be marked as BUSTED
-            if (this._gameOptions.type !== GameType.CASH && player.chips === 0n) {
+            // Players with 0 chips should be marked as BUSTED
+            if (player.chips === 0n) {
                 player.updateStatus(PlayerStatus.BUSTED);
+            }
+
+            // Activate players who were SITTING_OUT (waiting for next hand)
+            if (player.status === PlayerStatus.SITTING_OUT) {
+                player.updateStatus(PlayerStatus.ACTIVE);
             }
         }
 
@@ -341,6 +356,34 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     get maxBuyIn(): bigint {
         return this._gameOptions.maxBuyIn;
+    }
+
+    /**
+     * Calculate maximum allowed top-up amount for a player
+     * @param playerAddress The address of the player
+     * @returns The maximum amount the player can add to their stack
+     */
+    getMaxTopUpAmount(playerAddress: string): bigint {
+        const player = this.getPlayer(playerAddress);
+        if (!player) return 0n;
+
+        // Cannot top up while in active hand
+        if (player.status === PlayerStatus.ACTIVE || player.status === PlayerStatus.ALL_IN) {
+            return 0n;
+        }
+
+        // Maximum top-up is the difference between max buy-in and current chips
+        const maxTopUp = this.maxBuyIn - player.chips;
+        return maxTopUp > 0n ? maxTopUp : 0n;
+    }
+
+    /**
+     * Check if a player can top up their stack
+     * @param playerAddress The address of the player
+     * @returns True if the player can add chips to their stack
+     */
+    canTopUp(playerAddress: string): boolean {
+        return this.getMaxTopUpAmount(playerAddress) > 0n;
     }
 
     get minPlayers(): number {
@@ -528,7 +571,36 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
+     * Checks if a hand is currently in progress
+     * A hand is in progress if:
+     * 1. We're past ANTE but haven't reached END, OR
+     * 2. We're in ANTE but blinds have been posted (hand has started)
+     */
+    private isHandInProgress(): boolean {
+        // If we're past ANTE but not at END, hand is definitely in progress
+        if (this._currentRound !== TexasHoldemRound.ANTE &&
+            this._currentRound !== TexasHoldemRound.END) {
+            return true;
+        }
+
+        // If we're at END, hand is not in progress
+        if (this._currentRound === TexasHoldemRound.END) {
+            return false;
+        }
+
+        // We're in ANTE - check if blinds have been posted
+        const actions = this._rounds.get(TexasHoldemRound.ANTE) || [];
+        const hasBlinds = actions.some(
+            a => a.action === PlayerActionType.SMALL_BLIND ||
+                 a.action === PlayerActionType.BIG_BLIND
+        );
+
+        return hasBlinds;
+    }
+
+    /**
      * Adds a player to the game at a specific seat
+     * If a hand is in progress, player is set to SITTING_OUT and will join the next hand
      */
     joinAtSeat(player: Player, seat: number): void {
         // Ensure the seat is valid
@@ -538,7 +610,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Add player to the table
         this._playersMap.set(seat, player);
-        player.updateStatus(PlayerStatus.ACTIVE);
+
+        // If a hand is in progress, set player to SITTING_OUT
+        // They will become ACTIVE when the next hand starts
+        if (this.isHandInProgress()) {
+            player.updateStatus(PlayerStatus.SITTING_OUT);
+        } else {
+            player.updateStatus(PlayerStatus.ACTIVE);
+        }
     }
 
     /**
@@ -600,7 +679,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         //     throw new Error("Cards have already been dealt for this hand.");
         // }
 
-        const players = this.getSeatedPlayers();
+        // Only deal to ACTIVE players (excludes SITTING_OUT/waiting players)
+        const players = this.findActivePlayers();
 
         // Deal first card to each player
         for (const player of players) {
@@ -845,6 +925,54 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
+     * Determines if game should auto-runout remaining streets
+     * This happens when no more betting action is possible
+     */
+    private shouldAutoRunout(): boolean {
+        const livePlayers = this.findLivePlayers();
+        const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
+        const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
+
+        // Case 1: All remaining live players are all-in (2 or more players)
+        // No more betting action possible - auto-runout remaining streets
+        if (allInPlayers.length >= 2 && allInPlayers.length === livePlayers.length) {
+            return true;
+        }
+
+        // Case 2: Heads-up or multi-way with one or more all-in and one active player who has matched the bet
+        // If there's only 1 active player left and others are all-in, check if active player has matched the largest all-in
+        if (allInPlayers.length >= 1 && activePlayers.length === 1) {
+            // IMPORTANT: Check ALL rounds, not just current round
+            // After advancing from FLOP to TURN, the TURN round has no actions yet
+            // But we still need to detect auto-runout based on previous betting
+            const allActions: Turn[] = [];
+            for (const [, actions] of this._rounds.entries()) {
+                allActions.push(...actions);
+            }
+            const betManager = new BetManager(allActions);
+
+            const activePlayer = activePlayers[0];
+            const activePlayerBet = betManager.getTotalBetsForPlayer(activePlayer.address);
+
+            // Find the largest all-in bet
+            let largestAllInBet = 0n;
+            for (const allInPlayer of allInPlayers) {
+                const allInBet = betManager.getTotalBetsForPlayer(allInPlayer.address);
+                if (allInBet > largestAllInBet) {
+                    largestAllInBet = allInBet;
+                }
+            }
+
+            // If active player has matched or exceeded the largest all-in, no more betting possible
+            if (activePlayerBet >= largestAllInBet) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Determines if the current betting round has ended
      */
     hasRoundEnded(round: TexasHoldemRound): boolean {
@@ -852,8 +980,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const livePlayers = this.findLivePlayers();
 
         // Step 2: If only one live player remains, they win - move to showdown
-        if (livePlayers.length <= 1) {
-            if (this.currentRound !== TexasHoldemRound.ANTE && livePlayers.length === 1) {
+        // IMPORTANT: In ANTE round, we must wait for both blinds to be posted even if only one player is live
+        // This prevents the game from advancing to PREFLOP prematurely in heads-up scenarios
+        // Also don't force SHOWDOWN if we're already at or past SHOWDOWN
+        if (livePlayers.length <= 1 && round !== TexasHoldemRound.ANTE) {
+            if (this.currentRound !== TexasHoldemRound.ANTE &&
+                this.currentRound !== TexasHoldemRound.SHOWDOWN &&
+                this.currentRound !== TexasHoldemRound.END &&
+                livePlayers.length === 1) {
                 // Check community cards, deal the remaining
                 this._currentRound = TexasHoldemRound.SHOWDOWN;
                 this.dealCommunityCards();
@@ -862,9 +996,17 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return true;
         }
 
-        // Step 3: Get active players (can still act - excludes all-in players)
+        // Step 3: Check if we should auto-runout (all live players all-in, 2+)
+        if (this.shouldAutoRunout() && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
+            // Auto-runout: round ends immediately to trigger automatic progression
+            // The nextRound() method will be called repeatedly until we reach showdown
+            return true;
+        }
+
+        // Step 4: Get active players (can still act - excludes all-in players)
+        // Skip this check if we're already at SHOWDOWN or END - those rounds have their own logic
         const activePlayers = livePlayers.filter(player => player.status === PlayerStatus.ACTIVE);
-        if (activePlayers.length === 0) {
+        if (activePlayers.length === 0 && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
             // No active players remain, round ends
             this._currentRound = TexasHoldemRound.SHOWDOWN;
             this.dealCommunityCards();
@@ -875,7 +1017,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Get actions for this round
         const actions = this._rounds.get(round) || [];
 
-        // Step 4: Special case for ANTE round
+        // Step 5: Special case for ANTE round
         if (round === TexasHoldemRound.ANTE) {
             const hasSmallBlind = actions.some(a => a.action === PlayerActionType.SMALL_BLIND);
             const hasBigBlind = actions.some(a => a.action === PlayerActionType.BIG_BLIND);
@@ -887,6 +1029,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Special case for SHOWDOWN round
         if (round === TexasHoldemRound.SHOWDOWN) {
+            // If only one player remains (everyone else folded), no need to show - advance to END
+            if (livePlayers.length <= 1) {
+                return true;
+            }
+
             // Check if all live players have either shown or mucked
             const showdownActions = actions.filter(a => a.action === PlayerActionType.SHOW || a.action === PlayerActionType.MUCK);
             const playersWhoActedInShowdown = new Set(showdownActions.map(a => a.playerId));
@@ -901,14 +1048,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        // Step 5: If all live players are all-in, skip to showdown
+        // Step 6: If all live players are all-in, skip to showdown
         const allInPlayers = livePlayers.filter(player => player.status === PlayerStatus.ALL_IN);
         if (allInPlayers.length === livePlayers.length && livePlayers.length > 1) {
             // All remaining players are all-in, round ends immediately
             return true;
         }
 
-        // Step 6: If no active players remain (all are all-in), round ends
+        // Step 7: If no active players remain (all are all-in), round ends
         if (activePlayers.length === 0) {
             return true;
         }
@@ -927,7 +1074,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             return false;
         }
 
-        // Step 7: Check that all active players have acted
+        // Step 8: Check that all active players have acted
         const playersWhoActed = new Set(bettingActions.map(a => a.playerId));
 
         for (const player of activePlayers) {
@@ -936,7 +1083,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 8: Check if all players have acted AFTER the last bet/raise/all-in
+        // Step 9: Check if all players have acted AFTER the last bet/raise/all-in
         let lastBetOrRaiseIndex = -1;
         let lastBetOrRaisePlayerId = "";
         for (let i = actions.length - 1; i >= 0; i--) {
@@ -963,7 +1110,7 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         }
 
-        // Step 9: For PREFLOP, check if it's just checks/calls (no bets/raises)
+        // Step 10: For PREFLOP, check if it's just checks/calls (no bets/raises)
         if (round === TexasHoldemRound.PREFLOP) {
             const preflopBetsOrRaises = bettingActions.filter(a => a.action === PlayerActionType.BET || a.action === PlayerActionType.RAISE);
 
@@ -973,10 +1120,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
 
             // If there were bets/raises, fall through to normal logic below
-            // (don't return here - let it continue to Steps 4b and 6)
+            // (don't return here - let it continue to Steps 5 and 7)
         }
 
-        // Step 10: Calculate each active player's total bets and check if they're equal
+        // Step 11: Calculate each active player's total bets and check if they're equal
         // Note: We only check active players, not all live players, because all-in players
         // cannot contribute more to the current round and shouldn't be included in equality check
         const playerBets: bigint[] = [];
@@ -1038,9 +1185,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             }
         };
 
-        // Get all valid actions for this player
-        const actions = this._actions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
-        return actions;
+        // Get all valid player actions
+        const playerActions = this._actions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
+
+        // Get all valid non-player actions (SIT_OUT, TOP_UP, etc.)
+        const nonPlayerActions = this._nonPlayerActions.map(verifyAction).filter((a): a is LegalActionDTO => !!a);
+
+        // Combine and return all legal actions
+        return [...playerActions, ...nonPlayerActions];
     }
 
     /**
@@ -1082,10 +1234,18 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     performAction(address: string, action: PlayerActionType | NonPlayerActionType, index: number, amount?: bigint, data?: string, timestamp?: number): void {
         // Check action index for replay protection
-        // const actionIndex = this.getActionIndex();
-        // if (index !== actionIndex && action !== NonPlayerActionType.LEAVE && action !== PlayerActionType.SIT_OUT) {
-        //     throw new Error("Invalid action index.");
-        // }
+        const actionIndex = this.getActionIndex();
+        if (index !== actionIndex) {
+            throw new Error("Invalid action index.");
+        }
+
+        // Store timestamp for use by addAction/addNonPlayerAction during this action
+        // Timestamp must be provided from Cosmos block time for deterministic consensus
+        if (timestamp === undefined) {
+            throw new Error("Timestamp is required for deterministic consensus. Blockchain timestamp must be provided.");
+        }
+        
+        this._actionTimestamp = timestamp;
 
         // Convert amount to BigInt if provided
         const _amount: bigint = amount ? BigInt(amount) : 0n;
@@ -1113,6 +1273,18 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 return;
             case NonPlayerActionType.NEW_HAND:
                 new NewHandAction(this, this._update, data || "").execute(this.getPlayer(address), index);
+                return;
+            case NonPlayerActionType.TOP_UP:
+                if (!this.exists(address)) {
+                    throw new Error("Player not found.");
+                }
+                new TopUpAction(this, this._update).execute(this.getPlayer(address), index, _amount);
+                return;
+            case NonPlayerActionType.SIT_OUT:
+                if (!this.exists(address)) {
+                    throw new Error("Player not found.");
+                }
+                new SitOutAction(this, this._update).execute(this.getPlayer(address), index);
                 return;
         }
 
@@ -1161,23 +1333,30 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             case PlayerActionType.SHOW:
                 new ShowAction(this, this._update).execute(player, index);
                 break;
-            case PlayerActionType.SIT_OUT:
-                player.updateStatus(PlayerStatus.SITTING_OUT);
-                break;
-            case PlayerActionType.SIT_IN:
+            case NonPlayerActionType.SIT_IN:
                 player.updateStatus(PlayerStatus.ACTIVE);
                 break;
         }
 
         // Record the action in the player's history
-        // Use provided timestamp (from Cosmos block time) or fall back to Date.now() for legacy support
-        // In production with Cosmos, timestamp should ALWAYS be provided for determinism
-        const actionTimestamp = timestamp ?? Date.now();
-        player.addAction({ playerId: address, action, amount, index }, actionTimestamp);
+        // Use _actionTimestamp which was set at the start of performAction (from Cosmos block time or Date.now() fallback)
+        player.addAction({ playerId: address, action, amount, index }, this._actionTimestamp!);
 
         // Check if the round has ended and advance if needed
-        if (this.hasRoundEnded(this.currentRound)) {
+        // Loop through remaining rounds if auto-runout is triggered (all-in scenario)
+        // Continue until we reach END round
+        // Safety counter prevents infinite loops (max 6 advances / 7 rounds: ANTE->PREFLOP->FLOP->TURN->RIVER->SHOWDOWN->END)
+        let safetyCounter = 0;
+        const MAX_ROUND_ADVANCES = 6;
+        while (this.hasRoundEnded(this.currentRound) && this._currentRound !== TexasHoldemRound.END && safetyCounter < MAX_ROUND_ADVANCES) {
             this.nextRound();
+            safetyCounter++;
+        }
+        if (safetyCounter >= MAX_ROUND_ADVANCES && this._currentRound !== TexasHoldemRound.END) {
+            LoggerFactory.getInstance().log(
+                `Safety counter reached ${MAX_ROUND_ADVANCES} advances in round ${this._currentRound}. Possible infinite loop.`,
+                "error"
+            );
         }
     }
 
@@ -1186,8 +1365,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      */
     addAction(turn: Turn, round: TexasHoldemRound = this.currentRound): void {
         const seat = this.getPlayerSeatNumber(turn.playerId);
-        const timestamp = Date.now();
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        // Use stored action timestamp from performAction for deterministic consensus
+        if (this._actionTimestamp === undefined) {
+            throw new Error("Action timestamp not set. performAction must be called with a timestamp.");
+        }
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp: this._actionTimestamp };
 
         this.setAction(turnWithSeat, round);
     }
@@ -1196,11 +1378,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
      * Adds a non-player action to the game state
      */
     addNonPlayerAction(turn: Turn, data?: string): void {
-        const timestamp = Date.now();
+        // Use stored action timestamp from performAction for deterministic consensus
+        if (this._actionTimestamp === undefined) {
+            throw new Error("Action timestamp not set. performAction must be called with a timestamp.");
+        }
         const seat = data ? Number(data) : this.getPlayerSeatNumber(turn.playerId);
-        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp };
+        const turnWithSeat: TurnWithSeat = { ...turn, seat, timestamp: this._actionTimestamp };
 
         this.setAction(turnWithSeat, this.currentRound);
+    }
+
+    /**
+     * Sets the action timestamp for testing purposes.
+     * In production, this is set automatically by performAction from the blockchain timestamp.
+     * @internal For testing only
+     */
+    setActionTimestamp(timestamp: number): void {
+        this._actionTimestamp = timestamp;
     }
 
     /**
@@ -1810,7 +2004,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 gameOptions.rake = {
                     rakeFreeThreshold: BigInt(gameOptions.rake.rakeFreeThreshold),
                     rakePercentage: gameOptions.rake.rakePercentage,
-                    rakeCap: BigInt(gameOptions.rake.rakeCap)
+                    rakeCap: BigInt(gameOptions.rake.rakeCap),
+                    owner: gameOptions.rake.owner || gameOptions.owner || ""
                 };
             }
             // Owner is already a string, no conversion needed

@@ -5,7 +5,7 @@ import useUserWallet from "../hooks/useUserWallet";
 import { formatBalance } from "../utils/numberUtils";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
-import { WithdrawResponseDTO } from "@bitcoinbrisbane/block52";
+import { WithdrawResponseDTO } from "@block52/poker-vm-sdk";
 import useWithdraw from "../hooks/DepositPage/useWithdraw";
 
 /**
@@ -25,7 +25,7 @@ import useWithdraw from "../hooks/DepositPage/useWithdraw";
  * 7. User receives funds on Ethereum mainnet
  *
  * DEPENDENCIES:
- * - @bitcoinbrisbane/block52 SDK for withdrawal proof generation
+ * - @block52/poker-vm-sdk SDK for withdrawal proof generation
  * - ethers.js for address validation and amount conversion
  * - wagmi/viem for Web3 transaction execution
  * - MetaMask (REQUIRED) for transaction signing and gas payment
@@ -142,8 +142,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 
     const cancelButtonStyle = useMemo(
         () => ({
-            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5),
-            border: `1px solid ${hexToRgba(colors.ui.textSecondary, 0.3)}`
+            background: `linear-gradient(135deg, ${colors.accent.danger} 0%, ${hexToRgba(colors.accent.danger, 0.8)} 100%)`
         }),
         []
     );
@@ -468,25 +467,25 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-3">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 py-2 px-4 rounded-lg font-semibold transition hover:opacity-80"
-                        style={cancelButtonStyle}
-                        disabled={isWithdrawing}
-                    >
-                        Cancel
-                    </button>
+                <div className="flex flex-col space-y-3">
                     {!success && (
                         <button
                             onClick={handleWithdraw}
-                            className="flex-1 py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                            className="w-full py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
                             style={buttonStyle}
                             disabled={isWithdrawing || !isWeb3Connected || !web3Address || !amount}
                         >
                             {isWithdrawing ? "Processing..." : !isWeb3Connected ? "Connect Wallet First" : "Withdraw"}
                         </button>
                     )}
+                    <button
+                        onClick={onClose}
+                        className="w-full py-2 px-4 rounded-lg font-semibold text-white transition hover:opacity-80"
+                        style={cancelButtonStyle}
+                        disabled={isWithdrawing}
+                    >
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@bitcoinbrisbane/block52";
+import { useNavigate } from "react-router-dom";
+import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@block52/poker-vm-sdk";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { AnimatedBackground } from "./common/AnimatedBackground";
@@ -27,6 +28,7 @@ const SeedPhraseGrid = ({ mnemonic, hidden = false }: { mnemonic: string; hidden
 };
 
 const CosmosWalletPage = () => {
+    const navigate = useNavigate();
     const [mnemonic, setMnemonic] = useState<string>("");
     const [address, setAddress] = useState<string>("");
     const [isGenerating, setIsGenerating] = useState(false);
@@ -208,13 +210,22 @@ const CosmosWalletPage = () => {
                                 </div>
                             )}
 
-                            <button
-                                onClick={handleClearWallet}
-                                className="w-full text-white px-6 py-3 rounded-xl font-semibold mt-4 transition-all hover:opacity-80"
-                                style={{ backgroundColor: colors.accent.danger }}
-                            >
-                                Clear Wallet
-                            </button>
+                            <div className="flex flex-col space-y-3 mt-4">
+                                <button
+                                    onClick={() => navigate("/")}
+                                    className="w-full text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
+                                    style={{ backgroundColor: colors.brand.primary }}
+                                >
+                                    Return to Dashboard
+                                </button>
+                                <button
+                                    onClick={handleClearWallet}
+                                    className="w-full text-white px-6 py-3 rounded-xl font-semibold transition-all hover:opacity-80"
+                                    style={{ backgroundColor: colors.accent.danger }}
+                                >
+                                    Clear Wallet
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

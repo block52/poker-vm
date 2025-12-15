@@ -1,4 +1,4 @@
-import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { ethers } from "ethers";
 
 export const getRaiseToAmount = (raiseAmount: number, actions: ActionDTO[], currentRound: TexasHoldemRound, userAddress: string): number => {

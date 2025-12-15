@@ -14,6 +14,36 @@ interface MenuItem {
     newTab?: boolean; // Open link in new tab
 }
 
+// Logo component with error handling - uses VITE_CLUB_LOGO env variable
+// Falls back to /logo1080.png if not set, then to text if image fails
+// Memoized to prevent unnecessary re-renders
+const LogoComponent: React.FC = React.memo(() => {
+    const [imageError, setImageError] = useState(false);
+    const clubLogo = import.meta.env.VITE_CLUB_LOGO;
+    const clubName = import.meta.env.VITE_CLUB_NAME || "Block 52";
+    const logoSrc = clubLogo || "/logo1080.png";
+
+    if (imageError) {
+        return (
+            <span
+                className="text-xl font-bold"
+                style={{ color: colors.brand.primary }}
+            >
+                {clubName}
+            </span>
+        );
+    }
+
+    return (
+        <img
+            src={logoSrc}
+            alt={`${clubName} Logo`}
+            className="h-8 w-auto object-contain"
+            onError={() => setImageError(true)}
+        />
+    );
+});
+
 // Reusable component for network status and selector (extracted to avoid recreation on every render)
 const NetworkStatusAndSelector: React.FC<{ latestBlockHeight: string | null; hasError: boolean }> = ({ latestBlockHeight, hasError }) => (
     <>
@@ -84,7 +114,7 @@ export const GlobalHeader: React.FC = () => {
     // Note: Withdrawals moved to Admin > Bridge Management section
     const userMenuItems: MenuItem[] = [
         { path: "/admin/tables", label: "Tables", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" },
-        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14", newTab: true }
+        { path: "/explorer", label: "Block Explorer", icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" }
     ];
 
     // Admin/dev menu items - icon only for discreet access
@@ -109,8 +139,8 @@ export const GlobalHeader: React.FC = () => {
                 <div className="hidden lg:flex items-center justify-between">
                     {/* Left: Logo + Navigation */}
                     <div className="flex items-center gap-6">
-                        <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
-                            {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                        <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
+                            <LogoComponent />
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -171,8 +201,8 @@ export const GlobalHeader: React.FC = () => {
                 {/* Mobile/Tablet Layout: Keep original structure */}
                 <div className="flex lg:hidden items-center justify-between">
                     {/* Left side - Logo/Title */}
-                    <Link to="/" className="text-xl font-bold hover:opacity-80 transition-opacity" style={{ color: colors.brand.primary }}>
-                        {import.meta.env.VITE_CLUB_NAME || "Block 52"}
+                    <Link to="/" className="hover:opacity-80 transition-opacity flex items-center">
+                        <LogoComponent />
                     </Link>
 
                     {/* Right side - Network Selector & Mobile Menu */}

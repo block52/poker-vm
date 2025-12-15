@@ -1,4 +1,4 @@
-import { GameOptions, PlayerActionType, KEYS, NonPlayerActionType } from "@bitcoinbrisbane/block52";
+import { GameOptions, PlayerActionType, KEYS, NonPlayerActionType } from "@block52/poker-vm-sdk";
 import { OrderedTransaction } from "../engine/types";
 import { ITransaction } from "../models/interfaces";
 

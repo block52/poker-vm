@@ -1,4 +1,4 @@
-import { PlayerStatus, PlayerDTO, Card } from "@bitcoinbrisbane/block52";
+import { PlayerStatus, PlayerDTO, Card } from "@block52/poker-vm-sdk";
 import { IJSONModel } from "./interfaces";
 import { Turn } from "../engine/types";
 

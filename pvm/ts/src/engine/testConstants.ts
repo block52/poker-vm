@@ -1,4 +1,4 @@
-import { ActionDTO, GameOptions, GameType, TexasHoldemRound } from "@bitcoinbrisbane/block52";
+import { ActionDTO, GameOptions, GameType, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { ethers } from "ethers";
 import TexasHoldemGame from "./texasHoldem";
 import { Player } from "../models/player";

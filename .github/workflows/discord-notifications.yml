@@ -1,0 +1,39 @@
+name: Discord Notifications
+
+on:
+  pull_request:
+    types: [opened, closed]
+  issues:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Opened Notification
+        if: github.event.action == 'opened'
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{\"embeds\": [{\"title\": \"🆕 New PR Opened\", \"description\": \"**${{ github.event.pull_request.title }}**\", \"url\": \"${{ github.event.pull_request.html_url }}\", \"color\": 3447003, \"fields\": [{\"name\": \"Author\", \"value\": \"${{ github.event.pull_request.user.login }}\", \"inline\": true}, {\"name\": \"Branch\", \"value\": \"${{ github.event.pull_request.head.ref }}\", \"inline\": true}]}]}" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: PR Merged Notification
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{\"embeds\": [{\"title\": \"✅ PR Merged\", \"description\": \"**${{ github.event.pull_request.title }}**\", \"url\": \"${{ github.event.pull_request.html_url }}\", \"color\": 5763719, \"fields\": [{\"name\": \"Author\", \"value\": \"${{ github.event.pull_request.user.login }}\", \"inline\": true}, {\"name\": \"Merged by\", \"value\": \"${{ github.event.sender.login }}\", \"inline\": true}]}]}" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: PR Closed Without Merge Notification
+        if: github.event.action == 'closed' && github.event.pull_request.merged == false
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{\"embeds\": [{\"title\": \"❌ PR Closed\", \"description\": \"**${{ github.event.pull_request.title }}**\", \"url\": \"${{ github.event.pull_request.html_url }}\", \"color\": 15158332, \"fields\": [{\"name\": \"Author\", \"value\": \"${{ github.event.pull_request.user.login }}\", \"inline\": true}, {\"name\": \"Closed by\", \"value\": \"${{ github.event.sender.login }}\", \"inline\": true}]}]}" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Issue Opened Notification
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{\"embeds\": [{\"title\": \"📋 New Issue Opened\", \"description\": \"**${{ github.event.issue.title }}**\", \"url\": \"${{ github.event.issue.html_url }}\", \"color\": 16750848, \"fields\": [{\"name\": \"Author\", \"value\": \"${{ github.event.issue.user.login }}\", \"inline\": true}, {\"name\": \"Labels\", \"value\": \"${{ join(github.event.issue.labels.*.name, ', ') || 'None' }}\", \"inline\": true}]}]}" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}

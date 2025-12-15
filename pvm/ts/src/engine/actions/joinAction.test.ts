@@ -1,8 +1,8 @@
-import { NonPlayerActionType, PlayerStatus } from "@bitcoinbrisbane/block52";
+import { NonPlayerActionType, PlayerStatus } from "@block52/poker-vm-sdk";
 import JoinAction from "./joinAction";
 import TexasHoldemGame from "../texasHoldem";
 import { Player } from "../../models/player";
-import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_THOUSAND_TOKENS } from "../testConstants";
+import { baseGameConfig, gameOptions, ONE_HUNDRED_TOKENS, ONE_THOUSAND_TOKENS, DETERMINISTIC_TIMESTAMP } from "../testConstants";
 import { IUpdate } from "../types";
 
 describe("JoinAction", () => {
@@ -13,6 +13,7 @@ describe("JoinAction", () => {
 
     beforeEach(() => {
         game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
+        game.setActionTimestamp(DETERMINISTIC_TIMESTAMP);
         updateMock = {
             addAction: jest.fn()
         };

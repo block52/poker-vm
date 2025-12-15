@@ -1,6 +1,6 @@
 import { useGameStateContext } from "../../context/GameStateContext";
 import { PlayerLegalActionsResult } from "./types";
-import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@bitcoinbrisbane/block52";
+import { LegalActionDTO, PlayerActionType, PlayerDTO } from "@block52/poker-vm-sdk";
 import { useRef, useMemo, useState, useEffect } from "react";
 
 // 🔍 DEBUG: Enhanced logging utility for easy data export (same as GameStateContext)
