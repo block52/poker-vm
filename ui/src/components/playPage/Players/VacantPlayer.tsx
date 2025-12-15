@@ -134,6 +134,14 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             return gameOptions?.minBuyIn === gameOptions?.maxBuyIn;
         }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
 
+        // Memoize min/max buy-in values for slider
+        const { minBuyInNum, maxBuyInNum } = useMemo(() => {
+            return {
+                minBuyInNum: parseFloat(formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0")),
+                maxBuyInNum: parseFloat(formatUSDCToSimpleDollars(gameOptions?.maxBuyIn || "0"))
+            };
+        }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
+
         // Step 2: Handle buy-in confirmation and join
         const handleBuyInConfirm = useCallback(async () => {
             if (!tableId) {
@@ -398,15 +406,15 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                     {/* Slider with min/max labels */}
                                     <div className="mb-3">
                                         <div className="flex justify-between text-xs text-gray-400 mb-2">
-                                            <span>${formatUSDCToSimpleDollars(gameOptions.minBuyIn)}</span>
-                                            <span>${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}</span>
+                                            <span>${minBuyInNum.toFixed(2)}</span>
+                                            <span>${maxBuyInNum.toFixed(2)}</span>
                                         </div>
                                         <input
                                             type="range"
-                                            value={buyInAmount}
+                                            value={parseFloat(buyInAmount) || minBuyInNum}
                                             onChange={e => setBuyInAmount(e.target.value)}
-                                            min={formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
-                                            max={formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                            min={minBuyInNum}
+                                            max={maxBuyInNum}
                                             step="0.01"
                                             className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                                             style={{
@@ -428,8 +436,8 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             border: `1px solid ${colors.ui.borderColor}`
                                         }}
                                         step="0.01"
-                                        min={formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
-                                        max={formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                        min={minBuyInNum}
+                                        max={maxBuyInNum}
                                     />
                                 </div>
                             )}
@@ -453,9 +461,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                                     <span className="text-white font-semibold">USDC</span>
                                                     <span
                                                         className={`text-lg font-bold ${
-                                                            usdcAmount < parseFloat(formatUSDCToSimpleDollars(gameOptions.minBuyIn))
-                                                                ? "text-red-400"
-                                                                : "text-white"
+                                                            usdcAmount < minBuyInNum ? "text-red-400" : "text-white"
                                                         }`}
                                                     >
                                                         ${usdcAmount.toFixed(2)}
