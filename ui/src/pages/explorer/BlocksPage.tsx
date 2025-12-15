@@ -112,12 +112,7 @@ export default function BlocksPage() {
                 <AnimatedBackground />
                 <div className="max-w-7xl mx-auto relative z-10">
                     {/* Header */}
-                    <div className="mb-8">
-                        <div>
-                            <h1 className="text-4xl font-bold text-white mb-2 text-center">Block Explorer</h1>
-                            <p className="text-gray-400 text-center">Latest blocks on Pokerchain</p>
-                        </div>
-                    </div>
+                    <ExplorerHeader />
 
                     {/* Error Card */}
                     <div className="flex justify-center">
