@@ -73,7 +73,6 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const cosmosWallet = useCosmosWallet();
         const { currentNetwork } = useNetwork();
 
-        const [showConfirmModal, setShowConfirmModal] = useState(false);
         const [showBuyInModal, setShowBuyInModal] = useState(false);
         const [isJoining, setIsJoining] = useState(false);
         const [joinError, setJoinError] = useState<string | null>(null);
@@ -94,11 +93,17 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         const handleJoinClick = useCallback(() => {
             console.log("🪑 VacantPlayer - handleJoinClick called for seat:", index);
             if (!canJoinThisSeat) return;
-            setShowConfirmModal(true);
+            
+            // Initialize buy-in amount with minBuyIn for Cash games
+            const minBuyInDollars = formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0");
+            setBuyInAmount(minBuyInDollars);
+            
+            // Open buy-in modal directly (skip confirmation modal)
+            setShowBuyInModal(true);
             setJoinError(null);
             setJoinSuccess(false);
             setJoinResponse(null);
-        }, [canJoinThisSeat, index]);
+        }, [canJoinThisSeat, index, gameOptions?.minBuyIn]);
 
         const handleSeatClick = useCallback(() => {
             console.log("🪑 VacantPlayer - handleSeatClick called:", {
@@ -118,23 +123,28 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             }
         }, [isUserAlreadyPlaying, canJoinThisSeat, handleJoinClick, index, gameOptions]);
 
-        // Step 1: Confirm seat selection
-        const handleConfirmSeatYes = useCallback(() => {
-            // Initialize buy-in amount with minBuyIn for Cash games
-            const minBuyInDollars = formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0");
-            setBuyInAmount(minBuyInDollars);
 
-            // Close confirmation modal and open buy-in modal
-            setShowConfirmModal(false);
-            setShowBuyInModal(true);
-        }, [gameOptions?.minBuyIn]);
 
         // Detect if this is Sit & Go (fixed buy-in) or Cash game (variable buy-in)
         const isSitAndGo = useMemo(() => {
             return gameOptions?.minBuyIn === gameOptions?.maxBuyIn;
         }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
 
-        // Step 2: Handle buy-in confirmation and join
+        // Memoize min/max buy-in values for slider
+        const { minBuyInNum, maxBuyInNum } = useMemo(() => {
+            return {
+                minBuyInNum: parseFloat(formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0")),
+                maxBuyInNum: parseFloat(formatUSDCToSimpleDollars(gameOptions?.maxBuyIn || "0"))
+            };
+        }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
+
+        // Memoize slider value to avoid inline function recreation
+        const sliderValue = useMemo(() => {
+            const val = parseFloat(buyInAmount);
+            return isNaN(val) ? minBuyInNum : val;
+        }, [buyInAmount, minBuyInNum]);
+
+        // Handle buy-in confirmation and join
         const handleBuyInConfirm = useCallback(async () => {
             if (!tableId) {
                 setJoinError("Missing table ID");
@@ -392,49 +402,50 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 // Cash Game: Editable buy-in amount
                                 <div className="mb-6">
                                     <label className="block text-xs text-gray-400 mb-2">
-                                        Buy-In Amount (between ${formatUSDCToSimpleDollars(gameOptions.minBuyIn)} - $
-                                        {formatUSDCToSimpleDollars(gameOptions.maxBuyIn)})
+                                        Buy-In Amount
                                     </label>
-                                    <div className="flex gap-2 mb-3">
-                                        <button
-                                            onClick={() => setBuyInAmount(formatUSDCToSimpleDollars(gameOptions.minBuyIn || "0"))}
-                                            className="px-4 py-2 rounded-lg text-sm transition"
-                                            style={{
-                                                backgroundColor: colors.ui.bgMedium,
-                                                color: "white",
-                                                border: `1px solid ${colors.ui.borderColor}`
-                                            }}
-                                        >
-                                            MIN
-                                            <br />${formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
-                                        </button>
-                                        <button
-                                            onClick={() => setBuyInAmount(formatUSDCToSimpleDollars(gameOptions.maxBuyIn || "0"))}
-                                            className="px-4 py-2 rounded-lg text-sm transition"
-                                            style={{
-                                                backgroundColor: colors.ui.bgMedium,
-                                                color: "white",
-                                                border: `1px solid ${colors.ui.borderColor}`
-                                            }}
-                                        >
-                                            MAX
-                                            <br />${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
-                                        </button>
+                                    
+                                    {/* Slider with min/max labels */}
+                                    <div className="mb-3">
+                                        <div className="flex justify-between text-xs text-gray-400 mb-2">
+                                            <span>${minBuyInNum.toFixed(2)}</span>
+                                            <span>${maxBuyInNum.toFixed(2)}</span>
+                                        </div>
                                         <input
-                                            type="number"
-                                            value={buyInAmount}
-                                            onChange={e => setBuyInAmount(e.target.value)}
-                                            placeholder="Enter amount"
-                                            className="flex-1 px-4 py-2 rounded-lg text-white text-center text-lg"
+                                            type="range"
+                                            value={sliderValue}
+                                            onChange={e => {
+                                                const val = parseFloat(e.target.value);
+                                                if (!isNaN(val)) {
+                                                    setBuyInAmount(val.toFixed(2));
+                                                }
+                                            }}
+                                            min={minBuyInNum.toString()}
+                                            max={maxBuyInNum.toString()}
+                                            step="0.01"
+                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                                             style={{
                                                 backgroundColor: colors.ui.bgMedium,
-                                                border: `1px solid ${colors.ui.borderColor}`
+                                                accentColor: colors.brand.primary
                                             }}
-                                            step="0.01"
-                                            min={formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
-                                            max={formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
                                         />
                                     </div>
+                                    
+                                    {/* Manual input below slider */}
+                                    <input
+                                        type="number"
+                                        value={buyInAmount}
+                                        onChange={e => setBuyInAmount(e.target.value)}
+                                        placeholder="Enter amount"
+                                        className="w-full px-4 py-2 rounded-lg text-white text-center text-lg"
+                                        style={{
+                                            backgroundColor: colors.ui.bgMedium,
+                                            border: `1px solid ${colors.ui.borderColor}`
+                                        }}
+                                        step="0.01"
+                                        min={minBuyInNum.toString()}
+                                        max={maxBuyInNum.toString()}
+                                    />
                                 </div>
                             )}
 
@@ -457,9 +468,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                                     <span className="text-white font-semibold">USDC</span>
                                                     <span
                                                         className={`text-lg font-bold ${
-                                                            usdcAmount >= parseFloat(formatUSDCToSimpleDollars(gameOptions.maxBuyIn))
-                                                                ? "text-green-400"
-                                                                : "text-red-400"
+                                                            usdcAmount < minBuyInNum ? "text-red-400" : "text-white"
                                                         }`}
                                                     >
                                                         ${usdcAmount.toFixed(2)}
@@ -515,14 +524,14 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             Joining...
                                         </>
                                     ) : (
-                                        "Confirm & Join"
+                                        `Confirm & Join Seat ${index}`
                                     )}
                                 </button>
                                 <button
                                     onClick={() => setShowBuyInModal(false)}
                                     className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300"
                                     style={{
-                                        backgroundColor: colors.ui.textSecondary,
+                                        backgroundColor: colors.accent.danger,
                                         color: "white"
                                     }}
                                     disabled={isJoining}
@@ -536,7 +545,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                 )}
 
                 {/* Placeholder div for potential future loading animation */}
-                {joinSuccess && !showConfirmModal && (
+                {joinSuccess && (
                     <div id="loading-animation-placeholder" style={{ display: "none" }}>
                         {/* Future loading animation will go here */}
                     </div>
