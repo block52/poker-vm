@@ -392,49 +392,45 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 // Cash Game: Editable buy-in amount
                                 <div className="mb-6">
                                     <label className="block text-xs text-gray-400 mb-2">
-                                        Buy-In Amount (between ${formatUSDCToSimpleDollars(gameOptions.minBuyIn)} - $
-                                        {formatUSDCToSimpleDollars(gameOptions.maxBuyIn)})
+                                        Buy-In Amount
                                     </label>
-                                    <div className="flex gap-2 mb-3">
-                                        <button
-                                            onClick={() => setBuyInAmount(formatUSDCToSimpleDollars(gameOptions.minBuyIn || "0"))}
-                                            className="px-4 py-2 rounded-lg text-sm transition"
-                                            style={{
-                                                backgroundColor: colors.ui.bgMedium,
-                                                color: "white",
-                                                border: `1px solid ${colors.ui.borderColor}`
-                                            }}
-                                        >
-                                            MIN
-                                            <br />${formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
-                                        </button>
-                                        <button
-                                            onClick={() => setBuyInAmount(formatUSDCToSimpleDollars(gameOptions.maxBuyIn || "0"))}
-                                            className="px-4 py-2 rounded-lg text-sm transition"
-                                            style={{
-                                                backgroundColor: colors.ui.bgMedium,
-                                                color: "white",
-                                                border: `1px solid ${colors.ui.borderColor}`
-                                            }}
-                                        >
-                                            MAX
-                                            <br />${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
-                                        </button>
+                                    
+                                    {/* Slider with min/max labels */}
+                                    <div className="mb-3">
+                                        <div className="flex justify-between text-xs text-gray-400 mb-2">
+                                            <span>${formatUSDCToSimpleDollars(gameOptions.minBuyIn)}</span>
+                                            <span>${formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}</span>
+                                        </div>
                                         <input
-                                            type="number"
+                                            type="range"
                                             value={buyInAmount}
                                             onChange={e => setBuyInAmount(e.target.value)}
-                                            placeholder="Enter amount"
-                                            className="flex-1 px-4 py-2 rounded-lg text-white text-center text-lg"
-                                            style={{
-                                                backgroundColor: colors.ui.bgMedium,
-                                                border: `1px solid ${colors.ui.borderColor}`
-                                            }}
-                                            step="0.01"
                                             min={formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
                                             max={formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                            step="0.01"
+                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                            style={{
+                                                backgroundColor: colors.ui.bgMedium,
+                                                accentColor: colors.brand.primary
+                                            }}
                                         />
                                     </div>
+                                    
+                                    {/* Manual input below slider */}
+                                    <input
+                                        type="number"
+                                        value={buyInAmount}
+                                        onChange={e => setBuyInAmount(e.target.value)}
+                                        placeholder="Enter amount"
+                                        className="w-full px-4 py-2 rounded-lg text-white text-center text-lg"
+                                        style={{
+                                            backgroundColor: colors.ui.bgMedium,
+                                            border: `1px solid ${colors.ui.borderColor}`
+                                        }}
+                                        step="0.01"
+                                        min={formatUSDCToSimpleDollars(gameOptions.minBuyIn)}
+                                        max={formatUSDCToSimpleDollars(gameOptions.maxBuyIn)}
+                                    />
                                 </div>
                             )}
 
@@ -455,7 +451,13 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             >
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-white font-semibold">USDC</span>
-                                                    <span className="text-lg font-bold text-white">
+                                                    <span
+                                                        className={`text-lg font-bold ${
+                                                            usdcAmount < parseFloat(formatUSDCToSimpleDollars(gameOptions.minBuyIn))
+                                                                ? "text-red-400"
+                                                                : "text-white"
+                                                        }`}
+                                                    >
                                                         ${usdcAmount.toFixed(2)}
                                                     </span>
                                                 </div>
