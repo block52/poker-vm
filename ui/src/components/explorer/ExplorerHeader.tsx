@@ -32,15 +32,15 @@ export const ExplorerHeader = ({ title = "Block Explorer", subtitle = "Latest bl
         <div className="mb-8">
             <h1 className="text-4xl font-bold text-white mb-2 text-center">{title}</h1>
             <p className="text-gray-400 text-center">{subtitle}</p>
-            <div className="mt-3 flex gap-4 justify-center flex-wrap items-center">
+            <div className="mt-3 flex gap-3 justify-center flex-wrap items-center">
                 {navLinks.map(link => (
                     <a
                         key={link.href}
                         href={link.href}
-                        className={`text-sm transition-colors ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                             isActive(link.href)
-                                ? "text-white font-semibold underline"
-                                : "text-blue-400 hover:text-blue-300 hover:underline"
+                                ? "bg-blue-600 text-white hover:bg-blue-700"
+                                : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white"
                         }`}
                     >
                         {link.label}
