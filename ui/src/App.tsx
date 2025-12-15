@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import FaucetPage from "./pages/FaucetPage";
 import NodeStatusPage from "./pages/NodeStatusPage";
 import NodesPage from "./pages/NodesPage";
+import ChatPage from "./pages/ChatPage";
 import { TestSdk } from "./test-sdk";
 import { GameStateProvider } from "./context/GameStateContext";
 import { generateCSSVariables } from "./utils/colorConfig";
@@ -101,6 +102,7 @@ function AppContent() {
                 <Route path="/faucet" element={<FaucetPage />} />
                 <Route path="/nodes" element={<NodesPage />} />
                 <Route path="/node/:name" element={<NodeStatusPage />} />
+                <Route path="/chat" element={<ChatPage />} />
                 <Route path="/" element={<Dashboard />} />
             </Routes>
             <ToastContainer

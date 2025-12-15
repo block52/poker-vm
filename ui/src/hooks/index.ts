@@ -35,6 +35,8 @@ export { useSitAndGoPlayerResults } from "./useSitAndGoPlayerResults";
 // Default export hooks
 export { default as useUserWallet } from "./useUserWallet";
 export { default as useCosmosWallet } from "./useCosmosWallet";
+export { useTelegramChat } from "./useTelegramChat";
+export { useTelegramAuth } from "./useTelegramAuth";
 
 // Named exports from useUserWallet
 export { STORAGE_PRIVATE_KEY } from "./useUserWallet";
