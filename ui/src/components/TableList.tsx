@@ -11,6 +11,10 @@ import { colors, hexToRgba } from "../utils/colorConfig";
 const TableList: React.FC = () => {
     const { games, isLoading, error, refetch } = useFindGames();
 
+    // Use environment variables for club branding
+    const clubLogo = import.meta.env.VITE_CLUB_LOGO || "/poker.svg";
+    const clubName = import.meta.env.VITE_CLUB_NAME || "Texas Hodl";
+
     // Button style using standard blue
     const buttonStyle = {
         background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
@@ -135,11 +139,11 @@ const TableList: React.FC = () => {
                                     <td className="px-4 py-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <img 
-                                                src="/poker.svg" 
-                                                alt="Texas Hodl" 
+                                                src={clubLogo} 
+                                                alt={clubName} 
                                                 className="w-6 h-6 object-contain"
                                             />
-                                            <span className="text-white">Texas Hodl</span>
+                                            <span className="text-white">{clubName}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-4">
