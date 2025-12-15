@@ -14,9 +14,15 @@ interface TableListProps {
 const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
     const { games, isLoading, error, refetch } = useFindGames();
 
-    // Button style matching WalletPanel deposit button
+    // Button style using standard blue
     const buttonStyle = {
-        background: `linear-gradient(135deg, ${colors.accent.success} 0%, ${hexToRgba(colors.accent.success, 0.8)} 100%)`
+        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+    };
+
+    // Copy to clipboard utility
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        // Could add a toast notification here in the future
     };
 
     if (isLoading) {
@@ -123,16 +129,38 @@ const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
                             games.map((game: any) => (
                                 <tr
                                     key={game.address}
-                                    className="hover:bg-gray-700/50 transition-colors cursor-pointer"
-                                    onClick={() => onJoinTable(game.address, game.minBuyIn, game.maxBuyIn)}
+                                    className="hover:bg-gray-700/50 transition-colors"
                                 >
                                     <td className="px-4 py-4">
-                                        <span className="text-white">Texas Hodl</span>
+                                        <div className="flex items-center gap-2">
+                                            <img 
+                                                src="/block52.png" 
+                                                alt="Texas Hodl" 
+                                                className="w-6 h-6 object-contain"
+                                            />
+                                            <span className="text-white">Texas Hodl</span>
+                                        </div>
                                     </td>
                                     <td className="px-4 py-4">
-                                        <span className="text-gray-300 font-mono text-sm">
-                                            {game.address ? `${game.address.slice(0, 4)}...${game.address.slice(-4)}` : "-"}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-gray-300 font-mono text-sm">
+                                                {game.address ? `${game.address.slice(0, 4)}...${game.address.slice(-4)}` : "-"}
+                                            </span>
+                                            {game.address && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        copyToClipboard(game.address);
+                                                    }}
+                                                    className="text-gray-400 hover:text-white transition-colors"
+                                                    title="Copy full address"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-4">
                                         <span className="text-white font-bold">
@@ -160,7 +188,7 @@ const TableList: React.FC<TableListProps> = ({ onJoinTable }) => {
                                                 e.stopPropagation();
                                                 onJoinTable(game.address, game.minBuyIn, game.maxBuyIn);
                                             }}
-                                            className="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90"
+                                            className="px-4 py-2 text-white text-sm font-semibold rounded-lg transition-all hover:opacity-90 hover:scale-105"
                                             style={buttonStyle}
                                         >
                                             Join
