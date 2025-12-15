@@ -411,7 +411,10 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                         </div>
                                         <input
                                             type="range"
-                                            value={isNaN(parseFloat(buyInAmount)) ? minBuyInNum : parseFloat(buyInAmount)}
+                                            value={(() => {
+                                                const val = parseFloat(buyInAmount);
+                                                return isNaN(val) ? minBuyInNum : val;
+                                            })()}
                                             onChange={e => setBuyInAmount(parseFloat(e.target.value).toFixed(2))}
                                             min={minBuyInNum}
                                             max={maxBuyInNum}
