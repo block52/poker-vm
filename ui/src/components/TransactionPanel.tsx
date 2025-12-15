@@ -112,11 +112,14 @@ const TransactionPanel: React.FC = () => {
                 <button
                     onClick={fetchTransactions}
                     disabled={loading}
-                    className="p-2 rounded-lg transition-all hover:bg-gray-700 disabled:opacity-50"
+                    className="px-3 py-2 rounded-lg text-white text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                    style={{
+                        background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                    }}
                     title="Refresh transactions"
                 >
                     <svg
-                        className={`w-5 h-5 text-gray-400 hover:text-white transition-colors ${loading ? "animate-spin" : ""}`}
+                        className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -128,6 +131,7 @@ const TransactionPanel: React.FC = () => {
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                     </svg>
+                    <span>Refresh</span>
                 </button>
             </div>
 

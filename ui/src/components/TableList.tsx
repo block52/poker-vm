@@ -94,9 +94,9 @@ const TableList: React.FC = () => {
                 <table className="w-full">
                     <thead className="bg-gray-900">
                         <tr>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Club</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Table ID</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-400">Stakes</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Club</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Table ID</th>
+                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Stakes</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Type</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Players</th>
                             <th className="px-4 py-3 text-center text-sm font-semibold text-gray-400">Buy-In</th>
@@ -133,9 +133,9 @@ const TableList: React.FC = () => {
                                     className="hover:bg-gray-700/50 transition-colors"
                                 >
                                     <td className="px-4 py-4">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center justify-center gap-2">
                                             <img 
-                                                src="/block52.png" 
+                                                src="/poker.svg" 
                                                 alt="Texas Hodl" 
                                                 className="w-6 h-6 object-contain"
                                             />
@@ -143,7 +143,7 @@ const TableList: React.FC = () => {
                                         </div>
                                     </td>
                                     <td className="px-4 py-4">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center justify-center gap-2">
                                             <span className="text-gray-300 font-mono text-sm">
                                                 {game.address ? `${game.address.slice(0, 4)}...${game.address.slice(-4)}` : "-"}
                                             </span>
@@ -160,7 +160,7 @@ const TableList: React.FC = () => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 text-center">
                                         <span className="text-white font-bold">
                                             ${formatMicroAsUsdc(game.smallBlind || "0", 2)} / ${formatMicroAsUsdc(game.bigBlind || "0", 2)}
                                         </span>
