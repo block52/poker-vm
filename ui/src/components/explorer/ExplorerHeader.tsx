@@ -39,8 +39,8 @@ export const ExplorerHeader = ({ title = "Block Explorer", subtitle = "Latest bl
                         href={link.href}
                         className={`text-sm transition-colors ${
                             isActive(link.href)
-                                ? "text-white font-semibold"
-                                : "text-blue-400 hover:text-blue-300"
+                                ? "text-white font-semibold underline"
+                                : "text-blue-400 hover:text-blue-300 hover:underline"
                         }`}
                     >
                         {link.label}
