@@ -45,6 +45,9 @@ const CosmosWalletPage = () => {
     useEffect(() => {
         const storedMnemonic = getCosmosMnemonic();
         const storedAddress = getCosmosAddress();
+        console.log("🔍 CosmosWalletPage: Loading from localStorage");
+        console.log("  - storedMnemonic:", storedMnemonic ? `${storedMnemonic.split(" ").length} words` : "null");
+        console.log("  - storedAddress:", storedAddress);
         setExistingMnemonic(storedMnemonic);
         setExistingAddress(storedAddress);
         setIsLoading(false);
