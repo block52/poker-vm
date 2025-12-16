@@ -5,6 +5,13 @@ import { useCosmosWallet } from "../hooks";
 import { useNetwork } from "../context/NetworkContext";
 import { formatTimestampRelative } from "../utils/formatUtils";
 import { microToUsdc } from "../constants/currency";
+import {
+    formatTransactionLabel,
+    formatTransferDirection,
+    getTransferDirectionClass,
+    formatShortHash,
+    formatGameId
+} from "../utils/transactionUtils";
 
 interface Transaction {
     txhash: string;
@@ -250,8 +257,8 @@ const TransactionPanel: React.FC = () => {
                                 className="p-3 rounded-lg bg-gray-900 border border-gray-700 cursor-pointer hover:bg-gray-700/50 transition-colors"
                             >
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-white text-sm font-medium capitalize">
-                                        {tx.action || tx.messageType?.replace(/^Msg/, "") || "Transaction"}
+                                    <span className="text-white text-sm font-medium">
+                                        {formatTransactionLabel(tx.action, tx.messageType)}
                                     </span>
                                     <span
                                         className="text-xs px-2 py-0.5 rounded-full"
@@ -267,8 +274,8 @@ const TransactionPanel: React.FC = () => {
                                 {(tx.amount || tx.transferAmount) && (
                                     <div className="flex items-center gap-2 mb-1">
                                         {tx.transferDirection && (
-                                            <span className={`text-xs ${tx.transferDirection === "received" ? "text-green-400" : "text-orange-400"}`}>
-                                                {tx.transferDirection === "received" ? "+" : "-"}
+                                            <span className={`text-xs ${getTransferDirectionClass(tx.transferDirection)}`}>
+                                                {formatTransferDirection(tx.transferDirection)}
                                             </span>
                                         )}
                                         <span className="text-sm font-medium" style={{ color: colors.brand.primary }}>
@@ -276,14 +283,14 @@ const TransactionPanel: React.FC = () => {
                                         </span>
                                         {tx.gameId && (
                                             <span className="text-xs text-gray-500">
-                                                Game: {tx.gameId.slice(0, 6)}...
+                                                Game: {formatGameId(tx.gameId)}
                                             </span>
                                         )}
                                     </div>
                                 )}
                                 <div className="flex items-center justify-between">
                                     <span className="text-gray-400 text-xs font-mono">
-                                        {tx.txhash.slice(0, 8)}...{tx.txhash.slice(-8)}
+                                        {formatShortHash(tx.txhash)}
                                     </span>
                                     <span className="text-gray-500 text-xs">{formatTimestampRelative(tx.timestamp)}</span>
                                 </div>
