@@ -63,16 +63,15 @@ export const ExplorerHeader = ({ title = "Block Explorer", subtitle = "Latest bl
 
     return (
         <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2 text-center">{title}</h1>
-            <p className="text-gray-400 text-center mb-6">{subtitle}</p>
+            <h1 className="text-4xl font-bold text-white mb-6 text-center">{title}</h1>
             
-            {/* Card-style navigation */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {/* Horizontal navigation */}
+            <div className="flex gap-3 justify-center flex-wrap">
                 {navLinks.map(link => (
                     <a
                         key={link.href}
                         href={link.href}
-                        className="p-4 rounded-lg border transition-all duration-200 hover:scale-[1.02]"
+                        className="px-4 py-2 rounded-lg border transition-all duration-200 hover:scale-[1.02] flex items-center gap-2"
                         style={{
                             backgroundColor: isActive(link.href)
                                 ? hexToRgba(colors.brand.primary, 0.15)
@@ -82,30 +81,18 @@ export const ExplorerHeader = ({ title = "Block Explorer", subtitle = "Latest bl
                                 : hexToRgba(colors.brand.primary, 0.2)
                         }}
                     >
-                        <div className="flex items-start gap-3">
-                            <div
-                                className="p-2 rounded-lg flex-shrink-0"
-                                style={{ backgroundColor: hexToRgba(colors.brand.primary, 0.1) }}
-                            >
-                                <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    style={{ color: colors.brand.primary }}
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon} />
-                                </svg>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-bold text-white mb-0.5">
-                                    {link.label}
-                                </h3>
-                                <p className="text-gray-400 text-xs leading-tight">
-                                    {link.description}
-                                </p>
-                            </div>
-                        </div>
+                        <svg
+                            className="w-4 h-4 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            style={{ color: colors.brand.primary }}
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon} />
+                        </svg>
+                        <span className="text-sm font-bold text-white whitespace-nowrap">
+                            {link.label}
+                        </span>
                     </a>
                 ))}
             </div>
