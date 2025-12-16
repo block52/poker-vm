@@ -184,7 +184,7 @@ export default function AddressPage() {
 
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Explorer Navigation Header */}
-                <ExplorerHeader title="Block Explorer" subtitle="Address lookup on Pokerchain" />
+                <ExplorerHeader title="Block Explorer" />
 
                 {/* Search Card */}
                 <div className="backdrop-blur-md p-6 rounded-xl shadow-2xl mb-6" style={containerStyle}>

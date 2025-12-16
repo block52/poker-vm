@@ -3,7 +3,6 @@ import { colors, hexToRgba } from "../../utils/colorConfig";
 
 interface ExplorerHeaderProps {
     title?: string;
-    subtitle?: string;
 }
 
 interface NavLink {
@@ -13,7 +12,7 @@ interface NavLink {
     icon: string;
 }
 
-export const ExplorerHeader = ({ title = "Block Explorer", subtitle = "Latest blocks on Pokerchain" }: ExplorerHeaderProps) => {
+export const ExplorerHeader = ({ title = "Block Explorer" }: ExplorerHeaderProps) => {
     const location = useLocation();
     const currentPath = location.pathname;
 

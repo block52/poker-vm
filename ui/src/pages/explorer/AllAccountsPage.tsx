@@ -284,7 +284,7 @@ export default function AllAccountsPage() {
 
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Explorer Navigation Header */}
-                <ExplorerHeader title="Block Explorer" subtitle="All accounts on Pokerchain" />
+                <ExplorerHeader title="Block Explorer" />
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
