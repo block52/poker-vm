@@ -65,12 +65,12 @@ export const ExplorerHeader = ({ title = "Block Explorer" }: ExplorerHeaderProps
             <h1 className="text-4xl font-bold text-white mb-6 text-center">{title}</h1>
             
             {/* Horizontal card-style navigation */}
-            <div className="flex gap-4 justify-center flex-wrap">
+            <div className="flex gap-4 justify-center overflow-x-auto">
                 {navLinks.map(link => (
                     <a
                         key={link.href}
                         href={link.href}
-                        className="p-4 rounded-lg border transition-all duration-200 hover:scale-[1.02] flex items-start gap-3"
+                        className="p-4 rounded-lg border transition-all duration-200 hover:scale-[1.02] flex items-start gap-3 flex-shrink-0"
                         style={{
                             backgroundColor: isActive(link.href)
                                 ? hexToRgba(colors.brand.primary, 0.15)
@@ -78,8 +78,8 @@ export const ExplorerHeader = ({ title = "Block Explorer" }: ExplorerHeaderProps
                             borderColor: isActive(link.href)
                                 ? colors.brand.primary
                                 : hexToRgba(colors.brand.primary, 0.2),
-                            minWidth: "200px",
-                            maxWidth: "280px"
+                            minWidth: "180px",
+                            maxWidth: "220px"
                         }}
                     >
                         <div
