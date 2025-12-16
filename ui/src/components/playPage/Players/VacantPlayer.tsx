@@ -130,11 +130,14 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             return gameOptions?.minBuyIn === gameOptions?.maxBuyIn;
         }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
 
-        // Memoize min/max buy-in values for slider
-        const { minBuyInNum, maxBuyInNum } = useMemo(() => {
+        // Memoize min/max buy-in values for slider and calculate big blind
+        const { minBuyInNum, maxBuyInNum, bigBlindValue } = useMemo(() => {
+            const maxBuyIn = parseFloat(formatUSDCToSimpleDollars(gameOptions?.maxBuyIn || "0"));
+            const bigBlind = maxBuyIn / 100; // Big blind is 1/100 of max buy-in
             return {
                 minBuyInNum: parseFloat(formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0")),
-                maxBuyInNum: parseFloat(formatUSDCToSimpleDollars(gameOptions?.maxBuyIn || "0"))
+                maxBuyInNum: maxBuyIn,
+                bigBlindValue: bigBlind
             };
         }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
 
@@ -143,6 +146,15 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
             const val = parseFloat(buyInAmount);
             return isNaN(val) ? minBuyInNum : val;
         }, [buyInAmount, minBuyInNum]);
+
+        // Check if buy-in exceeds available balance
+        const exceedsBalance = useMemo(() => {
+            const buyInValue = parseFloat(buyInAmount) || 0;
+            const usdcBalance = cosmosWallet.balance.find(b => b.denom === "usdc");
+            if (!usdcBalance) return false;
+            const usdcAmount = microToUsdc(usdcBalance.amount);
+            return buyInValue > usdcAmount;
+        }, [buyInAmount, cosmosWallet.balance]);
 
         // Handle buy-in confirmation and join
         const handleBuyInConfirm = useCallback(async () => {
@@ -372,12 +384,14 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             onChange={e => {
                                                 const val = parseFloat(e.target.value);
                                                 if (!isNaN(val)) {
-                                                    setBuyInAmount(val.toFixed(2));
+                                                    // Round to nearest step to align with bigBlindValue increments
+                                                    const steppedValue = Math.round(val / bigBlindValue) * bigBlindValue;
+                                                    setBuyInAmount(Math.max(minBuyInNum, Math.min(steppedValue, maxBuyInNum)).toFixed(2));
                                                 }
                                             }}
                                             min={minBuyInNum.toString()}
                                             max={maxBuyInNum.toString()}
-                                            step="0.01"
+                                            step={bigBlindValue.toString()}
                                             className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                                             style={{
                                                 backgroundColor: colors.ui.bgMedium,
@@ -397,7 +411,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                             backgroundColor: colors.ui.bgMedium,
                                             border: `1px solid ${colors.ui.borderColor}`
                                         }}
-                                        step="0.01"
+                                        step={bigBlindValue.toString()}
                                         min={minBuyInNum.toString()}
                                         max={maxBuyInNum.toString()}
                                     />
@@ -410,6 +424,8 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                 {cosmosWallet.balance.map((balance, idx) => {
                                     if (balance.denom === "usdc") {
                                         const usdcAmount = microToUsdc(balance.amount);
+                                        const buyInValue = parseFloat(buyInAmount) || 0;
+                                        const exceedsBalance = buyInValue > usdcAmount;
                                         return (
                                             <div
                                                 key={idx}
@@ -423,7 +439,7 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                                                     <span className="text-white font-semibold">USDC</span>
                                                     <span
                                                         className={`text-lg font-bold ${
-                                                            usdcAmount < minBuyInNum ? "text-red-400" : "text-white"
+                                                            exceedsBalance ? "text-red-400" : "text-white"
                                                         }`}
                                                     >
                                                         ${usdcAmount.toFixed(2)}
@@ -454,11 +470,13 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
                             <div className="flex flex-col space-y-3">
                                 <button
                                     onClick={handleBuyInConfirm}
-                                    disabled={isJoining}
+                                    disabled={isJoining || exceedsBalance}
                                     className="w-full px-6 py-3 text-sm font-semibold rounded-lg transition duration-300 flex items-center justify-center"
                                     style={{
                                         background: colors.brand.primary,
-                                        color: "white"
+                                        color: "white",
+                                        opacity: exceedsBalance ? 0.5 : 1,
+                                        cursor: exceedsBalance ? "not-allowed" : "pointer"
                                     }}
                                 >
                                     {isJoining ? (
