@@ -4,6 +4,14 @@ import { colors, hexToRgba } from "../utils/colorConfig";
 import { useCosmosWallet } from "../hooks";
 import { useNetwork } from "../context/NetworkContext";
 import { formatTimestampRelative } from "../utils/formatUtils";
+import { microToUsdc } from "../constants/currency";
+import {
+    formatTransactionLabel,
+    formatTransferDirection,
+    getTransferDirectionClass,
+    formatShortHash,
+    formatGameId
+} from "../utils/transactionUtils";
 
 interface Transaction {
     txhash: string;
@@ -12,6 +20,13 @@ interface Transaction {
     code: number;
     // Message type for display
     messageType?: string;
+    // Detailed action info
+    action?: string;
+    amount?: string;
+    gameId?: string;
+    // Transfer info
+    transferAmount?: string;
+    transferDirection?: "sent" | "received";
 }
 
 /**
@@ -67,21 +82,79 @@ const TransactionPanel: React.FC = () => {
             uniqueTxs.sort((a: any, b: any) => parseInt(b.height) - parseInt(a.height));
             const recentTxs = uniqueTxs.slice(0, 6);
 
-            // Extract message type for display
+            // Extract message type and details for display
             const formattedTxs: Transaction[] = recentTxs.map((tx: any) => {
                 let messageType = "Transaction";
-                if (tx.tx?.body?.messages?.[0]) {
-                    const msgType = tx.tx.body.messages[0]["@type"] || "";
-                    // Extract the last part of the type URL (e.g., "MsgSend" from "/cosmos.bank.v1beta1.MsgSend")
+                let action: string | undefined;
+                let amount: string | undefined;
+                let gameId: string | undefined;
+                let transferAmount: string | undefined;
+                let transferDirection: "sent" | "received" | undefined;
+
+                const msg = tx.tx?.body?.messages?.[0];
+                if (msg) {
+                    const msgType = msg["@type"] || "";
+                    // Extract the last part of the type URL
                     const parts = msgType.split(".");
                     messageType = parts[parts.length - 1] || "Transaction";
+
+                    // Extract poker action details
+                    if (msgType.includes("MsgPerformAction")) {
+                        action = msg.action;
+                        if (msg.amount && msg.amount !== "0") {
+                            amount = msg.amount;
+                        }
+                        gameId = msg.game_id;
+                    } else if (msgType.includes("MsgJoinGame")) {
+                        action = "join";
+                        amount = msg.buy_in;
+                        gameId = msg.game_id;
+                    } else if (msgType.includes("MsgLeaveGame")) {
+                        action = "leave";
+                        gameId = msg.game_id;
+                    } else if (msgType.includes("MsgCreateGame")) {
+                        action = "create";
+                        gameId = msg.game_id;
+                    } else if (msgType.includes("MsgSend")) {
+                        // Bank transfer
+                        const coins = msg.amount?.[0];
+                        if (coins) {
+                            transferAmount = coins.amount;
+                            transferDirection = msg.from_address === address ? "sent" : "received";
+                        }
+                    }
                 }
+
+                // Check events for transfer details if not already found
+                if (!transferAmount && tx.events) {
+                    const transferEvent = tx.events.find((e: any) => e.type === "transfer");
+                    if (transferEvent) {
+                        const amountAttr = transferEvent.attributes?.find((a: any) => a.key === "amount");
+                        const recipientAttr = transferEvent.attributes?.find((a: any) => a.key === "recipient");
+                        const senderAttr = transferEvent.attributes?.find((a: any) => a.key === "sender");
+
+                        if (amountAttr?.value) {
+                            // Parse amount like "120000usdc"
+                            const match = amountAttr.value.match(/^(\d+)/);
+                            if (match) {
+                                transferAmount = match[1];
+                                transferDirection = recipientAttr?.value === address ? "received" : "sent";
+                            }
+                        }
+                    }
+                }
+
                 return {
                     txhash: tx.txhash,
                     height: tx.height,
                     timestamp: tx.timestamp,
                     code: tx.code,
-                    messageType
+                    messageType,
+                    action,
+                    amount,
+                    gameId,
+                    transferAmount,
+                    transferDirection
                 };
             });
 
@@ -184,7 +257,9 @@ const TransactionPanel: React.FC = () => {
                                 className="p-3 rounded-lg bg-gray-900 border border-gray-700 cursor-pointer hover:bg-gray-700/50 transition-colors"
                             >
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-white text-sm font-medium">{tx.messageType}</span>
+                                    <span className="text-white text-sm font-medium">
+                                        {formatTransactionLabel(tx.action, tx.messageType)}
+                                    </span>
                                     <span
                                         className="text-xs px-2 py-0.5 rounded-full"
                                         style={{
@@ -195,9 +270,27 @@ const TransactionPanel: React.FC = () => {
                                         {tx.code === 0 ? "Success" : "Failed"}
                                     </span>
                                 </div>
+                                {/* Action/Transfer Details */}
+                                {(tx.amount || tx.transferAmount) && (
+                                    <div className="flex items-center gap-2 mb-1">
+                                        {tx.transferDirection && (
+                                            <span className={`text-xs ${getTransferDirectionClass(tx.transferDirection)}`}>
+                                                {formatTransferDirection(tx.transferDirection)}
+                                            </span>
+                                        )}
+                                        <span className="text-sm font-medium" style={{ color: colors.brand.primary }}>
+                                            {microToUsdc(tx.amount || tx.transferAmount || "0")} USDC
+                                        </span>
+                                        {tx.gameId && (
+                                            <span className="text-xs text-gray-500">
+                                                Game: {formatGameId(tx.gameId)}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between">
                                     <span className="text-gray-400 text-xs font-mono">
-                                        {tx.txhash.slice(0, 8)}...{tx.txhash.slice(-8)}
+                                        {formatShortHash(tx.txhash)}
                                     </span>
                                     <span className="text-gray-500 text-xs">{formatTimestampRelative(tx.timestamp)}</span>
                                 </div>
