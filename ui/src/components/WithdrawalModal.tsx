@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { ethers } from "ethers";
 import { getClient, getPublicKey } from "../utils/b52AccountUtils";
-import useUserWallet from "../hooks/useUserWallet";
-import { formatBalance } from "../utils/numberUtils";
+import useCosmosWallet from "../hooks/useCosmosWallet";
+import { microToUsdc } from "../constants/currency";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import useUserWalletConnect from "../hooks/DepositPage/useUserWalletConnect";
 import { WithdrawResponseDTO } from "@block52/poker-vm-sdk";
@@ -70,7 +70,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     // Get the Layer 2 game account public key from localStorage
     // This is the account that holds the funds to be withdrawn
     const publicKey = getPublicKey();
-    const { accountData: account, refreshBalance: refetchAccount } = useUserWallet();
+    const { balance: cosmosBalance, refreshBalance: refetchAccount } = useCosmosWallet();
     const { address: web3Address, isConnected: isWeb3Connected } = useUserWalletConnect();
 
     // Amount to withdraw in USDC
@@ -190,13 +190,12 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
             return false;
         }
 
-        // Ensure account data is loaded
-        if (!account) return false;
+        // Get USDC balance from Cosmos wallet
+        const usdcBalanceEntry = cosmosBalance.find(b => b.denom === "usdc");
+        if (!usdcBalanceEntry) return false;
 
-        // Convert balance from wei to USDC for comparison
-        // Use the same formatBalance function as Dashboard for consistency
-        // formatBalance returns a string, so we need to convert back to number
-        const balanceInUSDC = Number(formatBalance(account.balance));
+        // Convert balance from micro-units to USDC for comparison
+        const balanceInUSDC = microToUsdc(usdcBalanceEntry.amount);
 
         // Check if user has sufficient balance
         return Number(value) <= balanceInUSDC;
@@ -341,9 +340,9 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 
     if (!isOpen) return null;
 
-    // Convert balance from wei to USDC for display and validation
-    // Use the same formatBalance function as Dashboard for consistency
-    const balanceInUSDC = account?.balance ? formatBalance(account.balance) : "0.00";
+    // Get USDC balance from Cosmos wallet and convert from micro-units to USDC for display
+    const usdcBalanceEntry = cosmosBalance.find(b => b.denom === "usdc");
+    const balanceInUSDC = usdcBalanceEntry ? microToUsdc(usdcBalanceEntry.amount).toFixed(2) : "0.00";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={modalOverlayStyle}>
@@ -356,7 +355,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                         Available Balance
                     </p>
                     <p className="text-xl font-bold" style={{ color: colors.brand.primary }}>
-                        ${account ? formatBalance(account.balance) : "0.00"} USDC
+                        ${balanceInUSDC} USDC
                     </p>
                 </div>
 
