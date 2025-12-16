@@ -37,7 +37,12 @@ const ACTION_DISPLAY_MAP: Record<string, string> = {
 };
 
 // Actions that should NOT trigger the display (too frequent/not relevant)
-const FILTERED_ACTIONS = ["join", "deal", "new-hand", "sit-out"];
+const FILTERED_ACTIONS = [
+  NonPlayerActionType.JOIN,
+  NonPlayerActionType.DEAL,
+  NonPlayerActionType.NEW_HAND,
+  NonPlayerActionType.SIT_OUT
+];
 
 // Format amount for display
 const formatActionAmount = (_action: string, amount?: string): string => {
@@ -82,7 +87,7 @@ export const usePlayerActionDropBox = (seatIndex: number): PlayerActionDisplay =
     const globallyMostRecentAction = previousActions.find(action => action.index === mostRecentActionIndex) || null;
 
     // Check if the most recent action should be filtered (not displayed)
-    const shouldFilter = globallyMostRecentAction && FILTERED_ACTIONS.includes(globallyMostRecentAction.action.toLowerCase());
+    const shouldFilter = globallyMostRecentAction && FILTERED_ACTIONS.includes(globallyMostRecentAction.action.toLowerCase() as NonPlayerActionType);
 
     // If we should filter this action, don't show anything
     const actionToShow = shouldFilter ? null : globallyMostRecentAction;
