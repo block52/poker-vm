@@ -94,17 +94,23 @@ const ActionsLog: React.FC = () => {
                     toast.error(errorMessage);
                 });
         } else {
-            // Fallback for older browsers or non-HTTPS contexts
+            // Fallback for older browsers or non-HTTPS contexts using deprecated execCommand
+            // This is intentionally used as a legacy fallback for browsers without Clipboard API
             try {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed";
-                textArea.style.left = "-999999px";
+                textArea.style.left = "-9999px"; // Hide off-screen
                 document.body.appendChild(textArea);
                 textArea.select();
-                document.execCommand("copy");
+                const success = document.execCommand("copy"); // Deprecated but needed for legacy browsers
                 document.body.removeChild(textArea);
-                onSuccess();
+                if (success) {
+                    onSuccess();
+                } else {
+                    console.error("execCommand copy failed");
+                    toast.error(errorMessage);
+                }
             } catch (err) {
                 console.error("Failed to copy:", err);
                 toast.error(errorMessage);
