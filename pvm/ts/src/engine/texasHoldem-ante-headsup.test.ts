@@ -60,18 +60,20 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         it("should have correct legal actions before posting blinds", () => {
             // Get legal actions for the next player
             const actual = game.getLegalActions(PLAYER_1);
-            expect(actual.length).toBeGreaterThanOrEqual(2);
+            expect(actual.length).toBe(2); // SMALL_BLIND + SIT_OUT (non-player action)
             expect(actual[0].action).toEqual(PlayerActionType.SMALL_BLIND);
-            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(NonPlayerActionType.SIT_OUT);
+            // FOLD should NOT be available during ANTE round
         });
 
         it("should have correct legal actions after posting the small blind", () => {
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
             // Get legal actions for the next player
             const actual = game.getLegalActions(PLAYER_2);
-            expect(actual.length).toBeGreaterThanOrEqual(2); // FOLD, BIG_BLIND
+            expect(actual.length).toBe(2); // BIG_BLIND + SIT_OUT (non-player action)
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
-            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(NonPlayerActionType.SIT_OUT);
+            // FOLD should NOT be available during ANTE round
         });
 
         it("should have correct legal actions after posting the big blind", () => {
@@ -169,7 +171,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             expect(game.getPlayer("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac")).toBeDefined();
         });
 
-        it.only("should do end to end", () => {
+        it("should do end to end", () => {
             // Do the small blind
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
@@ -271,9 +273,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             // Do the small blind
             let actions = game.getLegalActions(PLAYER_1);
-            expect(actions.length).toBeGreaterThanOrEqual(2);
+            expect(actions.length).toBe(2); // SMALL_BLIND + SIT_OUT (non-player action)
             expect(actions[0].action).toEqual(PlayerActionType.SMALL_BLIND);
-            expect(actions[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actions[1].action).toEqual(NonPlayerActionType.SIT_OUT);
+            // FOLD should NOT be available during ANTE round
 
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
@@ -281,7 +284,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
 
             // Do the big blind
             actions = game.getLegalActions(PLAYER_2);
-            expect(actions.length).toBeGreaterThanOrEqual(2);
+            expect(actions.length).toBe(2); // BIG_BLIND + SIT_OUT (non-player action)
+            expect(actions[0].action).toEqual(PlayerActionType.BIG_BLIND);
+            expect(actions[1].action).toEqual(NonPlayerActionType.SIT_OUT);
+            // FOLD should NOT be available during ANTE round
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
             expect(game.pot).toEqual(THREE_TOKENS);
@@ -411,16 +417,20 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player.
             // This guy should now be the small blind
             actions = game.getLegalActions(PLAYER_2);
-            expect(actions.length).toBeGreaterThanOrEqual(2);
+            expect(actions.length).toBe(2); // SMALL_BLIND + SIT_OUT (non-player action)
             expect(actions[0].action).toEqual(PlayerActionType.SMALL_BLIND);
-            expect(actions[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actions[1].action).toEqual(NonPlayerActionType.SIT_OUT);
+            // FOLD should NOT be available during ANTE round
 
             // Perform the small blind
             game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 17, ONE_TOKEN, undefined, getNextTestTimestamp());
 
             // Get legal actions for the next player
             actions = game.getLegalActions(PLAYER_1);
-            expect(actions.length).toBeGreaterThanOrEqual(2);
+            expect(actions.length).toBe(2); // BIG_BLIND + SIT_OUT (non-player action)
+            expect(actions[0].action).toEqual(PlayerActionType.BIG_BLIND);
+            expect(actions[1].action).toEqual(NonPlayerActionType.SIT_OUT);
+            // FOLD should NOT be available during ANTE round
 
             game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 18, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
