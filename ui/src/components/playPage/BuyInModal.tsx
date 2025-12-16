@@ -404,10 +404,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                                         </div>
                                         <div className="text-right">
                                             <div className="flex items-baseline gap-2">
-                                                <span className={`font-bold text-lg ${shouldShowRed ? 'text-red-500' : 'text-white'}`}>{displayAmount}</span>
+                                                <span className={`font-bold text-lg ${shouldShowRed ? "text-red-500" : "text-white"}`}>{displayAmount}</span>
                                                 <span className="text-gray-400 text-xs">{balance.denom}</span>
                                             </div>
-                                            {usdValue && <div className={`text-xs ${shouldShowRed ? 'text-red-400' : 'text-gray-400'}`}>≈ {usdValue}</div>}
+                                            {usdValue && <div className={`text-xs ${shouldShowRed ? "text-red-400" : "text-gray-400"}`}>≈ {usdValue}</div>}
                                             <div className="text-xs text-gray-500">{Number(balance.amount).toLocaleString("en-US")} micro-units</div>
                                         </div>
                                     </div>
