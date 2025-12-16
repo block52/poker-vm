@@ -189,11 +189,17 @@ describe("Texas Holdem Game", () => {
         it("should have legal moves for players to post small blind", () => {
             const legalActions = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
 
+            // During ANTE round: blind action + SIT_OUT. FOLD is NOT available during ANTE.
             expect(legalActions).toContainEqual(expect.objectContaining({
                 action: PlayerActionType.SMALL_BLIND
             }));
 
             expect(legalActions).toContainEqual(expect.objectContaining({
+                action: NonPlayerActionType.SIT_OUT
+            }));
+
+            // FOLD should NOT be available during ANTE round
+            expect(legalActions).not.toContainEqual(expect.objectContaining({
                 action: PlayerActionType.FOLD
             }));
         });
@@ -202,19 +208,20 @@ describe("Texas Holdem Game", () => {
             game.performAction("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac", PlayerActionType.SMALL_BLIND, 3, undefined, undefined, getNextTestTimestamp());
             game.performAction("0x980b8D8A16f5891F41871d878a479d81Da52334c", PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
 
-            // After blinds, before dealing, the legal actions should include DEAL, FOLD, and non-player actions
+            // After blinds, still in ANTE round. Legal actions: DEAL + SIT_OUT. FOLD is NOT available during ANTE.
             const legalActions1 = game.getLegalActions("0x1fa53E96ad33C6Eaeebff8D1d83c95Fcd7ba9dac");
 
-            expect(legalActions1.length).toBeGreaterThanOrEqual(2);
+            expect(legalActions1.length).toBe(2);
             expect(legalActions1).toContainEqual(expect.objectContaining({
                 action: NonPlayerActionType.DEAL
             }));
 
-            expect(legalActions1).toContainEqual(expect.objectContaining({
+            // FOLD should NOT be available during ANTE round
+            expect(legalActions1).not.toContainEqual(expect.objectContaining({
                 action: PlayerActionType.FOLD
             }));
 
-            // Should also include SIT_OUT as a non-player action
+            // Should include SIT_OUT as a non-player action
             expect(legalActions1).toContainEqual(expect.objectContaining({
                 action: NonPlayerActionType.SIT_OUT
             }));

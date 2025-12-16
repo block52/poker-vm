@@ -27,6 +27,7 @@ class FoldAction extends BaseAction implements IAction {
         }
 
         this.validateNotInSpecificRound(TexasHoldemRound.SHOWDOWN);
+        this.validateNotInAnteRound();
 
         if (this.isLastLivePlayer(player)) {
             // If the player is the last live player, they cannot fold
