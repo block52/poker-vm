@@ -96,12 +96,12 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             expect(nextToAct).toBeDefined();
             expect(nextToAct?.address).toEqual(PLAYER_2);
 
-            // Get player (SIT_OUT is now a non-player action, always available separately)
+            // During ANTE round: blind action + SIT_OUT. FOLD is NOT available during ANTE.
             let seat2Actions = game.getLegalActions(PLAYER_2);
             expect(seat2Actions).toBeDefined();
-            expect(seat2Actions.length).toBeGreaterThanOrEqual(2);
+            expect(seat2Actions.length).toBe(2);
             expect(seat2Actions[0].action).toEqual(PlayerActionType.SMALL_BLIND);
-            expect(seat2Actions[1].action).toEqual(PlayerActionType.FOLD);
+            expect(seat2Actions[1].action).toEqual(NonPlayerActionType.SIT_OUT);
 
             // Perform blinds
             game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
@@ -110,18 +110,19 @@ describe("Texas Holdem - Ante - 3 Players", () => {
             // Get round
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
 
-            // Get legal actions for player 3 seat 8 (SIT_OUT is now a non-player action, always available separately)
+            // Still in ANTE round: DEAL + SIT_OUT. FOLD is NOT available during ANTE.
             const seat8Actions = game.getLegalActions(PLAYER_3);
             expect(seat8Actions).toBeDefined();
-            expect(seat8Actions.length).toBeGreaterThanOrEqual(2);
+            expect(seat8Actions.length).toBe(2);
             expect(seat8Actions[0].action).toEqual(NonPlayerActionType.DEAL);
-            expect(seat8Actions[1].action).toEqual(PlayerActionType.FOLD);
+            expect(seat8Actions[1].action).toEqual(NonPlayerActionType.SIT_OUT);
 
-            // Get legal actions for player 2 seat 2 (SIT_OUT is now a non-player action, always available separately)
+            // Still in ANTE round: DEAL + SIT_OUT. FOLD is NOT available during ANTE.
             seat2Actions = game.getLegalActions(PLAYER_2);
             expect(seat2Actions).toBeDefined();
-            expect(seat2Actions.length).toBeGreaterThanOrEqual(1);
+            expect(seat2Actions.length).toBe(2);
             expect(seat2Actions[0].action).toEqual(NonPlayerActionType.DEAL);
+            expect(seat2Actions[1].action).toEqual(NonPlayerActionType.SIT_OUT);
         });
 
         it("should allow a player to leave and remove them from the game", () => {

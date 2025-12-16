@@ -59,10 +59,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
         it("should have correct legal actions after posting the small blind", () => {
             // Get legal actions for the next player
             let actual = game.getLegalActions(SMALL_BLIND_PLAYER);
-            // SIT_OUT is now a non-player action (always available), not included in legal actions
-            expect(actual.length).toBeGreaterThanOrEqual(2);
+            // During ANTE round: blind action + SIT_OUT (non-player action). FOLD is NOT available during ANTE.
+            expect(actual.length).toBe(2);
             expect(actual[0].action).toEqual(PlayerActionType.SMALL_BLIND);
-            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(NonPlayerActionType.SIT_OUT);
 
             game.performAction(SMALL_BLIND_PLAYER, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.currentRound).toEqual(TexasHoldemRound.ANTE);
@@ -70,10 +70,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             actual = game.getLegalActions(BIG_BLIND_PLAYER);
 
-            // SIT_OUT is now a non-player action (always available), not included in legal actions
-            expect(actual.length).toBeGreaterThanOrEqual(2);
+            // During ANTE round: blind action + SIT_OUT (non-player action). FOLD is NOT available during ANTE.
+            expect(actual.length).toBe(2);
             expect(actual[0].action).toEqual(PlayerActionType.BIG_BLIND);
-            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(NonPlayerActionType.SIT_OUT);
 
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct).toBeDefined();
@@ -87,10 +87,10 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             // Get legal actions for the next player
             const actual = game.getLegalActions("0x980b8D8A16f5891F41871d878a479d81Da52334c");
 
-            // SIT_OUT is now a non-player action (always available), not included in legal actions
-            expect(actual.length).toBeGreaterThanOrEqual(2);
+            // Still in ANTE round after blinds: DEAL + SIT_OUT. FOLD is NOT available during ANTE.
+            expect(actual.length).toBe(2);
             expect(actual[0].action).toEqual(NonPlayerActionType.DEAL);
-            expect(actual[1].action).toEqual(PlayerActionType.FOLD);
+            expect(actual[1].action).toEqual(NonPlayerActionType.SIT_OUT);
         });
 
         it("should have correct legal actions after posting blinds", () => {

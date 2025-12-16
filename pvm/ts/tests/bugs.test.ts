@@ -244,12 +244,12 @@ describe("Texas Holdem - Data driven", () => {
             const nextToAct = game.getNextPlayerToAct();
             expect(nextToAct?.address).toEqual("0x4260E88e81E60113146092Fb9474b61C59f7552e");
 
-            // SIT_OUT is now a non-player action (always available), not included in legal actions
+            // During ANTE round: DEAL + SIT_OUT. FOLD is NOT available during ANTE.
             const legalActions = game.getLegalActions("0x4260E88e81E60113146092Fb9474b61C59f7552e");
             expect(legalActions).toBeDefined();
-            expect(legalActions.length).toBeGreaterThanOrEqual(2);
+            expect(legalActions.length).toBe(2);
             expect(legalActions[0].action).toEqual("deal");
-            expect(legalActions[1].action).toEqual("fold");
+            expect(legalActions[1].action).toEqual("sit-out");
         });
 
         it.skip("should test bug 1103", () => {
