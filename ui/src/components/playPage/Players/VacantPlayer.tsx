@@ -133,13 +133,29 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
         // Memoize min/max buy-in values for slider and calculate big blind
         const { minBuyInNum, maxBuyInNum, bigBlindValue } = useMemo(() => {
             const maxBuyIn = parseFloat(formatUSDCToSimpleDollars(gameOptions?.maxBuyIn || "0"));
-            const bigBlind = maxBuyIn / 100; // Big blind is 1/100 of max buy-in
+            
+            // Get actual big blind from game options instead of deriving from max buy-in
+            // This ensures the slider increments correctly by the actual big blind value
+            let bigBlind: number;
+            if (gameOptions?.bigBlind) {
+                // Use actual big blind from game options (convert from micro-units to dollars)
+                bigBlind = parseFloat(formatUSDCToSimpleDollars(gameOptions.bigBlind));
+                console.log("💰 VacantPlayer - Using actual big blind from game options:");
+                console.log("  bigBlind (micro):", gameOptions.bigBlind);
+                console.log("  bigBlind (dollars):", bigBlind);
+            } else {
+                // Fallback to deriving from max buy-in (old behavior)
+                bigBlind = maxBuyIn / 100;
+                console.log("⚠️ VacantPlayer - Big blind not in game options, deriving from max buy-in:");
+                console.log("  bigBlind (derived):", bigBlind);
+            }
+            
             return {
                 minBuyInNum: parseFloat(formatUSDCToSimpleDollars(gameOptions?.minBuyIn || "0")),
                 maxBuyInNum: maxBuyIn,
                 bigBlindValue: bigBlind
             };
-        }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn]);
+        }, [gameOptions?.minBuyIn, gameOptions?.maxBuyIn, gameOptions?.bigBlind]);
 
         // Memoize slider value to avoid inline function recreation
         const sliderValue = useMemo(() => {
