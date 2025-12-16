@@ -37,7 +37,7 @@ const ACTION_DISPLAY_MAP: Record<string, string> = {
 };
 
 // Actions that should NOT trigger the display (too frequent/not relevant)
-const FILTERED_ACTIONS = ["join", "deal", "new-hand"];
+const FILTERED_ACTIONS = ["join", "deal", "new-hand", "sit-out"];
 
 // Format amount for display
 const formatActionAmount = (_action: string, amount?: string): string => {
