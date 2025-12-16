@@ -9,6 +9,7 @@ import { JoinTableOptions } from "../../hooks/playerActions/types";
 import { useCosmosWallet } from "../../hooks";
 import { USDC_TO_MICRO, microToUsdc } from "../../constants/currency";
 import { useNetwork } from "../../context/NetworkContext";
+import { useGameStateContext } from "../../context/GameStateContext";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {
@@ -77,6 +78,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     // Get Cosmos wallet hook and network context
     const cosmosWallet = useCosmosWallet();
     const { currentNetwork } = useNetwork();
+    const { gameState } = useGameStateContext();
 
     // Use props if provided, otherwise fall back to hook
     const hookBuyIns = useMinAndMaxBuyIns();
@@ -125,9 +127,29 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         console.log("  balanceFormatted (dollars):", balance);
         console.log("  isSitAndGo:", isSitAndGo);
 
-        // Calculate stake label from max buy-in
-        const bigBlind = parseFloat(maxFormatted) / 100;
-        const smallBlind = bigBlind / 2;
+        // Get actual big blind from game state instead of deriving from max buy-in
+        // This ensures the slider increments correctly by the actual big blind value
+        let bigBlind: number;
+        let smallBlind: number;
+        
+        if (gameState?.gameOptions?.bigBlind && gameState?.gameOptions?.smallBlind) {
+            // Use actual blinds from game state (convert from micro-units to dollars)
+            bigBlind = parseFloat(formatUSDCToSimpleDollars(gameState.gameOptions.bigBlind));
+            smallBlind = parseFloat(formatUSDCToSimpleDollars(gameState.gameOptions.smallBlind));
+            console.log("💰 BuyInModal - Using actual blinds from game state:");
+            console.log("  bigBlind (micro):", gameState.gameOptions.bigBlind);
+            console.log("  smallBlind (micro):", gameState.gameOptions.smallBlind);
+            console.log("  bigBlind (dollars):", bigBlind);
+            console.log("  smallBlind (dollars):", smallBlind);
+        } else {
+            // Fallback to deriving from max buy-in (old behavior)
+            bigBlind = parseFloat(maxFormatted) / 100;
+            smallBlind = bigBlind / 2;
+            console.log("⚠️ BuyInModal - Blinds not in game state, deriving from max buy-in:");
+            console.log("  bigBlind (derived):", bigBlind);
+            console.log("  smallBlind (derived):", smallBlind);
+        }
+        
         const stake = `$${smallBlind.toFixed(2)} / $${bigBlind.toFixed(2)}`;
 
         return {
@@ -139,7 +161,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             maxBuyInNumber: parseFloat(maxFormatted),
             bigBlindValue: bigBlind
         };
-    }, [minBuyInWei, maxBuyInWei, cosmosWallet.balance, minBuyIn, maxBuyIn, hookBuyIns.minBuyInWei, hookBuyIns.maxBuyInWei, isSitAndGo]);
+    }, [minBuyInWei, maxBuyInWei, cosmosWallet.balance, minBuyIn, maxBuyIn, hookBuyIns.minBuyInWei, hookBuyIns.maxBuyInWei, isSitAndGo, gameState?.gameOptions?.bigBlind, gameState?.gameOptions?.smallBlind]);
 
     // Initialize buyInAmount with maxBuyInFormatted
     const [buyInAmount, setBuyInAmount] = useState(() => maxBuyInFormatted);
