@@ -4,8 +4,9 @@ import { useGameProgress } from "../hooks/useGameProgress";
 import { formatPlayerId, formatAmount } from "../utils/accountUtils";
 import { ActionDTO } from "@block52/poker-vm-sdk";
 import { colors } from "../utils/colorConfig";
-import { FaCopy, FaCheck } from "react-icons/fa";
+import { FaCopy, FaCheck, FaFileDownload } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { useGameStateContext } from "../context/GameStateContext";
 
 // Function to format action names with proper capitalization and spacing
 const formatActionName = (action: string): string => {
@@ -75,7 +76,9 @@ const formatRoundName = (round: string): string => {
 const ActionsLog: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { previousActions } = useGameProgress(id);
+    const { gameState } = useGameStateContext();
     const [copied, setCopied] = useState(false);
+    const [copiedJSON, setCopiedJSON] = useState(false);
 
     // Function to copy action log to clipboard
     const handleCopyLog = () => {
@@ -130,6 +133,50 @@ const ActionsLog: React.FC = () => {
         }
     };
 
+    // Function to copy hand history as JSON
+    const handleCopyJSON = () => {
+        if (!gameState) {
+            toast.info("No game state available to export");
+            return;
+        }
+
+        // Create comprehensive hand history JSON
+        const handHistoryJSON = JSON.stringify(gameState, null, 2);
+
+        // Copy to clipboard with fallback for older browsers
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+                .writeText(handHistoryJSON)
+                .then(() => {
+                    setCopiedJSON(true);
+                    toast.success("Hand history JSON copied to clipboard!");
+                    setTimeout(() => setCopiedJSON(false), 2000);
+                })
+                .catch((err) => {
+                    console.error("Failed to copy JSON:", err);
+                    toast.error("Failed to copy JSON");
+                });
+        } else {
+            // Fallback for older browsers or non-HTTPS contexts
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = handHistoryJSON;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                setCopiedJSON(true);
+                toast.success("Hand history JSON copied to clipboard!");
+                setTimeout(() => setCopiedJSON(false), 2000);
+            } catch (err) {
+                console.error("Failed to copy JSON:", err);
+                toast.error("Failed to copy JSON");
+            }
+        }
+    };
+
     return (
         <div 
             className="rounded w-full h-full overflow-y-auto scrollbar-hide backdrop-blur-sm"
@@ -143,14 +190,24 @@ const ActionsLog: React.FC = () => {
                 style={{ borderColor: "rgba(255,255,255,0.2)" }}
             >
                 <h3 className="text-sm font-semibold">History</h3>
-                <button
-                    onClick={handleCopyLog}
-                    className="p-1.5 rounded hover:bg-white/10 transition-colors duration-200"
-                    title="Copy history to clipboard"
-                    style={{ color: copied ? colors.accent.success : colors.brand.primary }}
-                >
-                    {copied ? <FaCheck size={12} /> : <FaCopy size={12} />}
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleCopyLog}
+                        className="p-1.5 rounded hover:bg-white/10 transition-colors duration-200"
+                        title="Copy history to clipboard"
+                        style={{ color: copied ? colors.accent.success : colors.brand.primary }}
+                    >
+                        {copied ? <FaCheck size={12} /> : <FaCopy size={12} />}
+                    </button>
+                    <button
+                        onClick={handleCopyJSON}
+                        className="p-1.5 rounded hover:bg-white/10 transition-colors duration-200"
+                        title="Copy hand history as JSON"
+                        style={{ color: copiedJSON ? colors.accent.success : colors.brand.primary }}
+                    >
+                        {copiedJSON ? <FaCheck size={12} /> : <FaFileDownload size={12} />}
+                    </button>
+                </div>
             </div>
             
             {previousActions && previousActions.length > 0 ? (
