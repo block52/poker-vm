@@ -80,6 +80,38 @@ const ActionsLog: React.FC = () => {
     const [copied, setCopied] = useState(false);
     const [copiedJSON, setCopiedJSON] = useState(false);
 
+    // Reusable utility function for copying text to clipboard
+    const copyTextToClipboard = (text: string, onSuccess: () => void, errorMessage: string) => {
+        // Copy to clipboard with fallback for older browsers
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+                .writeText(text)
+                .then(() => {
+                    onSuccess();
+                })
+                .catch((err) => {
+                    console.error("Failed to copy:", err);
+                    toast.error(errorMessage);
+                });
+        } else {
+            // Fallback for older browsers or non-HTTPS contexts
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                onSuccess();
+            } catch (err) {
+                console.error("Failed to copy:", err);
+                toast.error(errorMessage);
+            }
+        }
+    };
+
     // Function to copy action log to clipboard
     const handleCopyLog = () => {
         if (!previousActions || previousActions.length === 0) {
@@ -99,38 +131,15 @@ const ActionsLog: React.FC = () => {
             })
             .join("\n");
 
-        // Copy to clipboard with fallback for older browsers
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard
-                .writeText(logText)
-                .then(() => {
-                    setCopied(true);
-                    toast.success("Action log copied to clipboard!");
-                    setTimeout(() => setCopied(false), 2000);
-                })
-                .catch((err) => {
-                    console.error("Failed to copy:", err);
-                    toast.error("Failed to copy log");
-                });
-        } else {
-            // Fallback for older browsers or non-HTTPS contexts
-            try {
-                const textArea = document.createElement("textarea");
-                textArea.value = logText;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-999999px";
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand("copy");
-                document.body.removeChild(textArea);
+        copyTextToClipboard(
+            logText,
+            () => {
                 setCopied(true);
                 toast.success("Action log copied to clipboard!");
                 setTimeout(() => setCopied(false), 2000);
-            } catch (err) {
-                console.error("Failed to copy:", err);
-                toast.error("Failed to copy log");
-            }
-        }
+            },
+            "Failed to copy log"
+        );
     };
 
     // Function to copy hand history as JSON
@@ -140,40 +149,22 @@ const ActionsLog: React.FC = () => {
             return;
         }
 
-        // Create comprehensive hand history JSON
-        const handHistoryJSON = JSON.stringify(gameState, null, 2);
-
-        // Copy to clipboard with fallback for older browsers
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard
-                .writeText(handHistoryJSON)
-                .then(() => {
+        try {
+            // Create comprehensive hand history JSON with error handling for serialization
+            const handHistoryJSON = JSON.stringify(gameState, null, 2);
+            
+            copyTextToClipboard(
+                handHistoryJSON,
+                () => {
                     setCopiedJSON(true);
                     toast.success("Hand history JSON copied to clipboard!");
                     setTimeout(() => setCopiedJSON(false), 2000);
-                })
-                .catch((err) => {
-                    console.error("Failed to copy JSON:", err);
-                    toast.error("Failed to copy JSON");
-                });
-        } else {
-            // Fallback for older browsers or non-HTTPS contexts
-            try {
-                const textArea = document.createElement("textarea");
-                textArea.value = handHistoryJSON;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-999999px";
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand("copy");
-                document.body.removeChild(textArea);
-                setCopiedJSON(true);
-                toast.success("Hand history JSON copied to clipboard!");
-                setTimeout(() => setCopiedJSON(false), 2000);
-            } catch (err) {
-                console.error("Failed to copy JSON:", err);
-                toast.error("Failed to copy JSON");
-            }
+                },
+                "Failed to copy JSON"
+            );
+        } catch (err) {
+            console.error("Failed to serialize game state:", err);
+            toast.error("Failed to serialize game state to JSON");
         }
     };
 
