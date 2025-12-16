@@ -1396,23 +1396,43 @@ const Table = React.memo(() => {
             {/* Sit In Button - Shows when player is sitting out */}
             {hasSitInAction && (
                 <div className={`fixed z-30 ${isMobileLandscape ? "bottom-2 left-2" : isMobile ? "bottom-[260px] right-4" : "bottom-20 left-4"}`}>
-                    <button
-                        onClick={() => handleSitIn(id, currentNetwork)}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600
-                            text-white font-bold py-2 px-4 rounded-lg shadow-lg border-2 border-green-600
-                            transition-all duration-300 flex items-center justify-center gap-2 transform hover:scale-105
-                            animate-pulse text-sm"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                            />
-                        </svg>
-                        SIT IN
-                    </button>
+                    {/* Mobile: Compact Button Design */}
+                    {isMobile || isMobileLandscape ? (
+                        <button
+                            onClick={() => handleSitIn(id, currentNetwork)}
+                            className="btn-sit-out text-white font-medium py-1.5 px-3 rounded-lg shadow-md text-xs
+                            backdrop-blur-sm transition-all duration-300 border
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
+                            </svg>
+                            SIT IN
+                        </button>
+                    ) : (
+                        /* Desktop: Original Button Design */
+                        <button
+                            onClick={() => handleSitIn(id, currentNetwork)}
+                            className="btn-sit-out text-white font-medium py-2 px-4 rounded-lg shadow-md text-sm
+                            backdrop-blur-sm transition-all duration-300 border
+                            flex items-center justify-center gap-2 transform hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                />
+                            </svg>
+                            SIT IN
+                        </button>
+                    )}
                 </div>
             )}
 
