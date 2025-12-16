@@ -274,15 +274,15 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
     
     // WIN CELEBRATION ANIMATIONS
     winAnimations: {
-      // 4-PLAYER WIN ANIMATIONS
+      // 4-PLAYER WIN ANIMATIONS - Match vacantPlayers positions
       four: [
-        { left: "450px", top: "399px" },   // Win animation Seat 1
-        { left: "-110px", top: "175px" },  // Win animation Seat 2
-        { left: "450px", top: "-110px" },  // Win animation Seat 3
-        { left: "999px", top: "175px" }    // Win animation Seat 4
+        { left: "400px", top: "400px" },    // Win animation Seat 1
+        { left: "-140px", top: "32%" },     // Win animation Seat 2
+        { left: "550px", top: "00px" },     // Win animation Seat 3
+        { left: "90%", top: "32%" }         // Win animation Seat 4
       ],
       
-      // 6-PLAYER WIN ANIMATIONS
+      // 6-PLAYER WIN ANIMATIONS - Match vacantPlayers positions
       six: [
         { left: "40%", top: "100%" },    // Win animation at Seat 1
         { left: "17%", top: "32%" },     // Win animation at Seat 2
@@ -292,17 +292,17 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
         { left: "60%", top: "100%" }     // Win animation at Seat 6
       ],
       
-      // 9-PLAYER WIN ANIMATIONS
+      // 9-PLAYER WIN ANIMATIONS - Match vacantPlayers positions
       nine: [
-        { left: "450px", top: "470px" },   // Win animation at Seat 1
-        { left: "155px", top: "460px" },   // Win animation at Seat 2
-        { left: "-104px", top: "320px" },  // Win animation at Seat 3
-        { left: "-59px", top: "69px" },    // Win animation at Seat 4
-        { left: "267px", top: "-10px" },   // Win animation at Seat 5
-        { left: "600px", top: "-10px" },   // Win animation at Seat 6
-        { left: "960px", top: "69px" },    // Win animation at Seat 7
-        { left: "999px", top: "320px" },   // Win animation at Seat 8
-        { left: "740px", top: "460px" }    // Win animation at Seat 9
+        { left: "414px", top: "399px" },   // Win animation at Seat 1
+        { left: "130px", top: "374px" },   // Win animation at Seat 2
+        { left: "-110px", top: "220px" },  // Win animation at Seat 3
+        { left: "-55px", top: "-30px" },   // Win animation at Seat 4
+        { left: "240px", top: "-110px" },  // Win animation at Seat 5
+        { left: "580px", top: "-110px" },  // Win animation at Seat 6
+        { left: "880px", top: "-30px" },   // Win animation at Seat 7
+        { left: "929px", top: "220px" },   // Win animation at Seat 8
+        { left: "700px", top: "374px" }    // Win animation at Seat 9
       ]
     }
   },
@@ -492,7 +492,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
       ]
     },
     
-    // WIN CELEBRATION ANIMATIONS
+    // WIN CELEBRATION ANIMATIONS - Match vacantPlayers positions
     winAnimations: {
       // 4-PLAYER WIN ANIMATIONS
       four: [
@@ -512,17 +512,17 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
         { left: "60%", top: "100%" }     // Win animation at Seat 6
       ],
       
-      // 9-PLAYER WIN ANIMATIONS
+      // 9-PLAYER WIN ANIMATIONS - Match vacantPlayers positions
       nine: [
-        { left: "450px", top: "470px" },   // Win animation at Seat 1
-        { left: "155px", top: "460px" },   // Win animation at Seat 2
-        { left: "-104px", top: "320px" },  // Win animation at Seat 3
-        { left: "-59px", top: "69px" },    // Win animation at Seat 4
-        { left: "267px", top: "-10px" },   // Win animation at Seat 5
-        { left: "600px", top: "-10px" },   // Win animation at Seat 6
-        { left: "960px", top: "69px" },    // Win animation at Seat 7
-        { left: "999px", top: "320px" },   // Win animation at Seat 8
-        { left: "740px", top: "460px" }    // Win animation at Seat 9
+        { left: "414px", top: "399px" },   // Win animation at Seat 1
+        { left: "130px", top: "374px" },   // Win animation at Seat 2
+        { left: "-110px", top: "220px" },  // Win animation at Seat 3
+        { left: "-55px", top: "-30px" },   // Win animation at Seat 4
+        { left: "240px", top: "-110px" },  // Win animation at Seat 5
+        { left: "580px", top: "-110px" },  // Win animation at Seat 6
+        { left: "880px", top: "-30px" },   // Win animation at Seat 7
+        { left: "929px", top: "220px" },   // Win animation at Seat 8
+        { left: "700px", top: "374px" }    // Win animation at Seat 9
       ]
     }
   },
@@ -712,7 +712,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
       ]
     },
     
-    // WIN CELEBRATION ANIMATIONS
+    // WIN CELEBRATION ANIMATIONS - Match vacantPlayers positions
     winAnimations: {
       // 4-PLAYER WIN ANIMATIONS
       four: [
@@ -732,17 +732,17 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
         { left: "60%", top: "100%" }     // Win animation at Seat 6
       ],
       
-      // 9-PLAYER WIN ANIMATIONS
+      // 9-PLAYER WIN ANIMATIONS - Match vacantPlayers positions
       nine: [
-        { left: "450px", top: "470px" },   // Win animation at Seat 1
-        { left: "155px", top: "460px" },   // Win animation at Seat 2
-        { left: "-104px", top: "320px" },  // Win animation at Seat 3
-        { left: "-59px", top: "69px" },    // Win animation at Seat 4
-        { left: "267px", top: "-10px" },   // Win animation at Seat 5
-        { left: "600px", top: "-10px" },   // Win animation at Seat 6
-        { left: "960px", top: "69px" },    // Win animation at Seat 7
-        { left: "999px", top: "320px" },   // Win animation at Seat 8
-        { left: "740px", top: "460px" }    // Win animation at Seat 9
+        { left: "414px", top: "399px" },   // Win animation at Seat 1
+        { left: "130px", top: "374px" },   // Win animation at Seat 2
+        { left: "-110px", top: "220px" },  // Win animation at Seat 3
+        { left: "-55px", top: "-30px" },   // Win animation at Seat 4
+        { left: "240px", top: "-110px" },  // Win animation at Seat 5
+        { left: "580px", top: "-110px" },  // Win animation at Seat 6
+        { left: "880px", top: "-30px" },   // Win animation at Seat 7
+        { left: "929px", top: "220px" },   // Win animation at Seat 8
+        { left: "700px", top: "374px" }    // Win animation at Seat 9
       ]
     }
   },
@@ -932,7 +932,7 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
       ]
     },
     
-    // WIN CELEBRATION ANIMATIONS
+    // WIN CELEBRATION ANIMATIONS - Match vacantPlayers positions
     winAnimations: {
       // 4-PLAYER WIN ANIMATIONS
       four: [
@@ -952,17 +952,17 @@ export const viewportConfigs: Record<string, ViewportConfig> = {
         { left: "60%", top: "100%" }     // Win animation at Seat 6
       ],
       
-      // 9-PLAYER WIN ANIMATIONS
+      // 9-PLAYER WIN ANIMATIONS - Match vacantPlayers positions
       nine: [
-        { left: "450px", top: "470px" },   // Win animation at Seat 1
-        { left: "155px", top: "460px" },   // Win animation at Seat 2
-        { left: "-104px", top: "320px" },  // Win animation at Seat 3
-        { left: "-59px", top: "69px" },    // Win animation at Seat 4
-        { left: "267px", top: "-10px" },   // Win animation at Seat 5
-        { left: "600px", top: "-10px" },   // Win animation at Seat 6
-        { left: "960px", top: "69px" },    // Win animation at Seat 7
-        { left: "999px", top: "320px" },   // Win animation at Seat 8
-        { left: "740px", top: "460px" }    // Win animation at Seat 9
+        { left: "414px", top: "399px" },   // Win animation at Seat 1
+        { left: "130px", top: "374px" },   // Win animation at Seat 2
+        { left: "-110px", top: "220px" },  // Win animation at Seat 3
+        { left: "-55px", top: "-30px" },   // Win animation at Seat 4
+        { left: "240px", top: "-110px" },  // Win animation at Seat 5
+        { left: "580px", top: "-110px" },  // Win animation at Seat 6
+        { left: "880px", top: "-30px" },   // Win animation at Seat 7
+        { left: "929px", top: "220px" },   // Win animation at Seat 8
+        { left: "700px", top: "374px" }    // Win animation at Seat 9
       ]
     }
   }

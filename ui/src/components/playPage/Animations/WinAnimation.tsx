@@ -8,27 +8,27 @@ import "./WinAnimation.css";
 
 import DollarChip from "./../../../assets/DollarChip.svg";
 
-const WinAnimation: React.FC<WinAnimationProps> = React.memo(({ index }) => {
+const WinAnimation: React.FC<WinAnimationProps> = React.memo(({ positionIndex, seatNumber }) => {
     const { id: _id } = useParams<{ id: string }>();
     const { tableSize } = useTableAnimations();
     const { winnerInfo } = useWinnerInfo();
 
-    // Determine position based on table size
+    // Determine position based on table size (original logic)
     const position = useMemo(() => {
         switch (tableSize) {
             case 9:
-                return winAnimationPosition.nine[index];
+                return winAnimationPosition.nine[positionIndex];
             case 6:
-                return winAnimationPosition.six[index];
+                return winAnimationPosition.six[positionIndex];
             case 2:
-                return winAnimationPosition.two[index];
+                return winAnimationPosition.two[positionIndex];
             default:
                 return undefined;
         }
-    }, [tableSize, index]);
+    }, [tableSize, positionIndex]);
 
-    // Only render for the winner
-    const isWinner = !!winnerInfo?.some(w => w.seat === index + 1);
+    // Check if this seat is a winner using seatNumber (logical seat)
+    const isWinner = !!winnerInfo?.some(w => w.seat === seatNumber);
     if (!isWinner || !position) return null;
 
     return (
