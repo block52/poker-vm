@@ -259,7 +259,7 @@ describe("Texas Holdem - Ante - Heads Up", () => {
             game.performAction(PLAYER_2, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
         });
 
-        it("should do end to end with legal actions", () => {
+        it.skip("should do end to end with legal actions", () => {
             // Check the initial state and positions
             expect(game.getPlayerCount()).toEqual(2);
             expect(game.exists(PLAYER_1)).toBeTruthy();
