@@ -158,12 +158,16 @@ export default function AddressPage() {
         [loading]
     );
 
+    const formatDenom = (denom: string) => {
+        if (denom.toLowerCase() === "usdc") return "USDC";
+        if (denom.startsWith("u")) return denom.slice(1).toUpperCase();
+        return denom.toUpperCase();
+    };
+
     const formatAmount = (amount: string, denom: string) => {
         // Assuming micro-denominations (6 decimals)
         const value = microToUsdc(amount);
-        // Remove "u" prefix only if it's a micro-denomination (starts with "u")
-        const displayDenom = denom.startsWith("u") ? denom.slice(1) : denom;
-        return `${value.toFixed(6)} ${displayDenom.toUpperCase()}`;
+        return `${value.toFixed(6)} ${formatDenom(denom)}`;
     };
 
     const copyToClipboard = (text: string) => {
@@ -246,7 +250,7 @@ export default function AddressPage() {
                                     color: "white"
                                 }}
                             >
-                                Balances {balances.length > 0 && `(${balances.length})`}
+                                Balances
                             </button>
                             <button
                                 onClick={() => setActiveTab("transactions")}
@@ -256,7 +260,7 @@ export default function AddressPage() {
                                     color: "white"
                                 }}
                             >
-                                Transactions {transactions.length > 0 && `(${transactions.length})`}
+                                Transactions
                             </button>
                         </div>
 
@@ -279,8 +283,7 @@ export default function AddressPage() {
                                             >
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <p className="text-gray-400 text-sm">Denomination</p>
-                                                        <p className="text-white font-bold">{balance.denom}</p>
+                                                        <p className="text-white font-bold">{formatDenom(balance.denom)}</p>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-gray-400 text-sm">Amount</p>
@@ -305,46 +308,46 @@ export default function AddressPage() {
                                         {transactions.map((tx: any, index) => {
                                             const currentAddress = urlAddress || address;
                                             return (
-                                            <div
-                                                key={index}
-                                                onClick={() =>
-                                                    navigate(`/explorer/tx/${tx.txhash}`, {
-                                                        state: { fromAddress: currentAddress }
-                                                    })
-                                                }
-                                                className="p-4 rounded-lg cursor-pointer hover:opacity-80 transition-all"
-                                                style={{
-                                                    backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5),
-                                                    border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
-                                                }}
-                                            >
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div className="flex-1">
-                                                        <p className="text-gray-400 text-sm">Transaction Hash</p>
-                                                        <p className="text-white font-mono text-sm break-all">{tx.txhash}</p>
+                                                <div
+                                                    key={index}
+                                                    onClick={() =>
+                                                        navigate(`/explorer/tx/${tx.txhash}`, {
+                                                            state: { fromAddress: currentAddress }
+                                                        })
+                                                    }
+                                                    className="p-4 rounded-lg cursor-pointer hover:opacity-80 transition-all"
+                                                    style={{
+                                                        backgroundColor: hexToRgba(colors.ui.bgMedium, 0.5),
+                                                        border: `1px solid ${hexToRgba(colors.brand.primary, 0.2)}`
+                                                    }}
+                                                >
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex-1">
+                                                            <p className="text-gray-400 text-sm">Transaction Hash</p>
+                                                            <p className="text-white font-mono text-sm break-all">{tx.txhash}</p>
+                                                        </div>
+                                                        <div
+                                                            className="px-3 py-1 rounded-full text-xs font-bold ml-4"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    tx.code === 0 ? hexToRgba(colors.accent.success, 0.2) : hexToRgba(colors.accent.danger, 0.2),
+                                                                color: tx.code === 0 ? colors.accent.success : colors.accent.danger
+                                                            }}
+                                                        >
+                                                            {tx.code === 0 ? "Success" : "Failed"}
+                                                        </div>
                                                     </div>
-                                                    <div
-                                                        className="px-3 py-1 rounded-full text-xs font-bold ml-4"
-                                                        style={{
-                                                            backgroundColor:
-                                                                tx.code === 0 ? hexToRgba(colors.accent.success, 0.2) : hexToRgba(colors.accent.danger, 0.2),
-                                                            color: tx.code === 0 ? colors.accent.success : colors.accent.danger
-                                                        }}
-                                                    >
-                                                        {tx.code === 0 ? "Success" : "Failed"}
+                                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                                        <div>
+                                                            <p className="text-gray-400">Block Height</p>
+                                                            <p className="text-white">{tx.height}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-gray-400">Timestamp</p>
+                                                            <p className="text-white">{formatTimestampRelative(tx.timestamp)}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                                    <div>
-                                                        <p className="text-gray-400">Block Height</p>
-                                                        <p className="text-white">{tx.height}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-gray-400">Timestamp</p>
-                                                        <p className="text-white">{formatTimestampRelative(tx.timestamp)}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
                                             );
                                         })}
                                     </div>
