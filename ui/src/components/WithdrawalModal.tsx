@@ -73,6 +73,12 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
     const { balance: cosmosBalance, refreshBalance: refetchAccount } = useCosmosWallet();
     const { address: web3Address, isConnected: isWeb3Connected } = useUserWalletConnect();
 
+    // Memoized USDC balance in human-readable format (avoids duplication)
+    const balanceInUSDC = useMemo(() => {
+        const usdcBalanceEntry = cosmosBalance.find(b => b.denom === "usdc");
+        return usdcBalanceEntry ? microToUsdc(usdcBalanceEntry.amount) : 0;
+    }, [cosmosBalance]);
+
     // Amount to withdraw in USDC
     const [amount, setAmount] = useState("");
 
@@ -190,14 +196,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
             return false;
         }
 
-        // Get USDC balance from Cosmos wallet
-        const usdcBalanceEntry = cosmosBalance.find(b => b.denom === "usdc");
-        if (!usdcBalanceEntry) return false;
-
-        // Convert balance from micro-units to USDC for comparison
-        const balanceInUSDC = microToUsdc(usdcBalanceEntry.amount);
-
-        // Check if user has sufficient balance
+        // Check if user has sufficient balance (using memoized balance)
         return Number(value) <= balanceInUSDC;
     };
 
@@ -340,9 +339,8 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
 
     if (!isOpen) return null;
 
-    // Get USDC balance from Cosmos wallet and convert from micro-units to USDC for display
-    const usdcBalanceEntry = cosmosBalance.find(b => b.denom === "usdc");
-    const balanceInUSDC = usdcBalanceEntry ? microToUsdc(usdcBalanceEntry.amount).toFixed(2) : "0.00";
+    // Format balance for display (2 decimal places)
+    const balanceDisplay = balanceInUSDC.toFixed(2);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={modalOverlayStyle}>
@@ -355,7 +353,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                         Available Balance
                     </p>
                     <p className="text-xl font-bold" style={{ color: colors.brand.primary }}>
-                        ${balanceInUSDC} USDC
+                        ${balanceDisplay} USDC
                     </p>
                 </div>
 
@@ -444,7 +442,7 @@ const WithdrawalModal: React.FC<WithdrawalModalProps> = ({ isOpen, onClose, onSu
                                     placeholder="0.00"
                                     step="0.01"
                                     min="0"
-                                    max={balanceInUSDC}
+                                    max={balanceDisplay}
                                     className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2"
                                     style={inputStyle}
                                     disabled={isWithdrawing}
