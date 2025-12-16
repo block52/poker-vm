@@ -188,7 +188,7 @@ export default function DistributionPage() {
             <AnimatedBackground />
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Explorer Navigation Header */}
-                <ExplorerHeader title="Block Explorer" subtitle="Card distribution analytics on Pokerchain" />
+                <ExplorerHeader title="Block Explorer" />
 
             {loading ? (
                 <div className="text-center py-12">

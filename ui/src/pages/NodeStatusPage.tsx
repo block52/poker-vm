@@ -172,7 +172,7 @@ export default function NodeStatusPage() {
             <div className="min-h-screen p-8 relative">
                 <AnimatedBackground />
                 <div className="max-w-7xl mx-auto relative z-10">
-                    <ExplorerHeader title="Node Not Found" subtitle="The requested node does not exist" />
+                    <ExplorerHeader title="Node Not Found" />
                     <div className="max-w-2xl mx-auto">
                         <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 text-center">
                             <svg className="h-16 w-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +207,6 @@ export default function NodeStatusPage() {
                 {/* Header with navigation */}
                 <ExplorerHeader
                     title={network.name}
-                    subtitle="Node Status"
                 />
 
                 <div className="max-w-3xl mx-auto">
