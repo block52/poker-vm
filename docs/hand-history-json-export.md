@@ -11,9 +11,30 @@ The Poker VM UI now supports exporting complete hand history as JSON format. Thi
 ## How to Use
 
 1. Navigate to any active poker table
-2. Open the History sidebar (click the sidebar toggle button)
-3. Click the "Copy as JSON" button (download icon) in the History panel
-4. The complete game state will be copied to your clipboard as formatted JSON
+2. Open the History sidebar (click the sidebar toggle button on the right side of the screen)
+3. In the History panel header, you'll see two buttons:
+   - **Copy** button (clipboard icon) - Copies human-readable action log
+   - **Copy as JSON** button (download icon) - Copies complete game state as JSON
+4. Click the "Copy as JSON" button
+5. The complete game state will be copied to your clipboard as formatted JSON
+6. A success notification will appear and the button icon will briefly change to a checkmark
+
+### Button Location
+```
+┌──────────────────────────────────┐
+│ History                    📋 📥 │ ← Buttons in header
+├──────────────────────────────────┤
+│ Action log entries...            │
+│                                  │
+│ player1 (Seat 1): Raise $50     │
+│ player2 (Seat 2): Call $50      │
+│ ...                              │
+└──────────────────────────────────┘
+
+Legend:
+📋 = Copy history as text
+📥 = Copy hand history as JSON (NEW)
+```
 
 ## JSON Structure
 
