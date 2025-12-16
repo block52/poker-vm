@@ -1350,8 +1350,10 @@ const Table = React.memo(() => {
                 </div>
             )}
 
-            {/* Sit Out Toggle - Professional Mobile Design */}
-            {hasSitOutAction && (
+            {/* Sit Out/Sit In Toggle - Professional Mobile Design */}
+            {/* Only show SIT OUT button when hasSitOutAction is true and hasSitInAction is false */}
+            {/* Only show SIT IN button when hasSitInAction is true */}
+            {hasSitOutAction && !hasSitInAction && (
                 <div className={`fixed z-30 ${isMobileLandscape ? "bottom-2 left-2" : isMobile ? "bottom-[260px] right-4" : "bottom-20 left-4"}`}>
                     {/* Mobile: Compact Button Design */}
                     {isMobile || isMobileLandscape ? (
