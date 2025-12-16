@@ -65,12 +65,12 @@ export const ExplorerHeader = ({ title = "Block Explorer" }: ExplorerHeaderProps
             <h1 className="text-4xl font-bold text-white mb-6 text-center">{title}</h1>
             
             {/* Horizontal card-style navigation */}
-            <div className="flex gap-4 justify-center overflow-x-auto">
+            <div className="flex flex-nowrap gap-4 justify-center overflow-x-auto scrollbar-hide">
                 {navLinks.map(link => (
                     <a
                         key={link.href}
                         href={link.href}
-                        className="p-4 rounded-lg border transition-all duration-200 hover:scale-[1.02] flex items-start gap-3 flex-shrink-0"
+                        className="p-4 rounded-lg border transition-colors duration-200 flex items-start gap-3 flex-shrink-0"
                         style={{
                             backgroundColor: isActive(link.href)
                                 ? hexToRgba(colors.brand.primary, 0.15)
