@@ -433,7 +433,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                                 </div>
                                 <input
                                     type="range"
-                                    value={parseFloat(buyInAmount) || minBuyInNumber}
+                                    value={Math.max(parseFloat(buyInAmount) || 0, minBuyInNumber)}
                                     onChange={e => {
                                         const val = parseFloat(e.target.value);
                                         if (!isNaN(val)) {
@@ -515,7 +515,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                         disabled={!canJoinRandomSeat || exceedsBalance}
                         className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: !canJoinRandomSeat || exceedsBalance ? `${colors.brand.primary}` : `${colors.brand.secondary}, ${colors.brand.primary}`,
+                            background: !canJoinRandomSeat || exceedsBalance ? colors.brand.primary : STATIC_STYLES.joinButtonGradient,
                             opacity: exceedsBalance || !canJoinRandomSeat ? 0.5 : 1,
                             cursor: !canJoinRandomSeat || exceedsBalance ? "not-allowed" : "pointer"
                         }}
