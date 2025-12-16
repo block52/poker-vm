@@ -149,7 +149,7 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
             }
             if (isSittingOut) {
                 return (
-                    <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "#ff9800" }}>
+                    <span className="animate-progress delay-2000 flex items-center w-full h-2 mb-2 mt-auto gap-2 justify-center" style={{ color: "white" }}>
                         SITTING OUT
                     </span>
                 );
