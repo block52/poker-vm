@@ -157,8 +157,29 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
     // Check if random seat join is available
     const canJoinRandomSeat = useMemo(() => {
-        return !isUserAlreadyPlaying && emptySeatIndexes.length > 0 && !isDisabled && !isJoiningRandomSeat;
-    }, [isUserAlreadyPlaying, emptySeatIndexes.length, isDisabled, isJoiningRandomSeat]);
+        return !isUserAlreadyPlaying && emptySeatIndexes.length > 0 && !isDisabled && !isJoiningRandomSeat && !exceedsBalance;
+    }, [isUserAlreadyPlaying, emptySeatIndexes.length, isDisabled, isJoiningRandomSeat, exceedsBalance]);
+
+    // Memoize button disabled states and styles
+    const buttonStates = useMemo(() => {
+        const viewTableDisabled = exceedsBalance;
+        const takeSeatDisabled = !canJoinRandomSeat || exceedsBalance;
+        
+        return {
+            viewTable: {
+                disabled: viewTableDisabled,
+                background: colors.brand.primary,
+                opacity: viewTableDisabled ? 0.5 : 1,
+                cursor: viewTableDisabled ? "not-allowed" : "pointer"
+            },
+            takeSeat: {
+                disabled: takeSeatDisabled,
+                background: takeSeatDisabled ? colors.brand.primary : STATIC_STYLES.joinButtonGradient,
+                opacity: takeSeatDisabled ? 0.5 : 1,
+                cursor: takeSeatDisabled ? "not-allowed" : "pointer"
+            }
+        };
+    }, [exceedsBalance, canJoinRandomSeat]);
 
     // Memoized event handlers
     const handleBuyInChange = useCallback((amount: string) => {
@@ -433,11 +454,13 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                                 </div>
                                 <input
                                     type="range"
-                                    value={Math.max(parseFloat(buyInAmount) || 0, minBuyInNumber)}
+                                    value={Math.min(Math.max(parseFloat(buyInAmount) || 0, minBuyInNumber), _maxBuyInNumber)}
                                     onChange={e => {
                                         const val = parseFloat(e.target.value);
                                         if (!isNaN(val)) {
-                                            handleBuyInChange(val.toFixed(2));
+                                            // Round to nearest step to align with bigBlindValue increments
+                                            const steppedValue = Math.round(val / bigBlindValue) * bigBlindValue;
+                                            handleBuyInChange(Math.max(minBuyInNumber, Math.min(steppedValue, _maxBuyInNumber)).toFixed(2));
                                         }
                                     }}
                                     min={minBuyInNumber.toString()}
@@ -500,24 +523,24 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                     </button>
                     <button
                         onClick={handleJoinClick}
-                        disabled={exceedsBalance}
+                        disabled={buttonStates.viewTable.disabled}
                         className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: `${colors.brand.primary}`,
-                            opacity: exceedsBalance ? 0.5 : 1,
-                            cursor: exceedsBalance || !canJoinRandomSeat ? "not-allowed" : "pointer"
+                            background: buttonStates.viewTable.background,
+                            opacity: buttonStates.viewTable.opacity,
+                            cursor: buttonStates.viewTable.cursor
                         }}
                     >
                         View Table
                     </button>
                     <button
                         onClick={handleRandomSeatJoin}
-                        disabled={!canJoinRandomSeat || exceedsBalance}
+                        disabled={buttonStates.takeSeat.disabled}
                         className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: !canJoinRandomSeat || exceedsBalance ? colors.brand.primary : STATIC_STYLES.joinButtonGradient,
-                            opacity: exceedsBalance || !canJoinRandomSeat ? 0.5 : 1,
-                            cursor: !canJoinRandomSeat || exceedsBalance ? "not-allowed" : "pointer"
+                            background: buttonStates.takeSeat.background,
+                            opacity: buttonStates.takeSeat.opacity,
+                            cursor: buttonStates.takeSeat.cursor
                         }}
                     >
                         {isJoiningRandomSeat ? "Joining..." : "Take My Seat"}
