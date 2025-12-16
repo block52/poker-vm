@@ -207,7 +207,6 @@ export default function NodeStatusPage() {
                 {/* Header with navigation */}
                 <ExplorerHeader
                     title={network.name}
-                    subtitle="Node Status"
                 />
 
                 <div className="max-w-3xl mx-auto">

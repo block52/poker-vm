@@ -163,7 +163,6 @@ export default function NodesPage() {
                 {/* Header */}
                 <ExplorerHeader
                     title="Network Nodes"
-                    subtitle="Monitor the status of all Block52 validator nodes"
                 />
 
                 {/* Nodes Grid */}
