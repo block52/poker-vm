@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, getSigningClient } from "../utils/cosmos/client";
-import { getCosmosMnemonic, setCosmosMnemonic, setCosmosAddress } from "../utils/cosmos/storage";
+import { getCosmosMnemonic, getCosmosAddress, setCosmosMnemonic, setCosmosAddress } from "../utils/cosmos/storage";
 import { getAddressFromMnemonic } from "@block52/poker-vm-sdk";
 import { useNetwork } from "../context/NetworkContext";
 
@@ -88,16 +88,24 @@ export const useCosmosWallet = (): UseCosmosWalletReturn => {
 
     // Import seed phrase
     const importSeedPhrase = useCallback(async (mnemonic: string) => {
+        console.log("🔑 importSeedPhrase called with mnemonic:", mnemonic ? `${mnemonic.split(" ").length} words` : "empty");
         setIsLoading(true);
         setError(null);
 
         try {
             // Get address from mnemonic
             const addr = await getAddressFromMnemonic(mnemonic, "b52");
+            console.log("🔑 Address derived:", addr);
 
             // Store mnemonic AND address in localStorage
             setCosmosMnemonic(mnemonic);
             setCosmosAddress(addr);
+            console.log("🔑 Stored in localStorage - mnemonic:", mnemonic ? "yes" : "no", "address:", addr);
+
+            // Verify storage worked
+            const verifyMnemonic = getCosmosMnemonic();
+            const verifyAddress = getCosmosAddress();
+            console.log("🔑 Verification - mnemonic in storage:", verifyMnemonic ? "yes" : "no", "address in storage:", verifyAddress);
 
             // Update state
             setAddress(addr);
