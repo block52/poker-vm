@@ -1312,14 +1312,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Execute the specific player action
         switch (action) {
             case PlayerActionType.SMALL_BLIND:
-                // Allow partial small blind if player is short-stacked
-                const sbAmount = player.chips < this.smallBlind ? player.chips : this.smallBlind;
-                new SmallBlindAction(this, this._update).execute(player, index, sbAmount);
+                // Amount is calculated internally by SmallBlindAction based on player's chip stack
+                new SmallBlindAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.BIG_BLIND:
-                // Allow partial big blind if player is short-stacked
-                const bbAmount = player.chips < this.bigBlind ? player.chips : this.bigBlind;
-                new BigBlindAction(this, this._update).execute(player, index, bbAmount);
+                // Amount is calculated internally by BigBlindAction based on player's chip stack
+                new BigBlindAction(this, this._update).execute(player, index);
                 break;
             case PlayerActionType.FOLD:
                 new FoldAction(this, this._update).execute(player, index);
