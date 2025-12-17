@@ -1005,7 +1005,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         }
 
         // Step 3: Check if we should auto-runout (all live players all-in, 2+)
-        if (this.shouldAutoRunout() && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
+        // Don't auto-runout during ANTE round - must wait for blinds and deal
+        if (this.shouldAutoRunout() && round !== TexasHoldemRound.ANTE && round !== TexasHoldemRound.SHOWDOWN && round !== TexasHoldemRound.END) {
             // Auto-runout: round ends immediately to trigger automatic progression
             // The nextRound() method will be called repeatedly until we reach showdown
             return true;
@@ -1311,10 +1312,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         // Execute the specific player action
         switch (action) {
             case PlayerActionType.SMALL_BLIND:
-                new SmallBlindAction(this, this._update).execute(player, index, this.smallBlind);
+                // Allow partial small blind if player is short-stacked
+                const sbAmount = player.chips < this.smallBlind ? player.chips : this.smallBlind;
+                new SmallBlindAction(this, this._update).execute(player, index, sbAmount);
                 break;
             case PlayerActionType.BIG_BLIND:
-                new BigBlindAction(this, this._update).execute(player, index, this.bigBlind);
+                // Allow partial big blind if player is short-stacked
+                const bbAmount = player.chips < this.bigBlind ? player.chips : this.bigBlind;
+                new BigBlindAction(this, this._update).execute(player, index, bbAmount);
                 break;
             case PlayerActionType.FOLD:
                 new FoldAction(this, this._update).execute(player, index);

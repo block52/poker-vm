@@ -34,8 +34,18 @@ class BigBlindAction extends BaseAction implements IAction {
             throw new Error("Big blind has already been posted.");
         }
 
-        // Return the exact big blind amount required
-        return { minAmount: this.game.bigBlind, maxAmount: this.game.bigBlind };
+        // Return the big blind amount - allow partial blind if player is short-stacked
+        // The min is the player's remaining chips (or full BB if they have enough)
+        // This allows short-stacked players to go all-in on the blind
+        const effectiveAmount = player.chips < this.game.bigBlind ? player.chips : this.game.bigBlind;
+        return { minAmount: effectiveAmount, maxAmount: effectiveAmount };
+    }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        super.execute(player, index, amount);
+
+        // Set player state to ALL_IN if they have no chips left after posting the blind
+        this.setAllInWhenBalanceIsZero(player);
     }
 
     getDeductAmount(): bigint {

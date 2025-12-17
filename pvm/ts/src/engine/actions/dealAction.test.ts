@@ -98,7 +98,8 @@ describe("DealAction", () => {
         });
 
         it("should throw error if not enough active players", () => {
-            jest.spyOn(game, "getActivePlayerCount").mockReturnValue(1);
+            // Mock findLivePlayers to return only 1 player (less than minPlayers)
+            jest.spyOn(game, "findLivePlayers").mockReturnValue([player]);
 
             expect(() => action.verify(player)).toThrow("Not enough active players");
         });

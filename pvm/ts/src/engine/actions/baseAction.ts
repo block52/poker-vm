@@ -45,8 +45,16 @@ abstract class BaseAction {
         player.chips -= amount;
 
         const round = this.game.currentRound;
+
+        // Determine the action type to record
+        // Blind actions (SMALL_BLIND, BIG_BLIND) should preserve their type even when player goes all-in
+        // This is important because DealAction checks for these specific action types
+        const blindActions = [PlayerActionType.SMALL_BLIND, PlayerActionType.BIG_BLIND];
+        const isBlindAction = blindActions.includes(this.type as PlayerActionType);
+        const actionType = (!player.chips && amount && !isBlindAction) ? PlayerActionType.ALL_IN : this.type;
+
         this.game.addAction(
-            { playerId: player.address, action: !player.chips && amount ? PlayerActionType.ALL_IN : this.type, amount: amount, index: index },
+            { playerId: player.address, action: actionType, amount: amount, index: index },
             round
         );
     }

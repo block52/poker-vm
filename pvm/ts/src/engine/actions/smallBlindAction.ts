@@ -44,8 +44,17 @@ class SmallBlindAction extends BaseAction implements IAction {
             throw new Error("Small blind has already been posted.");
         }
 
-        // Small blind can only be exactly the small blind amount
-        return { minAmount: this.game.smallBlind, maxAmount: this.game.smallBlind };
+        // Return the small blind amount - allow partial blind if player is short-stacked
+        // This allows short-stacked players to go all-in on the blind
+        const effectiveAmount = player.chips < this.game.smallBlind ? player.chips : this.game.smallBlind;
+        return { minAmount: effectiveAmount, maxAmount: effectiveAmount };
+    }
+
+    execute(player: Player, index: number, amount: bigint): void {
+        super.execute(player, index, amount);
+
+        // Set player state to ALL_IN if they have no chips left after posting the blind
+        this.setAllInWhenBalanceIsZero(player);
     }
 
     /**
