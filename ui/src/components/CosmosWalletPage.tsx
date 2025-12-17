@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK } from "@block52/poker-vm-sdk";
+import { generateWallet as generateWalletSDK, createWalletFromMnemonic as createWalletSDK, getAddressFromMnemonic } from "@block52/poker-vm-sdk";
 import { setCosmosMnemonic, setCosmosAddress, getCosmosMnemonic, getCosmosAddress, clearCosmosData, isValidSeedPhrase } from "../utils/cosmos";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { AnimatedBackground } from "./common/AnimatedBackground";
@@ -35,10 +35,41 @@ const CosmosWalletPage = () => {
     const [importMnemonic, setImportMnemonic] = useState("");
     const [error, setError] = useState<string>("");
     const [showMnemonic, setShowMnemonic] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Check if wallet already exists
-    const existingMnemonic = getCosmosMnemonic();
-    const existingAddress = getCosmosAddress();
+    // Store existing wallet in state to handle updates properly
+    const [existingMnemonic, setExistingMnemonic] = useState<string | null>(null);
+    const [existingAddress, setExistingAddress] = useState<string | null>(null);
+
+    // Load existing wallet from localStorage on mount
+    useEffect(() => {
+        const loadWallet = async () => {
+            const storedMnemonic = getCosmosMnemonic();
+            let storedAddress = getCosmosAddress();
+
+            console.log("🔍 CosmosWalletPage: Loading from localStorage");
+            console.log("  - storedMnemonic:", storedMnemonic ? `${storedMnemonic.split(" ").length} words` : "null");
+            console.log("  - storedAddress:", storedAddress);
+
+            // If we have a mnemonic but no address, derive and store the address
+            if (storedMnemonic && !storedAddress) {
+                console.log("🔧 Address missing, deriving from mnemonic...");
+                try {
+                    storedAddress = await getAddressFromMnemonic(storedMnemonic, "b52");
+                    setCosmosAddress(storedAddress);
+                    console.log("✅ Address derived and stored:", storedAddress);
+                } catch (err) {
+                    console.error("❌ Failed to derive address:", err);
+                }
+            }
+
+            setExistingMnemonic(storedMnemonic);
+            setExistingAddress(storedAddress);
+            setIsLoading(false);
+        };
+
+        loadWallet();
+    }, []);
 
     // Card style matching Dashboard
     const cardStyle = useMemo(
@@ -75,9 +106,14 @@ const CosmosWalletPage = () => {
             setCosmosMnemonic(newMnemonic);
             setCosmosAddress(newAddress);
 
+            // Update local state for newly generated wallet display
             setMnemonic(newMnemonic);
             setAddress(newAddress);
             setShowMnemonic(true);
+
+            // Update existing wallet state so UI shows "Current Wallet" section
+            setExistingMnemonic(newMnemonic);
+            setExistingAddress(newAddress);
 
             console.log("✅ Wallet generated successfully with proper bech32 encoding!");
             console.log("Address:", newAddress);
@@ -110,9 +146,14 @@ const CosmosWalletPage = () => {
             setCosmosMnemonic(importMnemonic);
             setCosmosAddress(importedAddress);
 
+            // Update local state
             setMnemonic(importMnemonic);
             setAddress(importedAddress);
             setImportMnemonic("");
+
+            // Update existing wallet state so UI shows "Current Wallet" section
+            setExistingMnemonic(importMnemonic);
+            setExistingAddress(importedAddress);
 
             console.log("✅ Wallet imported successfully with proper bech32 encoding!");
             console.log("Address:", importedAddress);
@@ -131,9 +172,10 @@ const CosmosWalletPage = () => {
             setMnemonic("");
             setAddress("");
             setShowMnemonic(false);
+            // Update state to show generate/import UI
+            setExistingMnemonic(null);
+            setExistingAddress(null);
             console.log("Wallet cleared");
-            // Reload page to update existingAddress/existingMnemonic
-            window.location.reload();
         }
     };
 
@@ -142,6 +184,21 @@ const CosmosWalletPage = () => {
         navigator.clipboard.writeText(text);
         alert(`${label} copied to clipboard!`);
     };
+
+    // Show loading state while checking localStorage
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden p-8 pt-24 pb-24">
+                <AnimatedBackground />
+                <div className="relative z-10 w-full max-w-xl mx-auto text-center">
+                    <div className="animate-pulse">
+                        <div className="w-12 h-12 mx-auto mb-4 rounded-full" style={{ backgroundColor: colors.brand.primary }}></div>
+                        <p className="text-white">Loading wallet...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden p-8 pt-24 pb-24">
