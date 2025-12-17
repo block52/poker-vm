@@ -75,6 +75,7 @@ export default function TableAdminPage() {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
     const [createdGameAddress, setCreatedGameAddress] = useState<string | null>(null);
+    const [tableCountBeforeCreation, setTableCountBeforeCreation] = useState<number>(0);
 
     // Player counts from game state
     const [playerCounts, setPlayerCounts] = useState<Record<string, number>>({});
@@ -150,6 +151,9 @@ export default function TableAdminPage() {
             ...(rakeConfig && { rake: rakeConfig })
         });
 
+        // Store the table count before creating to verify a new table was added
+        setTableCountBeforeCreation(tables.length);
+        
         try {
             console.log("🚀 Calling createTable...");
             const txHash = await createTable({
@@ -168,6 +172,7 @@ export default function TableAdminPage() {
             if (txHash) {
                 // Show success modal with transaction link
                 setSuccessTxHash(txHash);
+                setCreatedGameAddress(null); // Reset game address for new creation
                 setShowSuccessModal(true);
 
                 // Wait a moment then reload tables
@@ -246,10 +251,16 @@ export default function TableAdminPage() {
     // When tables update after successful creation, store the newest game address
     useEffect(() => {
         if (showSuccessModal && successTxHash && !createdGameAddress && tables.length > 0) {
-            // Tables are sorted by creation date (newest first), so the first one is the newly created game
-            setCreatedGameAddress(tables[0].gameId);
+            // Verify that a new table was actually added (table count increased)
+            if (tables.length > tableCountBeforeCreation) {
+                // Tables are sorted by creation date (newest first), so the first one is the newly created game
+                // Note: In rare cases where multiple users create tables simultaneously, this might not be
+                // the user's table, but given the low likelihood and lack of game ID in transaction response,
+                // this is an acceptable trade-off. The user can still join from the tables list if needed.
+                setCreatedGameAddress(tables[0].gameId);
+            }
         }
-    }, [tables, showSuccessModal, successTxHash, createdGameAddress]);
+    }, [tables, showSuccessModal, successTxHash, createdGameAddress, tableCountBeforeCreation]);
 
     // Stats
     const totalTables = tables.length;
