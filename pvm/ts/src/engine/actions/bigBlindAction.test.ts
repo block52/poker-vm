@@ -76,7 +76,7 @@ describe("BigBlindAction", () => {
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(0);
         });
 
-        it("should return correct range for big blind", () => {
+        it("should return correct range for big blind with full stack", () => {
             // Mock that small blind has been posted and player is in correct position
             jest.spyOn(game, "getActionsForRound").mockReturnValue([
                 { playerId: "0x123", action: PlayerActionType.SMALL_BLIND, amount: TWO_TOKENS, index: 0, seat: 1, timestamp: Date.now() }
@@ -91,6 +91,30 @@ describe("BigBlindAction", () => {
             });
         });
 
+        it("should return player chips as range when short-stacked", () => {
+            // Mock that small blind has been posted
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                { playerId: "0x123", action: PlayerActionType.SMALL_BLIND, amount: TWO_TOKENS, index: 0, seat: 1, timestamp: Date.now() }
+            ]);
+            jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(2);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            // Create a short-stacked player with less than big blind
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                100000000000000000n, // 0.1 tokens - less than big blind (0.2 tokens)
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+
+            const range = action.verify(shortStackedPlayer);
+            expect(range).toEqual({
+                minAmount: 100000000000000000n,
+                maxAmount: 100000000000000000n
+            });
+        });
+
         it("should throw error if not in ANTE round", () => {
             // Override the current round mock to be FLOP instead of PREFLOP
             jest.spyOn(game, "currentRound", "get").mockReturnValue(TexasHoldemRound.FLOP);
@@ -98,18 +122,49 @@ describe("BigBlindAction", () => {
             expect(() => action.verify(player)).toThrow("post-big-blind can only be performed during ante round.");
         });
 
-        it("should throw error if player is not in small blind position", () => {
-            // Mock player in a different position than small blind
+        it("should throw error if player is not in big blind position", () => {
+            // Mock player in a different position than big blind
             jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(1);
 
             expect(() => action.verify(player)).toThrow("Only the big blind player can post the big blind.");
         });
+
+        it("should throw error if small blind has not been posted", () => {
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([]);
+            jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(2);
+
+            expect(() => action.verify(player)).toThrow("Small blind must be posted before big blind.");
+        });
     });
 
-    describe("getDeductAmount", () => {
-        it("should return big blind amount", () => {
-            const amount = action.getDeductAmount();
+    describe("getEffectiveAmount", () => {
+        it("should return big blind amount when player has enough chips", () => {
+            const amount = action.getEffectiveAmount(player);
             expect(amount).toBe(game.bigBlind);
+        });
+
+        it("should return player chips when short-stacked", () => {
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                100000000000000000n, // Less than big blind
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            const amount = action.getEffectiveAmount(shortStackedPlayer);
+            expect(amount).toBe(100000000000000000n);
+        });
+
+        it("should return zero when player has no chips", () => {
+            const zeroChipPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                0n,
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            const amount = action.getEffectiveAmount(zeroChipPlayer);
+            expect(amount).toBe(0n);
         });
     });
 
@@ -150,8 +205,37 @@ describe("BigBlindAction", () => {
 
         it("should deduct big blind amount from player chips", () => {
             const initialChips = player.chips;
-            action.execute(player, 0, TWO_TOKENS);
+            action.execute(player, 0);
             expect(player.chips).toBe(initialChips - game.bigBlind);
+        });
+
+        it("should deduct only available chips when short-stacked", () => {
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                100000000000000000n, // Less than big blind
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            action.execute(shortStackedPlayer, 0);
+            expect(shortStackedPlayer.chips).toBe(0n);
+        });
+
+        it("should set player status to ALL_IN when going all-in on big blind", () => {
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                100000000000000000n, // Less than big blind
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            action.execute(shortStackedPlayer, 0);
+            expect(shortStackedPlayer.status).toBe(PlayerStatus.ALL_IN);
+        });
+
+        it("should not set ALL_IN status when player has chips remaining", () => {
+            action.execute(player, 0);
+            expect(player.status).toBe(PlayerStatus.ACTIVE);
         });
     });
 });

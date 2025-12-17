@@ -17,7 +17,7 @@ describe("SmallBlindAction", () => {
         const initialPlayer = new Player(
             "0x980b8D8A16f5891F41871d878a479d81Da52334c", // address
             undefined, // lastAction
-            100000000000000000n, // chips
+            100000000000000000n, // chips (0.1 tokens)
             undefined, // holeCards
             PlayerStatus.ACTIVE // status
         );
@@ -37,7 +37,7 @@ describe("SmallBlindAction", () => {
         player = new Player(
             "0x980b8D8A16f5891F41871d878a479d81Da52334c", // address
             undefined, // lastAction
-            100000000000000000n, // chips
+            100000000000000000n, // chips (0.1 tokens)
             undefined, // holeCards
             PlayerStatus.ACTIVE // status
         );
@@ -72,12 +72,31 @@ describe("SmallBlindAction", () => {
             expect(() => action.verify(player)).toThrow("Cannot post small blind with less than 2 players.");
         });
 
-        it("should return correct range for small blind", () => {
-            jest.spyOn(game, "getActivePlayerCount").mockReturnValue(2); // Mocking that there are 2 players
+        it("should return correct range for small blind with full stack", () => {
+            jest.spyOn(game, "getActivePlayerCount").mockReturnValue(2);
             const range = action.verify(player);
             expect(range).toEqual({
                 minAmount: game.smallBlind,
                 maxAmount: game.smallBlind
+            });
+        });
+
+        it("should return player chips as range when short-stacked", () => {
+            jest.spyOn(game, "getActivePlayerCount").mockReturnValue(2);
+
+            // Create a short-stacked player with less than small blind
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                50000000000000000n, // 0.05 tokens - less than small blind (0.1 tokens)
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+
+            const range = action.verify(shortStackedPlayer);
+            expect(range).toEqual({
+                minAmount: 50000000000000000n,
+                maxAmount: 50000000000000000n
             });
         });
 
@@ -89,10 +108,34 @@ describe("SmallBlindAction", () => {
         });
     });
 
-    describe("getDeductAmount", () => {
-        it("should return small blind amount", () => {
-            const amount = action.getDeductAmount();
+    describe("getEffectiveAmount", () => {
+        it("should return small blind amount when player has enough chips", () => {
+            const amount = action.getEffectiveAmount(player);
             expect(amount).toBe(game.smallBlind);
+        });
+
+        it("should return player chips when short-stacked", () => {
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                50000000000000000n, // Less than small blind
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            const amount = action.getEffectiveAmount(shortStackedPlayer);
+            expect(amount).toBe(50000000000000000n);
+        });
+
+        it("should return zero when player has no chips", () => {
+            const zeroChipPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                0n,
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            const amount = action.getEffectiveAmount(zeroChipPlayer);
+            expect(amount).toBe(0n);
         });
     });
 
@@ -113,8 +156,46 @@ describe("SmallBlindAction", () => {
 
         it("should deduct small blind amount from player chips", () => {
             const initialChips = player.chips;
-            action.execute(player, 0, game.smallBlind);
+            action.execute(player, 0);
             expect(player.chips).toBe(initialChips - game.smallBlind);
+        });
+
+        it("should deduct only available chips when short-stacked", () => {
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                50000000000000000n, // Less than small blind
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            action.execute(shortStackedPlayer, 0);
+            expect(shortStackedPlayer.chips).toBe(0n);
+        });
+
+        it("should set player status to ALL_IN when going all-in on small blind", () => {
+            const shortStackedPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                50000000000000000n, // Less than small blind
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            action.execute(shortStackedPlayer, 0);
+            expect(shortStackedPlayer.status).toBe(PlayerStatus.ALL_IN);
+        });
+
+        it("should not set ALL_IN status when player has chips remaining", () => {
+            // Player has 0.1 tokens, small blind is 0.1 tokens
+            // Give player more chips so they have some remaining after posting
+            const richPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                1000000000000000000n, // 1 token - more than small blind
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+            action.execute(richPlayer, 0);
+            expect(richPlayer.status).toBe(PlayerStatus.ACTIVE);
         });
     });
 });

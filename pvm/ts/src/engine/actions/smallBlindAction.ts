@@ -8,15 +8,15 @@ class SmallBlindAction extends BaseAction implements IAction {
 
     /**
      * Verify if a player can post the small blind
-     * 
+     *
      * For posting a small blind to be valid:
      * 1. Player must be active and it must be their turn (checked in base verify)
      * 2. Game must be in the ANTE round (blinds are only posted before dealing)
      * 3. Player must be in the small blind position
      * 4. Small blind must not have been posted already
-     * 
+     *
      * @param player The player attempting to post the small blind
-     * @returns Range object with min and max amount both set to the small blind amount
+     * @returns Range object with min and max amount both set to the effective small blind amount
      * @throws Error if the player cannot post the small blind
      */
     verify(player: Player): Range {
@@ -44,16 +44,36 @@ class SmallBlindAction extends BaseAction implements IAction {
             throw new Error("Small blind has already been posted.");
         }
 
-        // Small blind can only be exactly the small blind amount
-        return { minAmount: this.game.smallBlind, maxAmount: this.game.smallBlind };
+        // Return the effective small blind amount
+        const effectiveAmount = this.getEffectiveAmount(player);
+        return { minAmount: effectiveAmount, maxAmount: effectiveAmount };
     }
 
     /**
-     * Get the amount to deduct for small blind
-     * Always returns the exact small blind amount
+     * Calculate the effective small blind amount for a player.
+     * If player has less chips than the small blind, they go all-in with their remaining chips.
+     *
+     * @param player The player posting the small blind
+     * @returns The effective amount to post (min of player's chips and small blind)
      */
-    getDeductAmount(): bigint {
-        return this.game.smallBlind;
+    getEffectiveAmount(player: Player): bigint {
+        return player.chips < this.game.smallBlind ? player.chips : this.game.smallBlind;
+    }
+
+    /**
+     * Execute the small blind action.
+     * Calculates the effective amount internally based on player's chip stack.
+     *
+     * @param player The player posting the small blind
+     * @param index The action index
+     * @param _amount Optional amount parameter (ignored - amount is calculated internally)
+     */
+    execute(player: Player, index: number, _amount?: bigint): void {
+        const effectiveAmount = this.getEffectiveAmount(player);
+        super.execute(player, index, effectiveAmount);
+
+        // Set player state to ALL_IN if they have no chips left after posting the blind
+        this.setAllInWhenBalanceIsZero(player);
     }
 }
 
