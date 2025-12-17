@@ -15,6 +15,7 @@ module TexasHoldem.GameState
     , GameConfig(..)
     , GameError(..)
     , ActionLog(..)
+    , LegalAction(..)
       -- * Constructors
     , newGame
     , defaultConfig
@@ -23,16 +24,50 @@ module TexasHoldem.GameState
     , dealHoleCards
     , dealCommunityCards
     , advanceRound
-      -- * Queries
+      -- * Player Queries
     , currentPlayerToAct
-    , isHandComplete
-    , getWinners
+    , getNextPlayerToAct
+    , playerExists
+    , getPlayerCount
+    , getActivePlayerCount
+    , getSeatedPlayers
+    , findActivePlayers
     , getLivePlayers
     , getShowdownPlayers
+    , getPlayer
+    , getPlayerAtSeat
+    , getPlayerSeatNumber
+    , getPlayerStatus
+    , findNextEmptySeat
+    , getAvailableSeats
+      -- * Player Modifications
+    , joinAtSeat
+    , removePlayer
+    , canTopUp
+    , getMaxTopUpAmount
+      -- * Game Queries
+    , isHandComplete
+    , hasRoundEnded
+    , getWinners
+    , getPot
+      -- * Action Queries
+    , getActionIndex
+    , getLegalActions
+    , getLastRoundAction
+    , getPlayersLastAction
+    , getPreviousActions
+    , getActionsForRound
+      -- * Bet Queries
+    , getAllBets
+    , getBetsForRound
+    , getPlayerTotalBets
       -- * State Transformations
     , applyAction
     , resetForNewHand
     , rotateDealer
+      -- * Serialization
+    , gameStateToJson
+    , gameStateFromJson
     ) where
 
 import TexasHoldem.Card
@@ -45,7 +80,7 @@ import TexasHoldem.Pot
 import TexasHoldem.Evaluation
 
 import qualified Data.Map.Strict as Map
-import Data.List (sortBy, find)
+import Data.List (sortBy, find, foldl')
 import Data.Ord (comparing)
 import Data.Maybe (mapMaybe, isJust, fromMaybe)
 
@@ -443,3 +478,241 @@ rotateDealer gs = gs { gsDealerSeat = nextDealer }
     currentDealer = gsDealerSeat gs
     nextSeats = dropWhile (<= currentDealer) (cycle seats)
     nextDealer = head nextSeats
+
+--------------------------------------------------------------------------------
+-- Player Queries (TypeScript compatible)
+--------------------------------------------------------------------------------
+
+-- | Get next player to act (alias for currentPlayerToAct)
+getNextPlayerToAct :: GameState -> Maybe Player
+getNextPlayerToAct = currentPlayerToAct
+
+-- | Check if a player exists in the game
+playerExists :: PlayerId -> GameState -> Bool
+playerExists pid gs = isJust $ findPlayerById pid gs
+
+-- | Get total number of players
+getPlayerCount :: GameState -> Int
+getPlayerCount = Map.size . gsPlayers
+
+-- | Get number of active players
+getActivePlayerCount :: GameState -> Int
+getActivePlayerCount = length . findActivePlayers
+
+-- | Get all seated players
+getSeatedPlayers :: GameState -> [Player]
+getSeatedPlayers = Map.elems . gsPlayers
+
+-- | Find all active players (not waiting)
+findActivePlayers :: GameState -> [Player]
+findActivePlayers gs = filter isActive $ Map.elems (gsPlayers gs)
+
+-- | Get a player by ID
+getPlayer :: PlayerId -> GameState -> Maybe Player
+getPlayer = findPlayerById
+
+-- | Get player at a specific seat
+getPlayerAtSeat :: SeatIndex -> GameState -> Maybe Player
+getPlayerAtSeat seat gs = Map.lookup seat (gsPlayers gs)
+
+-- | Get seat number for a player
+getPlayerSeatNumber :: PlayerId -> GameState -> Maybe SeatIndex
+getPlayerSeatNumber pid gs = playerSeat <$> findPlayerById pid gs
+
+-- | Get a player's status
+getPlayerStatus :: PlayerId -> GameState -> Maybe PlayerStatus
+getPlayerStatus pid gs = playerStatus <$> findPlayerById pid gs
+
+-- | Find next empty seat starting from given position
+findNextEmptySeat :: SeatIndex -> GameState -> Maybe SeatIndex
+findNextEmptySeat start gs =
+    let maxSeats = configMaxPlayers (gsConfig gs)
+        allSeats = [start .. maxSeats - 1] ++ [0 .. start - 1]
+        emptySeat s = not $ Map.member s (gsPlayers gs)
+    in find emptySeat allSeats
+
+-- | Get all available (empty) seats
+getAvailableSeats :: GameState -> [SeatIndex]
+getAvailableSeats gs =
+    let maxSeats = configMaxPlayers (gsConfig gs)
+        allSeats = [0 .. maxSeats - 1]
+    in filter (\s -> not $ Map.member s (gsPlayers gs)) allSeats
+
+--------------------------------------------------------------------------------
+-- Player Modifications
+--------------------------------------------------------------------------------
+
+-- | Add a player at a specific seat
+joinAtSeat :: Player -> SeatIndex -> GameState -> Either GameError GameState
+joinAtSeat player seat gs
+    | Map.member seat (gsPlayers gs) = Left $ InvalidPlayer "Seat is occupied"
+    | seat < 0 || seat >= configMaxPlayers (gsConfig gs) = Left $ InvalidPlayer "Invalid seat"
+    | playerChips player < configMinBuyIn (gsConfig gs) = Left $ InvalidPlayer "Below minimum buy-in"
+    | playerChips player > configMaxBuyIn (gsConfig gs) = Left $ InvalidPlayer "Above maximum buy-in"
+    | otherwise = Right gs { gsPlayers = Map.insert seat player (gsPlayers gs) }
+
+-- | Remove a player from the game
+removePlayer :: PlayerId -> GameState -> GameState
+removePlayer pid gs = gs
+    { gsPlayers = Map.filter (\p -> playerId p /= pid) (gsPlayers gs)
+    }
+
+-- | Check if a player can top up their stack
+canTopUp :: PlayerId -> GameState -> Bool
+canTopUp pid gs = case findPlayerById pid gs of
+    Nothing -> False
+    Just p  -> playerChips p < configMaxBuyIn (gsConfig gs) &&
+               gsRound gs == Complete  -- Can only top up between hands
+
+-- | Get maximum top-up amount for a player
+getMaxTopUpAmount :: PlayerId -> GameState -> Chips
+getMaxTopUpAmount pid gs = case findPlayerById pid gs of
+    Nothing -> 0
+    Just p  -> max 0 $ configMaxBuyIn (gsConfig gs) - playerChips p
+
+--------------------------------------------------------------------------------
+-- Game Queries
+--------------------------------------------------------------------------------
+
+-- | Check if a specific round has ended
+hasRoundEnded :: Round -> GameState -> Bool
+hasRoundEnded round gs
+    | gsRound gs /= round = True  -- Already past this round
+    | otherwise = shouldAdvanceRound gs
+
+-- | Get total pot amount
+getPot :: GameState -> Chips
+getPot = totalPot . gsPot
+
+--------------------------------------------------------------------------------
+-- Action Queries
+--------------------------------------------------------------------------------
+
+-- | Legal action with min/max amounts
+data LegalAction = LegalAction
+    { laAction    :: !ActionType
+    , laMinAmount :: !Chips
+    , laMaxAmount :: !Chips
+    } deriving (Eq, Show)
+
+-- | Get current action index
+getActionIndex :: GameState -> Int
+getActionIndex = length . gsActionLog
+
+-- | Get legal actions for a player
+getLegalActions :: PlayerId -> GameState -> [LegalAction]
+getLegalActions pid gs = case findPlayerById pid gs of
+    Nothing -> []
+    Just player
+        | not (canAct player) -> []
+        | gsRound gs == Ante -> blindActions
+        | gsRound gs == Showdown -> showdownActions
+        | otherwise -> bettingActions player
+  where
+    bb = configBigBlind (gsConfig gs)
+    sb = configSmallBlind (gsConfig gs)
+
+    blindActions =
+        [ LegalAction PostSmallBlind sb sb
+        , LegalAction PostBigBlind bb bb
+        ]
+
+    showdownActions =
+        [ LegalAction Show 0 0
+        , LegalAction Muck 0 0
+        ]
+
+    bettingActions player =
+        let chips = playerChips player
+            currentBet = gsCurrentBet gs
+            playerBetAmt = playerBet player
+            toCall = currentBet - playerBetAmt
+            minRaise = currentBet + max (gsLastRaise gs) bb
+        in catMaybes
+            [ Just $ LegalAction Fold 0 0
+            , if currentBet == 0 || playerBetAmt >= currentBet
+              then Just $ LegalAction Check 0 0
+              else Nothing
+            , if toCall > 0 && toCall <= chips
+              then Just $ LegalAction Call toCall toCall
+              else Nothing
+            , if currentBet == 0 && chips >= bb
+              then Just $ LegalAction Bet bb chips
+              else Nothing
+            , if currentBet > 0 && chips >= minRaise
+              then Just $ LegalAction Raise minRaise chips
+              else Nothing
+            , Just $ LegalAction AllIn chips chips
+            ]
+
+    catMaybes = mapMaybe id
+
+-- | Get the last action in the current round
+getLastRoundAction :: GameState -> Maybe ActionLog
+getLastRoundAction gs = case gsActionLog gs of
+    [] -> Nothing
+    xs -> Just $ last xs
+
+-- | Get a player's last action
+getPlayersLastAction :: PlayerId -> GameState -> Maybe ActionLog
+getPlayersLastAction pid gs =
+    let playerActions = filter (\al -> actionPlayer (logAction al) == pid) (gsActionLog gs)
+    in case playerActions of
+        [] -> Nothing
+        xs -> Just $ last xs
+
+-- | Get all previous actions
+getPreviousActions :: GameState -> [ActionLog]
+getPreviousActions = gsActionLog
+
+-- | Get actions for a specific round
+getActionsForRound :: Round -> GameState -> [ActionLog]
+getActionsForRound round gs = filter (\al -> logRound al == round) (gsActionLog gs)
+
+--------------------------------------------------------------------------------
+-- Bet Queries
+--------------------------------------------------------------------------------
+
+-- | Get all bets (from pot state)
+getAllBets :: GameState -> Map.Map PlayerId Chips
+getAllBets = playerBets . gsPot
+
+-- | Get bets for a specific round
+-- Note: In pure functional style, we track cumulative bets, not per-round
+getBetsForRound :: Round -> GameState -> Map.Map PlayerId Chips
+getBetsForRound round gs =
+    let roundActions = getActionsForRound round gs
+        addBet acc al = Map.insertWith (+) (actionPlayer $ logAction al)
+                                           (actionAmount $ logAction al) acc
+    in foldl' addBet Map.empty roundActions
+
+-- | Get total bets for a player
+getPlayerTotalBets :: PlayerId -> GameState -> Chips
+getPlayerTotalBets pid gs = Map.findWithDefault 0 pid (getAllBets gs)
+
+--------------------------------------------------------------------------------
+-- Serialization
+--------------------------------------------------------------------------------
+
+-- | Convert game state to JSON-like structure
+-- Returns a map of key-value pairs for serialization
+gameStateToJson :: GameState -> Map.Map String String
+gameStateToJson gs = Map.fromList
+    [ ("round", show $ gsRound gs)
+    , ("handNumber", show $ gsHandNumber gs)
+    , ("pot", show $ getPot gs)
+    , ("currentBet", show $ gsCurrentBet gs)
+    , ("dealerSeat", show $ gsDealerSeat gs)
+    , ("actionOn", show $ gsActionOn gs)
+    , ("playerCount", show $ getPlayerCount gs)
+    , ("communityCards", showCommunityCards $ gsCommunityCards gs)
+    , ("deck", deckToString $ gsDeck gs)
+    ]
+  where
+    showCommunityCards NoCards = ""
+    showCommunityCards cc = unwords $ map toMnemonic $ communityCardsList cc
+
+-- | Parse game state from JSON-like structure
+-- This is a simplified version - full implementation would need more fields
+gameStateFromJson :: Map.Map String String -> GameConfig -> Maybe GameState
+gameStateFromJson _json _config = Nothing  -- TODO: Implement full parsing
