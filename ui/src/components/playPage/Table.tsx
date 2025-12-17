@@ -77,7 +77,6 @@ import React from "react";
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { NetworkSelector } from "../NetworkSelector";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import { isValidPlayerAddress } from "../../utils/addressUtils";
 import { getCardImageUrl, getCardBackUrl, CardBackStyle } from "../../utils/cardImages";
@@ -742,17 +741,25 @@ const Table = React.memo(() => {
     }, []);
 
     // Handler for copying table link
-    const handleCopyTableLink = useCallback(() => {
-        const tableUrl = `${window.location.origin}/table/${id}`;
-        navigator.clipboard.writeText(tableUrl);
-        toast.success("Table link copied to clipboard!", {
-            position: "top-right",
-            autoClose: 2000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true
-        });
+    const handleCopyTableLink = useCallback(async () => {
+        try {
+            const tableUrl = `${window.location.origin}/table/${id}`;
+            await navigator.clipboard.writeText(tableUrl);
+            toast.success("Table link copied to clipboard!", {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true
+            });
+        } catch (error) {
+            console.error("Failed to copy table link:", error);
+            toast.error("Failed to copy link. Please try again.", {
+                position: "top-right",
+                autoClose: 2000
+            });
+        }
     }, [id]);
 
     // Memoize event handlers to prevent re-renders
