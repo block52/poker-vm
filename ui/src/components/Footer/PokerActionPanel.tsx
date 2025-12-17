@@ -158,6 +158,7 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
 
     const formattedSmallBlindAmount = useMemo(() => microBigIntToUsdc(smallBlindMicro).toFixed(2), [smallBlindMicro]);
     const formattedBigBlindAmount = useMemo(() => microBigIntToUsdc(bigBlindMicro).toFixed(2), [bigBlindMicro]);
+    const bigBlindUsdc = useMemo(() => microBigIntToUsdc(bigBlindMicro), [bigBlindMicro]);
     const formattedCallAmount = useMemo(() => callAmount.toFixed(2), [callAmount]);
     const formattedMaxBetAmount = useMemo(
         () => (hasBetAction ? maxBet.toFixed(2) : maxRaise.toFixed(2)),
@@ -275,9 +276,9 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
         };
     }, [hasSmallBlindAction, hasBigBlindAction, isUsersTurn, isUserInTable, hasFoldAction, playerStatus, legalActions]);
 
-    // Increment/decrement handlers
+    // Increment/decrement handlers - always step by big blind amount
     const getStep = (): number => {
-        return hasBetAction ? minBet : hasRaiseAction ? minRaise : 0;
+        return bigBlindUsdc > 0 ? bigBlindUsdc : (hasBetAction ? minBet : hasRaiseAction ? minRaise : 0);
     };
 
     const handleRaiseIncrement = () => {
