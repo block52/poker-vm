@@ -10,8 +10,9 @@ class DealAction extends BaseAction implements IAction {
 
     verify(player: Player): Range {
 
-        // Check minimum players: TODO change this to use gameStatus
-        if (this.game.getActivePlayerCount() < this.game.minPlayers) {
+        // Check minimum players: Use findLivePlayers() to include both ACTIVE and ALL_IN players
+        // This is important for cases where a player goes all-in while posting blinds
+        if (this.game.findLivePlayers().length < this.game.minPlayers) {
             throw new Error("Not enough active players");
         }
 
