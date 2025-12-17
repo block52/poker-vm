@@ -9,6 +9,7 @@ import { JoinTableOptions } from "../../hooks/playerActions/types";
 import { useCosmosWallet } from "../../hooks";
 import { USDC_TO_MICRO, microToUsdc } from "../../constants/currency";
 import { useNetwork } from "../../context/NetworkContext";
+import { useGameStateContext } from "../../context/GameStateContext";
 
 // Move static styles outside component to avoid recreation
 const STATIC_STYLES = {
@@ -77,6 +78,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
     // Get Cosmos wallet hook and network context
     const cosmosWallet = useCosmosWallet();
     const { currentNetwork } = useNetwork();
+    const { gameState } = useGameStateContext();
 
     // Use props if provided, otherwise fall back to hook
     const hookBuyIns = useMinAndMaxBuyIns();
@@ -98,7 +100,8 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         balanceFormatted,
         stakeLabel,
         minBuyInNumber,
-        maxBuyInNumber: _maxBuyInNumber
+        maxBuyInNumber: _maxBuyInNumber,
+        bigBlindValue
     } = useMemo(() => {
         console.log("🎰 BuyInModal - Using buy-in values:", {
             fromProps: { minBuyIn, maxBuyIn },
@@ -124,9 +127,29 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         console.log("  balanceFormatted (dollars):", balance);
         console.log("  isSitAndGo:", isSitAndGo);
 
-        // Calculate stake label from max buy-in
-        const bigBlind = parseFloat(maxFormatted) / 100;
-        const smallBlind = bigBlind / 2;
+        // Get actual big blind from game state instead of deriving from max buy-in
+        // This ensures the slider increments correctly by the actual big blind value
+        let bigBlind: number;
+        let smallBlind: number;
+        
+        if (gameState?.gameOptions?.bigBlind && gameState?.gameOptions?.smallBlind) {
+            // Use actual blinds from game state (convert from micro-units to dollars)
+            bigBlind = parseFloat(formatUSDCToSimpleDollars(gameState.gameOptions.bigBlind));
+            smallBlind = parseFloat(formatUSDCToSimpleDollars(gameState.gameOptions.smallBlind));
+            console.log("💰 BuyInModal - Using actual blinds from game state:");
+            console.log("  bigBlind (micro):", gameState.gameOptions.bigBlind);
+            console.log("  smallBlind (micro):", gameState.gameOptions.smallBlind);
+            console.log("  bigBlind (dollars):", bigBlind);
+            console.log("  smallBlind (dollars):", smallBlind);
+        } else {
+            // Fallback to deriving from max buy-in (old behavior)
+            bigBlind = parseFloat(maxFormatted) / 100;
+            smallBlind = bigBlind / 2;
+            console.log("⚠️ BuyInModal - Blinds not in game state, deriving from max buy-in:");
+            console.log("  bigBlind (derived):", bigBlind);
+            console.log("  smallBlind (derived):", smallBlind);
+        }
+        
         const stake = `$${smallBlind.toFixed(2)} / $${bigBlind.toFixed(2)}`;
 
         return {
@@ -135,9 +158,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
             balanceFormatted: balance,
             stakeLabel: stake,
             minBuyInNumber: parseFloat(minFormatted),
-            maxBuyInNumber: parseFloat(maxFormatted)
+            maxBuyInNumber: parseFloat(maxFormatted),
+            bigBlindValue: bigBlind
         };
-    }, [minBuyInWei, maxBuyInWei, cosmosWallet.balance, minBuyIn, maxBuyIn, hookBuyIns.minBuyInWei, hookBuyIns.maxBuyInWei, isSitAndGo]);
+    }, [minBuyInWei, maxBuyInWei, cosmosWallet.balance, minBuyIn, maxBuyIn, hookBuyIns.minBuyInWei, hookBuyIns.maxBuyInWei, isSitAndGo, gameState?.gameOptions?.bigBlind, gameState?.gameOptions?.smallBlind]);
 
     // Initialize buyInAmount with maxBuyInFormatted
     const [buyInAmount, setBuyInAmount] = useState(() => maxBuyInFormatted);
@@ -147,10 +171,37 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
         return balanceFormatted < minBuyInNumber;
     }, [balanceFormatted, minBuyInNumber]);
 
+    // Check if buy-in exceeds balance
+    const exceedsBalance = useMemo(() => {
+        const buyInValue = parseFloat(buyInAmount) || 0;
+        return buyInValue > balanceFormatted;
+    }, [buyInAmount, balanceFormatted]);
+
     // Check if random seat join is available
     const canJoinRandomSeat = useMemo(() => {
-        return !isUserAlreadyPlaying && emptySeatIndexes.length > 0 && !isDisabled && !isJoiningRandomSeat;
-    }, [isUserAlreadyPlaying, emptySeatIndexes.length, isDisabled, isJoiningRandomSeat]);
+        return !isUserAlreadyPlaying && emptySeatIndexes.length > 0 && !isDisabled && !isJoiningRandomSeat && !exceedsBalance;
+    }, [isUserAlreadyPlaying, emptySeatIndexes.length, isDisabled, isJoiningRandomSeat, exceedsBalance]);
+
+    // Memoize button disabled states and styles
+    const buttonStates = useMemo(() => {
+        const viewTableDisabled = exceedsBalance;
+        const takeSeatDisabled = !canJoinRandomSeat || exceedsBalance;
+        
+        return {
+            viewTable: {
+                disabled: viewTableDisabled,
+                background: colors.brand.primary,
+                opacity: viewTableDisabled ? 0.5 : 1,
+                cursor: viewTableDisabled ? "not-allowed" : "pointer"
+            },
+            takeSeat: {
+                disabled: takeSeatDisabled,
+                background: takeSeatDisabled ? colors.brand.primary : STATIC_STYLES.joinButtonGradient,
+                opacity: takeSeatDisabled ? 0.5 : 1,
+                cursor: takeSeatDisabled ? "not-allowed" : "pointer"
+            }
+        };
+    }, [exceedsBalance, canJoinRandomSeat]);
 
     // Memoized event handlers
     const handleBuyInChange = useCallback((amount: string) => {
@@ -357,6 +408,9 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                                       })
                                     : null;
 
+                                // Determine if this USDC balance should show red (when buy-in exceeds balance)
+                                const shouldShowRed = isUSDC && exceedsBalance;
+
                                 return (
                                     <div
                                         key={idx}
@@ -372,10 +426,10 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                                         </div>
                                         <div className="text-right">
                                             <div className="flex items-baseline gap-2">
-                                                <span className="text-white font-bold text-lg">{displayAmount}</span>
+                                                <span className={`font-bold text-lg ${shouldShowRed ? "text-red-500" : "text-white"}`}>{displayAmount}</span>
                                                 <span className="text-gray-400 text-xs">{balance.denom}</span>
                                             </div>
-                                            {usdValue && <div className="text-gray-400 text-xs">≈ {usdValue}</div>}
+                                            {usdValue && <div className={`text-xs ${shouldShowRed ? "text-red-400" : "text-gray-400"}`}>≈ {usdValue}</div>}
                                             <div className="text-xs text-gray-500">{Number(balance.amount).toLocaleString("en-US")} micro-units</div>
                                         </div>
                                     </div>
@@ -395,7 +449,7 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
 
                 {/* Buy-In Amount Selection */}
                 <div className="mb-6">
-                    <label className="block text-gray-300 mb-2 font-medium text-sm">{isSitAndGo ? "Fixed Buy-In (Sit & Go)" : "Select Buy-In Amount"}</label>
+                    <label className="block text-gray-300 mb-2 font-medium text-sm">{isSitAndGo ? "Fixed Buy-In (Sit & Go)" : "Buy-In Amount"}</label>
                     {isSitAndGo ? (
                         // Sit & Go: Show fixed buy-in amount (non-editable)
                         <div
@@ -412,49 +466,55 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                             </div>
                         </div>
                     ) : (
-                        // Cash Game: Allow user to choose buy-in amount
-                        <div className="flex justify-between gap-2 mb-2">
-                            <button
-                                onClick={handleMaxClick}
-                                className="flex-1 py-2 text-sm text-white rounded transition duration-200"
-                                style={STATIC_STYLES.button}
-                                onMouseEnter={handleButtonMouseEnter}
-                                onMouseLeave={handleButtonMouseLeave}
-                            >
-                                MAX
-                                <br />
-                                {maxBuyInFormatted}
-                            </button>
-                            <button
-                                onClick={handleMinClick}
-                                className="flex-1 py-2 text-sm text-white rounded transition duration-200"
-                                style={STATIC_STYLES.button}
-                                onMouseEnter={handleButtonMouseEnter}
-                                onMouseLeave={handleButtonMouseLeave}
-                            >
-                                MIN
-                                <br />
-                                {minBuyInFormatted}
-                            </button>
-                            <div className="flex-1">
-                                <label style={{ color: colors.ui.textSecondary }} className="text-xs block mb-1 text-center">
-                                    OTHER
-                                </label>
+                        // Cash Game: Allow user to choose buy-in amount with slider
+                        <div>
+                            {/* Slider with min/max labels */}
+                            <div className="mb-3">
+                                <div className="flex justify-between text-xs text-gray-400 mb-2">
+                                    <span>${minBuyInFormatted}</span>
+                                    <span>${maxBuyInFormatted}</span>
+                                </div>
                                 <input
-                                    type="number"
-                                    value={buyInAmount}
-                                    onChange={e => handleBuyInChange(e.target.value)}
-                                    className="w-full p-2 text-white rounded-lg text-sm text-center focus:outline-none"
-                                    style={STATIC_STYLES.input}
-                                    onFocus={handleInputFocus}
-                                    onBlur={handleInputBlur}
-                                    placeholder="0.00"
+                                    type="range"
+                                    value={Math.min(Math.max(parseFloat(buyInAmount) || 0, minBuyInNumber), _maxBuyInNumber)}
+                                    onChange={e => {
+                                        const val = parseFloat(e.target.value);
+                                        if (!isNaN(val)) {
+                                            // Round to nearest step to align with bigBlindValue increments
+                                            const steppedValue = Math.round(val / bigBlindValue) * bigBlindValue;
+                                            handleBuyInChange(Math.max(minBuyInNumber, Math.min(steppedValue, _maxBuyInNumber)).toFixed(2));
+                                        }
+                                    }}
+                                    min={minBuyInNumber.toString()}
+                                    max={_maxBuyInNumber.toString()}
+                                    step={bigBlindValue.toString()}
+                                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                    style={{
+                                        backgroundColor: colors.ui.bgMedium,
+                                        accentColor: colors.brand.primary
+                                    }}
                                 />
                             </div>
+                            
+                            {/* Manual input below slider */}
+                            <input
+                                type="number"
+                                value={buyInAmount}
+                                onChange={e => handleBuyInChange(e.target.value)}
+                                placeholder="Enter amount"
+                                className="w-full px-4 py-2 rounded-lg text-white text-center text-lg focus:outline-none"
+                                style={{
+                                    backgroundColor: colors.ui.bgMedium,
+                                    border: `1px solid ${colors.ui.borderColor}`
+                                }}
+                                step={bigBlindValue.toString()}
+                                min={minBuyInNumber.toString()}
+                                max={_maxBuyInNumber.toString()}
+                            />
                         </div>
                     )}
                     {buyInError && (
-                        <p style={{ color: colors.accent.danger }} className="mt-2">
+                        <p style={{ color: colors.accent.danger }} className="mt-2 text-sm">
                             ⚠️ {buyInError}
                         </p>
                     )}
@@ -485,21 +545,24 @@ const BuyInModal: React.FC<BuyInModalProps> = React.memo(({ onClose, onJoin, tab
                     </button>
                     <button
                         onClick={handleJoinClick}
+                        disabled={buttonStates.viewTable.disabled}
                         className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: `${colors.brand.primary}`,
-                            cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
+                            background: buttonStates.viewTable.background,
+                            opacity: buttonStates.viewTable.opacity,
+                            cursor: buttonStates.viewTable.cursor
                         }}
                     >
                         View Table
                     </button>
                     <button
                         onClick={handleRandomSeatJoin}
-                        disabled={!canJoinRandomSeat}
+                        disabled={buttonStates.takeSeat.disabled}
                         className="px-4 py-3 rounded-lg font-medium flex-1 text-white shadow-md text-sm"
                         style={{
-                            background: !canJoinRandomSeat ? `${colors.brand.primary}` : `${colors.brand.secondary}, ${colors.brand.primary}`,
-                            cursor: !canJoinRandomSeat ? "not-allowed" : "pointer"
+                            background: buttonStates.takeSeat.background,
+                            opacity: buttonStates.takeSeat.opacity,
+                            cursor: buttonStates.takeSeat.cursor
                         }}
                     >
                         {isJoiningRandomSeat ? "Joining..." : "Take My Seat"}

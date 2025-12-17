@@ -71,12 +71,24 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
         // All community cards should be dealt (5 total)
         expect(game.communityCards.length).toBe(5);
 
-        // Legal actions should be SHOW or MUCK, NOT CHECK or BET
-        const legalActions = game.getLegalActions(PLAYER_2);
-        const actionTypes = legalActions.map(a => a.action);
-        expect(actionTypes).toContain(PlayerActionType.SHOW);
-        expect(actionTypes).not.toContain(PlayerActionType.CHECK);
-        expect(actionTypes).not.toContain(PlayerActionType.BET);
+        // With turn-based showdown (Issue #1531), only the player whose turn it is has SHOW
+        // Player 1 (ALL_IN at seat 1) should be first to act at showdown
+        const player1LegalActions = game.getLegalActions(PLAYER_1);
+        const player1ActionTypes = player1LegalActions.map(a => a.action);
+        expect(player1ActionTypes).toContain(PlayerActionType.SHOW);
+        expect(player1ActionTypes).not.toContain(PlayerActionType.CHECK);
+        expect(player1ActionTypes).not.toContain(PlayerActionType.BET);
+
+        // Player 2 should NOT have SHOW until Player 1 acts (turn-based showdown)
+        const player2LegalActions = game.getLegalActions(PLAYER_2);
+        const player2ActionTypes = player2LegalActions.map(a => a.action);
+        expect(player2ActionTypes).not.toContain(PlayerActionType.SHOW);
+
+        // After Player 1 shows, Player 2 should have SHOW option
+        game.performAction(PLAYER_1, PlayerActionType.SHOW, 11, undefined, undefined, getNextTestTimestamp());
+        const player2LegalActionsAfterShow = game.getLegalActions(PLAYER_2);
+        const player2ActionTypesAfterShow = player2LegalActionsAfterShow.map(a => a.action);
+        expect(player2ActionTypesAfterShow).toContain(PlayerActionType.SHOW);
     });
 
     /**
@@ -122,11 +134,17 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
         expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
         expect(game.communityCards.length).toBe(5);
 
-        // Verify legal actions
-        const legalActions = game.getLegalActions(PLAYER_2);
-        const actionTypes = legalActions.map(a => a.action);
-        expect(actionTypes).toContain(PlayerActionType.SHOW);
-        expect(actionTypes).not.toContain(PlayerActionType.CHECK);
+        // With turn-based showdown (Issue #1531), only the player whose turn it is has SHOW
+        // Player 1 (ALL_IN at seat 1) should be first to act at showdown
+        const player1LegalActions = game.getLegalActions(PLAYER_1);
+        const player1ActionTypes = player1LegalActions.map(a => a.action);
+        expect(player1ActionTypes).toContain(PlayerActionType.SHOW);
+        expect(player1ActionTypes).not.toContain(PlayerActionType.CHECK);
+
+        // Player 2 should NOT have SHOW until it's their turn
+        const player2LegalActions = game.getLegalActions(PLAYER_2);
+        const player2ActionTypes = player2LegalActions.map(a => a.action);
+        expect(player2ActionTypes).not.toContain(PlayerActionType.SHOW);
     });
 
     /**
@@ -261,16 +279,17 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
         expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
         expect(game.communityCards.length).toBe(5);
 
-        // CRITICAL: All-in player (Player 1) should have SHOW option
+        // CRITICAL: With turn-based showdown (Issue #1531), only the player whose turn it is has SHOW
+        // Player 1 (ALL_IN at seat 1) should be first to act at showdown
         const player1LegalActions = game.getLegalActions(PLAYER_1);
         const player1ActionTypes = player1LegalActions.map(a => a.action);
         expect(player1ActionTypes).toContain(PlayerActionType.SHOW);
         // Note: MUCK is not available until someone shows first (poker rules)
 
-        // Player 2 should also have SHOW option (both players can show in any order)
+        // Player 2 should NOT have SHOW until it's their turn (turn-based showdown - Issue #1531)
         const player2LegalActions = game.getLegalActions(PLAYER_2);
         const player2ActionTypes = player2LegalActions.map(a => a.action);
-        expect(player2ActionTypes).toContain(PlayerActionType.SHOW);
+        expect(player2ActionTypes).not.toContain(PlayerActionType.SHOW);
 
         // Verify Player 1 (all-in player) can actually perform SHOW action
         expect(() => {

@@ -852,7 +852,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 continue;
             }
 
+            // During SHOWDOWN, both ACTIVE and ALL_IN players can act (show/muck)
             if (player && player.status === PlayerStatus.ACTIVE) {
+                return player;
+            }
+            if (round === TexasHoldemRound.SHOWDOWN && player && player.status === PlayerStatus.ALL_IN) {
                 return player;
             }
         }
@@ -866,7 +870,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 continue;
             }
 
+            // During SHOWDOWN, both ACTIVE and ALL_IN players can act (show/muck)
             if (player && player.status === PlayerStatus.ACTIVE) {
+                return player;
+            }
+            if (round === TexasHoldemRound.SHOWDOWN && player && player.status === PlayerStatus.ALL_IN) {
                 return player;
             }
         }
