@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { COSMOS_CONSTANTS, EquityResult, EquityResponse } from "./sdkTypes";
+import { COSMOS_CONSTANTS, EquityResult, EquityResponse, GameStateResponse, GameResponse } from "./sdkTypes";
 import { IClient } from "./IClient";
 
 export class CosmosClient implements IClient {
@@ -145,14 +145,14 @@ export class CosmosClient implements IClient {
     /**
      * Get game state via REST API
      */
-    async getGameState(gameId: string): Promise<any> {
+    async getGameState(gameId: string): Promise<GameStateResponse> {
         try {
-            const response = await this.restClient.get(`/block52/pokerchain/poker/v1/game_state/${gameId}`);
+            const response = await this.restClient.get<GameStateResponse>(`/block52/pokerchain/poker/v1/game_state/${gameId}`);
 
             if (response.data) {
                 return response.data;
             }
-            return {} as any;
+            return { game_state: "" };
         } catch (error) {
             console.error("Error fetching game state:", error);
             throw error;
@@ -160,16 +160,34 @@ export class CosmosClient implements IClient {
     }
 
     /**
-     * Get game info via REST API
+     * Get public game state via REST API
+     * Shows hole cards for players at showdown (StatusShowing)
      */
-    async getGame(gameId: string): Promise<any> {
+    async getGameStatePublic(gameId: string): Promise<GameStateResponse> {
         try {
-            const response = await this.restClient.get(`/block52/pokerchain/poker/v1/game/${gameId}`);
+            const response = await this.restClient.get<GameStateResponse>(`/block52/pokerchain/poker/v1/game_state_public/${gameId}`);
 
             if (response.data) {
                 return response.data;
             }
-            return {} as any;
+            return { game_state: "" };
+        } catch (error) {
+            console.error("Error fetching public game state:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get game info via REST API
+     */
+    async getGame(gameId: string): Promise<GameResponse> {
+        try {
+            const response = await this.restClient.get<GameResponse>(`/block52/pokerchain/poker/v1/game/${gameId}`);
+
+            if (response.data) {
+                return response.data;
+            }
+            return { game: "" };
         } catch (error) {
             console.error("Error fetching game:", error);
             throw error;

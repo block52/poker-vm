@@ -43,18 +43,17 @@ export default function DistributionPage() {
             // Process each game
             for (const game of games) {
                 try {
-                    // Fetch game info (contains gameState with communityCards)
-                    const gameResponse = await cosmosClient.getGame(game.gameId);
+                    // Fetch public game state (shows hole cards at showdown)
+                    const gameResponse = await cosmosClient.getGameStatePublic(game.gameId);
                     console.log(`🎮 Game ${game.gameId} raw response:`, gameResponse);
 
-                    // Parse the game JSON string
-                    if (!gameResponse || !gameResponse.game) {
-                        console.warn(`⚠️ No game found for ${game.gameId}`);
+                    // Parse the gameState JSON string
+                    if (!gameResponse || !gameResponse.game_state) {
+                        console.warn(`⚠️ No game state found for ${game.gameId}`);
                         continue;
                     }
 
-                    const gameData = JSON.parse(gameResponse.game);
-                    const gameState = gameData?.gameState;
+                    const gameState = JSON.parse(gameResponse.game_state);
                     console.log(`🎮 Game ${game.gameId} parsed state:`, gameState);
 
                     if (gameState) {
