@@ -76,6 +76,7 @@ import { FaCopy } from "react-icons/fa";
 import React from "react";
 import { formatUSDCToSimpleDollars } from "../../utils/numberUtils";
 import { NetworkSelector } from "../NetworkSelector";
+import { toast } from "react-toastify";
 
 import { isValidPlayerAddress } from "../../utils/addressUtils";
 import { getCardImageUrl, getCardBackUrl, CardBackStyle } from "../../utils/cardImages";
@@ -739,6 +740,28 @@ const Table = React.memo(() => {
         navigator.clipboard.writeText(text);
     }, []);
 
+    // Handler for copying table link
+    const handleCopyTableLink = useCallback(async () => {
+        try {
+            const tableUrl = `${window.location.origin}/table/${id}`;
+            await navigator.clipboard.writeText(tableUrl);
+            toast.success("Table link copied to clipboard!", {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true
+            });
+        } catch (error) {
+            console.error("Failed to copy table link:", error);
+            toast.error("Failed to copy link. Please try again.", {
+                position: "top-right",
+                autoClose: 2000
+            });
+        }
+    }, [id]);
+
     // Memoize event handlers to prevent re-renders
     const handleLobbyClick = useCallback(() => {
         window.location.href = "/";
@@ -869,6 +892,21 @@ const Table = React.memo(() => {
                                 Table {id ? id.slice(-5) : ""}
                             </span>
                             <NetworkSelector />
+                            {/* Copy Table Link Button */}
+                            <button
+                                onClick={handleCopyTableLink}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 hover:opacity-80 border"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.ui.bgMedium, 0.6),
+                                    borderColor: colors.brand.primary,
+                                    color: colors.brand.primary
+                                }}
+                                title="Copy table link to clipboard"
+                            >
+                                <FaCopy size={12} />
+                                <span className="hidden sm:inline">Copy Table Link</span>
+                                <span className="sm:hidden">Copy Link</span>
+                            </button>
                             {/* Game Type Display - Desktop Only */}
                             {gameOptions && (
                                 <div
