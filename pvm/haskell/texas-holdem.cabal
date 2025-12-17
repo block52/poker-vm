@@ -30,6 +30,8 @@ library
                     , TexasHoldem.Pot
                     , TexasHoldem.Round
                     , TexasHoldem.Evaluation
+                    , TexasHoldem.BetManager
+                    , TexasHoldem.DealerManager
     build-depends:    base ^>=4.17.2.1
                     , containers >= 0.6
                     , mtl >= 2.2

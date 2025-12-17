@@ -23,7 +23,7 @@ import TexasHoldem
 main :: IO ()
 main = do
     let config = defaultConfig
-        deck = shuffleWithSeed 12345 newDeck
+        deck = shuffleDeck 12345 newDeck
         players = [("alice", 0, 100), ("bob", 1, 100)]
         game = newGame config deck players
 
@@ -48,6 +48,8 @@ The library is organized into the following modules:
 * "TexasHoldem.Round" - Betting rounds
 * "TexasHoldem.Pot" - Pot and side pot calculations
 * "TexasHoldem.GameState" - Complete game state management
+* "TexasHoldem.BetManager" - Bet tracking for betting rounds
+* "TexasHoldem.DealerManager" - Dealer button and position management
 -}
 module TexasHoldem
     ( -- * Re-exports
@@ -69,6 +71,10 @@ module TexasHoldem
     , module TexasHoldem.Pot
       -- ** Game State
     , module TexasHoldem.GameState
+      -- ** Bet Management
+    , module TexasHoldem.BetManager
+      -- ** Dealer Management
+    , module TexasHoldem.DealerManager
     ) where
 
 import TexasHoldem.Card
@@ -80,3 +86,5 @@ import TexasHoldem.Action
 import TexasHoldem.Round
 import TexasHoldem.Pot
 import TexasHoldem.GameState
+import TexasHoldem.BetManager
+import TexasHoldem.DealerManager

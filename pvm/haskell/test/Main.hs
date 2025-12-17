@@ -9,6 +9,7 @@ module Main (main) where
 import TexasHoldem
 import Data.Maybe (mapMaybe, isJust)
 import Data.List (sort)
+import qualified Data.Map.Strict as Map
 
 main :: IO ()
 main = do
@@ -51,6 +52,16 @@ main = do
     runTest "Deck from string" testDeckFromString
     runTest "Deck state with position" testDeckStateWithPosition
     runTest "Roundtrip serialization" testRoundtripSerialization
+
+    -- BetManager tests
+    runTest "Bet manager tracks bets" testBetManagerTracksBets
+    runTest "Bet manager largest bet" testBetManagerLargestBet
+    runTest "Bet manager raise amount" testBetManagerRaiseAmount
+
+    -- DealerManager tests
+    runTest "Dealer position" testDealerPosition
+    runTest "Heads-up blind positions" testHeadsUpBlinds
+    runTest "Multi-player blind positions" testMultiPlayerBlinds
 
     putStrLn ""
     putStrLn "All tests completed!"
@@ -281,3 +292,70 @@ testRoundtripSerialization =
         Just ds'' -> dsTop ds'' == dsTop ds' &&
                      dsCards ds'' == dsCards ds'
         Nothing -> False
+
+-- BetManager tests
+testBetManagerTracksBets :: Bool
+testBetManagerTracksBets =
+    let bm = emptyBetManager 2  -- big blind = 2
+        action1 = BetAction 0 "player1" 1 PostSmallBlind
+        action2 = BetAction 1 "player2" 2 PostBigBlind
+        bm' = addBet action1 $ addBet action2 bm
+    in getTotalBetsForPlayer "player1" bm' == 1 &&
+       getTotalBetsForPlayer "player2" bm' == 2 &&
+       getBetCount bm' == 2
+
+testBetManagerLargestBet :: Bool
+testBetManagerLargestBet =
+    let bm = emptyBetManager 2
+        actions = [ BetAction 0 "player1" 1 PostSmallBlind
+                  , BetAction 1 "player2" 2 PostBigBlind
+                  , BetAction 2 "player1" 4 Raise  -- total = 5
+                  , BetAction 3 "player2" 3 Call   -- total = 5
+                  ]
+        bm' = addBets actions bm
+    in getLargestBet bm' == 5
+
+testBetManagerRaiseAmount :: Bool
+testBetManagerRaiseAmount =
+    let bm = emptyBetManager 2
+        -- Only blinds - raise amount should be big blind
+        actions1 = [ BetAction 0 "player1" 1 PostSmallBlind
+                   , BetAction 1 "player2" 2 PostBigBlind
+                   ]
+        bm1 = addBets actions1 bm
+        -- With a raise
+        actions2 = actions1 ++ [ BetAction 2 "player1" 5 Raise ]  -- raises to 6 total
+        bm2 = addBets actions2 bm
+    in getRaisedAmount bm1 == 2 &&  -- big blind
+       getRaisedAmount bm2 >= 2     -- at least big blind
+
+-- DealerManager tests
+testDealerPosition :: Bool
+testDealerPosition =
+    let ds = mkDealerState 0 9 2  -- dealer at seat 0, 9 max, 2 min
+    in getDealerPosition ds == 0
+
+testHeadsUpBlinds :: Bool
+testHeadsUpBlinds =
+    let ds = mkDealerState 0 9 2
+        -- Create two active players at seats 0 and 1
+        player0 = mkPlayer "player0" 0 100
+        player1 = mkPlayer "player1" 1 100
+        players = Map.fromList [(0, setStatus Active player0), (1, setStatus Active player1)]
+        -- In heads-up, dealer is small blind
+        sbPos = getSmallBlindPosition ds players
+        bbPos = getBigBlindPosition ds players
+    in sbPos == 0 && bbPos == 1  -- dealer (0) is SB, other (1) is BB
+
+testMultiPlayerBlinds :: Bool
+testMultiPlayerBlinds =
+    let ds = mkDealerState 0 9 2
+        -- Create three active players at seats 0, 1, 2
+        player0 = setStatus Active $ mkPlayer "player0" 0 100
+        player1 = setStatus Active $ mkPlayer "player1" 1 100
+        player2 = setStatus Active $ mkPlayer "player2" 2 100
+        players = Map.fromList [(0, player0), (1, player1), (2, player2)]
+        -- With 3+ players: dealer=0, SB=1, BB=2
+        sbPos = getSmallBlindPosition ds players
+        bbPos = getBigBlindPosition ds players
+    in sbPos == 1 && bbPos == 2
