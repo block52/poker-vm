@@ -8,7 +8,7 @@ import { ethers } from "ethers";
 import { BASE_RPC_URL, BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
 import { useAccount as useWagmiAccount, useSwitchChain } from "wagmi";
 
-import { microToUsdc } from "../constants/currency";
+import { calculateBuyIn } from "../utils/buyInUtils";
 
 const RPC_URL = BASE_RPC_URL; // Base Chain RPC for USDC balance queries
 const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
@@ -39,94 +39,6 @@ import {
 
 // Club branding imports
 import { colors, getAnimationGradient, getHexagonStroke, hexToRgba } from "../utils/colorConfig";
-
-// Copy to clipboard
-const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    alert(`${label} copied to clipboard!`);
-};
-
-// Memoized Deposit button component
-const DepositButton = React.memo(({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) => {
-    const buttonStyle = useMemo(
-        () => ({
-            background: disabled
-                ? `linear-gradient(135deg, ${hexToRgba(colors.ui.bgDark, 0.5)} 0%, ${hexToRgba(colors.ui.bgDark, 0.3)} 100%)`
-                : `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-        }),
-        [disabled]
-    );
-
-    const handleClick = useCallback(() => {
-        if (!disabled) {
-            onClick();
-        }
-    }, [onClick, disabled]);
-
-    return (
-        <button
-            type="button"
-            onClick={handleClick}
-            disabled={disabled}
-            className={`flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 shadow-md ${
-                disabled ? "cursor-not-allowed opacity-50" : "transform hover:scale-105 hover:opacity-90"
-            }`}
-            style={buttonStyle}
-            title={disabled ? "Connect Web3 wallet to deposit" : "Deposit USDC"}
-        >
-            Deposit
-        </button>
-    );
-});
-
-// Memoized Withdraw button component
-const WithdrawButton = React.memo(({ onClick }: { onClick: () => void }) => {
-    const buttonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-        }),
-        []
-    );
-
-    const handleClick = useCallback(() => {
-        onClick();
-    }, [onClick]);
-
-    return (
-        <button
-            type="button"
-            onClick={handleClick}
-            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
-            style={buttonStyle}
-        >
-            Withdraw
-        </button>
-    );
-});
-
-const CreateTransferButton = React.memo(({ onClick }: { onClick: () => void }) => {
-    const buttonStyle = useMemo(
-        () => ({
-            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
-        }),
-        []
-    );
-
-    const handleClick = useCallback(() => {
-        onClick();
-    }, [onClick]);
-
-    return (
-        <button
-            type="button"
-            onClick={handleClick}
-            className="flex-1 min-h-[60px] flex items-center justify-center text-white rounded-xl py-2 px-4 text-sm font-bold transition duration-300 transform hover:scale-105 shadow-md hover:opacity-90"
-            style={buttonStyle}
-        >
-            Transfer
-        </button>
-    );
-});
 
 // Add hexagon pattern SVG background
 const HexagonPattern = React.memo(() => {
@@ -174,16 +86,23 @@ const Dashboard: React.FC = () => {
     const [createGameError, setCreateGameError] = useState("");
     // Modal game options
     const [modalGameType, setModalGameType] = useState<GameType>(GameType.SIT_AND_GO);
-    const [modalMinBuyIn, setModalMinBuyIn] = useState(10);
-    const [modalMaxBuyIn, setModalMaxBuyIn] = useState(100);
     const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
     const [modalPlayerCount, setModalPlayerCount] = useState(4);
     // For Cash Game: min/max players
     const [modalMinPlayers, setModalMinPlayers] = useState(2);
     const [modalMaxPlayers, setModalMaxPlayers] = useState(9);
-    // Small/Big Blind fields
-    const [modalSmallBlind, setModalSmallBlind] = useState(1);
-    const [modalBigBlind, setModalBigBlind] = useState(2);
+    // Small/Big Blind fields (in dollars)
+    const [modalSmallBlind, setModalSmallBlind] = useState(0.5);
+    const [modalBigBlind, setModalBigBlind] = useState(1);
+    // Buy-in fields in Big Blinds (BB) for Cash games
+    const [modalMinBuyInBB, setModalMinBuyInBB] = useState(20);   // 20 BB default
+    const [modalMaxBuyInBB, setModalMaxBuyInBB] = useState(100);  // 100 BB default
+
+    // Calculate actual buy-in values from BB using utility function
+    const { minBuyIn: calculatedMinBuyIn, maxBuyIn: calculatedMaxBuyIn } = useMemo(
+        () => calculateBuyIn({ minBuyInBB: modalMinBuyInBB, maxBuyInBB: modalMaxBuyInBB, bigBlind: modalBigBlind }),
+        [modalMinBuyInBB, modalMaxBuyInBB, modalBigBlind]
+    );
 
     // Withdrawal Modal
     const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
@@ -393,8 +312,10 @@ const Dashboard: React.FC = () => {
             // Log the modal values before creating game options
             console.log("🎲 Modal Values:");
             console.log("  Game Type:", modalGameType);
-            console.log("  Min Buy-In:", modalMinBuyIn);
-            console.log("  Max Buy-In:", modalMaxBuyIn);
+            console.log("  Min Buy-In (BB):", modalMinBuyInBB);
+            console.log("  Max Buy-In (BB):", modalMaxBuyInBB);
+            console.log("  Calculated Min Buy-In ($):", calculatedMinBuyIn);
+            console.log("  Calculated Max Buy-In ($):", calculatedMaxBuyIn);
             console.log("  Sit & Go Buy-In:", modalSitAndGoBuyIn);
             console.log("  Player Count:", modalPlayerCount);
             console.log("  Is Tournament:", isTournament);
@@ -402,8 +323,8 @@ const Dashboard: React.FC = () => {
 
             const gameOptions: CreateTableOptions = {
                 type: modalGameType,
-                minBuyIn: isTournament ? modalSitAndGoBuyIn : modalMinBuyIn,
-                maxBuyIn: isTournament ? modalSitAndGoBuyIn : modalMaxBuyIn,
+                minBuyIn: isTournament ? modalSitAndGoBuyIn : calculatedMinBuyIn,
+                maxBuyIn: isTournament ? modalSitAndGoBuyIn : calculatedMaxBuyIn,
                 minPlayers: modalGameType === GameType.CASH ? modalMinPlayers : modalPlayerCount,
                 maxPlayers: modalGameType === GameType.CASH ? modalMaxPlayers : modalPlayerCount,
                 smallBlind: modalSmallBlind,
@@ -616,35 +537,6 @@ const Dashboard: React.FC = () => {
         }),
         []
     );
-
-    // Memoized card styles
-    const mainCardStyle = useMemo(
-        () => ({
-            borderColor: hexToRgba(colors.brand.primary, 0.2)
-        }),
-        []
-    );
-
-    const walletSectionStyle = useMemo(
-        () => ({
-            backgroundColor: hexToRgba(colors.ui.bgMedium, 0.9),
-            border: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
-        }),
-        []
-    );
-
-    // Removed: useEffect for limit type - no longer using these state variables
-
-    // Removed: handleGameType - game type selection now in Create Game modal
-
-    // Memoized hover handlers
-    const handleWalletMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.2);
-    }, []);
-
-    const handleWalletMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        e.currentTarget.style.borderColor = hexToRgba(colors.brand.primary, 0.1);
-    }, []);
 
     // Auto-switch to Base Chain when wallet connects
     useEffect(() => {
@@ -1252,6 +1144,34 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     )}
 
+                                    {/* Small Blind and Big Blind fields - FIRST for Cash games */}
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="block text-white text-sm mb-1">Small Blind ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalSmallBlind}
+                                                onChange={e => setModalSmallBlind(Number(e.target.value))}
+                                                min="0.01"
+                                                max="10000"
+                                                step="0.01"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-white text-sm mb-1">Big Blind ($)</label>
+                                            <input
+                                                type="number"
+                                                value={modalBigBlind}
+                                                onChange={e => setModalBigBlind(Number(e.target.value))}
+                                                min="0.01"
+                                                max="10000"
+                                                step="0.01"
+                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                            />
+                                        </div>
+                                    </div>
+
                                     {/* Show different fields based on game type */}
                                     {modalGameType === GameType.SIT_AND_GO || modalGameType === GameType.TOURNAMENT ? (
                                         // For Sit & Go and Tournament: Single buy-in field
@@ -1268,59 +1188,88 @@ const Dashboard: React.FC = () => {
                                             <p className="text-xs text-gray-400 mt-1">All players pay the same entry fee</p>
                                         </div>
                                     ) : (
-                                        // For Cash games: Min and Max buy-in fields
+                                        // For Cash games: Buy-in in Big Blinds (BB)
                                         <>
+                                            {/* Preset buttons */}
                                             <div>
-                                                <label className="block text-white text-sm mb-1">Minimum Buy-In ($)</label>
-                                                <input
-                                                    type="number"
-                                                    value={modalMinBuyIn}
-                                                    onChange={e => setModalMinBuyIn(Number(e.target.value))}
-                                                    min="1"
-                                                    max="1000"
-                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                                />
+                                                <label className="block text-white text-sm mb-2">Buy-In Presets</label>
+                                                <div className="flex gap-2 flex-wrap">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setModalMinBuyInBB(20); setModalMaxBuyInBB(100); }}
+                                                        className={`px-3 py-1 text-xs rounded transition-all duration-200 ${
+                                                            modalMinBuyInBB === 20 && modalMaxBuyInBB === 100
+                                                                ? "bg-blue-600 text-white"
+                                                                : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                                                        }`}
+                                                    >
+                                                        Standard (20-100 BB)
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setModalMinBuyInBB(40); setModalMaxBuyInBB(200); }}
+                                                        className={`px-3 py-1 text-xs rounded transition-all duration-200 ${
+                                                            modalMinBuyInBB === 40 && modalMaxBuyInBB === 200
+                                                                ? "bg-blue-600 text-white"
+                                                                : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                                                        }`}
+                                                    >
+                                                        Deep (40-200 BB)
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setModalMinBuyInBB(100); setModalMaxBuyInBB(300); }}
+                                                        className={`px-3 py-1 text-xs rounded transition-all duration-200 ${
+                                                            modalMinBuyInBB === 100 && modalMaxBuyInBB === 300
+                                                                ? "bg-blue-600 text-white"
+                                                                : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                                                        }`}
+                                                    >
+                                                        Deep Stack (100-300 BB)
+                                                    </button>
+                                                </div>
                                             </div>
 
-                                            <div>
-                                                <label className="block text-white text-sm mb-1">Maximum Buy-In ($)</label>
-                                                <input
-                                                    type="number"
-                                                    value={modalMaxBuyIn}
-                                                    onChange={e => setModalMaxBuyIn(Number(e.target.value))}
-                                                    min="1"
-                                                    max="10000"
-                                                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                                />
+                                            {/* Buy-in inputs in BB */}
+                                            <div className="flex gap-4">
+                                                <div className="flex-1">
+                                                    <label className="block text-white text-sm mb-1">Minimum Buy-In (BB)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={modalMinBuyInBB}
+                                                        onChange={e => setModalMinBuyInBB(Number(e.target.value))}
+                                                        min="10"
+                                                        max="500"
+                                                        className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <label className="block text-white text-sm mb-1">Maximum Buy-In (BB)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={modalMaxBuyInBB}
+                                                        onChange={e => setModalMaxBuyInBB(Number(e.target.value))}
+                                                        min="20"
+                                                        max="500"
+                                                        className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                                    />
+                                                </div>
                                             </div>
+
+                                            {/* Calculated buy-in preview */}
+                                            {modalBigBlind > 0 && (
+                                                <div className="bg-gray-700/50 rounded p-3 border border-gray-600">
+                                                    <p className="text-xs text-gray-400 mb-1">Calculated Buy-In Range:</p>
+                                                    <p className="text-sm text-green-400">
+                                                        ${calculatedMinBuyIn.toFixed(2)} - ${calculatedMaxBuyIn.toFixed(2)}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        Based on ${modalBigBlind.toFixed(2)} BB
+                                                    </p>
+                                                </div>
+                                            )}
                                         </>
                                     )}
-
-                                    {/* Small Blind and Big Blind fields (always shown) */}
-                                    <div className="flex gap-4">
-                                        <div className="flex-1">
-                                            <label className="block text-white text-sm mb-1">Small Blind ($)</label>
-                                            <input
-                                                type="number"
-                                                value={modalSmallBlind}
-                                                onChange={e => setModalSmallBlind(Number(e.target.value))}
-                                                min="1"
-                                                max="10000"
-                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <label className="block text-white text-sm mb-1">Big Blind ($)</label>
-                                            <input
-                                                type="number"
-                                                value={modalBigBlind}
-                                                onChange={e => setModalBigBlind(Number(e.target.value))}
-                                                min="1"
-                                                max="10000"
-                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                            />
-                                        </div>
-                                    </div>
 
                                     <div>
                                         <label className="block text-white text-sm mb-1">Variant</label>

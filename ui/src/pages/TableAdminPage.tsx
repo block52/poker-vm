@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
 import TableList from "../components/TableList";
+import { calculateBuyIn, BUY_IN_PRESETS } from "../utils/buyInUtils";
 
 // Game creation fee in base units (1 usdc = 0.000001 USDC)
 // This matches GameCreationCost in pokerchain/x/poker/types/types.go
@@ -49,10 +50,19 @@ export default function TableAdminPage() {
     const [gameType, setGameType] = useState<GameType>(GameType.CASH);
     const [minPlayers] = useState(2);
     const [maxPlayers, setMaxPlayers] = useState(9);
-    const [minBuyIn, setMinBuyIn] = useState("1");
-    const [maxBuyIn, setMaxBuyIn] = useState("10");
-    const [smallBlind, setSmallBlind] = useState("0.01");
-    const [bigBlind, setBigBlind] = useState("0.02");
+    const [smallBlind, setSmallBlind] = useState("0.50");
+    const [bigBlind, setBigBlind] = useState("1.00");
+    // Buy-in in Big Blinds (BB) for Cash games
+    const [minBuyInBB, setMinBuyInBB] = useState(20);
+    const [maxBuyInBB, setMaxBuyInBB] = useState(100);
+    // For tournaments: single buy-in amount
+    const [tournamentBuyIn, setTournamentBuyIn] = useState("10");
+
+    // Calculate actual buy-in values from BB
+    const { minBuyIn: calculatedMinBuyIn, maxBuyIn: calculatedMaxBuyIn } = useMemo(
+        () => calculateBuyIn({ minBuyInBB, maxBuyInBB, bigBlind: parseFloat(bigBlind) || 0 }),
+        [minBuyInBB, maxBuyInBB, bigBlind]
+    );
 
     // Rake settings (optional)
     const [enableRake, setEnableRake] = useState(false);
@@ -121,10 +131,17 @@ export default function TableAdminPage() {
             owner: rakeOwner || cosmosWallet.address || ""
         } : undefined;
 
+        // For tournaments, use fixed buy-in; for cash games, use BB-calculated values
+        const isTournament = gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT;
+        const finalMinBuyIn = isTournament ? parseFloat(tournamentBuyIn) : calculatedMinBuyIn;
+        const finalMaxBuyIn = isTournament ? parseFloat(tournamentBuyIn) : calculatedMaxBuyIn;
+
         console.log("📋 Table configuration:", {
             type: gameType,
-            minBuyIn: parseFloat(minBuyIn),
-            maxBuyIn: parseFloat(maxBuyIn),
+            minBuyIn: finalMinBuyIn,
+            maxBuyIn: finalMaxBuyIn,
+            minBuyInBB: isTournament ? "N/A" : minBuyInBB,
+            maxBuyInBB: isTournament ? "N/A" : maxBuyInBB,
             minPlayers,
             maxPlayers,
             smallBlind: parseFloat(smallBlind),
@@ -136,8 +153,8 @@ export default function TableAdminPage() {
             console.log("🚀 Calling createTable...");
             const txHash = await createTable({
                 type: gameType,
-                minBuyIn: parseFloat(minBuyIn),
-                maxBuyIn: parseFloat(maxBuyIn),
+                minBuyIn: finalMinBuyIn,
+                maxBuyIn: finalMaxBuyIn,
                 minPlayers,
                 maxPlayers,
                 smallBlind: parseFloat(smallBlind),
@@ -336,69 +353,127 @@ export default function TableAdminPage() {
                         </div>
                     </div>
 
+                    {/* Blinds - FIRST (needed to calculate buy-in) */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
-                        {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
-                            <div className="col-span-2">
-                                <label className="text-gray-300 text-xs mb-1 block">Buy-In (USDC)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={minBuyIn}
-                                    onChange={e => {
-                                        setMinBuyIn(e.target.value);
-                                        setMaxBuyIn(e.target.value);
-                                    }}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                                    placeholder="e.g., 1.00"
-                                />
-                            </div>
-                        ) : (
-                            <>
-                                <div>
-                                    <label className="text-gray-300 text-xs mb-1 block">Min Buy-In (USDC)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={minBuyIn}
-                                        onChange={e => setMinBuyIn(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-gray-300 text-xs mb-1 block">Max Buy-In (USDC)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={maxBuyIn}
-                                        onChange={e => setMaxBuyIn(e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                                    />
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label className="text-gray-300 text-xs mb-1 block">Small Blind (USDC)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Small Blind ($)</label>
                             <input
                                 type="number"
                                 step="0.01"
+                                min="0.01"
                                 value={smallBlind}
                                 onChange={e => setSmallBlind(e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
                         <div>
-                            <label className="text-gray-300 text-xs mb-1 block">Big Blind (USDC)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">Big Blind ($)</label>
                             <input
                                 type="number"
                                 step="0.01"
+                                min="0.01"
                                 value={bigBlind}
                                 onChange={e => setBigBlind(e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
+                    </div>
+
+                    {/* Buy-In Section */}
+                    <div className="mb-4">
+                        {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
+                            <div>
+                                <label className="text-gray-300 text-xs mb-1 block">Tournament Buy-In ($)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={tournamentBuyIn}
+                                    onChange={e => setTournamentBuyIn(e.target.value)}
+                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                    placeholder="e.g., 10.00"
+                                />
+                                <p className="text-gray-500 text-xs mt-1">All players pay the same entry fee</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Buy-In Presets */}
+                                <label className="text-gray-300 text-xs mb-2 block">Buy-In Presets</label>
+                                <div className="flex gap-2 flex-wrap mb-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setMinBuyInBB(BUY_IN_PRESETS.STANDARD.minBuyInBB); setMaxBuyInBB(BUY_IN_PRESETS.STANDARD.maxBuyInBB); }}
+                                        className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                            minBuyInBB === 20 && maxBuyInBB === 100
+                                                ? "bg-blue-600 text-white"
+                                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                        }`}
+                                    >
+                                        Standard (20-100 BB)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setMinBuyInBB(BUY_IN_PRESETS.DEEP.minBuyInBB); setMaxBuyInBB(BUY_IN_PRESETS.DEEP.maxBuyInBB); }}
+                                        className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                            minBuyInBB === 40 && maxBuyInBB === 200
+                                                ? "bg-blue-600 text-white"
+                                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                        }`}
+                                    >
+                                        Deep (40-200 BB)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setMinBuyInBB(BUY_IN_PRESETS.DEEP_STACK.minBuyInBB); setMaxBuyInBB(BUY_IN_PRESETS.DEEP_STACK.maxBuyInBB); }}
+                                        className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                            minBuyInBB === 100 && maxBuyInBB === 300
+                                                ? "bg-blue-600 text-white"
+                                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                        }`}
+                                    >
+                                        Deep Stack (100-300 BB)
+                                    </button>
+                                </div>
+
+                                {/* Buy-In BB Inputs */}
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <label className="text-gray-300 text-xs mb-1 block">Min Buy-In (BB)</label>
+                                        <input
+                                            type="number"
+                                            min="10"
+                                            max="500"
+                                            value={minBuyInBB}
+                                            onChange={e => setMinBuyInBB(Number(e.target.value))}
+                                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-300 text-xs mb-1 block">Max Buy-In (BB)</label>
+                                        <input
+                                            type="number"
+                                            min="20"
+                                            max="500"
+                                            value={maxBuyInBB}
+                                            onChange={e => setMaxBuyInBB(Number(e.target.value))}
+                                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Calculated Preview */}
+                                {parseFloat(bigBlind) > 0 && (
+                                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
+                                        <p className="text-gray-400 text-xs mb-1">Calculated Buy-In Range:</p>
+                                        <p className="text-green-400 text-sm font-medium">
+                                            ${calculatedMinBuyIn.toFixed(2)} - ${calculatedMaxBuyIn.toFixed(2)}
+                                        </p>
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Based on ${parseFloat(bigBlind).toFixed(2)} BB
+                                        </p>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
 
                     {/* Rake Configuration Section */}
