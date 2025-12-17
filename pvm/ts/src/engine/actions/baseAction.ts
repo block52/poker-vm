@@ -8,13 +8,15 @@ abstract class BaseAction {
     private readonly zeroChipsAllowed = [NonPlayerActionType.SIT_OUT, PlayerActionType.FOLD, NonPlayerActionType.DEAL, PlayerActionType.ALL_IN, PlayerActionType.SHOW, PlayerActionType.MUCK];
     // Actions that are allowed for ALL_IN players (in addition to ACTIVE players)
     private readonly allInAllowed = [PlayerActionType.SHOW, PlayerActionType.MUCK];
+    // Actions that skip the turn order check - empty to enforce turn order for all player actions
+    private readonly skipTurnOrderCheck: PlayerActionType[] = [];
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
     abstract get type(): PlayerActionType | NonPlayerActionType;
 
     verify(player: Player): Range | undefined {
-        // Skip "next to act" check for SHOW and MUCK at showdown (any live player can show/muck in any order)
-        const skipNextToActCheck = this.allInAllowed.includes(this.type as PlayerActionType);
+        // Check if this action type should skip the "next to act" validation
+        const skipNextToActCheck = this.skipTurnOrderCheck.includes(this.type as PlayerActionType);
 
         if (this.type !== NonPlayerActionType.DEAL && !skipNextToActCheck) {
             const nextPlayerAddress = this.game.getNextPlayerToAct();

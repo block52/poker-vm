@@ -236,6 +236,93 @@ describe("ShowAction", () => {
         });
     });
 
+    describe("turn order enforcement", () => {
+        it("should throw error if not the active player's turn", () => {
+            const otherPlayer = new Player(
+                "0x123456789abcdef123456789abcdef123456789a",
+                undefined,
+                ONE_THOUSAND_TOKENS,
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+
+            // Set up the game so 'player' is next to act, not 'otherPlayer'
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            const livePlayers = [
+                new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE),
+                otherPlayer
+            ];
+            jest.spyOn(game, "findLivePlayers").mockReturnValue(livePlayers);
+
+            // otherPlayer should not be able to show since it's not their turn
+            expect(() => action.verify(otherPlayer)).toThrow("Must be currently active player.");
+        });
+
+        it("should allow SHOW only for active player during showdown", () => {
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            const livePlayers = [
+                new Player("0x980b8D8A16f5891F41871d878a479d81Da52334c", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE),
+                new Player("0x123456789abcdef123456789abcdef123456789a", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE)
+            ];
+            jest.spyOn(game, "findLivePlayers").mockReturnValue(livePlayers);
+
+            // Player whose turn it is should be able to show
+            const result = action.verify(player);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
+        });
+
+        it("should allow ALL_IN player to SHOW when it is their turn", () => {
+            const allInPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                0n,
+                undefined,
+                PlayerStatus.ALL_IN
+            );
+
+            // ALL_IN player is next to act
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(allInPlayer);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
+
+            const livePlayers = [
+                allInPlayer,
+                new Player("0x123456789abcdef123456789abcdef123456789a", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE)
+            ];
+            jest.spyOn(game, "findLivePlayers").mockReturnValue(livePlayers);
+
+            // ALL_IN player should be able to show when it's their turn
+            const result = action.verify(allInPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
+        });
+
+        it("should NOT allow ALL_IN player to SHOW when it is NOT their turn", () => {
+            const allInPlayer = new Player(
+                "0x123456789abcdef123456789abcdef123456789a",
+                undefined,
+                0n,
+                undefined,
+                PlayerStatus.ALL_IN
+            );
+
+            // Different player is next to act
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
+
+            const livePlayers = [
+                player,
+                allInPlayer
+            ];
+            jest.spyOn(game, "findLivePlayers").mockReturnValue(livePlayers);
+
+            // ALL_IN player should NOT be able to show when it's not their turn
+            expect(() => action.verify(allInPlayer)).toThrow("Must be currently active player.");
+        });
+    });
+
     describe("integration scenarios", () => {
         it("should handle typical showdown show scenario", () => {
             // Setup: Showdown round, multiple live players
