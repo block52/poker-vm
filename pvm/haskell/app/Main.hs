@@ -1,7 +1,7 @@
 {-|
 Module      : Main
 Description : Demo application for Texas Hold'em
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 -}
 module Main (main) where
@@ -24,7 +24,7 @@ main = do
             }
 
     -- Create a shuffled deck using a seed (deterministic for blockchain)
-    let deck = shuffleWithSeed 42 newDeck
+    let deck = shuffleDeck 42 newDeck
 
     -- Create players
     let players =

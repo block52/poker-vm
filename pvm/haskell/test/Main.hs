@@ -1,7 +1,7 @@
 {-|
 Module      : Main
 Description : Test suite for Texas Hold'em
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 -}
 module Main (main) where
@@ -93,8 +93,8 @@ testDrawReducesDeck =
 
 testDeterministicShuffle :: Bool
 testDeterministicShuffle =
-    let deck1 = shuffleWithSeed 12345 newDeck
-        deck2 = shuffleWithSeed 12345 newDeck
+    let deck1 = shuffleDeck 12345 newDeck
+        deck2 = shuffleDeck 12345 newDeck
     in unDeck deck1 == unDeck deck2
 
 -- Hand evaluation tests

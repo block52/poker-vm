@@ -1,7 +1,7 @@
 {-|
 Module      : TexasHoldem.Card
 Description : Card, Suit, and Rank types for poker
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 Maintainer  : dev@block52.xyz
 

@@ -1,7 +1,7 @@
 {-|
 Module      : TexasHoldem.Pot
 Description : Pot management and side pot calculations
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 Maintainer  : dev@block52.xyz
 

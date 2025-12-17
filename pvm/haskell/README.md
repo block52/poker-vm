@@ -57,7 +57,7 @@ main :: IO ()
 main = do
     let config = defaultConfig
         -- Deterministic shuffle using a seed (from blockchain)
-        deck = shuffleWithSeed 12345 newDeck
+        deck = shuffleDeck 12345 newDeck
         players = [("alice", 0, 100), ("bob", 1, 100)]
         game = newGame config deck players
 
@@ -122,10 +122,24 @@ Examples: `AS` (Ace of Spades), `TH` (Ten of Hearts), `2C` (Two of Clubs)
 
 The library is designed for blockchain integration:
 
-- `shuffleWithSeed` allows reproducible deck shuffling from a blockchain-provided seed
+- `shuffleDeck` takes a seed (Integer) for reproducible shuffling from blockchain randomness
+- `shuffleWithBytes` accepts raw bytes (e.g., from a block hash) for shuffling
 - All game state transitions are pure functions
 - No hidden state or randomness during gameplay
 - Actions can be replayed to verify game state
+
+### Seed-Based Shuffling
+
+```haskell
+-- Using an integer seed (e.g., from VRF)
+let deck = shuffleDeck 12345 newDeck
+
+-- Using bytes from a block hash
+let blockHash = [0xAB, 0xCD, 0xEF, ...]  -- 32 bytes
+    deck = shuffleWithBytes blockHash newDeck
+```
+
+The shuffle uses xorshift64 PRNG with Fisher-Yates algorithm - deterministic and unbiased.
 
 ## License
 

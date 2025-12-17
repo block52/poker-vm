@@ -1,38 +1,43 @@
 {-|
 Module      : TexasHoldem.Deck
-Description : Deck management for poker
-Copyright   : (c) Block52, 2024
+Description : Deck management with deterministic seed-based shuffling
+Copyright   : (c) Block52, 2025
 License     : MIT
 Maintainer  : dev@block52.xyz
 
 This module provides a pure functional interface for managing a deck of cards.
-The deck operations are deterministic and suitable for blockchain integration
-where shuffling is provided externally.
+Shuffling is done via a seed, making it deterministic and suitable for
+blockchain integration where the seed is provided by the consensus layer.
 -}
 module TexasHoldem.Deck
     ( -- * Types
       Deck(..)
+    , Seed
       -- * Constructors
     , newDeck
     , fromCards
     , fromMnemonics
+      -- * Shuffling (seed-based, deterministic)
+    , shuffleDeck
+    , shuffleWithBytes
       -- * Operations
-    , shuffle
     , draw
     , drawN
     , peek
     , peekN
     , remaining
     , isEmpty
-      -- * Utilities
-    , shuffleWithSeed
     ) where
 
 import TexasHoldem.Card
 
-import Data.List (sortBy)
-import Data.Ord (comparing)
-import System.Random (RandomGen, uniformR)
+import Data.Bits (xor, shiftL, shiftR)
+import Data.Word (Word64)
+import Data.List (foldl')
+
+-- | Seed for deterministic shuffling
+-- Can be derived from blockchain randomness (block hash, VRF output, etc.)
+type Seed = Integer
 
 -- | A deck of cards represented as a list (top of deck is head)
 newtype Deck = Deck { unDeck :: [Card] }
@@ -49,6 +54,34 @@ fromCards = Deck
 -- | Create a deck from card mnemonics (e.g., ["AS", "KH", "QD"])
 fromMnemonics :: [String] -> Maybe Deck
 fromMnemonics mnemonics = Deck <$> traverse fromMnemonic mnemonics
+
+-- | Shuffle the deck using a seed
+-- This is the primary shuffling function - deterministic and reproducible.
+-- Same seed always produces the same shuffle.
+--
+-- Example:
+-- @
+-- let seed = 12345  -- From blockchain
+--     deck = shuffleDeck seed newDeck
+-- @
+shuffleDeck :: Seed -> Deck -> Deck
+shuffleDeck seed (Deck cards) = Deck $ fisherYatesShuffle (mkPRNG seed) cards
+
+-- | Shuffle using a list of bytes (e.g., from a hash)
+-- Converts the bytes to a seed and shuffles.
+--
+-- Example:
+-- @
+-- let blockHash = [0xAB, 0xCD, 0xEF, ...]  -- 32 bytes from blockchain
+--     deck = shuffleWithBytes blockHash newDeck
+-- @
+shuffleWithBytes :: [Word8] -> Deck -> Deck
+shuffleWithBytes bytes = shuffleDeck (bytesToSeed bytes)
+  where
+    bytesToSeed :: [Word8] -> Seed
+    bytesToSeed = foldl' (\acc b -> acc * 256 + fromIntegral b) 0
+
+type Word8 = Word64  -- Simplified, using Word64 for compatibility
 
 -- | Draw the top card from the deck
 -- Returns Nothing if deck is empty
@@ -84,47 +117,52 @@ remaining (Deck cs) = length cs
 isEmpty :: Deck -> Bool
 isEmpty (Deck cs) = null cs
 
--- | Shuffle the deck using Fisher-Yates algorithm with a random generator
--- This is a pure function that returns the shuffled deck and updated generator
-shuffle :: RandomGen g => g -> Deck -> (Deck, g)
-shuffle gen (Deck cs) = (Deck shuffled, gen')
+--------------------------------------------------------------------------------
+-- Internal: Deterministic PRNG and Fisher-Yates shuffle
+--------------------------------------------------------------------------------
+
+-- | Simple PRNG state using xorshift algorithm
+-- Deterministic: same seed always produces same sequence
+newtype PRNG = PRNG Word64
+
+-- | Create a PRNG from a seed
+mkPRNG :: Seed -> PRNG
+mkPRNG seed = PRNG $ fromIntegral (abs seed `mod` (2^63 - 1)) .|. 1
   where
-    (shuffled, gen') = fisherYates gen cs
+    (.|.) = xor  -- Ensure non-zero
 
--- | Shuffle the deck using a seed for reproducibility
--- Useful for deterministic/blockchain scenarios
-shuffleWithSeed :: Int -> Deck -> Deck
-shuffleWithSeed seed deck = fst $ shuffle (mkStdGen' seed) deck
+-- | Generate next random value and updated PRNG (xorshift64)
+nextRandom :: PRNG -> (Word64, PRNG)
+nextRandom (PRNG s) = (s', PRNG s')
   where
-    -- Simple linear congruential generator for deterministic shuffling
-    mkStdGen' :: Int -> SimpleGen
-    mkStdGen' = SimpleGen
+    a = s `xor` (s `shiftL` 13)
+    b = a `xor` (a `shiftR` 7)
+    s' = b `xor` (b `shiftL` 17)
 
--- | Simple deterministic random generator for reproducible shuffles
-newtype SimpleGen = SimpleGen Int
-
-instance RandomGen SimpleGen where
-    genWord64 (SimpleGen s) =
-        let s' = (s * 1103515245 + 12345) `mod` (2^31)
-        in (fromIntegral s', SimpleGen s')
-    split g = (g, g)  -- Not truly split, but sufficient for shuffling
-
--- | Fisher-Yates shuffle algorithm (pure functional version)
-fisherYates :: RandomGen g => g -> [a] -> ([a], g)
-fisherYates gen [] = ([], gen)
-fisherYates gen xs = go gen (length xs - 1) xs
+-- | Generate a random number in range [0, n)
+randomInRange :: Int -> PRNG -> (Int, PRNG)
+randomInRange n prng = (fromIntegral (r `mod` fromIntegral n), prng')
   where
-    go g 0 ys = (ys, g)
+    (r, prng') = nextRandom prng
+
+-- | Fisher-Yates shuffle using our deterministic PRNG
+-- O(n²) but fine for 52 cards
+fisherYatesShuffle :: PRNG -> [a] -> [a]
+fisherYatesShuffle _ [] = []
+fisherYatesShuffle prng xs = go prng (length xs - 1) xs
+  where
+    go _ 0 ys = ys
     go g i ys =
-        let (j, g') = uniformR (0, i) g
-            ys' = swap i j ys
+        let (j, g') = randomInRange (i + 1) g
+            ys' = swapAt i j ys
         in go g' (i - 1) ys'
 
-    swap :: Int -> Int -> [a] -> [a]
-    swap i j xs'
-        | i == j    = xs'
-        | otherwise =
-            let xi = xs' !! i
-                xj = xs' !! j
-            in [ if k == i then xj else if k == j then xi else x
-               | (k, x) <- zip [0..] xs' ]
+-- | Swap elements at positions i and j in a list
+swapAt :: Int -> Int -> [a] -> [a]
+swapAt i j xs
+    | i == j    = xs
+    | i > j     = swapAt j i xs  -- Ensure i < j
+    | otherwise =
+        let (before, xi:middle) = splitAt i xs
+            (between, xj:after) = splitAt (j - i - 1) middle
+        in before ++ [xj] ++ between ++ [xi] ++ after

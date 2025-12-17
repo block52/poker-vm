@@ -1,7 +1,7 @@
 {-|
 Module      : TexasHoldem.Hand
 Description : Hand types and basic hand operations
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 Maintainer  : dev@block52.xyz
 

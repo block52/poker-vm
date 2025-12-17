@@ -1,7 +1,7 @@
 {-|
 Module      : TexasHoldem
 Description : Pure functional Texas Hold'em poker implementation
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 Maintainer  : dev@block52.xyz
 

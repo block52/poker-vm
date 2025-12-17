@@ -1,7 +1,7 @@
 {-|
 Module      : TexasHoldem.Round
 Description : Betting rounds for Texas Hold'em
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 Maintainer  : dev@block52.xyz
 

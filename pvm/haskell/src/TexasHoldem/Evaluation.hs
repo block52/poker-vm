@@ -1,7 +1,7 @@
 {-|
 Module      : TexasHoldem.Evaluation
 Description : Poker hand evaluation and comparison
-Copyright   : (c) Block52, 2024
+Copyright   : (c) Block52, 2025
 License     : MIT
 Maintainer  : dev@block52.xyz
 
