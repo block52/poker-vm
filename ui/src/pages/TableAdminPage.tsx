@@ -74,6 +74,7 @@ export default function TableAdminPage() {
     // Success modal state
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
+    const [createdGameAddress, setCreatedGameAddress] = useState<string | null>(null);
 
     // Player counts from game state
     const [playerCounts, setPlayerCounts] = useState<Record<string, number>>({});
@@ -241,6 +242,14 @@ export default function TableAdminPage() {
             toast.error(`Failed to load games: ${gamesError.message}`);
         }
     }, [createError, gamesError]);
+
+    // When tables update after successful creation, store the newest game address
+    useEffect(() => {
+        if (showSuccessModal && successTxHash && !createdGameAddress && tables.length > 0) {
+            // Tables are sorted by creation date (newest first), so the first one is the newly created game
+            setCreatedGameAddress(tables[0].gameId);
+        }
+    }, [tables, showSuccessModal, successTxHash, createdGameAddress]);
 
     // Stats
     const totalTables = tables.length;
@@ -641,19 +650,32 @@ export default function TableAdminPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
-                            <Link
-                                to={`/explorer/tx/${successTxHash}`}
-                                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
-                            >
-                                View on Explorer
-                            </Link>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex gap-3">
+                                {createdGameAddress && (
+                                    <a
+                                        href={`/table/${createdGameAddress}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors text-center"
+                                    >
+                                        Join Table
+                                    </a>
+                                )}
+                                <Link
+                                    to={`/explorer/tx/${successTxHash}`}
+                                    className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
+                                >
+                                    View on Explorer
+                                </Link>
+                            </div>
                             <button
                                 onClick={() => {
                                     setShowSuccessModal(false);
                                     setSuccessTxHash(null);
+                                    setCreatedGameAddress(null);
                                 }}
-                                className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                                className="w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
                             >
                                 Close
                             </button>
