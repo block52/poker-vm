@@ -216,6 +216,82 @@ describe("MuckAction", () => {
         });
     });
 
+    describe("turn order enforcement", () => {
+        beforeEach(() => {
+            // Mock that someone has already shown (requirement for mucking)
+            const mockShowAction: TurnWithSeat = {
+                playerId: "0xshower",
+                action: PlayerActionType.SHOW,
+                index: 1,
+                seat: 3,
+                timestamp: Date.now()
+            };
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([mockShowAction]);
+            jest.spyOn(game, "findWinners").mockReturnValue(false);
+        });
+
+        it("should throw error if not the active player's turn", () => {
+            const otherPlayer = new Player(
+                "0x123456789abcdef123456789abcdef123456789a",
+                undefined,
+                ONE_THOUSAND_TOKENS,
+                undefined,
+                PlayerStatus.ACTIVE
+            );
+
+            // Set up the game so 'player' is next to act, not 'otherPlayer'
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            // otherPlayer should not be able to muck since it's not their turn
+            expect(() => action.verify(otherPlayer)).toThrow("Must be currently active player.");
+        });
+
+        it("should allow MUCK only for active player during showdown", () => {
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            // Player whose turn it is should be able to muck
+            const result = action.verify(player);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
+        });
+
+        it("should allow ALL_IN player to MUCK when it is their turn", () => {
+            const allInPlayer = new Player(
+                "0x980b8D8A16f5891F41871d878a479d81Da52334c",
+                undefined,
+                0n,
+                undefined,
+                PlayerStatus.ALL_IN
+            );
+
+            // ALL_IN player is next to act
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(allInPlayer);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
+
+            // ALL_IN player should be able to muck when it's their turn
+            const result = action.verify(allInPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
+        });
+
+        it("should NOT allow ALL_IN player to MUCK when it is NOT their turn", () => {
+            const allInPlayer = new Player(
+                "0x123456789abcdef123456789abcdef123456789a",
+                undefined,
+                0n,
+                undefined,
+                PlayerStatus.ALL_IN
+            );
+
+            // Different player is next to act
+            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
+
+            // ALL_IN player should NOT be able to muck when it's not their turn
+            expect(() => action.verify(allInPlayer)).toThrow("Must be currently active player.");
+        });
+    });
+
     describe("integration scenarios", () => {
         it("should handle typical showdown muck scenario", () => {
             // Setup: Someone has shown, player has non-winning cards
