@@ -74,6 +74,8 @@ export default function TableAdminPage() {
     // Success modal state
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
+    const [createdGameAddress, setCreatedGameAddress] = useState<string | null>(null);
+    const [tableCountBeforeCreation, setTableCountBeforeCreation] = useState<number>(0);
 
     // Player counts from game state
     const [playerCounts, setPlayerCounts] = useState<Record<string, number>>({});
@@ -149,6 +151,9 @@ export default function TableAdminPage() {
             ...(rakeConfig && { rake: rakeConfig })
         });
 
+        // Store the table count before creating to verify a new table was added
+        setTableCountBeforeCreation(tables.length);
+        
         try {
             console.log("🚀 Calling createTable...");
             const txHash = await createTable({
@@ -167,6 +172,7 @@ export default function TableAdminPage() {
             if (txHash) {
                 // Show success modal with transaction link
                 setSuccessTxHash(txHash);
+                setCreatedGameAddress(null); // Reset game address for new creation
                 setShowSuccessModal(true);
 
                 // Wait a moment then reload tables
@@ -241,6 +247,20 @@ export default function TableAdminPage() {
             toast.error(`Failed to load games: ${gamesError.message}`);
         }
     }, [createError, gamesError]);
+
+    // When tables update after successful creation, store the newest game address
+    useEffect(() => {
+        if (showSuccessModal && successTxHash && !createdGameAddress && tables.length > 0) {
+            // Verify that a new table was actually added (table count increased)
+            if (tables.length > tableCountBeforeCreation) {
+                // Tables are sorted by creation date (newest first), so the first one is the newly created game
+                // Note: In rare cases where multiple users create tables simultaneously, this might not be
+                // the user's table, but given the low likelihood and lack of game ID in transaction response,
+                // this is an acceptable trade-off. The user can still join from the tables list if needed.
+                setCreatedGameAddress(tables[0].gameId);
+            }
+        }
+    }, [tables, showSuccessModal, successTxHash, createdGameAddress, tableCountBeforeCreation]);
 
     // Stats
     const totalTables = tables.length;
@@ -604,15 +624,7 @@ export default function TableAdminPage() {
             {/* Success Modal */}
             {showSuccessModal && successTxHash && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                    <div className="bg-gray-800 border border-green-500 rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
-                        <div className="flex items-center justify-center mb-6">
-                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-                                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                        </div>
-
+                    <div className="bg-gray-800 border border-blue-500 rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
                         <h2 className="text-2xl font-bold text-white text-center mb-4">Table Created Successfully!</h2>
 
                         <p className="text-gray-300 text-center mb-6">Your poker table has been created on the blockchain.</p>
@@ -620,7 +632,7 @@ export default function TableAdminPage() {
                         <div className="bg-gray-900 rounded-lg p-4 mb-6">
                             <p className="text-gray-400 text-sm mb-2">Transaction Hash:</p>
                             <div className="flex items-center justify-between gap-2">
-                                <code className="text-green-400 text-xs font-mono break-all">{successTxHash}</code>
+                                <code className="text-blue-400 text-xs font-mono break-all">{successTxHash}</code>
                                 <button
                                     onClick={() => {
                                         navigator.clipboard.writeText(successTxHash);
@@ -641,22 +653,35 @@ export default function TableAdminPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
-                            <Link
-                                to={`/explorer/tx/${successTxHash}`}
-                                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
-                            >
-                                View on Explorer
-                            </Link>
-                            <button
-                                onClick={() => {
-                                    setShowSuccessModal(false);
-                                    setSuccessTxHash(null);
-                                }}
-                                className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
-                            >
-                                Close
-                            </button>
+                        <div className="flex flex-col gap-3">
+                            {createdGameAddress && (
+                                <a
+                                    href={`/table/${createdGameAddress}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-colors text-center"
+                                >
+                                    Join Table
+                                </a>
+                            )}
+                            <div className="flex gap-3">
+                                <Link
+                                    to={`/explorer/tx/${successTxHash}`}
+                                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg transition-colors text-center"
+                                >
+                                    View on Explorer
+                                </Link>
+                                <button
+                                    onClick={() => {
+                                        setShowSuccessModal(false);
+                                        setSuccessTxHash(null);
+                                        setCreatedGameAddress(null);
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
