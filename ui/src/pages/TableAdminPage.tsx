@@ -157,7 +157,7 @@ export default function TableAdminPage() {
         
         try {
             console.log("🚀 Calling createTable...");
-            const txHash = await createTable({
+            const result = await createTable({
                 type: gameType,
                 minBuyIn: finalMinBuyIn,
                 maxBuyIn: finalMaxBuyIn,
@@ -168,12 +168,13 @@ export default function TableAdminPage() {
                 ...(rakeConfig && { rake: rakeConfig })
             });
 
-            console.log("✅ createTable returned:", txHash);
+            console.log("✅ createTable returned:", result);
 
-            if (txHash) {
+            if (result) {
                 // Show success modal with transaction link
-                setSuccessTxHash(txHash);
-                setCreatedGameAddress(null); // Reset game address for new creation
+                setSuccessTxHash(result.txHash);
+                // Set the game address immediately if we got it from the transaction
+                setCreatedGameAddress(result.gameId);
                 setShowSuccessModal(true);
 
                 // Wait a moment then reload tables
@@ -249,19 +250,8 @@ export default function TableAdminPage() {
         }
     }, [createError, gamesError]);
 
-    // When tables update after successful creation, store the newest game address
-    useEffect(() => {
-        if (showSuccessModal && successTxHash && !createdGameAddress && tables.length > 0) {
-            // Verify that a new table was actually added (table count increased)
-            if (tables.length > tableCountBeforeCreation) {
-                // Tables are sorted by creation date (newest first), so the first one is the newly created game
-                // Note: In rare cases where multiple users create tables simultaneously, this might not be
-                // the user's table, but given the low likelihood and lack of game ID in transaction response,
-                // this is an acceptable trade-off. The user can still join from the tables list if needed.
-                setCreatedGameAddress(tables[0].gameId);
-            }
-        }
-    }, [tables, showSuccessModal, successTxHash, createdGameAddress, tableCountBeforeCreation]);
+    // Note: createdGameAddress is now set directly from the transaction response
+    // when creating a table, so we no longer need to guess from the sorted tables list
 
     // Stats
     const totalTables = tables.length;
@@ -665,24 +655,16 @@ export default function TableAdminPage() {
                                     Join Table
                                 </a>
                             )}
-                            <div className="flex gap-3">
-                                <Link
-                                    to={`/explorer/tx/${successTxHash}`}
-                                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg transition-colors text-center"
-                                >
-                                    View on Explorer
-                                </Link>
-                                <button
-                                    onClick={() => {
-                                        setShowSuccessModal(false);
-                                        setSuccessTxHash(null);
-                                        setCreatedGameAddress(null);
-                                    }}
-                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowSuccessModal(false);
+                                    setSuccessTxHash(null);
+                                    setCreatedGameAddress(null);
+                                }}
+                                className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
