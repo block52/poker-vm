@@ -662,34 +662,34 @@ export default function TableAdminPage() {
                         </div>
 
                         <div className="flex flex-col gap-3">
+                            {createdGameAddress && (
+                                <a
+                                    href={`/table/${createdGameAddress}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-colors text-center"
+                                >
+                                    Join Table
+                                </a>
+                            )}
                             <div className="flex gap-3">
-                                {createdGameAddress && (
-                                    <a
-                                        href={`/table/${createdGameAddress}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
-                                    >
-                                        Join Table
-                                    </a>
-                                )}
                                 <Link
                                     to={`/explorer/tx/${successTxHash}`}
-                                    className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
+                                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors text-center"
                                 >
                                     View on Explorer
                                 </Link>
+                                <button
+                                    onClick={() => {
+                                        setShowSuccessModal(false);
+                                        setSuccessTxHash(null);
+                                        setCreatedGameAddress(null);
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                                >
+                                    Close
+                                </button>
                             </div>
-                            <button
-                                onClick={() => {
-                                    setShowSuccessModal(false);
-                                    setSuccessTxHash(null);
-                                    setCreatedGameAddress(null);
-                                }}
-                                className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
-                            >
-                                Close
-                            </button>
                         </div>
                     </div>
                 </div>
