@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { COSMOS_CONSTANTS, EquityResult, EquityResponse } from "./sdkTypes";
 import { IClient } from "./IClient";
-import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem } from "./types/game";
+import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem, BlockResponse } from "./types/game";
 
 export class CosmosClient implements IClient {
     protected readonly config: any;
@@ -90,7 +90,7 @@ export class CosmosClient implements IClient {
     /**
      * Get a specific block by height via REST API
      */
-    async getBlock(height: number): Promise<any> {
+    async getBlock(height: number): Promise<BlockResponse> {
         try {
             const response = await this.restClient.get(`/cosmos/base/tendermint/v1beta1/blocks/${height}`);
             return response.data;
@@ -103,7 +103,7 @@ export class CosmosClient implements IClient {
     /**
      * Get the latest block via REST API
      */
-    async getLatestBlock(): Promise<any> {
+    async getLatestBlock(): Promise<BlockResponse> {
         try {
             const response = await this.restClient.get("/cosmos/base/tendermint/v1beta1/blocks/latest");
             return response.data;
@@ -116,8 +116,8 @@ export class CosmosClient implements IClient {
     /**
      * Get multiple blocks starting from a specific height
      */
-    async getBlocks(startHeight: number, count: number = 10): Promise<any[]> {
-        const blocks: any[] = [];
+    async getBlocks(startHeight: number, count: number = 10): Promise<BlockResponse[]> {
+        const blocks: BlockResponse[] = [];
         const currentHeight = await this.getHeight();
         const endHeight = Math.min(startHeight + count - 1, currentHeight);
 
@@ -137,7 +137,7 @@ export class CosmosClient implements IClient {
     /**
      * Get the latest blocks (most recent)
      */
-    async getLatestBlocks(count: number = 10): Promise<any[]> {
+    async getLatestBlocks(count: number = 10): Promise<BlockResponse[]> {
         const currentHeight = await this.getHeight();
         const startHeight = Math.max(1, currentHeight - count + 1);
         return await this.getBlocks(startHeight, count);

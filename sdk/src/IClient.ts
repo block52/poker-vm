@@ -1,4 +1,4 @@
-import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem } from './types/game';
+import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem, BlockResponse } from './types/game';
 
 export interface IClient {
     getAccount(address: string): Promise<any>;
@@ -6,10 +6,10 @@ export interface IClient {
     getBalance(address: string, denom?: string): Promise<bigint>;
     getHeight(): Promise<number>;
     getTx(txHash: string): Promise<any>;
-    getBlock(height: number): Promise<any>;
-    getLatestBlock(): Promise<any>;
-    getBlocks(startHeight: number, count?: number): Promise<any[]>;
-    getLatestBlocks(count?: number): Promise<any[]>;
+    getBlock(height: number): Promise<BlockResponse>;
+    getLatestBlock(): Promise<BlockResponse>;
+    getBlocks(startHeight: number, count?: number): Promise<BlockResponse[]>;
+    getLatestBlocks(count?: number): Promise<BlockResponse[]>;
     getGameState(gameId: string): Promise<TexasHoldemStateDTO>;
     getGame(gameId: string): Promise<GameOptionsResponse>;
     getLegalActions(gameId: string, playerAddress?: string): Promise<LegalActionDTO[]>;
