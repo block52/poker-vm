@@ -1,4 +1,4 @@
-import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem, BlockResponse } from './types/game';
+import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem, BlockResponse } from "./types/game";
 
 export interface IClient {
     getAccount(address: string): Promise<any>;
@@ -38,4 +38,3 @@ export interface IClient {
     listWithdrawalRequests(cosmosAddress?: string): Promise<any[]>;
     disconnect(): Promise<void>;
 }
-

@@ -1,13 +1,13 @@
 import axios, { AxiosInstance } from "axios";
-import { COSMOS_CONSTANTS, EquityResult, EquityResponse } from "./sdkTypes";
+import { COSMOS_CONSTANTS, EquityResult, EquityResponse, CosmosConfig } from "./sdkTypes";
 import { IClient } from "./IClient";
 import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem, BlockResponse } from "./types/game";
 
 export class CosmosClient implements IClient {
-    protected readonly config: any;
+    protected readonly config: CosmosConfig;
     private readonly restClient: AxiosInstance;
 
-    constructor(config: any) {
+    constructor(config: CosmosConfig) {
         this.config = config;
 
         // Initialize REST client for API calls
@@ -458,13 +458,13 @@ export const getCosmosClient = (config?: any): CosmosClient => {
     return cosmosClientInstance;
 };
 
-export const initializeCosmosClient = (config: any): CosmosClient => {
+export const initializeCosmosClient = (config: CosmosConfig): CosmosClient => {
     cosmosClientInstance = new CosmosClient(config);
     return cosmosClientInstance;
 };
 
 // Update the default configuration
-export const getDefaultCosmosConfig = (domain: string = "localhost"): any => ({
+export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
     rpcEndpoint: `https://${domain}/rpc`,
     restEndpoint: `https://${domain}`,
     chainId: "pokerchain",
