@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { COSMOS_CONSTANTS, EquityResult, EquityResponse, CosmosConfig } from "./sdkTypes";
 import { IClient } from "./IClient";
-import type { LegalActionDTO, TexasHoldemStateDTO, GameOptionsResponse, GameListItem, BlockResponse } from "./types/game";
+import type { LegalActionDTO, GameOptionsResponse, GameListItem, BlockResponse, GameStateResponse } from "./types/game";
 
 export class CosmosClient implements IClient {
     protected readonly config: CosmosConfig;
@@ -146,7 +146,7 @@ export class CosmosClient implements IClient {
     /**
      * Get game state via REST API
      */
-    async getGameState(gameId: string): Promise<TexasHoldemStateDTO> {
+    async getGameState(gameId: string): Promise<GameStateResponse> {
         try {
             const response = await this.restClient.get(`/block52/pokerchain/poker/v1/game_state/${gameId}`);
 

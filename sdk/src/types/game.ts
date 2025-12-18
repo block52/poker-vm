@@ -206,14 +206,17 @@ export type Card = {
     mnemonic: string;
 };
 
+// Raw API response for getGame - contains JSON string that needs parsing
 export type GameOptionsResponse = {
-    address: string;
-    gameOptions: GameOptionsDTO;
+    address?: string;
+    game?: string; // JSON string that needs to be parsed
+    gameOptions?: GameOptionsDTO;
 };
 
 export type GameListItem = {
     id?: string;
     game_id?: string;
+    gameId?: string; // Some APIs return camelCase
     address: string;
     gameOptions: GameOptionsDTO;
     current_players?: number;
@@ -246,15 +249,15 @@ export type BlockHeader = {
 };
 
 export type Block = {
-    header?: BlockHeader;
-    data?: { txs?: string[] };
+    header: BlockHeader;
+    data: { txs: string[] };
     evidence?: { evidence?: any[] };
     last_commit?: any;
 };
 
 export type BlockResponse = {
-    block_id?: BlockID;
-    block?: Block;
+    block_id: BlockID;
+    block: Block;
     sdk_block?: Block;
 };
 
@@ -269,8 +272,9 @@ export type TransactionResponse = {
     data?: string;
 }
 
+// Raw API response for getGameState - contains JSON string that needs parsing
 export type GameStateResponse = {
-    state: TexasHoldemStateDTO;
+    game_state: string; // JSON string containing the game state
 }
 
 export type PerformActionResponse = {
