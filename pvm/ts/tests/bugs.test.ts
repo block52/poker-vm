@@ -1216,18 +1216,19 @@ describe("Texas Holdem - Data driven", () => {
 
             // Verify initial state
             expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
-            expect(game.winners.length).toBe(0); // No winner yet
+            expect(game.winners.size).toBe(0); // No winner yet
 
             // Perform the muck action (this triggers the bug)
-            game.performAction("b521s8aug28r6vned2xm767xhgrkg90wfef2hfg4mg", PlayerActionType.MUCK, 0n);
+            game.performAction("b521s8aug28r6vned2xm767xhgrkg90wfef2hfg4mg", PlayerActionType.MUCK, 73, 0n);
 
             const finalState = game.toJSON();
 
             // ✅ ASSERTIONS - What SHOULD happen:
 
             // 1. Winner should be declared
-            expect(game.winners.length).toBe(1);
-            expect(game.winners[0].playerId).toBe("b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t");
+            expect(game.winners.size).toBe(1);
+            const winnerEntries = Array.from(game.winners.entries());
+            expect(winnerEntries[0][0]).toBe("b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t"); // Winner address (Map key)
 
             // 2. Pot should be awarded to winner (220000000000000000 + 360000000000000000 = 580000000000000000)
             const winner = game.findPlayerByAddress("b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t");
@@ -1238,7 +1239,7 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toBe(TexasHoldemRound.END);
 
             // 4. Payout should be recorded
-            expect(game.winners[0].payout).toBe(360000000000000000n);
+            expect(winnerEntries[0][1].payout).toBe(360000000000000000n); // Winner payout (Map value)
         });
     });
 });
