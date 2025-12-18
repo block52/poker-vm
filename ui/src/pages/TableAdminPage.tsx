@@ -10,6 +10,7 @@ import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
 import TableList from "../components/TableList";
 import { calculateBuyIn, BUY_IN_PRESETS } from "../utils/buyInUtils";
+import { sortTablesByAvailableSeats } from "../utils/tableSortingUtils";
 
 // Game creation fee in base units (1 usdc = 0.000001 USDC)
 // This matches GameCreationCost in pokerchain/x/poker/types/types.go
@@ -30,6 +31,7 @@ interface TableData {
     gameType: string;
     minPlayers: number;
     maxPlayers: number;
+    currentPlayers: number;
     minBuyIn: string;
     maxBuyIn: string;
     smallBlind: string;
@@ -93,12 +95,13 @@ export default function TableAdminPage() {
 
     // Transform fetched games to TableData format - memoized to prevent infinite loops
     const tables: TableData[] = useMemo(() => {
-        return (fetchedGames || [])
+        const mappedTables = (fetchedGames || [])
             .map((game: any) => ({
                 gameId: game.address || game.gameId || game.game_id,
                 gameType: game.gameType || game.game_type || "texas-holdem",
                 minPlayers: game.minPlayers || game.min_players || 2,
-                maxPlayers: game.maxPlayers || game.max_players || 6,
+                maxPlayers: game.maxPlayers || game.max_players || 9,
+                currentPlayers: game.currentPlayers || game.current_players || 0,
                 minBuyIn: game.minBuyIn || game.min_buy_in || "0",
                 maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
                 smallBlind: game.smallBlind || game.small_blind || "0",
@@ -107,12 +110,10 @@ export default function TableAdminPage() {
                 status: game.status || "waiting",
                 creator: game.creator || "unknown",
                 createdAt: game.createdAt || game.created_at
-            }))
-            // Sort by creation date (newest first)
-            .sort((a, b) => {
-                if (!a.createdAt || !b.createdAt) return 0;
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
+            }));
+
+        // Sort by available seats (least empty seats first, full tables last)
+        return sortTablesByAvailableSeats(mappedTables);
     }, [fetchedGames]);
 
     // Create a new table using the useNewTable hook
