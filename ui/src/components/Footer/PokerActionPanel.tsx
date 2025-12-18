@@ -372,6 +372,7 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
                                     canBet={hasBetAction}
                                     canRaise={hasRaiseAction}
                                     raiseAmount={raiseAmount}
+                                    playerSumOfBets={userPlayer?.sumOfBets || "0"}
                                     isRaiseAmountInvalid={isRaiseAmountInvalid}
                                     playerStatus={userPlayer?.status || PlayerStatus.SEATED}
                                     loading={loadingAction}

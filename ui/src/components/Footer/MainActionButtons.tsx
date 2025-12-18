@@ -3,6 +3,7 @@ import { LoadingSpinner } from "../common";
 import { PlayerStatus } from "@block52/poker-vm-sdk";
 import { colors } from "../../utils/colorConfig";
 import { FoldButton } from "./FoldButton";
+import { calculateRaiseToDisplay } from "../../utils/raiseUtils";
 
 interface MainActionButtonsProps {
     canFold: boolean;
@@ -12,6 +13,7 @@ interface MainActionButtonsProps {
     canBet: boolean;
     canRaise: boolean;
     raiseAmount: number;
+    playerSumOfBets: string;
     isRaiseAmountInvalid: boolean;
     playerStatus: PlayerStatus;
     loading: string | null;
@@ -30,6 +32,7 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
     canBet,
     canRaise,
     raiseAmount,
+    playerSumOfBets,
     isRaiseAmountInvalid,
     playerStatus,
     loading,
@@ -39,6 +42,8 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
     onCall,
     onBetOrRaise
 }) => {
+    // Calculate the total amount to display for raise button
+    const raiseToAmount = canRaise ? calculateRaiseToDisplay(playerSumOfBets, raiseAmount) : raiseAmount;
     return (
         <div className={`flex justify-between ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
             {/* Show fold button if canFold OR if currently folding (to show spinner) */}
@@ -114,8 +119,8 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
                         </>
                     ) : (
                         <>
-                            {canRaise ? "RAISE" : "BET"}{" "}
-                            <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span>
+                            {canRaise ? "RAISE TO" : "BET"}{" "}
+                            <span style={{ color: colors.brand.primary }}>${raiseToAmount.toFixed(2)}</span>
                         </>
                     )}
                 </button>
