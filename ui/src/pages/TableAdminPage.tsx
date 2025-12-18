@@ -624,10 +624,10 @@ export default function TableAdminPage() {
             {/* Success Modal */}
             {showSuccessModal && successTxHash && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                    <div className="bg-gray-800 border border-green-500 rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
+                    <div className="bg-gray-800 border border-blue-500 rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
                         <div className="flex items-center justify-center mb-6">
-                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-                                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center">
+                                <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
@@ -640,7 +640,7 @@ export default function TableAdminPage() {
                         <div className="bg-gray-900 rounded-lg p-4 mb-6">
                             <p className="text-gray-400 text-sm mb-2">Transaction Hash:</p>
                             <div className="flex items-center justify-between gap-2">
-                                <code className="text-green-400 text-xs font-mono break-all">{successTxHash}</code>
+                                <code className="text-blue-400 text-xs font-mono break-all">{successTxHash}</code>
                                 <button
                                     onClick={() => {
                                         navigator.clipboard.writeText(successTxHash);
@@ -668,7 +668,7 @@ export default function TableAdminPage() {
                                         href={`/table/${createdGameAddress}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors text-center"
+                                        className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
                                     >
                                         Join Table
                                     </a>
@@ -686,7 +686,7 @@ export default function TableAdminPage() {
                                     setSuccessTxHash(null);
                                     setCreatedGameAddress(null);
                                 }}
-                                className="w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                                className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
                             >
                                 Close
                             </button>
