@@ -28,6 +28,11 @@ class BetAction extends BaseAction implements IAction {
             throw new Error("Cannot bet - player must call or raise.");
         }
 
+        // If player can't afford the minimum bet (big blind), they must go all-in instead
+        if (player.chips < this.game.bigBlind) {
+            throw new Error("Insufficient chips for minimum bet - use all-in instead.");
+        }
+
         return { minAmount: this.game.bigBlind, maxAmount: player.chips }
     }
 

@@ -54,11 +54,8 @@ class RaiseAction extends BaseAction implements IAction {
         const minRaiseAmount: bigint = minTotalBetAmount - playersBet;
 
         if (player.chips < minRaiseAmount) {
-            // Player can only go all-in
-            return {
-                minAmount: player.chips,
-                maxAmount: player.chips
-            };
+            // Player can't afford minimum raise - they must go all-in instead
+            throw new Error("Insufficient chips for minimum raise - use all-in instead.");
         }
 
         return {
