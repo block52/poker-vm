@@ -32,7 +32,7 @@ library
                     , TexasHoldem.Evaluation
                     , TexasHoldem.BetManager
                     , TexasHoldem.DealerManager
-    build-depends:    base ^>=4.17.2.1
+    build-depends:    base >= 4.17 && < 5
                     , containers >= 0.6
                     , mtl >= 2.2
                     , random >= 1.2
@@ -44,7 +44,7 @@ library
 executable texas-holdem-demo
     import:           warnings
     main-is:          Main.hs
-    build-depends:    base ^>=4.17.2.1
+    build-depends:    base >= 4.17 && < 5
                     , texas-holdem
                     , text >= 2.0
     hs-source-dirs:   app
@@ -56,7 +56,7 @@ test-suite texas-holdem-test
     type:             exitcode-stdio-1.0
     hs-source-dirs:   test
     main-is:          Main.hs
-    build-depends:    base ^>=4.17.2.1
+    build-depends:    base >= 4.17 && < 5
                     , texas-holdem
                     , hspec >= 2.10
                     , QuickCheck >= 2.14
