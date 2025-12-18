@@ -1038,8 +1038,15 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
         // Special case for SHOWDOWN round
         if (round === TexasHoldemRound.SHOWDOWN) {
-            // If only one player remains (everyone else folded), no need to show - advance to END
-            if (livePlayers.length <= 1) {
+            // If only one player remains (everyone else folded/mucked), they win by default
+            if (livePlayers.length === 0) {
+                // Edge case: no live players (shouldn't happen, but handle gracefully)
+                return true;
+            }
+
+            if (livePlayers.length === 1) {
+                // Award pot to the remaining player before ending the round
+                this.calculateWinner();
                 return true;
             }
 
