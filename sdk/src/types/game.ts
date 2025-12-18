@@ -211,6 +211,14 @@ export type GameOptionsResponse = {
     gameOptions: GameOptionsDTO;
 };
 
+export type GameListItem = {
+    id?: string;
+    game_id?: string;
+    address: string;
+    gameOptions: GameOptionsDTO;
+    current_players?: number;
+};
+
 export type TransactionResponse = {
     nonce: string;
     to: string;
