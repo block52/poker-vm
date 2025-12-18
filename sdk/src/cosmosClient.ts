@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import { COSMOS_CONSTANTS, EquityResult, EquityResponse } from "./sdkTypes";
 import { IClient } from "./IClient";
+import type { LegalActionDTO } from "./types/game";
 
 export class CosmosClient implements IClient {
     protected readonly config: any;
@@ -179,7 +180,7 @@ export class CosmosClient implements IClient {
     /**
      * Get legal actions for a game via REST API
      */
-    async getLegalActions(gameId: string, playerAddress?: string): Promise<any[]> {
+    async getLegalActions(gameId: string, playerAddress?: string): Promise<LegalActionDTO[]> {
         try {
             const url = playerAddress
                 ? `/block52/pokerchain/poker/v1/legal_actions/${gameId}/${playerAddress}`

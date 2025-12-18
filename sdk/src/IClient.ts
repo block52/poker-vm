@@ -1,11 +1,6 @@
-// Intentionally avoid importing types from ./types here to prevent the bundler
-// from expecting runtime exports for type-only symbols. Use `any` in this
-// interface for now — it's safe and avoids Rollup "not exported by" errors.
-
-import type { CosmosConfig } from "./sdkTypes";
+import type { LegalActionDTO } from './types/game';
 
 export interface IClient {
-    // Return type kept as `any` to avoid requiring a runtime export for a type-only symbol during bundling
     getAccount(address: string): Promise<any>;
     getAllBalances(address: string): Promise<any[]>;
     getBalance(address: string, denom?: string): Promise<bigint>;
@@ -17,7 +12,7 @@ export interface IClient {
     getLatestBlocks(count?: number): Promise<any[]>;
     getGameState(gameId: string): Promise<any>;
     getGame(gameId: string): Promise<any>;
-    getLegalActions(gameId: string, playerAddress?: string): Promise<any[]>;
+    getLegalActions(gameId: string, playerAddress?: string): Promise<LegalActionDTO[]>;
     listGames(): Promise<any[]>;
     findGames(min?: number, max?: number): Promise<any[]>;
     getPlayerGames(player: string): Promise<any[]>;
