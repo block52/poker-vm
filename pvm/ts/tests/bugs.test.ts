@@ -1121,4 +1121,124 @@ describe("Texas Holdem - Data driven", () => {
             expect(game.currentRound).toBe(TexasHoldemRound.RIVER);
         });
     });
+
+    describe("Issue #1556 - Player did not win when other player mucked", () => {
+        it("should award pot to showing player when opponent mucks at showdown", () => {
+            // This is the exact state from issue #1556 (before muck action)
+            const stateBeforeMuck = {
+                id: "1",
+                result: {
+                    data: {
+                        type: "cash",
+                        address: "0x56c45cf17cb33bd959986ff343a9287ef289683c2377e0cd1fe02854744a72d5",
+                        gameOptions: {
+                            minBuyIn: "400000000000000000",
+                            maxBuyIn: "2000000000000000000",
+                            minPlayers: 2,
+                            maxPlayers: 9,
+                            smallBlind: "10000000000000000",
+                            bigBlind: "20000000000000000",
+                            timeout: 300,
+                            type: "cash"
+                        },
+                        dealer: 2,
+                        smallBlindPosition: 6,
+                        bigBlindPosition: 2,
+                        players: [
+                            {
+                                address: "b521s8aug28r6vned2xm767xhgrkg90wfef2hfg4mg",
+                                seat: 2,
+                                stack: "500000000000000000",
+                                isSmallBlind: false,
+                                isBigBlind: true,
+                                isDealer: true,
+                                holeCards: ["6D", "2S"],
+                                status: "active",
+                                legalActions: [
+                                    { action: "muck", min: "0", max: "0", index: 73 },
+                                    { action: "show", min: "0", max: "0", index: 73 }
+                                ],
+                                sumOfBets: "10000000000000000",
+                                timeout: 0,
+                                signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            {
+                                address: "b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t",
+                                seat: 6,
+                                stack: "220000000000000000",
+                                isSmallBlind: true,
+                                isBigBlind: false,
+                                isDealer: false,
+                                holeCards: ["4C", "TC"],
+                                status: "showing",
+                                lastAction: {
+                                    playerId: "b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t",
+                                    seat: 6,
+                                    action: "show",
+                                    amount: "0",
+                                    round: "showdown",
+                                    index: 72,
+                                    timestamp: 1766053287510
+                                },
+                                legalActions: [],
+                                sumOfBets: "20000000000000000",
+                                timeout: 0,
+                                signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                            }
+                        ],
+                        communityCards: ["KH", "QS", "TD", "6H", "9C"],
+                        deck: "X",
+                        pots: ["360000000000000000"],
+                        nextToAct: 2,
+                        previousActions: [
+                            {
+                                playerId: "b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t",
+                                seat: 6,
+                                action: "show",
+                                amount: "0",
+                                round: "showdown",
+                                index: 72,
+                                timestamp: 1766053287510
+                            }
+                        ],
+                        actionCount: 58,
+                        handNumber: 5,
+                        round: "showdown",
+                        winners: [],
+                        results: [],
+                        signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                    },
+                    signature: "0x0000000000000000000000000000000000000000000000000000000000000000"
+                }
+            };
+
+            const game = fromTestJson(stateBeforeMuck);
+
+            // Verify initial state
+            expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
+            expect(game.winners.length).toBe(0); // No winner yet
+
+            // Perform the muck action (this triggers the bug)
+            game.performAction("b521s8aug28r6vned2xm767xhgrkg90wfef2hfg4mg", PlayerActionType.MUCK, 0n);
+
+            const finalState = game.toJSON();
+
+            // ✅ ASSERTIONS - What SHOULD happen:
+
+            // 1. Winner should be declared
+            expect(game.winners.length).toBe(1);
+            expect(game.winners[0].playerId).toBe("b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t");
+
+            // 2. Pot should be awarded to winner (220000000000000000 + 360000000000000000 = 580000000000000000)
+            const winner = game.findPlayerByAddress("b521kjpfyeyg3watq2f978vhu48ju3xjwdp0wjgp5t");
+            expect(winner).toBeDefined();
+            expect(winner!.stack).toBe(580000000000000000n);
+
+            // 3. Round should be END
+            expect(game.currentRound).toBe(TexasHoldemRound.END);
+
+            // 4. Payout should be recorded
+            expect(game.winners[0].payout).toBe(360000000000000000n);
+        });
+    });
 });
