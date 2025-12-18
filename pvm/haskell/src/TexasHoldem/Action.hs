@@ -23,7 +23,7 @@ module TexasHoldem.Action
     , requiresAmount
     ) where
 
-import TexasHoldem.Player
+import TexasHoldem.Player hiding (AllIn)
 import TexasHoldem.Round
 
 -- | Types of actions a player can take

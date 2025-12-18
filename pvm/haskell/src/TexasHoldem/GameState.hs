@@ -72,8 +72,9 @@ module TexasHoldem.GameState
 
 import TexasHoldem.Card
 import TexasHoldem.Deck
-import TexasHoldem.Hand
-import TexasHoldem.Player
+import TexasHoldem.Hand hiding (Flop)
+import qualified TexasHoldem.Hand as H
+import TexasHoldem.Player hiding (AllIn)
 import TexasHoldem.Action
 import TexasHoldem.Round
 import TexasHoldem.Pot
@@ -424,7 +425,7 @@ dealFlop gs = do
     case cards of
         [c1, c2, c3] -> Right gs
             { gsDeck           = newDeck
-            , gsCommunityCards = Flop c1 c2 c3
+            , gsCommunityCards = H.Flop c1 c2 c3
             , gsRound          = Flop
             }
         _ -> Left DeckExhausted
@@ -435,7 +436,7 @@ dealTurn gs = do
     (cards, newDeck) <- maybe (Left DeckExhausted) Right
                               (drawN 1 (gsDeck gs))
     case (cards, gsCommunityCards gs) of
-        ([c4], Flop c1 c2 c3) -> Right gs
+        ([c4], H.Flop c1 c2 c3) -> Right gs
             { gsDeck           = newDeck
             , gsCommunityCards = FlopTurn c1 c2 c3 c4
             , gsRound          = Turn

@@ -79,12 +79,12 @@ module TexasHoldem
 
 import TexasHoldem.Card
 import TexasHoldem.Deck
-import TexasHoldem.Hand
+import TexasHoldem.Hand hiding (Flop)  -- Flop is also in Round
 import TexasHoldem.Evaluation
-import TexasHoldem.Player
+import TexasHoldem.Player hiding (AllIn)  -- AllIn is also in Action
 import TexasHoldem.Action
 import TexasHoldem.Round
 import TexasHoldem.Pot
-import TexasHoldem.GameState
+import TexasHoldem.GameState hiding (getAllBets, rotateDealer)  -- Also in BetManager/DealerManager
 import TexasHoldem.BetManager
 import TexasHoldem.DealerManager
