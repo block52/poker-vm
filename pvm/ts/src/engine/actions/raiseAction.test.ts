@@ -185,7 +185,7 @@ describe("Raise Action", () => {
             expect(range.minAmount).toBe(SIX_TOKENS_ADDITIONAL);
         });
 
-        it("should handle all-in scenario when player has insufficient chips", () => {
+        it("should throw error when player has insufficient chips for minimum raise (must use all-in)", () => {
             // Set player chips lower than minimum raise requirement
             player1.chips = TWO_TOKENS; // Only 2 tokens left
 
@@ -211,13 +211,8 @@ describe("Raise Action", () => {
                 ];
             });
 
-            const range = action.verify(player1);
-
-            // Player can only go all-in with remaining chips
-            expect(range).toEqual({
-                minAmount: TWO_TOKENS, // 2 tokens total
-                maxAmount: TWO_TOKENS // Same for all-in
-            });
+            // Player can't afford minimum raise, must use all-in instead
+            expect(() => action.verify(player1)).toThrow("Insufficient chips for minimum raise - use all-in instead.");
         });
 
         describe("PREFLOP scenarios", () => {
