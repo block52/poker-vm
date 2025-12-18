@@ -10,6 +10,7 @@ import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
 import TableList from "../components/TableList";
 import { calculateBuyIn, BUY_IN_PRESETS } from "../utils/buyInUtils";
+import { sortTablesByAvailableSeats } from "../utils/tableSortingUtils";
 
 // Game creation fee in base units (1 usdc = 0.000001 USDC)
 // This matches GameCreationCost in pokerchain/x/poker/types/types.go
@@ -111,26 +112,8 @@ export default function TableAdminPage() {
                 createdAt: game.createdAt || game.created_at
             }));
 
-        // Sort by available seats (most empty seats first, full tables last)
-        return mappedTables.sort((a, b) => {
-            const aMaxPlayers = a.maxPlayers || 6;
-            const bMaxPlayers = b.maxPlayers || 6;
-            const aCurrentPlayers = a.currentPlayers || 0;
-            const bCurrentPlayers = b.currentPlayers || 0;
-            
-            const aAvailableSeats = aMaxPlayers - aCurrentPlayers;
-            const bAvailableSeats = bMaxPlayers - bCurrentPlayers;
-            
-            // Full tables go to the bottom
-            const aIsFull = aCurrentPlayers >= aMaxPlayers;
-            const bIsFull = bCurrentPlayers >= bMaxPlayers;
-            
-            if (aIsFull && !bIsFull) return 1;
-            if (!aIsFull && bIsFull) return -1;
-            
-            // For non-full tables, sort by available seats (descending - more empty seats first)
-            return bAvailableSeats - aAvailableSeats;
-        });
+        // Sort by available seats (least empty seats first, full tables last)
+        return sortTablesByAvailableSeats(mappedTables);
     }, [fetchedGames]);
 
     // Create a new table using the useNewTable hook

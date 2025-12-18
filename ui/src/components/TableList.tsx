@@ -2,6 +2,7 @@ import React from "react";
 import { useFindGames } from "../hooks/useFindGames";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { colors, hexToRgba } from "../utils/colorConfig";
+import { sortTablesByAvailableSeats } from "../utils/tableSortingUtils";
 
 /**
  * TableList - Displays available poker tables in a table format
@@ -11,28 +12,10 @@ import { colors, hexToRgba } from "../utils/colorConfig";
 const TableList: React.FC = () => {
     const { games: rawGames, isLoading, error, refetch } = useFindGames();
 
-    // Sort games by available seats (most empty seats first, full tables last)
+    // Sort games by available seats (least empty seats first, full tables last)
     const games = React.useMemo(() => {
-        return [...rawGames].sort((a, b) => {
-            // Access properties that are added by useFindGames hook
-            const aMaxPlayers = (a as any).maxPlayers || 9;
-            const bMaxPlayers = (b as any).maxPlayers || 9;
-            const aCurrentPlayers = (a as any).currentPlayers || 0;
-            const bCurrentPlayers = (b as any).currentPlayers || 0;
-            
-            const aAvailableSeats = aMaxPlayers - aCurrentPlayers;
-            const bAvailableSeats = bMaxPlayers - bCurrentPlayers;
-            
-            // Full tables go to the bottom
-            const aIsFull = aCurrentPlayers >= aMaxPlayers;
-            const bIsFull = bCurrentPlayers >= bMaxPlayers;
-            
-            if (aIsFull && !bIsFull) return 1;
-            if (!aIsFull && bIsFull) return -1;
-            
-            // For non-full tables, sort by available seats (descending - more empty seats first)
-            return bAvailableSeats - aAvailableSeats;
-        });
+        // Cast to any to access properties added by useFindGames hook
+        return sortTablesByAvailableSeats(rawGames as any[]);
     }, [rawGames]);
 
     // Use environment variables for club branding
