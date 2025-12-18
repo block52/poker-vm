@@ -59,5 +59,6 @@ test-suite texas-holdem-test
     main-is:          Main.hs
     build-depends:    base >= 4.17 && < 5
                     , texas-holdem
+                    , containers >= 0.6
                     , hspec >= 2.10
                     , QuickCheck >= 2.14
