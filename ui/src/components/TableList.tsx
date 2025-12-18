@@ -9,7 +9,31 @@ import { colors, hexToRgba } from "../utils/colorConfig";
  * Join buttons open tables in a new tab for better user experience
  */
 const TableList: React.FC = () => {
-    const { games, isLoading, error, refetch } = useFindGames();
+    const { games: rawGames, isLoading, error, refetch } = useFindGames();
+
+    // Sort games by available seats (most empty seats first, full tables last)
+    const games = React.useMemo(() => {
+        return [...rawGames].sort((a, b) => {
+            // Access properties that are added by useFindGames hook
+            const aMaxPlayers = (a as any).maxPlayers || 9;
+            const bMaxPlayers = (b as any).maxPlayers || 9;
+            const aCurrentPlayers = (a as any).currentPlayers || 0;
+            const bCurrentPlayers = (b as any).currentPlayers || 0;
+            
+            const aAvailableSeats = aMaxPlayers - aCurrentPlayers;
+            const bAvailableSeats = bMaxPlayers - bCurrentPlayers;
+            
+            // Full tables go to the bottom
+            const aIsFull = aCurrentPlayers >= aMaxPlayers;
+            const bIsFull = bCurrentPlayers >= bMaxPlayers;
+            
+            if (aIsFull && !bIsFull) return 1;
+            if (!aIsFull && bIsFull) return -1;
+            
+            // For non-full tables, sort by available seats (descending - more empty seats first)
+            return bAvailableSeats - aAvailableSeats;
+        });
+    }, [rawGames]);
 
     // Use environment variables for club branding
     // Defaults to poker.svg icon for table listings (appropriate for poker context)
