@@ -100,7 +100,7 @@ export default function TableAdminPage() {
                 gameId: game.address || game.gameId || game.game_id,
                 gameType: game.gameType || game.game_type || "texas-holdem",
                 minPlayers: game.minPlayers || game.min_players || 2,
-                maxPlayers: game.maxPlayers || game.max_players || 6,
+                maxPlayers: game.maxPlayers || game.max_players || 9,
                 currentPlayers: game.currentPlayers || game.current_players || 0,
                 minBuyIn: game.minBuyIn || game.min_buy_in || "0",
                 maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
