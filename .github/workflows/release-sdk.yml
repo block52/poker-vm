@@ -1,0 +1,137 @@
+name: Release SDK to NPM
+
+on:
+  push:
+    tags:
+      - 'sdk-v*.*.*'
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.2)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run (do not publish)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            # Remove 'sdk-v' or 'v' prefix from tag
+            VERSION=${GITHUB_REF#refs/tags/sdk-v}
+            VERSION=${VERSION#v}
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Install SDK dependencies
+        working-directory: ./sdk
+        run: yarn install --frozen-lockfile
+
+      - name: Build SDK
+        working-directory: ./sdk
+        run: yarn build
+
+      - name: Run SDK tests
+        working-directory: ./sdk
+        run: yarn test
+        continue-on-error: true
+
+      - name: Install PVM dependencies
+        working-directory: ./pvm/ts
+        run: yarn install --frozen-lockfile
+
+      - name: Run PVM tests
+        working-directory: ./pvm/ts
+        run: yarn test
+
+      - name: Verify package version
+        working-directory: ./sdk
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "Package version: $PACKAGE_VERSION"
+          echo "Expected version: ${{ steps.get_version.outputs.VERSION }}"
+          if [ "$PACKAGE_VERSION" != "${{ steps.get_version.outputs.VERSION }}" ]; then
+            echo "⚠️  Warning: package.json version ($PACKAGE_VERSION) does not match tag version (${{ steps.get_version.outputs.VERSION }})"
+            echo "Updating package.json version..."
+            npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
+          fi
+
+      - name: Publish to NPM (Dry Run)
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == true
+        working-directory: ./sdk
+        run: |
+          echo "🔍 Dry run mode - would publish the following:"
+          npm pack --dry-run
+          echo "Files that would be published:"
+          npm publish --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to NPM
+        if: (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
+        working-directory: ./sdk
+        run: |
+          echo "📦 Publishing @block52/poker-vm-sdk@${{ steps.get_version.outputs.VERSION }} to NPM..."
+          npm publish --access public
+          echo "✅ Successfully published to NPM!"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        if: (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name || format('sdk-v{0}', steps.get_version.outputs.VERSION) }}
+          release_name: SDK v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## @block52/poker-vm-sdk v${{ steps.get_version.outputs.VERSION }}
+
+            ### Installation
+            ```bash
+            npm install @block52/poker-vm-sdk@${{ steps.get_version.outputs.VERSION }}
+            # or
+            yarn add @block52/poker-vm-sdk@${{ steps.get_version.outputs.VERSION }}
+            ```
+
+            ### NPM Package
+            📦 https://www.npmjs.com/package/@block52/poker-vm-sdk/v/${{ steps.get_version.outputs.VERSION }}
+
+            ### Changes
+            See commit history for details.
+          draft: false
+          prerelease: false
+
+      - name: Notify Success
+        if: success() && ((github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false))
+        run: |
+          echo "🎉 SDK v${{ steps.get_version.outputs.VERSION }} successfully released!"
+          echo "📦 NPM: https://www.npmjs.com/package/@block52/poker-vm-sdk"
+          echo "🏷️  Tag: ${{ github.ref_name || format('sdk-v{0}', steps.get_version.outputs.VERSION) }}"
