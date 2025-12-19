@@ -372,11 +372,13 @@ export const PokerActionPanel: React.FC<PokerActionPanelProps> = ({
                                     canBet={hasBetAction}
                                     canRaise={hasRaiseAction}
                                     raiseAmount={raiseAmount}
-                                    playerSumOfBets={userPlayer?.sumOfBets || "0"}
                                     isRaiseAmountInvalid={isRaiseAmountInvalid}
                                     playerStatus={userPlayer?.status || PlayerStatus.SEATED}
                                     loading={loadingAction}
                                     isMobileLandscape={isMobileLandscape}
+                                    currentRound={gameState?.round || TexasHoldemRound.ANTE}
+                                    previousActions={gameState?.previousActions || []}
+                                    userAddress={userAddress || ""}
                                     onFold={() => handleActionWithTransaction("fold", () => handleFold(tableId, network))}
                                     onCheck={() => handleActionWithTransaction("check", () => handleCheck(tableId, network))}
                                     onCall={() =>

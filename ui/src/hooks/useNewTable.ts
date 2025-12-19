@@ -131,10 +131,15 @@ export const useNewTable = (): UseNewTableReturn => {
                 try {
                     console.log("📡 Fetching transaction details to extract game_id...");
                     const cosmosClient = getCosmosClient(currentNetwork);
-                    
+
+                    if (!cosmosClient) {
+                        console.warn("⚠️ Could not get cosmos client to fetch transaction details");
+                        return null;
+                    }
+
                     // Wait a moment for the transaction to be indexed
                     await new Promise(resolve => setTimeout(resolve, 2000));
-                    
+
                     const tx = await cosmosClient.getTx(txHash);
                     console.log("📦 Transaction response:", tx);
                     
