@@ -1,8 +1,9 @@
 import React from "react";
 import { LoadingSpinner } from "../common";
-import { PlayerStatus } from "@block52/poker-vm-sdk";
+import { PlayerStatus, TexasHoldemRound, ActionDTO } from "@block52/poker-vm-sdk";
 import { colors } from "../../utils/colorConfig";
 import { FoldButton } from "./FoldButton";
+import { getRaiseToAmount } from "../../utils/raiseUtils";
 
 interface MainActionButtonsProps {
     canFold: boolean;
@@ -16,6 +17,9 @@ interface MainActionButtonsProps {
     playerStatus: PlayerStatus;
     loading: string | null;
     isMobileLandscape: boolean;
+    currentRound: TexasHoldemRound;
+    previousActions: ActionDTO[];
+    userAddress: string;
     onFold: () => void;
     onCheck: () => void;
     onCall: () => void;
@@ -34,11 +38,17 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
     playerStatus,
     loading,
     isMobileLandscape,
+    currentRound,
+    previousActions,
+    userAddress,
     onFold,
     onCheck,
     onCall,
     onBetOrRaise
 }) => {
+    // Calculate the total amount to display for raise button
+    // This includes blinds posted during ANTE round when we're in PREFLOP
+    const raiseToAmount = canRaise ? getRaiseToAmount(raiseAmount, previousActions, currentRound, userAddress) : raiseAmount;
     return (
         <div className={`flex justify-between ${isMobileLandscape ? "gap-0.5" : "gap-1 lg:gap-2"}`}>
             {/* Show fold button if canFold OR if currently folding (to show spinner) */}
@@ -114,8 +124,8 @@ export const MainActionButtons: React.FC<MainActionButtonsProps> = ({
                         </>
                     ) : (
                         <>
-                            {canRaise ? "RAISE" : "BET"}{" "}
-                            <span style={{ color: colors.brand.primary }}>${raiseAmount.toFixed(2)}</span>
+                            {canRaise ? "RAISE TO" : "BET"}{" "}
+                            <span style={{ color: colors.brand.primary }}>${raiseToAmount.toFixed(2)}</span>
                         </>
                     )}
                 </button>

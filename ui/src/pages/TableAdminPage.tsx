@@ -10,6 +10,7 @@ import { formatMicroAsUsdc, USDC_DECIMALS } from "../constants/currency";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
 import TableList from "../components/TableList";
 import { calculateBuyIn, BUY_IN_PRESETS } from "../utils/buyInUtils";
+import { sortTablesByAvailableSeats } from "../utils/tableSortingUtils";
 
 // Game creation fee in base units (1 usdc = 0.000001 USDC)
 // This matches GameCreationCost in pokerchain/x/poker/types/types.go
@@ -30,6 +31,7 @@ interface TableData {
     gameType: string;
     minPlayers: number;
     maxPlayers: number;
+    currentPlayers: number;
     minBuyIn: string;
     maxBuyIn: string;
     smallBlind: string;
@@ -74,6 +76,8 @@ export default function TableAdminPage() {
     // Success modal state
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successTxHash, setSuccessTxHash] = useState<string | null>(null);
+    const [createdGameAddress, setCreatedGameAddress] = useState<string | null>(null);
+    const [tableCountBeforeCreation, setTableCountBeforeCreation] = useState<number>(0);
 
     // Player counts from game state
     const [playerCounts, setPlayerCounts] = useState<Record<string, number>>({});
@@ -91,12 +95,13 @@ export default function TableAdminPage() {
 
     // Transform fetched games to TableData format - memoized to prevent infinite loops
     const tables: TableData[] = useMemo(() => {
-        return (fetchedGames || [])
+        const mappedTables = (fetchedGames || [])
             .map((game: any) => ({
                 gameId: game.address || game.gameId || game.game_id,
                 gameType: game.gameType || game.game_type || "texas-holdem",
                 minPlayers: game.minPlayers || game.min_players || 2,
-                maxPlayers: game.maxPlayers || game.max_players || 6,
+                maxPlayers: game.maxPlayers || game.max_players || 9,
+                currentPlayers: game.currentPlayers || game.current_players || 0,
                 minBuyIn: game.minBuyIn || game.min_buy_in || "0",
                 maxBuyIn: game.maxBuyIn || game.max_buy_in || "0",
                 smallBlind: game.smallBlind || game.small_blind || "0",
@@ -105,12 +110,10 @@ export default function TableAdminPage() {
                 status: game.status || "waiting",
                 creator: game.creator || "unknown",
                 createdAt: game.createdAt || game.created_at
-            }))
-            // Sort by creation date (newest first)
-            .sort((a, b) => {
-                if (!a.createdAt || !b.createdAt) return 0;
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
+            }));
+
+        // Sort by available seats (least empty seats first, full tables last)
+        return sortTablesByAvailableSeats(mappedTables);
     }, [fetchedGames]);
 
     // Create a new table using the useNewTable hook
@@ -149,9 +152,12 @@ export default function TableAdminPage() {
             ...(rakeConfig && { rake: rakeConfig })
         });
 
+        // Store the table count before creating to verify a new table was added
+        setTableCountBeforeCreation(tables.length);
+        
         try {
             console.log("🚀 Calling createTable...");
-            const txHash = await createTable({
+            const result = await createTable({
                 type: gameType,
                 minBuyIn: finalMinBuyIn,
                 maxBuyIn: finalMaxBuyIn,
@@ -162,11 +168,13 @@ export default function TableAdminPage() {
                 ...(rakeConfig && { rake: rakeConfig })
             });
 
-            console.log("✅ createTable returned:", txHash);
+            console.log("✅ createTable returned:", result);
 
-            if (txHash) {
+            if (result) {
                 // Show success modal with transaction link
-                setSuccessTxHash(txHash);
+                setSuccessTxHash(result.txHash);
+                // Set the game address immediately if we got it from the transaction
+                setCreatedGameAddress(result.gameId);
                 setShowSuccessModal(true);
 
                 // Wait a moment then reload tables
@@ -241,6 +249,9 @@ export default function TableAdminPage() {
             toast.error(`Failed to load games: ${gamesError.message}`);
         }
     }, [createError, gamesError]);
+
+    // Note: createdGameAddress is now set directly from the transaction response
+    // when creating a table, so we no longer need to guess from the sorted tables list
 
     // Stats
     const totalTables = tables.length;
@@ -604,15 +615,7 @@ export default function TableAdminPage() {
             {/* Success Modal */}
             {showSuccessModal && successTxHash && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                    <div className="bg-gray-800 border border-green-500 rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
-                        <div className="flex items-center justify-center mb-6">
-                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-                                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                        </div>
-
+                    <div className="bg-gray-800 border border-blue-500 rounded-xl p-8 max-w-lg w-full mx-4 shadow-2xl">
                         <h2 className="text-2xl font-bold text-white text-center mb-4">Table Created Successfully!</h2>
 
                         <p className="text-gray-300 text-center mb-6">Your poker table has been created on the blockchain.</p>
@@ -620,7 +623,7 @@ export default function TableAdminPage() {
                         <div className="bg-gray-900 rounded-lg p-4 mb-6">
                             <p className="text-gray-400 text-sm mb-2">Transaction Hash:</p>
                             <div className="flex items-center justify-between gap-2">
-                                <code className="text-green-400 text-xs font-mono break-all">{successTxHash}</code>
+                                <code className="text-blue-400 text-xs font-mono break-all">{successTxHash}</code>
                                 <button
                                     onClick={() => {
                                         navigator.clipboard.writeText(successTxHash);
@@ -641,19 +644,24 @@ export default function TableAdminPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
-                            <Link
-                                to={`/explorer/tx/${successTxHash}`}
-                                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-center"
-                            >
-                                View on Explorer
-                            </Link>
+                        <div className="flex flex-col gap-3">
+                            {createdGameAddress && (
+                                <a
+                                    href={`/table/${createdGameAddress}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-colors text-center"
+                                >
+                                    Join Table
+                                </a>
+                            )}
                             <button
                                 onClick={() => {
                                     setShowSuccessModal(false);
                                     setSuccessTxHash(null);
+                                    setCreatedGameAddress(null);
                                 }}
-                                className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                                className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors"
                             >
                                 Close
                             </button>

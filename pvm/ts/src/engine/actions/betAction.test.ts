@@ -203,17 +203,13 @@ describe("BetAction", () => {
             });
         });
 
-        it("should handle player with chips less than big blind", () => {
+        it("should throw error when player has chips less than big blind (must use all-in)", () => {
             // Setup: Player only has 10n chips (less than big blind of 20n)
             player.chips = 10n;
             mockBetManager.setCurrentBet(0n);
 
-            const result = action.verify(player);
-
-            expect(result).toEqual({ 
-                minAmount: 20n, // bigBlind (still minimum)
-                maxAmount: 10n // player.chips (all they have)
-            });
+            // Player can't afford minimum bet, must use all-in instead
+            expect(() => action.verify(player)).toThrow("Insufficient chips for minimum bet - use all-in instead.");
         });
     });
 
