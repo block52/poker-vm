@@ -89,7 +89,35 @@ yarn build
 yarn start
 ```
 
-### Network Endpoints
+### Public PVM Endpoint
+
+A public PVM instance is available for development and testing:
+
+| Endpoint   | URL                        |
+| ---------- | -------------------------- |
+| **RPC**    | https://pvm.block52.xyz    |
+| **Health** | https://pvm.block52.xyz/health |
+
+**Example: Query the PVM**
+
+```bash
+# Health check
+curl https://pvm.block52.xyz/health
+
+# Get client info
+curl -X POST https://pvm.block52.xyz \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "get_client", "params": [], "id": 1}'
+```
+
+**Available RPC Methods:**
+
+| Category | Methods |
+| -------- | ------- |
+| **Read** | `find_contract`, `get_account`, `get_block`, `get_blocks`, `get_block_by_hash`, `get_client`, `get_contract_schema`, `get_game_state`, `get_last_block`, `get_mempool`, `get_nodes`, `get_shared_secret`, `get_transaction`, `get_transactions` |
+| **Write** | `block`, `burn`, `create_account`, `create_contract_schema`, `deploy_contract`, `mine`, `mined_block_hash`, `mint`, `new_hand`, `new_table`, `perform_action`, `transfer`, `withdraw` |
+
+### Blockchain Network Endpoints
 
 | Network        | RPC                            | REST                       | gRPC                           | WebSocket                  |
 | -------------- | ------------------------------ | -------------------------- | ------------------------------ | -------------------------- |
