@@ -3,14 +3,7 @@
  * Parses PHH format files into structured objects for testing
  */
 
-import {
-    PhhHand,
-    PhhAction,
-    PhhActionType,
-    PhhParseResult,
-    PHH_SUIT_MAP,
-    PHH_RANK_MAP
-} from "./phhTypes";
+import { PhhHand, PhhAction, PhhActionType, PhhParseResult, PHH_SUIT_MAP, PHH_RANK_MAP } from "./phhTypes";
 
 export class PhhParser {
     /**
@@ -26,7 +19,7 @@ export class PhhParser {
      * Parse the hand metadata from PHH content
      */
     private parseHand(content: string): PhhHand {
-        const lines = content.split('\n');
+        const lines = content.split("\n");
 
         const hand: PhhHand = {
             variant: "",
@@ -46,16 +39,16 @@ export class PhhParser {
             const trimmed = line.trim();
 
             // Skip comments and empty lines
-            if (trimmed.startsWith('#') || trimmed === '') continue;
+            if (trimmed.startsWith("#") || trimmed === "") continue;
 
             // Handle actions array
-            if (trimmed.startsWith('actions = [')) {
+            if (trimmed.startsWith("actions = [")) {
                 inActions = true;
                 continue;
             }
 
             if (inActions) {
-                if (trimmed === ']') {
+                if (trimmed === "]") {
                     inActions = false;
                     hand.actions = actionsBuffer;
                     continue;
@@ -84,41 +77,41 @@ export class PhhParser {
      */
     private setHandValue(hand: PhhHand, key: string, value: string): void {
         switch (key) {
-            case 'variant':
-                hand.variant = value.replace(/"/g, '');
+            case "variant":
+                hand.variant = value.replace(/"/g, "");
                 break;
-            case 'ante_trimming_status':
-                hand.anteTrimming = value === 'true';
+            case "ante_trimming_status":
+                hand.anteTrimming = value === "true";
                 break;
-            case 'antes':
+            case "antes":
                 hand.antes = this.parseNumberArray(value);
                 break;
-            case 'blinds_or_straddles':
+            case "blinds_or_straddles":
                 hand.blindsOrStraddles = this.parseNumberArray(value);
                 break;
-            case 'min_bet':
+            case "min_bet":
                 hand.minBet = parseFloat(value);
                 break;
-            case 'starting_stacks':
+            case "starting_stacks":
                 hand.startingStacks = this.parseNumberArray(value);
                 break;
-            case 'players':
+            case "players":
                 hand.players = this.parseStringArray(value);
                 break;
-            case 'author':
-                hand.author = value.replace(/"/g, '');
+            case "author":
+                hand.author = value.replace(/"/g, "");
                 break;
-            case 'event':
-                hand.event = value.replace(/"/g, '');
+            case "event":
+                hand.event = value.replace(/"/g, "");
                 break;
-            case 'year':
+            case "year":
                 hand.year = parseInt(value);
                 break;
-            case 'month':
+            case "month":
                 hand.month = parseInt(value);
                 break;
-            case 'currency':
-                hand.currency = value.replace(/"/g, '');
+            case "currency":
+                hand.currency = value.replace(/"/g, "");
                 break;
         }
     }
@@ -129,7 +122,7 @@ export class PhhParser {
     private parseNumberArray(value: string): number[] {
         const match = value.match(/\[([\d.,\s]+)\]/);
         if (!match) return [];
-        return match[1].split(',').map(s => parseFloat(s.trim()));
+        return match[1].split(",").map(s => parseFloat(s.trim()));
     }
 
     /**
@@ -138,7 +131,7 @@ export class PhhParser {
     private parseStringArray(value: string): string[] {
         const match = value.match(/\[([^\]]+)\]/);
         if (!match) return [];
-        return match[1].split(',').map(s => s.trim().replace(/"/g, ''));
+        return match[1].split(",").map(s => s.trim().replace(/"/g, ""));
     }
 
     /**
@@ -149,7 +142,6 @@ export class PhhParser {
         // Initialize current bet to big blind (blinds[1]) for preflop
         const bigBlind = blinds.length > 1 ? blinds[1] : 0;
         let currentBet = bigBlind;
-        let isPreflop = true;
 
         for (const raw of actionStrings) {
             const action = this.parseAction(raw, currentBet);
@@ -157,11 +149,10 @@ export class PhhParser {
                 actions.push(action);
 
                 // Update current bet tracking
-                if (action.type === 'bet' || action.type === 'raise') {
+                if (action.type === "bet" || action.type === "raise") {
                     currentBet = action.amount || 0;
-                } else if (action.type === 'deal_board') {
-                    currentBet = 0;  // Reset on new street
-                    isPreflop = false;
+                } else if (action.type === "deal_board") {
+                    currentBet = 0; // Reset on new street
                 }
             }
         }
@@ -178,17 +169,17 @@ export class PhhParser {
         if (parts.length < 2) return null;
 
         // Deal actions
-        if (parts[0] === 'd') {
-            if (parts[1] === 'dh') {
+        if (parts[0] === "d") {
+            if (parts[1] === "dh") {
                 // Deal hole cards: d dh p1 Ah3sKsKh
                 const playerMatch = parts[2]?.match(/p(\d+)/);
                 const player = playerMatch ? parseInt(playerMatch[1]) : undefined;
                 const cards = parts[3] ? this.parseCards(parts[3]) : undefined;
-                return { type: 'deal_hole', player, cards, raw };
-            } else if (parts[1] === 'db') {
+                return { type: "deal_hole", player, cards, raw };
+            } else if (parts[1] === "db") {
                 // Deal board: d db 4s5c2h
                 const cards = parts[2] ? this.parseCards(parts[2]) : undefined;
-                return { type: 'deal_board', cards, raw };
+                return { type: "deal_board", cards, raw };
             }
         }
 
@@ -199,24 +190,24 @@ export class PhhParser {
             const actionCode = parts[1];
 
             switch (actionCode) {
-                case 'f':
-                    return { type: 'fold', player, raw };
+                case "f":
+                    return { type: "fold", player, raw };
 
-                case 'cc':
+                case "cc":
                     // Check if there's a bet to call
-                    const type: PhhActionType = currentBet > 0 ? 'call' : 'check';
+                    const type: PhhActionType = currentBet > 0 ? "call" : "check";
                     return { type, player, raw };
 
-                case 'cbr':
+                case "cbr":
                     // Check/Bet/Raise - determine based on current bet
                     const amount = parts[2] ? parseFloat(parts[2]) : undefined;
-                    const betType: PhhActionType = currentBet > 0 ? 'raise' : 'bet';
+                    const betType: PhhActionType = currentBet > 0 ? "raise" : "bet";
                     return { type: betType, player, amount, raw };
 
-                case 'sm':
+                case "sm":
                     // Show/Muck
                     const showCards = parts[2] ? this.parseCards(parts[2]) : undefined;
-                    return { type: 'show', player, cards: showCards, raw };
+                    return { type: "show", player, cards: showCards, raw };
             }
         }
 
@@ -228,7 +219,7 @@ export class PhhParser {
      * PHH: "Ah3sKsKh" -> ["AH", "3S", "KS", "KH"]
      */
     parseCards(cardStr: string): string[] {
-        if (cardStr === '????' || cardStr.startsWith('?')) {
+        if (cardStr === "????" || cardStr.startsWith("?")) {
             return []; // Hidden cards
         }
 
