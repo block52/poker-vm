@@ -198,5 +198,64 @@ actions = [
             expect(result.gameState).toBeDefined();
             expect(result.gameState?.round).toBe(TexasHoldemRound.END);
         });
+
+        it("should run Pluribus AI 6-max hand from fixture", async () => {
+            const fs = await import("fs");
+            const path = await import("path");
+
+            const fixturePath = path.join(__dirname, "fixtures/pluribus-30-0.phh");
+            const phhContent = fs.readFileSync(fixturePath, "utf-8");
+
+            const runner = new PhhRunner();
+            const result = await runner.runHand(phhContent);
+
+            // Verify hand metadata
+            expect(result.hand.variant).toBe("NT");
+            expect(result.hand.players.length).toBe(6);
+            expect(result.hand.players).toContain("Pluribus");
+
+            // Verify all actions executed successfully
+            expect(result.success).toBe(true);
+            expect(result.actionsExecuted).toBe(result.totalActions);
+            expect(result.error).toBeUndefined();
+
+            // Hand ends after preflop folds - Bill wins with raise
+            expect(result.gameState).toBeDefined();
+            expect(result.gameState?.round).toBe(TexasHoldemRound.END);
+        });
+
+        it("should run Pluribus AI hand through all streets to showdown", async () => {
+            const fs = await import("fs");
+            const path = await import("path");
+
+            const fixturePath = path.join(__dirname, "fixtures/pluribus-30-12.phh");
+            const phhContent = fs.readFileSync(fixturePath, "utf-8");
+
+            const runner = new PhhRunner();
+            const result = await runner.runHand(phhContent);
+
+            // Log result for debugging
+            if (!result.success) {
+                console.log("Hand failed:", {
+                    error: result.error,
+                    errorAtAction: result.errorAtAction,
+                    actionsExecuted: result.actionsExecuted,
+                    totalActions: result.totalActions
+                });
+            }
+
+            // Verify hand metadata
+            expect(result.hand.variant).toBe("NT");
+            expect(result.hand.players.length).toBe(6);
+
+            // Verify all actions executed successfully
+            expect(result.success).toBe(true);
+            expect(result.actionsExecuted).toBe(result.totalActions);
+            expect(result.error).toBeUndefined();
+
+            // Hand should end at showdown
+            expect(result.gameState).toBeDefined();
+            expect(result.gameState?.round).toBe(TexasHoldemRound.END);
+        });
     });
 });

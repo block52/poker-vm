@@ -163,6 +163,49 @@ cd pvm/ts
 yarn test:integration
 ```
 
+### PHH Format Testing
+
+The engine supports replaying hands in [PHH (Poker Hand History)](https://phh.readthedocs.io/) format for fuzz testing and validation against real-world hand histories.
+
+```bash
+cd pvm/ts
+yarn test tests/phh/
+```
+
+**Supported PHH Features:**
+- No-Limit Texas Hold'em (`variant = "NT"`)
+- Action mapping: `cbr` (check/bet/raise), `cc` (check/call), `f` (fold), `sm` (show)
+- Automatic blind posting and dealing
+- Total-to-additional amount conversion for raises
+
+**Example: Running a PHH hand through the engine**
+
+```typescript
+import { PhhRunner } from "./src/testing/phhRunner";
+
+const runner = new PhhRunner();
+const result = await runner.runHand(`
+variant = "NT"
+blinds_or_straddles = [100, 200]
+starting_stacks = [10000, 10000]
+players = ["P1", "P2"]
+actions = [
+  "d dh p1 AcKc",
+  "d dh p2 2h3h",
+  "p1 cbr 600",
+  "p2 cc",
+  "d db Jc3d5c",
+  "p1 cbr 800",
+  "p2 f",
+]
+`);
+
+console.log(result.success); // true
+console.log(result.actionsExecuted); // 7
+```
+
+See [GitHub Issue #1578](https://github.com/block52/poker-vm/issues/1578) for integration progress with the [PHH Dataset](https://github.com/uoftcprg/phh-dataset).
+
 ### Building for Production
 
 ```bash
