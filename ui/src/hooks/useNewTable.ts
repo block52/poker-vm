@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { GameType, COSMOS_CONSTANTS } from "@block52/poker-vm-sdk";
-import { getSigningClient } from "../utils/cosmos/client";
+import { getSigningClient, getCosmosClient } from "../utils/cosmos/client";
 import { useNetwork } from "../context/NetworkContext";
 
 // Type for rake configuration options
@@ -25,7 +25,7 @@ export interface CreateTableOptions {
 
 // Type for useNewTable hook return
 export interface UseNewTableReturn {
-    createTable: (gameOptions: CreateTableOptions) => Promise<string | null>;
+    createTable: (gameOptions: CreateTableOptions) => Promise<{ txHash: string; gameId: string | null } | null>;
     isCreating: boolean;
     error: Error | null;
     newGameId: string | null;
@@ -43,7 +43,7 @@ export const useNewTable = (): UseNewTableReturn => {
 
     const createTable = useCallback(async (
         gameOptions: CreateTableOptions
-    ): Promise<string | null> => {
+    ): Promise<{ txHash: string; gameId: string | null } | null> => {
         console.log("🏁 useNewTable.createTable called with options:", gameOptions);
         console.log("Current network:", currentNetwork);
 
@@ -126,11 +126,50 @@ export const useNewTable = (): UseNewTableReturn => {
             if (txHash) {
                 console.log(`✅ Game creation transaction submitted: ${txHash}`);
                 setNewGameId(txHash);
+
+                // Fetch the transaction to extract the game_id from events
+                try {
+                    console.log("📡 Fetching transaction details to extract game_id...");
+                    const cosmosClient = getCosmosClient(currentNetwork);
+
+                    if (!cosmosClient) {
+                        console.warn("⚠️ Could not get cosmos client to fetch transaction details");
+                        return null;
+                    }
+
+                    // Wait a moment for the transaction to be indexed
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    const tx = await cosmosClient.getTx(txHash);
+                    console.log("📦 Transaction response:", tx);
+                    
+                    // Extract game_id from game_created event
+                    let gameId: string | null = null;
+                    if (tx?.tx_response?.events) {
+                        const gameCreatedEvent = tx.tx_response.events.find((e: any) => e.type === "game_created");
+                        if (gameCreatedEvent) {
+                            const gameIdAttr = gameCreatedEvent.attributes?.find((a: any) => a.key === "game_id");
+                            if (gameIdAttr) {
+                                gameId = gameIdAttr.value;
+                                console.log(`✅ Extracted game_id from transaction: ${gameId}`);
+                            }
+                        }
+                    }
+                    
+                    if (!gameId) {
+                        console.warn("⚠️ Could not extract game_id from transaction events");
+                    }
+                    
+                    return { txHash, gameId };
+                } catch (txError) {
+                    console.error("❌ Error fetching transaction details:", txError);
+                    // Return txHash even if we couldn't get game_id
+                    return { txHash, gameId: null };
+                }
             } else {
                 console.warn("⚠️ signingClient.createGame returned null/undefined");
+                return null;
             }
-
-            return txHash;
         } catch (err: any) {
             const errorMessage = err.message || "Failed to create game on blockchain";
             setError(new Error(errorMessage));

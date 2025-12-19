@@ -1,6 +1,107 @@
 import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { ethers } from "ethers";
-import { getRaiseToAmount } from "./raiseUtils";
+import { getRaiseToAmount, calculateRaiseToDisplay } from "./raiseUtils";
+
+describe("calculateRaiseToDisplay", () => {
+    describe("basic calculation", () => {
+        it("should add player's current bet to raise amount", () => {
+            // Player has bet 0.02, wants to raise by 0.02
+            const playerSumOfBets = "20000000000000000"; // 0.02 in micro units
+            const raiseAmount = 0.02;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(0.04, 10);
+        });
+
+        it("should handle zero current bet", () => {
+            const playerSumOfBets = "0";
+            const raiseAmount = 0.05;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(0.05, 10);
+        });
+
+        it("should handle zero raise amount", () => {
+            const playerSumOfBets = "50000000000000000"; // 0.05
+            const raiseAmount = 0;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(0.05, 10);
+        });
+
+        it("should handle empty string as zero", () => {
+            const playerSumOfBets = "";
+            const raiseAmount = 1.5;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(1.5, 10);
+        });
+    });
+
+    describe("decimal amounts", () => {
+        it("should handle small decimal amounts correctly", () => {
+            const playerSumOfBets = "10000000000000000"; // 0.01
+            const raiseAmount = 0.01;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(0.02, 10);
+        });
+
+        it("should handle larger amounts", () => {
+            const playerSumOfBets = "5000000000000000000"; // 5.0
+            const raiseAmount = 10.5;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(15.5, 10);
+        });
+
+        it("should handle very precise amounts", () => {
+            const playerSumOfBets = "123456789012345678"; // ~0.123456789
+            const raiseAmount = 0.876543211;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(1.0, 1); // Less precision due to floating point
+        });
+    });
+
+    describe("edge cases", () => {
+        it("should handle undefined sumOfBets as zero", () => {
+            const playerSumOfBets = undefined as unknown as string;
+            const raiseAmount = 2.0;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(2.0, 10);
+        });
+
+        it("should handle very large bet amounts", () => {
+            const playerSumOfBets = "1000000000000000000000"; // 1000.0
+            const raiseAmount = 500.0;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(1500.0, 10);
+        });
+    });
+
+    describe("real-world scenarios from issue #1569", () => {
+        it("should match the example from the issue - small blind scenario", () => {
+            // From issue: Player has bet $0.02, raise by $0.02, should show $0.04
+            const playerSumOfBets = "20000000000000000"; // 0.02
+            const raiseAmount = 0.02;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(0.04, 10);
+        });
+
+        it("should calculate correctly for big blind raise", () => {
+            // Big blind posted 0.04, raising by 0.04, should show 0.08
+            const playerSumOfBets = "40000000000000000"; // 0.04
+            const raiseAmount = 0.04;
+
+            const result = calculateRaiseToDisplay(playerSumOfBets, raiseAmount);
+            expect(result).toBeCloseTo(0.08, 10);
+        });
+    });
+});
 
 describe("getRaiseToAmount", () => {
     // Cosmos bech32 addresses (b52 prefix for Block52 chain)

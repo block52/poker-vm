@@ -2,6 +2,7 @@ import React from "react";
 import { useFindGames } from "../hooks/useFindGames";
 import { formatMicroAsUsdc } from "../constants/currency";
 import { colors, hexToRgba } from "../utils/colorConfig";
+import { sortTablesByAvailableSeats } from "../utils/tableSortingUtils";
 
 /**
  * TableList - Displays available poker tables in a table format
@@ -9,7 +10,13 @@ import { colors, hexToRgba } from "../utils/colorConfig";
  * Join buttons open tables in a new tab for better user experience
  */
 const TableList: React.FC = () => {
-    const { games, isLoading, error, refetch } = useFindGames();
+    const { games: rawGames, isLoading, error, refetch } = useFindGames();
+
+    // Sort games by available seats (least empty seats first, full tables last)
+    const games = React.useMemo(() => {
+        // Cast to any to access properties added by useFindGames hook
+        return sortTablesByAvailableSeats(rawGames as any[]);
+    }, [rawGames]);
 
     // Use environment variables for club branding
     // Defaults to poker.svg icon for table listings (appropriate for poker context)

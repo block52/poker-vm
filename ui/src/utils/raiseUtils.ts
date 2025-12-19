@@ -1,6 +1,24 @@
 import { ActionDTO, PlayerActionType, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import { ethers } from "ethers";
 
+/**
+ * Calculate the total amount to display on the raise button.
+ * This shows the TOTAL amount the player will have committed (not just the additional raise).
+ *
+ * @param playerSumOfBets - The player's current bet amount in the round (18 decimal wei format as string)
+ * @param raiseAmount - The additional raise amount (in USDC as number)
+ * @returns The total amount to display (current bet + raise amount)
+ *
+ * @example
+ * // Player has bet $0.02, wants to raise by $0.02
+ * calculateRaiseToDisplay("20000000000000000", 0.02) // Returns 0.04
+ */
+export const calculateRaiseToDisplay = (playerSumOfBets: string, raiseAmount: number): number => {
+    // Game state uses 18 decimal format (ethers format)
+    const currentBet = playerSumOfBets ? Number(ethers.formatUnits(playerSumOfBets, 18)) : 0;
+    return currentBet + raiseAmount;
+};
+
 export const getRaiseToAmount = (raiseAmount: number, actions: ActionDTO[], currentRound: TexasHoldemRound, userAddress: string): number => {
     // If no actions, return raiseAmount
     if (!actions || actions.length === 0) {
