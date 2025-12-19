@@ -174,5 +174,29 @@ actions = [
             expect(result.hand.variant).toBe("NT");
             expect(result.hand.players).toEqual(["P1", "P2"]);
         });
+
+        it("should run Dwan-Ivey hand from fixture", async () => {
+            const fs = await import("fs");
+            const path = await import("path");
+
+            const fixturePath = path.join(__dirname, "fixtures/dwan-ivey-2009.phh");
+            const phhContent = fs.readFileSync(fixturePath, "utf-8");
+
+            const runner = new PhhRunner();
+            const result = await runner.runHand(phhContent);
+
+            // Verify hand metadata
+            expect(result.hand.variant).toBe("NT");
+            expect(result.hand.players).toEqual(["Phil Ivey", "Patrik Antonius", "Tom Dwan"]);
+
+            // Verify all actions executed successfully
+            expect(result.success).toBe(true);
+            expect(result.actionsExecuted).toBe(result.totalActions);
+            expect(result.error).toBeUndefined();
+
+            // This is the famous million dollar pot - verify final state
+            expect(result.gameState).toBeDefined();
+            expect(result.gameState?.round).toBe(TexasHoldemRound.END);
+        });
     });
 });

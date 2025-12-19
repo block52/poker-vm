@@ -2,7 +2,7 @@
  * PHH Runner - Replays PHH hands through the Texas Holdem engine
  */
 
-import { GameOptions, GameType, PlayerActionType, TexasHoldemRound, PlayerStatus } from "@block52/poker-vm-sdk";
+import { GameOptions, GameType, PlayerActionType, NonPlayerActionType, TexasHoldemRound, PlayerStatus } from "@block52/poker-vm-sdk";
 import { ethers } from "ethers";
 import TexasHoldemGame from "../engine/texasHoldem";
 import { Player } from "../models/player";
@@ -59,12 +59,15 @@ export class PhhRunner {
             // Create game from PHH hand
             const game = this.createGame(hand);
 
+            // Post blinds and deal before executing PHH actions
+            this.postBlindsAndDeal(game, hand);
+
             // Execute actions
             let actionsExecuted = 0;
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 try {
-                    this.executeAction(game, hand, action, i);
+                    this.executeAction(game, action);
                     actionsExecuted++;
                 } catch (err) {
                     return {
@@ -132,8 +135,9 @@ export class PhhRunner {
 
             const player = new Player(
                 address,
+                undefined, // lastAction
                 stack,
-                i + 1, // seat (1-indexed)
+                undefined, // holeCards
                 PlayerStatus.ACTIVE
             );
 
@@ -162,9 +166,62 @@ export class PhhRunner {
     }
 
     /**
+     * Post blinds and deal cards to get game into PREFLOP state
+     * PHH format assumes blinds are already posted
+     */
+    private postBlindsAndDeal(game: TexasHoldemGame, hand: PhhHand): void {
+        const numPlayers = hand.players.length;
+
+        // In PHH format:
+        // - Player 1 is typically UTG/first position
+        // - For 3-player: Player 1 = Button/Dealer, Player 2 = SB, Player 3 = BB?
+        //   Actually in the Dwan-Ivey hand, Dwan (p3) acts first preflop, so he's not BB
+        // - Standard order for 3-way: Dealer, SB, BB
+        //   After blinds, action starts with player after BB (which wraps to dealer in 3-way)
+
+        // For now, assume:
+        // - SB is player 1
+        // - BB is player 2 (or player 2 if only 2 players)
+        const smallBlind = BigInt(hand.blindsOrStraddles[0] || 0);
+        const bigBlind = BigInt(hand.blindsOrStraddles[1] || 0);
+
+        // Post small blind (player 1 in heads-up, or first player after dealer in multi-way)
+        const sbPlayer = numPlayers === 2 ? 2 : 1; // In heads-up, dealer posts SB
+        game.performAction(
+            this.playerAddress(sbPlayer),
+            PlayerActionType.SMALL_BLIND,
+            game.getActionIndex(),
+            smallBlind,
+            undefined,
+            this.getNextTimestamp()
+        );
+
+        // Post big blind
+        const bbPlayer = numPlayers === 2 ? 1 : 2;
+        game.performAction(
+            this.playerAddress(bbPlayer),
+            PlayerActionType.BIG_BLIND,
+            game.getActionIndex(),
+            bigBlind,
+            undefined,
+            this.getNextTimestamp()
+        );
+
+        // Deal cards
+        game.performAction(
+            this.playerAddress(sbPlayer),
+            NonPlayerActionType.DEAL,
+            game.getActionIndex(),
+            undefined,
+            undefined,
+            this.getNextTimestamp()
+        );
+    }
+
+    /**
      * Execute a single PHH action on the game
      */
-    private executeAction(game: TexasHoldemGame, hand: PhhHand, action: PhhAction, _actionIndex: number): void {
+    private executeAction(game: TexasHoldemGame, action: PhhAction): void {
         const timestamp = this.getNextTimestamp();
 
         switch (action.type) {
@@ -179,27 +236,46 @@ export class PhhRunner {
                 break;
 
             case "fold":
-                this.performPlayerAction(game, hand, action.player!, PlayerActionType.FOLD, undefined, timestamp);
+                if (action.player) {
+                    this.performPlayerAction(game, action.player, PlayerActionType.FOLD, undefined, timestamp);
+                }
                 break;
 
             case "check":
-                this.performPlayerAction(game, hand, action.player!, PlayerActionType.CHECK, undefined, timestamp);
+                if (action.player) {
+                    this.performPlayerAction(game, action.player, PlayerActionType.CHECK, undefined, timestamp);
+                }
                 break;
 
             case "call":
-                this.performPlayerAction(game, hand, action.player!, PlayerActionType.CALL, undefined, timestamp);
+                if (action.player) {
+                    // Get the call amount from legal actions
+                    const callAmount = this.getCallAmount(game, action.player);
+                    this.performPlayerAction(game, action.player, PlayerActionType.CALL, callAmount, timestamp);
+                }
                 break;
 
             case "bet":
-                this.performPlayerAction(game, hand, action.player!, PlayerActionType.BET, BigInt(action.amount || 0), timestamp);
+                if (action.player) {
+                    // BET amount in PHH is the total bet amount
+                    this.performPlayerAction(game, action.player, PlayerActionType.BET, BigInt(action.amount || 0), timestamp);
+                }
                 break;
 
             case "raise":
-                this.performPlayerAction(game, hand, action.player!, PlayerActionType.RAISE, BigInt(action.amount || 0), timestamp);
+                if (action.player) {
+                    // PHH raise amount is TOTAL bet amount, engine expects ADDITIONAL amount
+                    // Get the player's current bet this round and calculate difference
+                    const raiseTotal = BigInt(action.amount || 0);
+                    const raiseAdditional = this.getRaiseAdditionalAmount(game, action.player, raiseTotal);
+                    this.performPlayerAction(game, action.player, PlayerActionType.RAISE, raiseAdditional, timestamp);
+                }
                 break;
 
             case "show":
-                this.performPlayerAction(game, hand, action.player!, PlayerActionType.SHOW, undefined, timestamp);
+                if (action.player) {
+                    this.performPlayerAction(game, action.player, PlayerActionType.SHOW, undefined, timestamp);
+                }
                 break;
         }
     }
@@ -209,7 +285,6 @@ export class PhhRunner {
      */
     private performPlayerAction(
         game: TexasHoldemGame,
-        hand: PhhHand,
         playerNumber: number,
         actionType: PlayerActionType,
         amount: bigint | undefined,
@@ -219,6 +294,42 @@ export class PhhRunner {
         const actionIndex = game.getActionIndex();
 
         game.performAction(address, actionType, actionIndex, amount, undefined, timestamp);
+    }
+
+    /**
+     * Get the call amount for a player from the game's legal actions
+     */
+    private getCallAmount(game: TexasHoldemGame, playerNumber: number): bigint {
+        const address = this.playerAddress(playerNumber);
+        const legalActions = game.getLegalActions(address);
+
+        const callAction = legalActions.find(a => a.action === PlayerActionType.CALL);
+        if (callAction && callAction.min) {
+            return BigInt(callAction.min);
+        }
+
+        // Fallback: if no call action found, return 0 (will likely fail validation)
+        return 0n;
+    }
+
+    /**
+     * Calculate the additional amount needed to raise to a total amount
+     * PHH uses total amounts, engine uses additional amounts
+     */
+    private getRaiseAdditionalAmount(game: TexasHoldemGame, playerNumber: number, totalAmount: bigint): bigint {
+        const address = this.playerAddress(playerNumber);
+
+        // Get player's current bet this round using the game's method
+        // Include blinds for preflop calculations
+        const includeBlinds = game.currentRound === TexasHoldemRound.PREFLOP;
+        const playerBetThisRound = game.getPlayerTotalBets(address, game.currentRound, includeBlinds);
+
+        // PHH totalAmount is the total the player wants to have in for this round
+        // Engine expects additional chips to put in
+        const additionalAmount = totalAmount - playerBetThisRound;
+
+        // Ensure we don't return negative (shouldn't happen with valid PHH data)
+        return additionalAmount > 0n ? additionalAmount : totalAmount;
     }
 
     /**
@@ -240,10 +351,10 @@ export class PhhRunner {
      * Extract game state for reporting
      */
     private getGameState(game: TexasHoldemGame): PhhRunResult["gameState"] {
-        const players: PhhRunResult["gameState"]!["players"] = [];
+        const players: Array<{ address: string; stack: bigint; status: PlayerStatus }> = [];
 
         for (let seat = 1; seat <= 9; seat++) {
-            const player = game.getPlayerBySeat(seat);
+            const player = game.getPlayerAtSeat(seat);
             if (player) {
                 players.push({
                     address: player.address,
@@ -256,7 +367,7 @@ export class PhhRunner {
         return {
             round: game.currentRound,
             pot: game.pot,
-            communityCards: game.communityCards,
+            communityCards: game.communityCards.map(card => card.toString()),
             players
         };
     }
