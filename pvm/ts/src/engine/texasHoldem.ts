@@ -679,8 +679,8 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         //     throw new Error("Cards have already been dealt for this hand.");
         // }
 
-        // Only deal to live players (includes ACTIVE and ALL_IN players, excludes FOLDED/BUSTED/SITTING_OUT)
-        const players = this.findLivePlayers();
+        // Only deal to ACTIVE players (excludes SITTING_OUT/waiting players)
+        const players = this.findActivePlayers();
 
         // Deal first card to each player
         for (const player of players) {

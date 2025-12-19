@@ -5,24 +5,10 @@ import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { ClickableAddress } from "../../components/explorer/ClickableAddress";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
+import { BlockResponse } from "@block52/poker-vm-sdk";
 
-// Types from CosmosClient
-interface CosmosBlock {
-    block_id: {
-        hash: string;
-    };
-    block: {
-        header: {
-            height: string;
-            time: string;
-            chain_id: string;
-            proposer_address: string;
-        };
-        data: {
-            txs: string[]; // Base64 encoded transactions
-        };
-    };
-}
+// Use SDK's BlockResponse type directly
+type CosmosBlock = BlockResponse;
 
 export default function BlockDetailPage() {
     const { height } = useParams<{ height: string }>();
@@ -388,7 +374,7 @@ export default function BlockDetailPage() {
                         <div>
                             <p className="text-gray-400 text-sm mb-1">Proposer Address</p>
                             <p className="font-mono text-sm">
-                                <ClickableAddress address={block.block.header.proposer_address} />
+                                <ClickableAddress address={block.block.header.proposer_address || ""} />
                             </p>
                         </div>
 

@@ -4,8 +4,7 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   moduleNameMapper: {
-    '^@bitcoinbrisbane/block52$': '<rootDir>/../../sdk/src/index.ts',
-    '^@block52/poker-vm-sdk$': '<rootDir>/../../sdk/src/index.ts'
+    '^@bitcoinbrisbane/block52$': '<rootDir>/../../sdk/src/index.ts'
   },
   moduleDirectories: ['node_modules', '<rootDir>/../../sdk/node_modules'],
   transform: {
