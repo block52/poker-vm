@@ -206,9 +206,59 @@ export type Card = {
     mnemonic: string;
 };
 
+// Raw API response for getGame - contains JSON string that needs parsing
 export type GameOptionsResponse = {
+    address?: string;
+    game?: string; // JSON string that needs to be parsed
+    gameOptions?: GameOptionsDTO;
+};
+
+export type GameListItem = {
+    id?: string;
+    game_id?: string;
+    gameId?: string; // Some APIs return camelCase
     address: string;
     gameOptions: GameOptionsDTO;
+    current_players?: number;
+};
+
+// Block types for Cosmos REST API responses
+export type BlockID = {
+    hash: string;
+    part_set_header?: {
+        total: number;
+        hash: string;
+    };
+};
+
+export type BlockHeader = {
+    version?: { block: string; app: string };
+    chain_id: string;
+    height: string;
+    time: string;
+    last_block_id?: BlockID;
+    last_commit_hash?: string;
+    data_hash?: string;
+    validators_hash?: string;
+    next_validators_hash?: string;
+    consensus_hash?: string;
+    app_hash?: string;
+    last_results_hash?: string;
+    evidence_hash?: string;
+    proposer_address?: string;
+};
+
+export type Block = {
+    header: BlockHeader;
+    data: { txs: string[] };
+    evidence?: { evidence?: any[] };
+    last_commit?: any;
+};
+
+export type BlockResponse = {
+    block_id: BlockID;
+    block: Block;
+    sdk_block?: Block;
 };
 
 export type TransactionResponse = {
@@ -222,8 +272,9 @@ export type TransactionResponse = {
     data?: string;
 }
 
+// Raw API response for getGameState - contains JSON string that needs parsing
 export type GameStateResponse = {
-    state: TexasHoldemStateDTO;
+    game_state: string; // JSON string containing the game state
 }
 
 export type PerformActionResponse = {

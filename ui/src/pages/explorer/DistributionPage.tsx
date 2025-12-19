@@ -42,25 +42,30 @@ export default function DistributionPage() {
 
             // Process each game
             for (const game of games) {
+                const gameId = game.gameId || game.game_id || game.id;
+                if (!gameId) {
+                    console.warn("⚠️ Game has no ID, skipping");
+                    continue;
+                }
                 try {
                     // Fetch game info (contains gameState with communityCards)
-                    const gameResponse = await cosmosClient.getGame(game.gameId);
-                    console.log(`🎮 Game ${game.gameId} raw response:`, gameResponse);
+                    const gameResponse = await cosmosClient.getGame(gameId);
+                    console.log(`🎮 Game ${gameId} raw response:`, gameResponse);
 
                     // Parse the game JSON string
                     if (!gameResponse || !gameResponse.game) {
-                        console.warn(`⚠️ No game found for ${game.gameId}`);
+                        console.warn(`⚠️ No game found for ${gameId}`);
                         continue;
                     }
 
                     const gameData = JSON.parse(gameResponse.game);
                     const gameState = gameData?.gameState;
-                    console.log(`🎮 Game ${game.gameId} parsed state:`, gameState);
+                    console.log(`🎮 Game ${gameId} parsed state:`, gameState);
 
                     if (gameState) {
                         // Count community cards (these are publicly visible dealt cards)
                         const communityCards = gameState.communityCards || [];
-                        console.log(`🃏 Community cards for game ${game.gameId}:`, communityCards);
+                        console.log(`🃏 Community cards for game ${gameId}:`, communityCards);
 
                         communityCards.forEach((card: string) => {
                             // Skip masked cards (X) and validate card format
@@ -84,7 +89,7 @@ export default function DistributionPage() {
                         });
                     }
                 } catch (error) {
-                    console.warn(`Failed to fetch game for ${game.gameId}:`, error);
+                    console.warn(`Failed to fetch game for ${gameId}:`, error);
                 }
             }
 

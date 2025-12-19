@@ -1,12 +1,13 @@
 import axios, { AxiosInstance } from "axios";
-import { COSMOS_CONSTANTS, EquityResult, EquityResponse } from "./sdkTypes";
+import { COSMOS_CONSTANTS, EquityResult, EquityResponse, CosmosConfig } from "./sdkTypes";
 import { IClient } from "./IClient";
+import type { LegalActionDTO, GameOptionsResponse, GameListItem, BlockResponse, GameStateResponse } from "./types/game";
 
 export class CosmosClient implements IClient {
-    protected readonly config: any;
+    protected readonly config: CosmosConfig;
     private readonly restClient: AxiosInstance;
 
-    constructor(config: any) {
+    constructor(config: CosmosConfig) {
         this.config = config;
 
         // Initialize REST client for API calls
@@ -89,7 +90,7 @@ export class CosmosClient implements IClient {
     /**
      * Get a specific block by height via REST API
      */
-    async getBlock(height: number): Promise<any> {
+    async getBlock(height: number): Promise<BlockResponse> {
         try {
             const response = await this.restClient.get(`/cosmos/base/tendermint/v1beta1/blocks/${height}`);
             return response.data;
@@ -102,7 +103,7 @@ export class CosmosClient implements IClient {
     /**
      * Get the latest block via REST API
      */
-    async getLatestBlock(): Promise<any> {
+    async getLatestBlock(): Promise<BlockResponse> {
         try {
             const response = await this.restClient.get("/cosmos/base/tendermint/v1beta1/blocks/latest");
             return response.data;
@@ -115,8 +116,8 @@ export class CosmosClient implements IClient {
     /**
      * Get multiple blocks starting from a specific height
      */
-    async getBlocks(startHeight: number, count: number = 10): Promise<any[]> {
-        const blocks: any[] = [];
+    async getBlocks(startHeight: number, count: number = 10): Promise<BlockResponse[]> {
+        const blocks: BlockResponse[] = [];
         const currentHeight = await this.getHeight();
         const endHeight = Math.min(startHeight + count - 1, currentHeight);
 
@@ -136,7 +137,7 @@ export class CosmosClient implements IClient {
     /**
      * Get the latest blocks (most recent)
      */
-    async getLatestBlocks(count: number = 10): Promise<any[]> {
+    async getLatestBlocks(count: number = 10): Promise<BlockResponse[]> {
         const currentHeight = await this.getHeight();
         const startHeight = Math.max(1, currentHeight - count + 1);
         return await this.getBlocks(startHeight, count);
@@ -145,7 +146,7 @@ export class CosmosClient implements IClient {
     /**
      * Get game state via REST API
      */
-    async getGameState(gameId: string): Promise<any> {
+    async getGameState(gameId: string): Promise<GameStateResponse> {
         try {
             const response = await this.restClient.get(`/block52/pokerchain/poker/v1/game_state/${gameId}`);
 
@@ -162,7 +163,7 @@ export class CosmosClient implements IClient {
     /**
      * Get game info via REST API
      */
-    async getGame(gameId: string): Promise<any> {
+    async getGame(gameId: string): Promise<GameOptionsResponse> {
         try {
             const response = await this.restClient.get(`/block52/pokerchain/poker/v1/game/${gameId}`);
 
@@ -179,7 +180,7 @@ export class CosmosClient implements IClient {
     /**
      * Get legal actions for a game via REST API
      */
-    async getLegalActions(gameId: string, playerAddress?: string): Promise<any[]> {
+    async getLegalActions(gameId: string, playerAddress?: string): Promise<LegalActionDTO[]> {
         try {
             const url = playerAddress
                 ? `/block52/pokerchain/poker/v1/legal_actions/${gameId}/${playerAddress}`
@@ -199,7 +200,7 @@ export class CosmosClient implements IClient {
     /**
      * List all games via REST API
      */
-    async listGames(): Promise<any[]> {
+    async listGames(): Promise<GameListItem[]> {
         try {
             console.log("📡 [CosmosClient] Making REST API call to list_games...");
             console.log("   URL:", `${this.config.restEndpoint}/block52/pokerchain/poker/v1/list_games`);
@@ -233,7 +234,7 @@ export class CosmosClient implements IClient {
      * @param min Optional minimum players filter
      * @param max Optional maximum players filter
      */
-    async findGames(min?: number, max?: number): Promise<any[]> {
+    async findGames(min?: number, max?: number): Promise<GameListItem[]> {
         try {
             console.log("🔍 [CosmosClient] findGames called with filters:", { min, max });
             const allGames = await this.listGames();
@@ -263,7 +264,7 @@ export class CosmosClient implements IClient {
     /**
      * Get player's games via REST API
      */
-    async getPlayerGames(player: string): Promise<any[]> {
+    async getPlayerGames(player: string): Promise<GameListItem[]> {
         try {
             // Use axios generic for type safety, but still need to parse the games string
             const response = await this.restClient.get(`/block52/pokerchain/poker/v1/player_games/${player}`);
@@ -457,13 +458,13 @@ export const getCosmosClient = (config?: any): CosmosClient => {
     return cosmosClientInstance;
 };
 
-export const initializeCosmosClient = (config: any): CosmosClient => {
+export const initializeCosmosClient = (config: CosmosConfig): CosmosClient => {
     cosmosClientInstance = new CosmosClient(config);
     return cosmosClientInstance;
 };
 
 // Update the default configuration
-export const getDefaultCosmosConfig = (domain: string = "localhost"): any => ({
+export const getDefaultCosmosConfig = (domain: string = "localhost"): CosmosConfig => ({
     rpcEndpoint: `https://${domain}/rpc`,
     restEndpoint: `https://${domain}`,
     chainId: "pokerchain",

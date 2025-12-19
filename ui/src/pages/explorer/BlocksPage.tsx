@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
-import { CosmosBlock } from "./types";
+import { BlockResponse } from "@block52/poker-vm-sdk";
 import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 import { ExplorerHeader } from "../../components/explorer/ExplorerHeader";
+
+// Use SDK's BlockResponse type directly
+type CosmosBlock = BlockResponse;
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -27,7 +30,9 @@ export default function BlocksPage() {
 
             const recentBlocks = await cosmosClient.getLatestBlocks(50);
             // Sort blocks by height in descending order (newest first)
-            const sortedBlocks = recentBlocks.sort((a, b) => parseInt(b.block.header.height) - parseInt(a.block.header.height));
+            const sortedBlocks = recentBlocks.sort((a, b) =>
+                parseInt(b.block.header.height) - parseInt(a.block.header.height)
+            );
             setBlocks(sortedBlocks);
             setError(null);
         } catch (err: any) {
@@ -186,8 +191,8 @@ export default function BlocksPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="font-mono text-xs text-white" title={block.block.header.proposer_address}>
-                                                {truncateHash(block.block.header.proposer_address)}
+                                            <span className="font-mono text-xs text-white" title={block.block.header.proposer_address || ""}>
+                                                {truncateHash(block.block.header.proposer_address || "")}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
