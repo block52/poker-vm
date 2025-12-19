@@ -24,11 +24,7 @@ export interface TxResponse {
   [key: string]: any;
 }
 
-export interface BlockResponse {
-  block_id: any;
-  block: any;
-  [key: string]: any;
-}
+// BlockResponse is defined in ./types/game.ts with proper typing
 
 // Poker/game types
 export interface GameState {
