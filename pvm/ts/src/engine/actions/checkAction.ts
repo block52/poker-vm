@@ -38,7 +38,10 @@ class CheckAction extends BaseAction implements IAction {
     }
 
     execute(player: Player, index: number, amount: bigint): void {
-        // Verify the player can perform the check action
+        // Re-verify the action is still valid before modifying state
+        this.verify(player);
+
+        // Verify the amount is correct for a check
         if (amount !== 0n) {
             throw new Error("Check amount must be zero.");
         }
