@@ -118,7 +118,9 @@ abstract class BaseAction {
 
     protected validateAmountIsPositive(amount: bigint): void {
         if (amount <= 0n) {
-            throw new Error(`${this.type} amount must be greater than zero.`);
+            // Capitalize first letter of action type for error message
+            const actionType = this.type.charAt(0).toUpperCase() + this.type.slice(1).toLowerCase();
+            throw new Error(`${actionType} amount must be greater than zero.`);
         }
     }
 }
