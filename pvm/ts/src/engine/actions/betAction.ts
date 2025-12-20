@@ -37,7 +37,10 @@ class BetAction extends BaseAction implements IAction {
     }
 
     execute(player: Player, index: number, amount: bigint): void {
-        // Verify the player can perform the call action
+        // Re-verify the action is still valid before modifying state
+        this.verify(player);
+
+        // Verify the amount is greater than zero
         if (amount <= 0n) {
             throw new Error("Bet amount must be greater than zero.");
         }
