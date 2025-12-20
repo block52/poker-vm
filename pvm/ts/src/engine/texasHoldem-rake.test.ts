@@ -471,16 +471,16 @@ describe("Texas Holdem - Rake Tests", () => {
             // Deal
             game.performAction(player1Address, NonPlayerActionType.DEAL, 6, undefined, undefined, getNextTestTimestamp());
 
-            // Preflop: Raise and call to build pot above threshold
-            game.performAction(player1Address, PlayerActionType.RAISE, 7, 2n * ONE_TOKEN, undefined, getNextTestTimestamp());
-            game.performAction(player2Address, PlayerActionType.CALL, 8, 2n * ONE_TOKEN, undefined, getNextTestTimestamp());
-            game.performAction(ownerAddress, PlayerActionType.FOLD, 9, undefined, undefined, getNextTestTimestamp());
+            // Preflop: UTG (seat 3) → SB (seat 1) → BB (seat 2)
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 7, undefined, undefined, getNextTestTimestamp());
+            game.performAction(player1Address, PlayerActionType.RAISE, 8, 2n * ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CALL, 9, 2n * ONE_TOKEN, undefined, getNextTestTimestamp());
 
             const potOnFlop = game.getPot();
             expect(potOnFlop).toBeGreaterThan(ONE_TOKEN);
 
-            // Flop: Player 2 folds - Player 1 wins
-            game.performAction(player1Address, PlayerActionType.CHECK, 10, undefined, undefined, getNextTestTimestamp());
+            // Flop: SB (player1) checks, BB (player2) folds - Player 1 wins
+            game.performAction(player1Address, PlayerActionType.CHECK, 10, 0n, undefined, getNextTestTimestamp());
             game.performAction(player2Address, PlayerActionType.FOLD, 11, undefined, undefined, getNextTestTimestamp());
 
             // Verify rake was charged
@@ -506,14 +506,14 @@ describe("Texas Holdem - Rake Tests", () => {
             // Deal
             game.performAction(player1Address, NonPlayerActionType.DEAL, 6, undefined, undefined, getNextTestTimestamp());
 
-            // Preflop
-            game.performAction(player1Address, PlayerActionType.RAISE, 7, ONE_TOKEN, undefined, getNextTestTimestamp());
-            game.performAction(player2Address, PlayerActionType.CALL, 8, ONE_TOKEN, undefined, getNextTestTimestamp());
-            game.performAction(ownerAddress, PlayerActionType.FOLD, 9, undefined, undefined, getNextTestTimestamp());
+            // Preflop: UTG (seat 3) → SB (seat 1) → BB (seat 2)
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 7, undefined, undefined, getNextTestTimestamp());
+            game.performAction(player1Address, PlayerActionType.RAISE, 8, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CALL, 9, ONE_TOKEN, undefined, getNextTestTimestamp());
 
-            // Flop: Check through
-            game.performAction(player1Address, PlayerActionType.CHECK, 10, undefined, undefined, getNextTestTimestamp());
-            game.performAction(player2Address, PlayerActionType.CHECK, 11, undefined, undefined, getNextTestTimestamp());
+            // Flop: Check through (SB → BB)
+            game.performAction(player1Address, PlayerActionType.CHECK, 10, 0n, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CHECK, 11, 0n, undefined, getNextTestTimestamp());
 
             // Turn: Bet and fold
             game.performAction(player1Address, PlayerActionType.BET, 12, ONE_TOKEN, undefined, getNextTestTimestamp());
