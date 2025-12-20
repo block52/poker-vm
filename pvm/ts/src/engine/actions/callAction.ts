@@ -49,11 +49,7 @@ class CallAction extends BaseAction implements IAction {
     execute(player: Player, index: number, amount: bigint): void {
         // Re-verify the action is still valid before modifying state
         this.verify(player);
-
-        // Verify the amount is greater than zero
-        if (amount <= 0n) {
-            throw new Error("Call amount must be greater than zero.");
-        }
+        this.validateAmountIsPositive(amount);
 
         super.execute(player, index, amount);
 

@@ -115,6 +115,12 @@ abstract class BaseAction {
             throw new Error(`${this.type} action is not allowed during ${forbiddenRound} round.`);
         }
     }
+
+    protected validateAmountIsPositive(amount: bigint): void {
+        if (amount <= 0n) {
+            throw new Error(`${this.type} amount must be greater than zero.`);
+        }
+    }
 }
 
 export default BaseAction;
