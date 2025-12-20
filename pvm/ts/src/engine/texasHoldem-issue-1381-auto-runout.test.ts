@@ -48,18 +48,17 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
         expect(game.communityCards.length).toBe(3);
 
-        // Flop action: Player 2 checks, Player 1 goes all-in
-        game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
-
+        // Flop action: In heads-up post-flop, SB (Player 1) acts first
+        // Player 1 goes all-in (first to act post-flop in heads-up)
         const player1ChipsBeforeAllIn = game.getPlayer(PLAYER_1).chips;
-        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 9, player1ChipsBeforeAllIn, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 8, player1ChipsBeforeAllIn, undefined, getNextTestTimestamp());
 
         expect(game.getPlayer(PLAYER_1).status).toBe(PlayerStatus.ALL_IN);
         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
         // Player 2 calls the all-in (still has chips remaining)
         const callAmount = player1ChipsBeforeAllIn;
-        game.performAction(PLAYER_2, PlayerActionType.CALL, 10, callAmount, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.CALL, 9, callAmount, undefined, getNextTestTimestamp());
 
         const player2AfterCall = game.getPlayer(PLAYER_2);
         expect(player2AfterCall.chips).toBeGreaterThan(0n); // Still has chips
@@ -85,7 +84,7 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
         expect(player2ActionTypes).not.toContain(PlayerActionType.SHOW);
 
         // After Player 1 shows, Player 2 should have SHOW option
-        game.performAction(PLAYER_1, PlayerActionType.SHOW, 11, undefined, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_1, PlayerActionType.SHOW, 10, undefined, undefined, getNextTestTimestamp());
         const player2LegalActionsAfterShow = game.getLegalActions(PLAYER_2);
         const player2ActionTypesAfterShow = player2LegalActionsAfterShow.map(a => a.action);
         expect(player2ActionTypesAfterShow).toContain(PlayerActionType.SHOW);
@@ -114,21 +113,19 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
 
         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
-        // Flop: Both check
-        game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
-        game.performAction(PLAYER_1, PlayerActionType.CHECK, 9, 0n, undefined, getNextTestTimestamp());
+        // Flop: Both check (in heads-up post-flop, SB acts first)
+        game.performAction(PLAYER_1, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.CHECK, 9, 0n, undefined, getNextTestTimestamp());
 
         expect(game.currentRound).toBe(TexasHoldemRound.TURN);
         expect(game.communityCards.length).toBe(4);
 
-        // Turn: Player 2 checks, Player 1 goes all-in
-        game.performAction(PLAYER_2, PlayerActionType.CHECK, 10, 0n, undefined, getNextTestTimestamp());
-
+        // Turn: Player 1 goes all-in (SB acts first in heads-up post-flop)
         const player1Chips = game.getPlayer(PLAYER_1).chips;
-        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 11, player1Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 10, player1Chips, undefined, getNextTestTimestamp());
 
         // Player 2 calls
-        game.performAction(PLAYER_2, PlayerActionType.CALL, 12, player1Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.CALL, 11, player1Chips, undefined, getNextTestTimestamp());
 
         // Should auto-progress to SHOWDOWN with river dealt
         expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
@@ -174,20 +171,18 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
 
         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
-        // Flop: Player 2 checks, Player 3 checks, Player 1 goes all-in
-        game.performAction(PLAYER_2, PlayerActionType.CHECK, 10, 0n, undefined, getNextTestTimestamp());
-        game.performAction(PLAYER_3, PlayerActionType.CHECK, 11, 0n, undefined, getNextTestTimestamp());
-
+        // Flop: Post-flop action order is SB → BB → other players
+        // Player 1 (SB) goes all-in
         const player1Chips = game.getPlayer(PLAYER_1).chips;
-        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 12, player1Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 10, player1Chips, undefined, getNextTestTimestamp());
 
-        // Player 2 also goes all-in (re-raising)
+        // Player 2 (BB) also goes all-in (re-raising)
         const player2Chips = game.getPlayer(PLAYER_2).chips;
-        game.performAction(PLAYER_2, PlayerActionType.ALL_IN, 13, player2Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.ALL_IN, 11, player2Chips, undefined, getNextTestTimestamp());
 
         // Player 3 calls (still has chips)
         const callAmount = player2Chips; // Match the largest all-in (Player 2's all-in)
-        game.performAction(PLAYER_3, PlayerActionType.CALL, 14, callAmount, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_3, PlayerActionType.CALL, 12, callAmount, undefined, getNextTestTimestamp());
 
         // All betting should be complete - auto-runout to showdown
         expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
@@ -222,11 +217,9 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
 
         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
-        // Flop: Player 2 checks, Player 1 goes all-in
-        game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
-
+        // Flop: Player 1 (SB) goes all-in first (heads-up post-flop, SB acts first)
         const player1Chips = game.getPlayer(PLAYER_1).chips;
-        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 9, player1Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 8, player1Chips, undefined, getNextTestTimestamp());
 
         // Before Player 2 acts, we should still be on FLOP
         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
@@ -263,17 +256,15 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
 
         expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
-        // Flop: Player 2 checks, Player 1 goes all-in
-        game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
-
+        // Flop: Player 1 (SB) goes all-in first (heads-up post-flop, SB acts first)
         const player1Chips = game.getPlayer(PLAYER_1).chips;
-        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 9, player1Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 8, player1Chips, undefined, getNextTestTimestamp());
 
         // Verify Player 1 is all-in
         expect(game.getPlayer(PLAYER_1).status).toBe(PlayerStatus.ALL_IN);
 
         // Player 2 calls
-        game.performAction(PLAYER_2, PlayerActionType.CALL, 10, player1Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.CALL, 9, player1Chips, undefined, getNextTestTimestamp());
 
         // Should auto-progress to SHOWDOWN
         expect(game.currentRound).toBe(TexasHoldemRound.SHOWDOWN);
@@ -293,7 +284,7 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
 
         // Verify Player 1 (all-in player) can actually perform SHOW action
         expect(() => {
-            game.performAction(PLAYER_1, PlayerActionType.SHOW, 11, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.SHOW, 10, undefined, undefined, getNextTestTimestamp());
         }).not.toThrow();
 
         // Verify Player 1's status changed to SHOWING

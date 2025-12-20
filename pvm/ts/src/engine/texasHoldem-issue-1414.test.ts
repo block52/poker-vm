@@ -142,9 +142,9 @@ describe("Tests for issue 1414", () => {
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
 
-            // Complete PREFLOP
+            // Complete PREFLOP - SB calls (1 token to match BB), then BB checks
             game.performAction(PLAYER_1, PlayerActionType.CALL, 6, 1000000000000000000n, undefined, getNextTestTimestamp());
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n, undefined, getNextTestTimestamp());
 
             expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
 
@@ -293,7 +293,7 @@ describe("Tests for issue 1414", () => {
 
             // Complete preflop betting (only between players 1 and 2)
             game.performAction(PLAYER_1, PlayerActionType.CALL, 7, 1000000000000000000n, undefined, getNextTestTimestamp());
-            game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
 
             // EXPECTED: Round should advance to FLOP (Player 3 never needed to act)
             expect(game.currentRound).toBe(TexasHoldemRound.FLOP);

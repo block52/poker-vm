@@ -21,10 +21,12 @@ describe("Simple test for issue 1381", () => {
         game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
         console.log("Current round after deal:", game.currentRound);
 
-        console.log("4. Player 1 goes all-in");
+        console.log("4. Player 1 goes all-in (using RAISE since there's already a bet - BB)");
         const player1Chips = game.getPlayer(PLAYER_1).chips;
         console.log("Player 1 chips:", player1Chips.toString());
-        game.performAction(PLAYER_1, PlayerActionType.ALL_IN, 6, player1Chips, undefined, getNextTestTimestamp());
+        // Preflop with BB already in, must use RAISE to increase bet (ALL_IN maps to BET which fails)
+        // Player 1 has already posted SB (1 token), so additional amount = remaining chips
+        game.performAction(PLAYER_1, PlayerActionType.RAISE, 6, player1Chips, undefined, getNextTestTimestamp());
         console.log("Current round after all-in:", game.currentRound);
 
         console.log("5. Player 2 calls - THIS IS WHERE IT MAY HANG");

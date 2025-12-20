@@ -18,7 +18,7 @@ describe("Texas Holdem - Rake Tests", () => {
         beforeEach(() => {
             const gameConfig = {
                 address: ethers.ZeroAddress,
-                dealer: 1,
+                dealer: 9, // Virtual dealer - SB at seat 1, BB at seat 2
                 handNumber: 1,
                 actionCount: 0,
                 round: TexasHoldemRound.ANTE,
@@ -85,35 +85,34 @@ describe("Texas Holdem - Rake Tests", () => {
 
         it("should charge 5% rake when pot is above rake-free threshold", () => {
             // Join players and owner
+            // With dealer at seat 9: SB is seat 1, BB is seat 2
             game.performAction(player1Address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
             game.performAction(player2Address, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
             game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
 
-            // Post blinds
+            // Post blinds - with dealer at seat 9, SB is seat 1, BB is seat 2
             game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n, undefined, getNextTestTimestamp());
             game.performAction(player2Address, PlayerActionType.BIG_BLIND, 5, ONE_TOKEN / 5n, undefined, getNextTestTimestamp());
 
             // Deal cards
             game.performAction(player1Address, NonPlayerActionType.DEAL, 6, undefined, undefined, getNextTestTimestamp());
 
-            // Player 1 raises to make pot significant
-            game.performAction(player1Address, PlayerActionType.RAISE, 7, TEN_TOKENS, undefined, getNextTestTimestamp());
-            
-            // Player 2 calls
-            game.performAction(player2Address, PlayerActionType.CALL, 8, TEN_TOKENS, undefined, getNextTestTimestamp());
-            
-            // Owner folds
-            game.performAction(ownerAddress, PlayerActionType.FOLD, 9, undefined, undefined, getNextTestTimestamp());
+            // Preflop: In 3-player with dealer at 9, action is: seat 3 (owner/UTG) → seat 1 (SB) → seat 2 (BB)
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 7, undefined, undefined, getNextTestTimestamp());
+            game.performAction(player1Address, PlayerActionType.RAISE, 8, TEN_TOKENS, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CALL, 9, TEN_TOKENS, undefined, getNextTestTimestamp());
 
-            // Check and move to showdown
-            game.performAction(player1Address, PlayerActionType.CHECK, 10, undefined, undefined, getNextTestTimestamp());
-            game.performAction(player2Address, PlayerActionType.CHECK, 11, undefined, undefined, getNextTestTimestamp());
-            
-            game.performAction(player1Address, PlayerActionType.CHECK, 12, undefined, undefined, getNextTestTimestamp());
-            game.performAction(player2Address, PlayerActionType.CHECK, 13, undefined, undefined, getNextTestTimestamp());
-            
-            game.performAction(player1Address, PlayerActionType.CHECK, 14, undefined, undefined, getNextTestTimestamp());
-            game.performAction(player2Address, PlayerActionType.CHECK, 15, undefined, undefined, getNextTestTimestamp());
+            // Flop: Post-flop action starts with SB (seat 1, player1)
+            game.performAction(player1Address, PlayerActionType.CHECK, 10, 0n, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CHECK, 11, 0n, undefined, getNextTestTimestamp());
+
+            // Turn
+            game.performAction(player1Address, PlayerActionType.CHECK, 12, 0n, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CHECK, 13, 0n, undefined, getNextTestTimestamp());
+
+            // River
+            game.performAction(player1Address, PlayerActionType.CHECK, 14, 0n, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CHECK, 15, 0n, undefined, getNextTestTimestamp());
 
             const pot = game.getPot();
             expect(pot).toBeGreaterThan(FIVE_TOKENS);
@@ -131,7 +130,7 @@ describe("Texas Holdem - Rake Tests", () => {
         });
 
         it("should cap rake at maximum value", () => {
-            // Create a very large pot scenario
+            // Create a very large pot scenario - with dealer at seat 9, SB=seat 1, BB=seat 2
             game.performAction(player1Address, NonPlayerActionType.JOIN, 1, ONE_HUNDRED_TOKENS, "seat=1", getNextTestTimestamp());
             game.performAction(player2Address, NonPlayerActionType.JOIN, 2, ONE_HUNDRED_TOKENS, "seat=2", getNextTestTimestamp());
             game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, ONE_HUNDRED_TOKENS, "seat=3", getNextTestTimestamp());
@@ -143,10 +142,10 @@ describe("Texas Holdem - Rake Tests", () => {
             // Deal cards
             game.performAction(player1Address, NonPlayerActionType.DEAL, 6, undefined, undefined, getNextTestTimestamp());
 
-            // Create large pot (20 tokens each)
-            game.performAction(player1Address, PlayerActionType.RAISE, 7, 20n * ONE_TOKEN, undefined, getNextTestTimestamp());
-            game.performAction(player2Address, PlayerActionType.CALL, 8, 20n * ONE_TOKEN, undefined, getNextTestTimestamp());
-            game.performAction(ownerAddress, PlayerActionType.FOLD, 9, undefined, undefined, getNextTestTimestamp());
+            // Create large pot - preflop order in 3-player: UTG (seat 3) → SB (seat 1) → BB (seat 2)
+            game.performAction(ownerAddress, PlayerActionType.FOLD, 7, undefined, undefined, getNextTestTimestamp());
+            game.performAction(player1Address, PlayerActionType.RAISE, 8, 20n * ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(player2Address, PlayerActionType.CALL, 9, 20n * ONE_TOKEN, undefined, getNextTestTimestamp());
 
             const pot = game.getPot();
             
@@ -348,7 +347,7 @@ describe("Texas Holdem - Rake Tests", () => {
         it("should allocate rake to owner when winner is determined (single winner by fold)", () => {
             const gameConfig = {
                 address: ethers.ZeroAddress,
-                dealer: 1,
+                dealer: 9, // Virtual dealer - SB at seat 1, BB at seat 2
                 handNumber: 1,
                 actionCount: 0,
                 round: TexasHoldemRound.ANTE,
@@ -394,17 +393,15 @@ describe("Texas Holdem - Rake Tests", () => {
             // Deal
             gameWithOwner.performAction(player1Address, NonPlayerActionType.DEAL, 6, undefined, undefined, getNextTestTimestamp());
 
-            // Player 1 raises to create pot above threshold
-            gameWithOwner.performAction(player1Address, PlayerActionType.RAISE, 7, FIVE_TOKENS, undefined, getNextTestTimestamp());
-            
-            // Player 2 calls, owner folds
-            gameWithOwner.performAction(player2Address, PlayerActionType.CALL, 8, FIVE_TOKENS, undefined, getNextTestTimestamp());
-            gameWithOwner.performAction(ownerAddress, PlayerActionType.FOLD, 9, undefined, undefined, getNextTestTimestamp());
+            // Preflop: UTG (seat 3) → SB (seat 1) → BB (seat 2)
+            gameWithOwner.performAction(ownerAddress, PlayerActionType.FOLD, 7, undefined, undefined, getNextTestTimestamp());
+            gameWithOwner.performAction(player1Address, PlayerActionType.RAISE, 8, FIVE_TOKENS, undefined, getNextTestTimestamp());
+            gameWithOwner.performAction(player2Address, PlayerActionType.CALL, 9, FIVE_TOKENS, undefined, getNextTestTimestamp());
 
             const potBeforeFold = gameWithOwner.getPot();
-            
-            // Player 2 folds on flop - Player 1 wins
-            gameWithOwner.performAction(player1Address, PlayerActionType.CHECK, 10, undefined, undefined, getNextTestTimestamp());
+
+            // Flop: SB (player1) checks, BB (player2) folds - Player 1 wins
+            gameWithOwner.performAction(player1Address, PlayerActionType.CHECK, 10, 0n, undefined, getNextTestTimestamp());
             gameWithOwner.performAction(player2Address, PlayerActionType.FOLD, 11, undefined, undefined, getNextTestTimestamp());
 
             const pot = potBeforeFold; // Pot before fold
@@ -424,7 +421,7 @@ describe("Texas Holdem - Rake Tests", () => {
         const createGameWithRake = () => {
             const gameConfig = {
                 address: ethers.ZeroAddress,
-                dealer: 1,
+                dealer: 9, // Virtual dealer position - SB at seat 1, BB at seat 2
                 handNumber: 1,
                 actionCount: 0,
                 round: TexasHoldemRound.ANTE,
@@ -640,7 +637,7 @@ describe("Texas Holdem - Rake Tests", () => {
         it("should handle rake with 0% percentage (no rake)", () => {
             const gameConfig = {
                 address: ethers.ZeroAddress,
-                dealer: 1,
+                dealer: 9, // Virtual dealer - SB at seat 1, BB at seat 2
                 handNumber: 1,
                 actionCount: 0,
                 round: TexasHoldemRound.ANTE,
@@ -672,14 +669,14 @@ describe("Texas Holdem - Rake Tests", () => {
 
             const game = TexasHoldemGame.fromJson(gameConfig, gameOptions);
 
-            // Setup
+            // Setup - with dealer at seat 9, SB is seat 1, BB is seat 2
             game.performAction(player1Address, NonPlayerActionType.JOIN, 1, TEN_TOKENS, "seat=1", getNextTestTimestamp());
             game.performAction(player2Address, NonPlayerActionType.JOIN, 2, TEN_TOKENS, "seat=2", getNextTestTimestamp());
             game.performAction(ownerAddress, NonPlayerActionType.JOIN, 3, TEN_TOKENS, "seat=3", getNextTestTimestamp());
 
             const ownerInitialChips = game.getPlayer(ownerAddress).chips;
 
-            // Blinds
+            // Blinds - SB at seat 1, BB at seat 2
             game.performAction(player1Address, PlayerActionType.SMALL_BLIND, 4, ONE_TOKEN / 10n, undefined, getNextTestTimestamp());
             game.performAction(player2Address, PlayerActionType.BIG_BLIND, 5, ONE_TOKEN / 5n, undefined, getNextTestTimestamp());
 
