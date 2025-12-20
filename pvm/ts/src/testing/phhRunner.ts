@@ -175,23 +175,13 @@ export class PhhRunner {
      * PHH format assumes blinds are already posted
      */
     private postBlindsAndDeal(game: TexasHoldemGame, hand: PhhHand): void {
-        const numPlayers = hand.players.length;
-
-        // In PHH format:
-        // - Player 1 is typically UTG/first position
-        // - For 3-player: Player 1 = Button/Dealer, Player 2 = SB, Player 3 = BB?
-        //   Actually in the Dwan-Ivey hand, Dwan (p3) acts first preflop, so he's not BB
-        // - Standard order for 3-way: Dealer, SB, BB
-        //   After blinds, action starts with player after BB (which wraps to dealer in 3-way)
-
-        // For now, assume:
-        // - SB is player 1
-        // - BB is player 2 (or player 2 if only 2 players)
+        // PHH format convention: player 1 posts SB, player 2 posts BB
+        // This follows standard PHH/dealer position conventions
         const smallBlind = BigInt(hand.blindsOrStraddles[0] || 0);
         const bigBlind = BigInt(hand.blindsOrStraddles[1] || 0);
 
-        // Post small blind (player 1 in heads-up, or first player after dealer in multi-way)
-        const sbPlayer = numPlayers === 2 ? 2 : 1; // In heads-up, dealer posts SB
+        // Post small blind (player 1)
+        const sbPlayer = 1;
         game.performAction(
             this.playerAddress(sbPlayer),
             PlayerActionType.SMALL_BLIND,
@@ -201,8 +191,8 @@ export class PhhRunner {
             this.getNextTimestamp()
         );
 
-        // Post big blind
-        const bbPlayer = numPlayers === 2 ? 1 : 2;
+        // Post big blind (player 2)
+        const bbPlayer = 2;
         game.performAction(
             this.playerAddress(bbPlayer),
             PlayerActionType.BIG_BLIND,
