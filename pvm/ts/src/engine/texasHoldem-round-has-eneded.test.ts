@@ -89,19 +89,22 @@ describe("hasRoundEnded", () => {
         });
 
         it("should end when both players check", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
+            // PLAYER_1 is small blind (posted 1 token), needs to call 1 more to match big blind
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 5, undefined, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(true);
         });
 
         it("should not end when only one player has acted", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
+            // PLAYER_1 calls to match big blind
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
         it("should not end when player bets and other hasn't responded", () => {
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
-            game.performAction(PLAYER_2, PlayerActionType.BET, 5, TWO_TOKENS, undefined, getNextTestTimestamp());
+            // PLAYER_1 calls, PLAYER_2 (big blind) raises
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.RAISE, 5, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.hasRoundEnded(TexasHoldemRound.PREFLOP)).toBe(false);
         });
 
@@ -126,7 +129,8 @@ describe("hasRoundEnded", () => {
             game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, 1, undefined, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, undefined, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, undefined, undefined, getNextTestTimestamp());
+            // PREFLOP: PLAYER_1 calls to match big blind, PLAYER_2 checks
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 5, undefined, undefined, getNextTestTimestamp());
             // Now we should be on FLOP
         });
@@ -158,8 +162,8 @@ describe("hasRoundEnded", () => {
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 2, undefined, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 3, undefined, undefined, getNextTestTimestamp());
 
-            // PREFLOP - both check
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 4, 0n, undefined, getNextTestTimestamp());
+            // PREFLOP - PLAYER_1 calls, PLAYER_2 checks
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 4, ONE_TOKEN, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 5, 0n, undefined, getNextTestTimestamp());
 
             // FLOP - both check
