@@ -114,11 +114,16 @@ export class PhhRunner {
         const smallBlind = BigInt(hand.blindsOrStraddles[0] || 0) * CHIP_MULTIPLIER;
         const bigBlind = BigInt(hand.blindsOrStraddles[1] || 0) * CHIP_MULTIPLIER;
 
+        // Guard against empty startingStacks (Math.max(...[]) returns -Infinity)
+        const maxStack = hand.startingStacks.length > 0
+            ? Math.max(...hand.startingStacks)
+            : 0;
+
         const gameOptions: GameOptions = {
             minBuyIn: 0n,
-            maxBuyIn: BigInt(Math.max(...hand.startingStacks)) * CHIP_MULTIPLIER * 2n,
+            maxBuyIn: BigInt(maxStack) * CHIP_MULTIPLIER * 2n,
             minPlayers: 2,
-            maxPlayers: hand.players.length,
+            maxPlayers: Math.max(hand.players.length, 2),
             smallBlind,
             bigBlind,
             timeout: 60000,
