@@ -178,7 +178,7 @@ describe("Issue #1381: Heads-up All-In Auto-Runout", () => {
 
         // Player 2 (BB) also goes all-in (re-raising)
         const player2Chips = game.getPlayer(PLAYER_2).chips;
-        game.performAction(PLAYER_2, PlayerActionType.ALL_IN, 11, player2Chips, undefined, getNextTestTimestamp());
+        game.performAction(PLAYER_2, PlayerActionType.RAISE, 11, player2Chips, undefined, getNextTestTimestamp());
 
         // Player 3 calls (still has chips)
         const callAmount = player2Chips; // Match the largest all-in (Player 2's all-in)

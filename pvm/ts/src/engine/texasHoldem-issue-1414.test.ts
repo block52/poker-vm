@@ -1,6 +1,6 @@
 import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
 import TexasHoldemGame from "./texasHoldem";
-import { getNextTestTimestamp, ONE_HUNDRED_TOKENS, baseGameConfig, gameOptions, mnemonic } from "./testConstants";
+import { getNextTestTimestamp, ONE_TOKEN, ONE_HUNDRED_TOKENS, baseGameConfig, gameOptions, mnemonic } from "./testConstants";
 
 /**
  * Tests for issue #1414: Joining table that is already in a hand
@@ -143,7 +143,7 @@ describe("Tests for issue 1414", () => {
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
 
             // Complete PREFLOP - SB calls (1 token to match BB), then BB checks
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, 1000000000000000000n, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, ONE_TOKEN, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n, undefined, getNextTestTimestamp());
 
             expect(game.currentRound).toBe(TexasHoldemRound.FLOP);
@@ -292,7 +292,7 @@ describe("Tests for issue 1414", () => {
             expect(game.currentRound).toBe(TexasHoldemRound.PREFLOP);
 
             // Complete preflop betting (only between players 1 and 2)
-            game.performAction(PLAYER_1, PlayerActionType.CALL, 7, 1000000000000000000n, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 7, ONE_TOKEN, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 8, 0n, undefined, getNextTestTimestamp());
 
             // EXPECTED: Round should advance to FLOP (Player 3 never needed to act)
