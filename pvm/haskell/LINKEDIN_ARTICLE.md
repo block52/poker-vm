@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="https://www.haskell.org/img/haskell-logo.svg" alt="Haskell Logo" width="200"/>
+</div>
+
 # Why Haskell is the Perfect Language for Deterministic Blockchain Applications
 
 ## The Challenge of Determinism in Distributed Systems
