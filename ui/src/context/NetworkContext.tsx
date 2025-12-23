@@ -99,6 +99,15 @@ export const NETWORK_PRESETS: NetworkEndpoints[] = [
         rest: "https://node1.block52.xyz",
         grpc: "grpcs://node1.block52.xyz:9443",
         ws: "wss://node1.block52.xyz/ws" // WebSocket endpoint for table/game updates
+    },
+    // [3] ✅ Miller Services - Sync node on DigitalOcean SYD1
+    // Added: 2025-12-22
+    {
+        name: "Miller Services",
+        rpc: "https://node.tommillerservices.com/rpc/",
+        rest: "https://node.tommillerservices.com",
+        grpc: "grpcs://node.tommillerservices.com:9443",
+        ws: "wss://node.tommillerservices.com/ws" // WebSocket server not deployed yet
     }
 ];
 
