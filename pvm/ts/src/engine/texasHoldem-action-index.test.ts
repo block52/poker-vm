@@ -62,11 +62,11 @@ describe("Texas Holdem - Action Index", () => {
             expect(game.getActionIndex()).toBe(3);
 
             // Perform first action (small blind) and check index
-            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(4);
 
             // Perform second action (big blind) and check index
-            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
+            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(5);
 
             // Perform third action (deal to enter PREFLOP) and check index

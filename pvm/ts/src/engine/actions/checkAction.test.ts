@@ -129,8 +129,15 @@ describe("CheckAction", () => {
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
-            // Mock verify to return undefined (no range)
-            jest.spyOn(action, "verify").mockReturnValue({ minAmount: 0n, maxAmount: 0n });
+            // Mock getActionsForRound to return empty array (no actions/bets in current round)
+            // This makes the BetManager return 0 for largest bet, allowing check
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([]);
+
+            // Mock bigBlind property for BetManager
+            Object.defineProperty(game, "bigBlind", {
+                get: jest.fn(() => 20000n),
+                configurable: true
+            });
 
             // Mock game's addAction method
             game.addAction = jest.fn();
