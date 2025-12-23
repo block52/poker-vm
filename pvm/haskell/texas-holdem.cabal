@@ -1,0 +1,64 @@
+cabal-version:      3.0
+name:               texas-holdem
+version:            0.1.0.0
+synopsis:           Pure functional Texas Hold'em poker implementation
+description:        A deterministic, pure functional implementation of Texas Hold'em
+                    poker game logic in Haskell. Designed for integration with
+                    blockchain-based poker applications.
+license:            MIT
+license-file:       LICENSE
+author:             Block52
+maintainer:         dev@block52.xyz
+category:           Game
+build-type:         Simple
+extra-doc-files:    README.md
+
+common warnings
+    ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns -Wmissing-export-lists
+                 -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+
+library
+    import:           warnings
+    exposed-modules:  TexasHoldem
+                    , TexasHoldem.Card
+                    , TexasHoldem.Deck
+                    , TexasHoldem.Hand
+                    , TexasHoldem.Player
+                    , TexasHoldem.GameState
+                    , TexasHoldem.Action
+                    , TexasHoldem.Pot
+                    , TexasHoldem.Round
+                    , TexasHoldem.Evaluation
+                    , TexasHoldem.BetManager
+                    , TexasHoldem.DealerManager
+    build-depends:    base >= 4.17 && < 5
+                    , containers >= 0.6
+                    , mtl >= 2.2
+                    , random >= 1.2
+                    , text >= 2.0
+                    , vector >= 0.13
+    hs-source-dirs:   src
+    default-language: Haskell2010
+
+executable texas-holdem-demo
+    import:           warnings
+    main-is:          Main.hs
+    build-depends:    base >= 4.17 && < 5
+                    , texas-holdem
+                    , containers >= 0.6
+                    , text >= 2.0
+    hs-source-dirs:   app
+    default-language: Haskell2010
+
+test-suite texas-holdem-test
+    import:           warnings
+    default-language: Haskell2010
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Main.hs
+    build-depends:    base >= 4.17 && < 5
+                    , texas-holdem
+                    , containers >= 0.6
+                    , hspec >= 2.10
+                    , QuickCheck >= 2.14
