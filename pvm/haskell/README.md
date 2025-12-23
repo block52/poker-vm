@@ -13,7 +13,7 @@ A deterministic, pure functional implementation of Texas Hold'em poker game logi
 
 ## Project Structure
 
-```
+```text
 pvm/haskell/
 ├── src/
 │   └── TexasHoldem/

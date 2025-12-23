@@ -199,11 +199,12 @@ getWinners gs
     validHands :: [(Player, EvaluatedHand)]
     validHands = [(p, h) | (p, Just h) <- playerHands]
 
-    -- Find the best hand
-    bestRank = maximum $ map (ehRank . snd) validHands
-
     -- All players with the best hand
-    winnersWithHands = filter (\(_, h) -> ehRank h == bestRank) validHands
+    winnersWithHands
+        | null validHands = []  -- No valid hands, no winners
+        | otherwise =
+            let bestRank = maximum $ map (ehRank . snd) validHands
+            in filter (\(_, h) -> ehRank h == bestRank) validHands
 
 -- | Perform an action, returning either an error or the new game state
 performAction :: Action -> GameState -> Either GameError GameState
@@ -339,13 +340,16 @@ setLastAggressor pid gs = gs
 
 -- | Advance to next player to act
 advanceAction :: GameState -> GameState
-advanceAction gs = gs { gsActionOn = nextSeat }
+advanceAction gs
+    | null actablePlayers = gs  -- No one can act, keep current
+    | otherwise = gs { gsActionOn = nextSeat }
   where
     seats = Map.keys (gsPlayers gs)
     currentSeat = gsActionOn gs
-    -- Find next seat with an active player
-    nextSeats = dropWhile (<= currentSeat) (cycle seats)
-    nextSeat = head $ filter (canActAt gs) nextSeats
+    actablePlayers = filter (canActAt gs) seats
+    -- Find next seat with an active player (cycling from current)
+    nextSeats = dropWhile (<= currentSeat) (cycle actablePlayers)
+    nextSeat = head nextSeats
 
     canActAt :: GameState -> SeatIndex -> Bool
     canActAt gs' seat = maybe False canAct (Map.lookup seat (gsPlayers gs'))
@@ -383,12 +387,14 @@ advanceRound gs = case nextRound (gsRound gs) of
 -- | Deal hole cards to all active players
 dealHoleCards :: GameState -> Either GameError GameState
 dealHoleCards gs = do
-    let playerCount = Map.size (gsPlayers gs)
+    let orderedSeats = Map.keys (gsPlayers gs)  -- sorted seats
+        playerCount = length orderedSeats
         cardsNeeded = playerCount * 2
     (cards, newDeck) <- maybe (Left DeckExhausted) Right
                               (drawN cardsNeeded (gsDeck gs))
     let cardPairs = chunk 2 cards
-        players' = Map.mapWithKey (dealToSeat cardPairs) (gsPlayers gs)
+        seatToCards = Map.fromList $ zip orderedSeats cardPairs
+        players' = Map.mapWithKey (dealToSeat seatToCards) (gsPlayers gs)
     return gs
         { gsDeck    = newDeck
         , gsPlayers = players'
@@ -398,16 +404,11 @@ dealHoleCards gs = do
     chunk _ [] = []
     chunk n xs = take n xs : chunk n (drop n xs)
 
-    dealToSeat :: [[Card]] -> SeatIndex -> Player -> Player
-    dealToSeat cardPairs seat p =
-        case cardPairs `safeIndex` seat of
+    dealToSeat :: Map.Map SeatIndex [Card] -> SeatIndex -> Player -> Player
+    dealToSeat seatToCards seat p =
+        case Map.lookup seat seatToCards of
             Just [c1, c2] -> dealCards (mkHoleCards c1 c2) p
             _             -> p
-
-    safeIndex :: [a] -> Int -> Maybe a
-    safeIndex xs i
-        | i < 0 || i >= length xs = Nothing
-        | otherwise = Just (xs !! i)
 
 -- | Deal community cards for the current round
 dealCommunityCards :: GameState -> Either GameError GameState

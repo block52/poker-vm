@@ -28,7 +28,6 @@ module TexasHoldem.Card
     ) where
 
 import Data.Char (toUpper)
-import Data.List (find)
 
 -- | Suit of a playing card
 data Suit = Clubs | Diamonds | Hearts | Spades
