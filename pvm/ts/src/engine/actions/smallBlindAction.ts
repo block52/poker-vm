@@ -69,6 +69,9 @@ class SmallBlindAction extends BaseAction implements IAction {
      * @param _amount Optional amount parameter (ignored - amount is calculated internally)
      */
     execute(player: Player, index: number, _amount?: bigint): void {
+        // Re-verify the action is still valid before modifying state
+        this.verify(player);
+
         const effectiveAmount = this.getEffectiveAmount(player);
         super.execute(player, index, effectiveAmount);
 

@@ -152,6 +152,12 @@ describe("SmallBlindAction", () => {
 
             // Mock player status
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            // Mock player seat number
+            jest.spyOn(game, "getPlayerSeatNumber").mockReturnValue(1);
+
+            // Mock active player count (need at least 2 players)
+            jest.spyOn(game, "getActivePlayerCount").mockReturnValue(2);
         });
 
         it("should deduct small blind amount from player chips", () => {

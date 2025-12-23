@@ -28,8 +28,8 @@ describe("Texas Holdem - Reinit", () => {
             game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_1, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
 
-            // Both check
-            game.performAction(PLAYER_1, PlayerActionType.CHECK, 6, 0n, undefined, getNextTestTimestamp());
+            // SB calls to match BB, then BB checks
+            game.performAction(PLAYER_1, PlayerActionType.CALL, 6, ONE_TOKEN, undefined, getNextTestTimestamp());
             game.performAction(PLAYER_2, PlayerActionType.CHECK, 7, 0n, undefined, getNextTestTimestamp());
 
             // Both check

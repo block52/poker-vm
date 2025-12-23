@@ -58,20 +58,24 @@ describe("Texas Holdem - Action Index", () => {
         });
 
         it("should increment turn index by exactly 1 for each action", () => {
-            // Check initial turn index is 1
+            // Check initial turn index is 3 (after 2 joins)
             expect(game.getActionIndex()).toBe(3);
 
-            // Perform first action and check index
-            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, undefined, undefined, getNextTestTimestamp());
+            // Perform first action (small blind) and check index
+            game.performAction(PLAYER_2, PlayerActionType.SMALL_BLIND, 3, ONE_TOKEN, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(4);
 
-            // Perform second action and check index
-            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4, undefined, undefined, getNextTestTimestamp());
+            // Perform second action (big blind) and check index
+            game.performAction(PLAYER_1, PlayerActionType.BIG_BLIND, 4, TWO_TOKENS, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(5);
 
-            // Perform third action and check index
-            game.performAction(PLAYER_2, PlayerActionType.CALL, 5, ONE_TOKEN, undefined, getNextTestTimestamp());
+            // Perform third action (deal to enter PREFLOP) and check index
+            game.performAction(PLAYER_2, NonPlayerActionType.DEAL, 5, undefined, undefined, getNextTestTimestamp());
             expect(game.getActionIndex()).toBe(6);
+
+            // Perform fourth action (small blind calls in PREFLOP) and check index
+            game.performAction(PLAYER_2, PlayerActionType.CALL, 6, ONE_TOKEN, undefined, getNextTestTimestamp());
+            expect(game.getActionIndex()).toBe(7);
         });
 
     });
