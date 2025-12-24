@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { NETWORK_PRESETS } from "../context/NetworkContext";
+import { NETWORK_PRESETS, NetworkEndpoints } from "../context/NetworkContext";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
 import { ExplorerHeader } from "../components/explorer/ExplorerHeader";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
@@ -15,9 +15,61 @@ import {
 // Filter out localhost for production view
 const productionNodes = NETWORK_PRESETS.filter(n => n.name !== "Localhost");
 
+interface NodeInfo {
+    status: "checking" | "online" | "offline";
+    blockHeight: string | null;
+}
+
 export default function NodesPage() {
     const [discoveredNodes, setDiscoveredNodes] = useState<DiscoveredNode[]>([]);
     const [isDiscovering, setIsDiscovering] = useState(false);
+    const [nodeInfo, setNodeInfo] = useState<Record<string, NodeInfo>>({});
+
+    // Check node status and get block height
+    const checkNode = useCallback(async (network: NetworkEndpoints): Promise<NodeInfo> => {
+        try {
+            const response = await fetch(
+                `${network.rest}/cosmos/base/tendermint/v1beta1/blocks/latest`,
+                { signal: AbortSignal.timeout(5000) }
+            );
+            if (!response.ok) {
+                return { status: "offline", blockHeight: null };
+            }
+            const data = await response.json();
+            const header = data.block?.header || data.sdk_block?.header;
+            return {
+                status: "online",
+                blockHeight: header?.height || null
+            };
+        } catch {
+            return { status: "offline", blockHeight: null };
+        }
+    }, []);
+
+    // Check all nodes on page load
+    const checkAllNodes = useCallback(async () => {
+        // Set all to checking
+        const initialInfo: Record<string, NodeInfo> = {};
+        productionNodes.forEach(n => {
+            initialInfo[n.name] = { status: "checking", blockHeight: null };
+        });
+        setNodeInfo(initialInfo);
+
+        // Check each node in parallel
+        const results = await Promise.all(
+            productionNodes.map(async (network) => {
+                const info = await checkNode(network);
+                return { name: network.name, info };
+            })
+        );
+
+        // Update info
+        const newInfo: Record<string, NodeInfo> = {};
+        results.forEach(r => {
+            newInfo[r.name] = r.info;
+        });
+        setNodeInfo(newInfo);
+    }, [checkNode]);
 
     // Discover new nodes from the network
     const handleDiscoverNodes = useCallback(async () => {
@@ -49,7 +101,8 @@ export default function NodesPage() {
 
     useEffect(() => {
         document.title = "Nodes - Block52";
-    }, []);
+        checkAllNodes();
+    }, [checkAllNodes]);
 
     // Combine preset and discovered nodes for display
     const allNodes = [
@@ -97,6 +150,8 @@ export default function NodesPage() {
                             <thead className="bg-gray-900">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Name</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Status</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Block Height</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 tracking-wider">Endpoint</th>
                                     <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 tracking-wider"></th>
                                 </tr>
@@ -104,6 +159,9 @@ export default function NodesPage() {
                             <tbody className="divide-y divide-gray-700">
                                 {allNodes.map((network) => {
                                     const isDiscovered = network.isDiscovered;
+                                    const info = nodeInfo[network.name];
+                                    const status = info?.status || "checking";
+                                    const blockHeight = info?.blockHeight;
 
                                     return (
                                         <tr
@@ -112,6 +170,26 @@ export default function NodesPage() {
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="text-white font-semibold">{network.name}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    status === "checking"
+                                                        ? "bg-yellow-900/50 text-yellow-400"
+                                                        : status === "online"
+                                                            ? "bg-green-900/50 text-green-400"
+                                                            : "bg-red-900/50 text-red-400"
+                                                }`}>
+                                                    {status === "checking" ? "Checking..." : status === "online" ? "Online" : "Offline"}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {status === "checking" ? (
+                                                    <span className="text-gray-500">-</span>
+                                                ) : blockHeight ? (
+                                                    <span className="text-blue-400 font-mono">#{parseInt(blockHeight).toLocaleString()}</span>
+                                                ) : (
+                                                    <span className="text-gray-500">-</span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className="font-mono text-xs text-gray-400">
