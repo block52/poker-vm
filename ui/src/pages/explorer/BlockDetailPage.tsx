@@ -5,10 +5,65 @@ import { useNetwork } from "../../context/NetworkContext";
 import { colors, hexToRgba } from "../../utils/colorConfig";
 import { ClickableAddress } from "../../components/explorer/ClickableAddress";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
-import { BlockResponse } from "@block52/poker-vm-sdk";
+// Define block response type locally to match Cosmos API response
+interface CosmosBlockResponse {
+    block_id: {
+        hash: string;
+        parts: {
+            total: number;
+            hash: string;
+        };
+    };
+    block: {
+        header: {
+            version: { block: string; app: string };
+            chain_id: string;
+            height: string;
+            time: string;
+            last_block_id: { hash: string; parts: { total: number; hash: string } };
+            last_commit_hash: string;
+            data_hash: string;
+            validators_hash: string;
+            next_validators_hash: string;
+            consensus_hash: string;
+            app_hash: string;
+            last_results_hash: string;
+            evidence_hash: string;
+            proposer_address: string;
+        };
+        data: {
+            txs: string[];
+        };
+        evidence: {
+            evidence: unknown[];
+        };
+        last_commit: {
+            height: string;
+            round: number;
+            block_id: { hash: string; parts: { total: number; hash: string } };
+            signatures: Array<{
+                block_id_flag: number;
+                validator_address: string;
+                timestamp: string;
+                signature: string;
+            }>;
+        };
+    };
+    sdk_block?: {
+        header: {
+            version: { block: string; app: string };
+            chain_id: string;
+            height: string;
+            time: string;
+            proposer_address: string;
+        };
+        data: {
+            txs: string[];
+        };
+    };
+}
 
-// Use SDK's BlockResponse type directly
-type CosmosBlock = BlockResponse;
+type CosmosBlock = CosmosBlockResponse;
 
 export default function BlockDetailPage() {
     const { height } = useParams<{ height: string }>();
@@ -37,7 +92,7 @@ export default function BlockDetailPage() {
                 }
 
                 const blockData = await cosmosClient.getBlock(parseInt(height));
-                setBlock(blockData);
+                setBlock(blockData as unknown as CosmosBlock);
                 setError(null);
             } catch (err: any) {
                 setError(err.message || "Failed to fetch block");
@@ -61,7 +116,7 @@ export default function BlockDetailPage() {
 
         const computeHashes = async () => {
             const hashes = await Promise.all(
-                block.block.data.txs.map(async tx => {
+                block.block.data.txs.map(async (tx: string) => {
                     const hexTx = decodeTransaction(tx);
                     return await calculateTxHash(hexTx);
                 })
@@ -400,7 +455,7 @@ export default function BlockDetailPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {block.block.data.txs.map((tx, index) => {
+                                {block.block.data.txs.map((tx: string, index: number) => {
                                     const txHex = decodeTransaction(tx);
                                     const txDetails = extractTransactionDetails(txHex);
                                     const showRawData = expandedTxs.has(index);

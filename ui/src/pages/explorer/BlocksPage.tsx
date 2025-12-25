@@ -1,14 +1,38 @@
 import { useState, useEffect, useCallback } from "react";
 import { getCosmosClient, clearCosmosClient } from "../../utils/cosmos/client";
 import { useNetwork } from "../../context/NetworkContext";
-import { BlockResponse } from "@block52/poker-vm-sdk";
 import { truncateHash, formatTimestampRelative } from "../../utils/formatUtils";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { AnimatedBackground } from "../../components/common/AnimatedBackground";
 import { ExplorerHeader } from "../../components/explorer/ExplorerHeader";
 
-// Use SDK's BlockResponse type directly
-type CosmosBlock = BlockResponse;
+// Define block response type locally to match Cosmos API response
+interface CosmosBlockResponse {
+    block_id: {
+        hash: string;
+        parts: { total: number; hash: string };
+    };
+    block: {
+        header: {
+            version: { block: string; app: string };
+            chain_id: string;
+            height: string;
+            time: string;
+            proposer_address: string;
+        };
+        data: { txs: string[] };
+    };
+    sdk_block?: {
+        header: {
+            height: string;
+            time: string;
+            proposer_address: string;
+        };
+        data: { txs: string[] };
+    };
+}
+
+type CosmosBlock = CosmosBlockResponse;
 
 export default function BlocksPage() {
     const [blocks, setBlocks] = useState<CosmosBlock[]>([]);
@@ -33,7 +57,7 @@ export default function BlocksPage() {
             const sortedBlocks = recentBlocks.sort((a, b) =>
                 parseInt(b.block.header.height) - parseInt(a.block.header.height)
             );
-            setBlocks(sortedBlocks);
+            setBlocks(sortedBlocks as unknown as CosmosBlock[]);
             setError(null);
         } catch (err: any) {
             // Provide detailed, network-specific error messages

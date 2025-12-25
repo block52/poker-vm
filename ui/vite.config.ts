@@ -57,7 +57,7 @@ export default defineConfig({
             "process",
             "util",
             "events",
-            "@bitcoinbrisbane/block52"
+            "@block52/poker-vm-sdk"
         ],
     },
 });
