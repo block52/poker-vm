@@ -135,22 +135,34 @@ async function testPhhDataset(datasetPath: string, maxHands: number = 1000): Pro
 }
 
 /**
+ * Format results as string
+ */
+function formatResults(stats: TestStats): string {
+    let output = "";
+    output += "\n" + "=".repeat(80) + "\n";
+    output += "PHH DATASET TEST RESULTS\n";
+    output += "=".repeat(80) + "\n";
+    output += `\nTotal Hands Tested:    ${stats.totalHands}\n`;
+    output += `Successful Hands:      ${stats.successfulHands}\n`;
+    output += `Failed Hands:          ${stats.failedHands}\n`;
+    output += `\nSuccess Rate:          ${stats.successRate.toFixed(2)}%\n`;
+    output += `Failure Rate:          ${(100 - stats.successRate).toFixed(2)}%\n`;
+    return output;
+}
+
+/**
  * Print detailed test results
  */
 function printResults(stats: TestStats) {
-    console.log("\n" + "=".repeat(80));
-    console.log("PHH DATASET TEST RESULTS");
-    console.log("=".repeat(80));
-    console.log(`\nTotal Hands Tested:    ${stats.totalHands}`);
-    console.log(`Successful Hands:      ${stats.successfulHands}`);
-    console.log(`Failed Hands:          ${stats.failedHands}`);
-    console.log(`\nSuccess Rate:          ${stats.successRate.toFixed(2)}%`);
-    console.log(`Failure Rate:          ${(100 - stats.successRate).toFixed(2)}%`);
+    const output = formatResults(stats);
+    console.log(output);
+
+    let detailsOutput = "";
 
     if (stats.errors.size > 0) {
-        console.log("\n" + "-".repeat(80));
-        console.log("ERROR BREAKDOWN");
-        console.log("-".repeat(80));
+        detailsOutput += "\n" + "-".repeat(80) + "\n";
+        detailsOutput += "ERROR BREAKDOWN\n";
+        detailsOutput += "-".repeat(80) + "\n";
 
         // Sort errors by frequency
         const sortedErrors = Array.from(stats.errors.entries())
@@ -158,28 +170,29 @@ function printResults(stats: TestStats) {
 
         for (const [error, count] of sortedErrors) {
             const percentage = (count / stats.failedHands * 100).toFixed(1);
-            console.log(`\n[${count} occurrences - ${percentage}% of failures]`);
-            console.log(`  ${error}`);
+            detailsOutput += `\n[${count} occurrences - ${percentage}% of failures]\n`;
+            detailsOutput += `  ${error}\n`;
         }
     }
 
     if (stats.failedHandDetails.length > 0) {
-        console.log("\n" + "-".repeat(80));
-        console.log(`FAILED HAND SAMPLES (showing first ${stats.failedHandDetails.length})`);
-        console.log("-".repeat(80));
+        detailsOutput += "\n" + "-".repeat(80) + "\n";
+        detailsOutput += `FAILED HAND SAMPLES (showing first ${stats.failedHandDetails.length})\n`;
+        detailsOutput += "-".repeat(80) + "\n";
 
         for (const detail of stats.failedHandDetails.slice(0, 10)) {
-            console.log(`\nFile: ${detail.file}`);
-            console.log(`  Actions: ${detail.actionsExecuted}/${detail.totalActions} executed`);
-            console.log(`  Error: ${detail.error}`);
+            detailsOutput += `\nFile: ${detail.file}\n`;
+            detailsOutput += `  Actions: ${detail.actionsExecuted}/${detail.totalActions} executed\n`;
+            detailsOutput += `  Error: ${detail.error}\n`;
         }
 
         if (stats.failedHandDetails.length > 10) {
-            console.log(`\n... and ${stats.failedHandDetails.length - 10} more failed hands`);
+            detailsOutput += `\n... and ${stats.failedHandDetails.length - 10} more failed hands\n`;
         }
     }
 
-    console.log("\n" + "=".repeat(80));
+    detailsOutput += "\n" + "=".repeat(80) + "\n";
+    console.log(detailsOutput);
 }
 
 /**
@@ -208,6 +221,57 @@ async function main() {
     try {
         const stats = await testPhhDataset(datasetPath, maxHands);
         printResults(stats);
+
+        // Save results to file
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const reportPath = path.join(__dirname, `../../test-results/phh-test-${timestamp}.txt`);
+
+        // Ensure directory exists
+        const reportDir = path.dirname(reportPath);
+        if (!fs.existsSync(reportDir)) {
+            fs.mkdirSync(reportDir, { recursive: true });
+        }
+
+        // Build full report
+        let fullReport = `PHH Dataset Test Report\n`;
+        fullReport += `Generated: ${new Date().toISOString()}\n`;
+        fullReport += `Dataset: ${datasetPath}\n`;
+        fullReport += `Max Hands: ${maxHands}\n`;
+        fullReport += formatResults(stats);
+
+        // Add error breakdown
+        if (stats.errors.size > 0) {
+            fullReport += "\n" + "-".repeat(80) + "\n";
+            fullReport += "ERROR BREAKDOWN\n";
+            fullReport += "-".repeat(80) + "\n";
+
+            const sortedErrors = Array.from(stats.errors.entries())
+                .sort((a, b) => b[1] - a[1]);
+
+            for (const [error, count] of sortedErrors) {
+                const percentage = (count / stats.failedHands * 100).toFixed(1);
+                fullReport += `\n[${count} occurrences - ${percentage}% of failures]\n`;
+                fullReport += `  ${error}\n`;
+            }
+        }
+
+        // Add all failed hands
+        if (stats.failedHandDetails.length > 0) {
+            fullReport += "\n" + "-".repeat(80) + "\n";
+            fullReport += `ALL FAILED HANDS (${stats.failedHandDetails.length} total)\n`;
+            fullReport += "-".repeat(80) + "\n";
+
+            for (const detail of stats.failedHandDetails) {
+                fullReport += `\nFile: ${detail.file}\n`;
+                fullReport += `  Actions: ${detail.actionsExecuted}/${detail.totalActions} executed\n`;
+                fullReport += `  Error: ${detail.error}\n`;
+            }
+        }
+
+        fullReport += "\n" + "=".repeat(80) + "\n";
+
+        fs.writeFileSync(reportPath, fullReport);
+        console.log(`\nReport saved to: ${reportPath}`);
 
         // Exit with error code if success rate is below threshold
         const threshold = 90.0;
