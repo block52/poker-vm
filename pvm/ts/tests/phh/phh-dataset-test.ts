@@ -196,6 +196,109 @@ function printResults(stats: TestStats) {
 }
 
 /**
+ * Generate markdown report with tables
+ */
+function generateMarkdownReport(stats: TestStats, datasetPath: string, maxHands: number): string {
+    const timestamp = new Date().toISOString();
+    let md = `# PHH Dataset Test Report\n\n`;
+    md += `**Generated:** ${timestamp}\n\n`;
+    md += `**Dataset:** \`${datasetPath}\`\n\n`;
+    md += `**Max Hands:** ${maxHands}\n\n`;
+
+    md += `---\n\n`;
+
+    // Summary table
+    md += `## Summary\n\n`;
+    md += `| Metric | Value | Percentage |\n`;
+    md += `|--------|------:|----------:|\n`;
+    md += `| Total Hands Tested | ${stats.totalHands} | 100.00% |\n`;
+    md += `| Successful Hands | ${stats.successfulHands} | ${stats.successRate.toFixed(2)}% |\n`;
+    md += `| Failed Hands | ${stats.failedHands} | ${(100 - stats.successRate).toFixed(2)}% |\n\n`;
+
+    // Success rate visualization
+    const successBars = Math.round(stats.successRate / 2);
+    const failBars = 50 - successBars;
+    md += `### Success Rate: ${stats.successRate.toFixed(2)}%\n\n`;
+    md += `\`\`\`\n`;
+    md += `[${'█'.repeat(successBars)}${'░'.repeat(failBars)}]\n`;
+    md += `\`\`\`\n\n`;
+
+    if (stats.errors.size > 0) {
+        md += `---\n\n`;
+        md += `## Error Breakdown\n\n`;
+        md += `| Error | Count | % of Failures |\n`;
+        md += `|-------|------:|--------------:|\n`;
+
+        const sortedErrors = Array.from(stats.errors.entries())
+            .sort((a, b) => b[1] - a[1]);
+
+        for (const [error, count] of sortedErrors) {
+            const percentage = (count / stats.failedHands * 100).toFixed(1);
+            // Escape pipe characters in error messages
+            const escapedError = error.replace(/\|/g, '\\|');
+            md += `| ${escapedError} | ${count} | ${percentage}% |\n`;
+        }
+        md += `\n`;
+
+        // Error category chart
+        md += `### Top Error Categories\n\n`;
+        const topErrors = sortedErrors.slice(0, 5);
+        for (const [error, count] of topErrors) {
+            const barLength = Math.round((count / stats.failedHands) * 40);
+            const percentage = (count / stats.failedHands * 100).toFixed(1);
+            md += `**${error.substring(0, 60)}${error.length > 60 ? '...' : ''}**\n`;
+            md += `\`\`\`\n`;
+            md += `[${'█'.repeat(barLength)}${' '.repeat(40 - barLength)}] ${count} (${percentage}%)\n`;
+            md += `\`\`\`\n\n`;
+        }
+    }
+
+    if (stats.failedHandDetails.length > 0) {
+        md += `---\n\n`;
+        md += `## Failed Hands Details\n\n`;
+        md += `Total failed hands: **${stats.failedHandDetails.length}**\n\n`;
+
+        // Group by error type
+        const groupedByError = new Map<string, typeof stats.failedHandDetails>();
+        for (const detail of stats.failedHandDetails) {
+            const errorKey = detail.error;
+            if (!groupedByError.has(errorKey)) {
+                groupedByError.set(errorKey, []);
+            }
+            groupedByError.get(errorKey)!.push(detail);
+        }
+
+        for (const [error, hands] of groupedByError) {
+            md += `### ${error}\n\n`;
+            md += `**Count:** ${hands.length} hands\n\n`;
+            md += `| File | Actions Executed | Total Actions |\n`;
+            md += `|------|----------------:|-------------:|\n`;
+
+            // Show first 10 of each error type
+            const samplesToShow = hands.slice(0, 10);
+            for (const hand of samplesToShow) {
+                md += `| ${hand.file} | ${hand.actionsExecuted} | ${hand.totalActions} |\n`;
+            }
+
+            if (hands.length > 10) {
+                md += `\n*... and ${hands.length - 10} more hands with this error*\n`;
+            }
+            md += `\n`;
+        }
+    }
+
+    md += `---\n\n`;
+    md += `## Test Configuration\n\n`;
+    md += `- **Test Runner:** PHH Dataset Test\n`;
+    md += `- **Dataset Path:** \`${datasetPath}\`\n`;
+    md += `- **Max Hands:** ${maxHands}\n`;
+    md += `- **Success Threshold:** 90.00%\n`;
+    md += `- **Test Passed:** ${stats.successRate >= 90.0 ? '✅ Yes' : '❌ No'}\n\n`;
+
+    return md;
+}
+
+/**
  * Main execution
  */
 async function main() {
@@ -271,7 +374,13 @@ async function main() {
         fullReport += "\n" + "=".repeat(80) + "\n";
 
         fs.writeFileSync(reportPath, fullReport);
-        console.log(`\nReport saved to: ${reportPath}`);
+        console.log(`\nText report saved to: ${reportPath}`);
+
+        // Generate markdown report
+        const mdReportPath = reportPath.replace('.txt', '.md');
+        const mdReport = generateMarkdownReport(stats, datasetPath, maxHands);
+        fs.writeFileSync(mdReportPath, mdReport);
+        console.log(`Markdown report saved to: ${mdReportPath}`);
 
         // Exit with error code if success rate is below threshold
         const threshold = 90.0;
