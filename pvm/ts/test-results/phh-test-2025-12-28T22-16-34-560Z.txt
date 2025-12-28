@@ -1,0 +1,270 @@
+PHH Dataset Test Report
+Generated: 2025-12-28T22:16:34.561Z
+Dataset: ../../../phh-dataset
+Max Hands: 1000
+
+================================================================================
+PHH DATASET TEST RESULTS
+================================================================================
+
+Total Hands Tested:    1000
+Successful Hands:      927
+Failed Hands:          73
+
+Success Rate:          92.70%
+Failure Rate:          7.30%
+
+--------------------------------------------------------------------------------
+ERROR BREAKDOWN
+--------------------------------------------------------------------------------
+
+[44 occurrences - 60.3% of failures]
+  Action 11 failed: Player has already matched the current bet so can check instead.
+
+[7 occurrences - 9.6% of failures]
+  Action 22 failed: Must be currently active player.
+
+[5 occurrences - 6.8% of failures]
+  Action 26 failed: Must be currently active player.
+
+[4 occurrences - 5.5% of failures]
+  Action 24 failed: Must be currently active player.
+
+[2 occurrences - 2.7% of failures]
+  Action 25 failed: Must be currently active player.
+
+[2 occurrences - 2.7% of failures]
+  Action 23 failed: Must be currently active player.
+
+[1 occurrences - 1.4% of failures]
+  Unsupported variant: FB. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 1.4% of failures]
+  Unsupported variant: PO. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 1.4% of failures]
+  Unsupported variant: F2L3D. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 1.4% of failures]
+  Unsupported variant: NS. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 1.4% of failures]
+  Action 14 failed: Insufficient chips for minimum raise - use all-in instead.
+
+[1 occurrences - 1.4% of failures]
+  Action 15 failed: Must be currently active player.
+
+[1 occurrences - 1.4% of failures]
+  Action 24 failed: Insufficient chips for minimum raise - use all-in instead.
+
+[1 occurrences - 1.4% of failures]
+  Action 17 failed: Must be currently active player.
+
+[1 occurrences - 1.4% of failures]
+  Action 18 failed: Insufficient chips for minimum raise - use all-in instead.
+
+--------------------------------------------------------------------------------
+ALL FAILED HANDS (50 total)
+--------------------------------------------------------------------------------
+
+File: alice-carol-wikipedia.phh
+  Actions: 0/28 executed
+  Error: Unsupported variant: FB. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: antonius-blom-2009.phh
+  Actions: 0/16 executed
+  Error: Unsupported variant: PO. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: arieh-yockey-2019.phh
+  Actions: 0/20 executed
+  Error: Unsupported variant: F2L3D. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: phua-xuan-2019.phh
+  Actions: 0/20 executed
+  Error: Unsupported variant: NS. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: 11.phh
+  Actions: 11/25 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 17.phh
+  Actions: 11/22 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 18.phh
+  Actions: 11/23 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 24.phh
+  Actions: 11/18 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 36.phh
+  Actions: 11/16 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 42.phh
+  Actions: 11/24 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 44.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 46.phh
+  Actions: 11/15 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 61.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 66.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 9.phh
+  Actions: 11/23 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 101.phh
+  Actions: 11/16 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 131.phh
+  Actions: 11/24 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 151.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 173.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 177.phh
+  Actions: 11/16 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 75.phh
+  Actions: 14/21 executed
+  Error: Action 14 failed: Insufficient chips for minimum raise - use all-in instead.
+
+File: 10.phh
+  Actions: 11/18 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 12.phh
+  Actions: 11/19 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 17.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 29.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 40.phh
+  Actions: 11/18 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 58.phh
+  Actions: 11/15 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 0.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 12.phh
+  Actions: 11/21 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 30.phh
+  Actions: 11/16 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 36.phh
+  Actions: 25/27 executed
+  Error: Action 25 failed: Must be currently active player.
+
+File: 4.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 54.phh
+  Actions: 11/21 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 57.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 117.phh
+  Actions: 11/23 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 84.phh
+  Actions: 11/23 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 93.phh
+  Actions: 11/23 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 23.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 4.phh
+  Actions: 11/22 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 45.phh
+  Actions: 11/20 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 57.phh
+  Actions: 11/20 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 6.phh
+  Actions: 11/24 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 105.phh
+  Actions: 11/15 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 129.phh
+  Actions: 11/15 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 141.phh
+  Actions: 11/23 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 144.phh
+  Actions: 11/23 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+File: 73.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 0.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 47.phh
+  Actions: 15/20 executed
+  Error: Action 15 failed: Must be currently active player.
+
+File: 51.phh
+  Actions: 11/24 executed
+  Error: Action 11 failed: Player has already matched the current bet so can check instead.
+
+================================================================================

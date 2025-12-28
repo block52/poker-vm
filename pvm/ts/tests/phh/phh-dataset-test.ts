@@ -8,6 +8,14 @@ import { PhhRunner, PhhRunResult } from "../../src/testing/phhRunner";
 import * as fs from "fs";
 import * as path from "path";
 
+interface HandStatistics {
+    totalActions: number[];
+    actionsExecuted: number[];
+    successfulActions: number[];
+    failedHandsActions: number[];
+    completionRates: number[];
+}
+
 interface TestStats {
     totalHands: number;
     successfulHands: number;
@@ -20,6 +28,7 @@ interface TestStats {
         actionsExecuted: number;
         totalActions: number;
     }>;
+    statistics: HandStatistics;
 }
 
 /**
@@ -66,7 +75,14 @@ async function testPhhDataset(datasetPath: string, maxHands: number = 1000): Pro
         failedHands: 0,
         successRate: 0,
         errors: new Map(),
-        failedHandDetails: []
+        failedHandDetails: [],
+        statistics: {
+            totalActions: [],
+            actionsExecuted: [],
+            successfulActions: [],
+            failedHandsActions: [],
+            completionRates: []
+        }
     };
 
     console.log(`\nSearching for PHH files in: ${datasetPath}`);
@@ -86,10 +102,20 @@ async function testPhhDataset(datasetPath: string, maxHands: number = 1000): Pro
 
             stats.totalHands++;
 
+            // Collect statistics
+            stats.statistics.totalActions.push(result.totalActions);
+            stats.statistics.actionsExecuted.push(result.actionsExecuted);
+            const completionRate = result.totalActions > 0
+                ? (result.actionsExecuted / result.totalActions) * 100
+                : 0;
+            stats.statistics.completionRates.push(completionRate);
+
             if (result.success) {
                 stats.successfulHands++;
+                stats.statistics.successfulActions.push(result.totalActions);
             } else {
                 stats.failedHands++;
+                stats.statistics.failedHandsActions.push(result.totalActions);
 
                 // Track error types
                 const errorMsg = result.error || "Unknown error";
@@ -196,6 +222,48 @@ function printResults(stats: TestStats) {
 }
 
 /**
+ * Calculate statistical metrics
+ */
+function calculateStats(values: number[]): {
+    mean: number;
+    median: number;
+    stdDev: number;
+    variance: number;
+    min: number;
+    max: number;
+    q1: number;
+    q3: number;
+} {
+    if (values.length === 0) {
+        return { mean: 0, median: 0, stdDev: 0, variance: 0, min: 0, max: 0, q1: 0, q3: 0 };
+    }
+
+    const sorted = [...values].sort((a, b) => a - b);
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+
+    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    const stdDev = Math.sqrt(variance);
+
+    const median = sorted.length % 2 === 0
+        ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+        : sorted[Math.floor(sorted.length / 2)];
+
+    const q1Index = Math.floor(sorted.length * 0.25);
+    const q3Index = Math.floor(sorted.length * 0.75);
+
+    return {
+        mean,
+        median,
+        stdDev,
+        variance,
+        min: sorted[0],
+        max: sorted[sorted.length - 1],
+        q1: sorted[q1Index],
+        q3: sorted[q3Index]
+    };
+}
+
+/**
  * Generate markdown report with tables
  */
 function generateMarkdownReport(stats: TestStats, datasetPath: string, maxHands: number): string {
@@ -222,6 +290,74 @@ function generateMarkdownReport(stats: TestStats, datasetPath: string, maxHands:
     md += `\`\`\`\n`;
     md += `[${'█'.repeat(successBars)}${'░'.repeat(failBars)}]\n`;
     md += `\`\`\`\n\n`;
+
+    // Statistical Analysis
+    md += `---\n\n`;
+    md += `## Statistical Analysis\n\n`;
+
+    const allActionsStats = calculateStats(stats.statistics.totalActions);
+    const successActionsStats = calculateStats(stats.statistics.successfulActions);
+    const failActionsStats = calculateStats(stats.statistics.failedHandsActions);
+    const completionStats = calculateStats(stats.statistics.completionRates);
+
+    md += `### Actions Per Hand\n\n`;
+    md += `| Metric | All Hands | Successful Hands | Failed Hands |\n`;
+    md += `|--------|----------:|-----------------:|-------------:|\n`;
+    md += `| Mean | ${allActionsStats.mean.toFixed(2)} | ${successActionsStats.mean.toFixed(2)} | ${failActionsStats.mean.toFixed(2)} |\n`;
+    md += `| Median | ${allActionsStats.median.toFixed(2)} | ${successActionsStats.median.toFixed(2)} | ${failActionsStats.median.toFixed(2)} |\n`;
+    md += `| Std Dev | ${allActionsStats.stdDev.toFixed(2)} | ${successActionsStats.stdDev.toFixed(2)} | ${failActionsStats.stdDev.toFixed(2)} |\n`;
+    md += `| Variance | ${allActionsStats.variance.toFixed(2)} | ${successActionsStats.variance.toFixed(2)} | ${failActionsStats.variance.toFixed(2)} |\n`;
+    md += `| Min | ${allActionsStats.min} | ${successActionsStats.min} | ${failActionsStats.min} |\n`;
+    md += `| Max | ${allActionsStats.max} | ${successActionsStats.max} | ${failActionsStats.max} |\n`;
+    md += `| Q1 (25th) | ${allActionsStats.q1} | ${successActionsStats.q1} | ${failActionsStats.q1} |\n`;
+    md += `| Q3 (75th) | ${allActionsStats.q3} | ${successActionsStats.q3} | ${failActionsStats.q3} |\n\n`;
+
+    md += `### Completion Rate Statistics\n\n`;
+    md += `| Metric | Value |\n`;
+    md += `|--------|------:|\n`;
+    md += `| Mean Completion | ${completionStats.mean.toFixed(2)}% |\n`;
+    md += `| Median Completion | ${completionStats.median.toFixed(2)}% |\n`;
+    md += `| Std Dev | ${completionStats.stdDev.toFixed(2)}% |\n`;
+    md += `| Min Completion | ${completionStats.min.toFixed(2)}% |\n`;
+    md += `| Max Completion | ${completionStats.max.toFixed(2)}% |\n\n`;
+
+    // Distribution visualization
+    md += `### Hand Complexity Distribution\n\n`;
+    const buckets = [0, 5, 10, 15, 20, 25, 30];
+    const distribution = new Map<string, number>();
+    for (const actions of stats.statistics.totalActions) {
+        let bucket = '30+';
+        for (let i = 0; i < buckets.length - 1; i++) {
+            if (actions >= buckets[i] && actions < buckets[i + 1]) {
+                bucket = `${buckets[i]}-${buckets[i + 1] - 1}`;
+                break;
+            }
+        }
+        distribution.set(bucket, (distribution.get(bucket) || 0) + 1);
+    }
+
+    md += `| Actions Range | Count | Percentage |\n`;
+    md += `|---------------|------:|-----------:|\n`;
+    const ranges = ['0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30+'];
+    for (const range of ranges) {
+        const count = distribution.get(range) || 0;
+        const percentage = ((count / stats.totalHands) * 100).toFixed(1);
+        md += `| ${range} actions | ${count} | ${percentage}% |\n`;
+    }
+    md += `\n`;
+
+    // Correlation analysis
+    const avgSuccessActions = successActionsStats.mean;
+    const avgFailActions = failActionsStats.mean;
+    const complexityDiff = ((avgFailActions - avgSuccessActions) / avgSuccessActions * 100);
+
+    md += `### Insights\n\n`;
+    md += `- **Complexity vs Success:** Failed hands average ${Math.abs(complexityDiff).toFixed(1)}% ${complexityDiff > 0 ? 'more' : 'fewer'} actions than successful hands\n`;
+    md += `- **Consistency:** Standard deviation of ${allActionsStats.stdDev.toFixed(2)} actions indicates ${allActionsStats.stdDev < 5 ? 'low' : allActionsStats.stdDev < 10 ? 'moderate' : 'high'} variability in hand complexity\n`;
+    md += `- **Completion Rate:** Average ${completionStats.mean.toFixed(1)}% of actions successfully executed per hand\n`;
+
+    const iqr = allActionsStats.q3 - allActionsStats.q1;
+    md += `- **IQR:** Interquartile range of ${iqr.toFixed(1)} actions (50% of hands between ${allActionsStats.q1} and ${allActionsStats.q3} actions)\n\n`;
 
     if (stats.errors.size > 0) {
         md += `---\n\n`;
