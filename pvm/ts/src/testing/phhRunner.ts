@@ -130,42 +130,40 @@ export class PhhRunner {
             type: GameType.CASH
         };
 
-        // Create player map
-        const playerStates = new Map<number, Player | null>();
-
-        for (let i = 0; i < hand.players.length; i++) {
-            // Generate deterministic addresses for players
-            const address = this.playerAddress(i + 1);
-            const stack = BigInt(hand.startingStacks[i] || 0) * CHIP_MULTIPLIER;
-
-            const player = new Player(
-                address,
-                undefined, // lastAction
-                stack,
-                undefined, // holeCards
-                PlayerStatus.ACTIVE
-            );
-
-            playerStates.set(i + 1, player);
-        }
+        // Create base game config for fromJson
+        const baseGameConfig = {
+            id: ethers.ZeroAddress,
+            options: gameOptions,
+            dealer: hand.players.length, // Dealer is typically last player
+            previousActions: [],
+            handNumber: 1,
+            actionCount: 0,
+            currentRound: TexasHoldemRound.ANTE,
+            communityCards: [],
+            pots: [0n],
+            playerStates: new Map(),
+            deckSeed: ""
+        };
 
         // Create the game
-        // Dealer is typically last player in PHH format
-        const dealerSeat = hand.players.length;
+        const game = TexasHoldemGame.fromJson(baseGameConfig, gameOptions);
 
-        const game = new TexasHoldemGame(
-            ethers.ZeroAddress,
-            gameOptions,
-            dealerSeat,
-            [], // previousActions
-            1, // handNumber
-            0, // actionCount
-            TexasHoldemRound.ANTE,
-            [], // communityCards
-            [0n], // pots
-            playerStates,
-            "" // deck seed - will be overridden
-        );
+        // Join players to the game
+        for (let i = 0; i < hand.players.length; i++) {
+            const playerNum = i + 1;
+            const address = this.playerAddress(playerNum);
+            const stack = BigInt(hand.startingStacks[i] || 0) * CHIP_MULTIPLIER;
+            const seat = playerNum;
+
+            game.performAction(
+                address,
+                NonPlayerActionType.JOIN,
+                game.getActionIndex(),
+                stack,
+                `seat=${seat}`,
+                this.getNextTimestamp()
+            );
+        }
 
         return game;
     }

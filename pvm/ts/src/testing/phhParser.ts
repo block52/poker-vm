@@ -41,9 +41,21 @@ export class PhhParser {
             // Skip comments and empty lines
             if (trimmed.startsWith("#") || trimmed === "") continue;
 
-            // Handle actions array
+            // Handle actions array (both single-line and multi-line)
             if (trimmed.startsWith("actions = [")) {
-                inActions = true;
+                // Check if entire array is on one line
+                if (trimmed.endsWith("]")) {
+                    // Single-line array: actions = ['a', 'b', 'c']
+                    const arrayContent = trimmed.substring("actions = [".length, trimmed.length - 1);
+                    const matches = arrayContent.matchAll(/["']([^"']+)["']/g);
+                    for (const match of matches) {
+                        actionsBuffer.push(match[1]);
+                    }
+                    hand.actions = actionsBuffer;
+                } else {
+                    // Multi-line array
+                    inActions = true;
+                }
                 continue;
             }
 
@@ -53,8 +65,8 @@ export class PhhParser {
                     hand.actions = actionsBuffer;
                     continue;
                 }
-                // Extract action string from quotes
-                const match = trimmed.match(/"([^"]+)"/);
+                // Extract action string from quotes (support both single and double quotes)
+                const match = trimmed.match(/["']([^"']+)["']/);
                 if (match) {
                     actionsBuffer.push(match[1]);
                 }
@@ -78,7 +90,7 @@ export class PhhParser {
     private setHandValue(hand: PhhHand, key: string, value: string): void {
         switch (key) {
             case "variant":
-                hand.variant = value.replace(/"/g, "");
+                hand.variant = value.replace(/["']/g, "");
                 break;
             case "ante_trimming_status":
                 hand.anteTrimming = value === "true";
@@ -99,10 +111,10 @@ export class PhhParser {
                 hand.players = this.parseStringArray(value);
                 break;
             case "author":
-                hand.author = value.replace(/"/g, "");
+                hand.author = value.replace(/["']/g, "");
                 break;
             case "event":
-                hand.event = value.replace(/"/g, "");
+                hand.event = value.replace(/["']/g, "");
                 break;
             case "year":
                 hand.year = parseInt(value);
@@ -111,7 +123,7 @@ export class PhhParser {
                 hand.month = parseInt(value);
                 break;
             case "currency":
-                hand.currency = value.replace(/"/g, "");
+                hand.currency = value.replace(/["']/g, "");
                 break;
         }
     }
@@ -131,7 +143,7 @@ export class PhhParser {
     private parseStringArray(value: string): string[] {
         const match = value.match(/\[([^\]]+)\]/);
         if (!match) return [];
-        return match[1].split(",").map(s => s.trim().replace(/"/g, ""));
+        return match[1].split(",").map(s => s.trim().replace(/["']/g, ""));
     }
 
     /**
