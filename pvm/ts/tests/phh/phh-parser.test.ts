@@ -140,9 +140,9 @@ actions = [
             expect(playerActions[0].type).toBe("call");
             expect(playerActions[0].player).toBe(1);
 
-            // p2 cc preflop - also seen as CALL by parser (doesn't track per-player bets)
-            // Note: In reality this is a CHECK since BB already has 200 in
-            expect(playerActions[1].type).toBe("call");
+            // p2 cc preflop - CHECK (BB player 2 already has 200 in, matching the current bet)
+            // Parser now correctly tracks per-player bets
+            expect(playerActions[1].type).toBe("check");
             expect(playerActions[1].player).toBe(2);
 
             // After flop deal, p2 cc should be CHECK (currentBet reset to 0)

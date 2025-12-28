@@ -1,0 +1,191 @@
+PHH Dataset Test Report
+Generated: 2025-12-28T22:35:51.619Z
+Dataset: ../../../phh-dataset
+Max Hands: 1000
+
+================================================================================
+PHH DATASET TEST RESULTS
+================================================================================
+
+Total Hands Tested:    1000
+Successful Hands:      969
+Failed Hands:          31
+
+Success Rate:          96.90%
+Failure Rate:          3.10%
+
+--------------------------------------------------------------------------------
+ERROR BREAKDOWN
+--------------------------------------------------------------------------------
+
+[7 occurrences - 22.6% of failures]
+  Action 22 failed: Must be currently active player.
+
+[6 occurrences - 19.4% of failures]
+  Action 26 failed: Must be currently active player.
+
+[5 occurrences - 16.1% of failures]
+  Action 24 failed: Must be currently active player.
+
+[2 occurrences - 6.5% of failures]
+  Action 25 failed: Must be currently active player.
+
+[2 occurrences - 6.5% of failures]
+  Action 23 failed: Must be currently active player.
+
+[1 occurrences - 3.2% of failures]
+  Unsupported variant: FB. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 3.2% of failures]
+  Unsupported variant: PO. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 3.2% of failures]
+  Unsupported variant: F2L3D. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 3.2% of failures]
+  Unsupported variant: NS. Only NT (No-Limit Texas Hold'em) is supported.
+
+[1 occurrences - 3.2% of failures]
+  Action 14 failed: Insufficient chips for minimum raise - use all-in instead.
+
+[1 occurrences - 3.2% of failures]
+  Action 15 failed: Must be currently active player.
+
+[1 occurrences - 3.2% of failures]
+  Action 24 failed: Insufficient chips for minimum raise - use all-in instead.
+
+[1 occurrences - 3.2% of failures]
+  Action 17 failed: Must be currently active player.
+
+[1 occurrences - 3.2% of failures]
+  Action 18 failed: Insufficient chips for minimum raise - use all-in instead.
+
+--------------------------------------------------------------------------------
+ALL FAILED HANDS (31 total)
+--------------------------------------------------------------------------------
+
+File: alice-carol-wikipedia.phh
+  Actions: 0/28 executed
+  Error: Unsupported variant: FB. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: antonius-blom-2009.phh
+  Actions: 0/16 executed
+  Error: Unsupported variant: PO. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: arieh-yockey-2019.phh
+  Actions: 0/20 executed
+  Error: Unsupported variant: F2L3D. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: phua-xuan-2019.phh
+  Actions: 0/20 executed
+  Error: Unsupported variant: NS. Only NT (No-Limit Texas Hold'em) is supported.
+
+File: 44.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 61.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 66.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 151.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 173.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 75.phh
+  Actions: 14/21 executed
+  Error: Action 14 failed: Insufficient chips for minimum raise - use all-in instead.
+
+File: 17.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 29.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 0.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 36.phh
+  Actions: 25/27 executed
+  Error: Action 25 failed: Must be currently active player.
+
+File: 4.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 57.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 23.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 73.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 0.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 47.phh
+  Actions: 15/20 executed
+  Error: Action 15 failed: Must be currently active player.
+
+File: 59.phh
+  Actions: 23/25 executed
+  Error: Action 23 failed: Must be currently active player.
+
+File: 100.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 11.phh
+  Actions: 24/28 executed
+  Error: Action 24 failed: Insufficient chips for minimum raise - use all-in instead.
+
+File: 13.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 216.phh
+  Actions: 17/21 executed
+  Error: Action 17 failed: Must be currently active player.
+
+File: 24.phh
+  Actions: 25/27 executed
+  Error: Action 25 failed: Must be currently active player.
+
+File: 264.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 271.phh
+  Actions: 23/25 executed
+  Error: Action 23 failed: Must be currently active player.
+
+File: 57.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 68.phh
+  Actions: 24/26 executed
+  Error: Action 24 failed: Must be currently active player.
+
+File: 70.phh
+  Actions: 18/24 executed
+  Error: Action 18 failed: Insufficient chips for minimum raise - use all-in instead.
+
+================================================================================

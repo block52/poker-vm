@@ -155,16 +155,35 @@ export class PhhParser {
         const bigBlind = blinds.length > 1 ? blinds[1] : 0;
         let currentBet = bigBlind;
 
+        // Track each player's bet amount for the current round
+        const playerBets = new Map<number, number>();
+        // Initialize with blinds - player 1 has small blind, player 2 has big blind
+        if (blinds.length > 0) {
+            playerBets.set(1, blinds[0] || 0);
+        }
+        if (blinds.length > 1) {
+            playerBets.set(2, blinds[1] || 0);
+        }
+
         for (const raw of actionStrings) {
-            const action = this.parseAction(raw, currentBet);
+            const action = this.parseAction(raw, currentBet, playerBets);
             if (action) {
                 actions.push(action);
 
-                // Update current bet tracking
+                // Update current bet and player bet tracking
                 if (action.type === "bet" || action.type === "raise") {
                     currentBet = action.amount || 0;
+                    if (action.player) {
+                        playerBets.set(action.player, currentBet);
+                    }
+                } else if (action.type === "call") {
+                    if (action.player) {
+                        playerBets.set(action.player, currentBet);
+                    }
                 } else if (action.type === "deal_board") {
-                    currentBet = 0; // Reset on new street
+                    // Reset on new street
+                    currentBet = 0;
+                    playerBets.clear();
                 }
             }
         }
@@ -175,7 +194,7 @@ export class PhhParser {
     /**
      * Parse a single action string
      */
-    private parseAction(raw: string, currentBet: number): PhhAction | null {
+    private parseAction(raw: string, currentBet: number, playerBets: Map<number, number> = new Map()): PhhAction | null {
         const parts = raw.trim().split(/\s+/);
 
         if (parts.length < 2) return null;
@@ -206,8 +225,10 @@ export class PhhParser {
                     return { type: "fold", player, raw };
 
                 case "cc":
-                    // Check if there's a bet to call
-                    const type: PhhActionType = currentBet > 0 ? "call" : "check";
+                    // Check if this player needs to call or can check
+                    // Player can check if they've already matched the current bet
+                    const playerBet = playerBets.get(player) || 0;
+                    const type: PhhActionType = (currentBet > 0 && playerBet < currentBet) ? "call" : "check";
                     return { type, player, raw };
 
                 case "cbr":
