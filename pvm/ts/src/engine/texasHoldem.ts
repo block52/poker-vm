@@ -795,6 +795,91 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
     }
 
     /**
+     * Find the last player who bet or raised in a given round
+     * @param round - The round to check
+     * @returns Player address of last aggressor, or undefined if none
+     */
+    private getLastAggressorForRound(round: TexasHoldemRound): string | undefined {
+        const actions = this.getActionsForRound(round);
+
+        // Iterate backwards to find most recent bet/raise
+        for (let i = actions.length - 1; i >= 0; i--) {
+            const action = actions[i];
+            if (action.action === PlayerActionType.BET ||
+                action.action === PlayerActionType.RAISE) {
+                return action.playerId;
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Check if player is eligible to participate in showdown
+     * @param player - The player to check
+     * @returns True if player is ACTIVE or ALL_IN
+     */
+    private isPlayerEligibleForShowdown(player: Player): boolean {
+        const status = this.getPlayerStatus(player.address);
+        return status === PlayerStatus.ACTIVE || status === PlayerStatus.ALL_IN;
+    }
+
+    /**
+     * Get first active player in positional order (left of button)
+     * @returns First eligible player in action order, or undefined
+     */
+    private getFirstActivePlayerInPositionOrder(): Player | undefined {
+        const livePlayers = this.findLivePlayers();
+        // findLivePlayers already returns players in seating order
+        return livePlayers.find(p => this.isPlayerEligibleForShowdown(p));
+    }
+
+    /**
+     * Get next player to show during SHOWDOWN round
+     * Follows poker showdown rules:
+     * 1. Last aggressor shows first (checking river → turn → flop → preflop)
+     * 2. If no aggressor, use positional order (left of button)
+     * 3. After first show, any player can show/muck
+     * @returns Next player who must show, or undefined if any player can act
+     */
+    getNextPlayerToShow(): Player | undefined {
+        const showdownActions = this.getActionsForRound(TexasHoldemRound.SHOWDOWN);
+
+        // After first show, any active player can show/muck
+        const hasShown = showdownActions.some(a => a.action === PlayerActionType.SHOW);
+        if (hasShown) {
+            return undefined; // Any player allowed
+        }
+
+        // First show: find last aggressor, checking rounds in reverse order
+        const rounds = [
+            TexasHoldemRound.RIVER,
+            TexasHoldemRound.TURN,
+            TexasHoldemRound.FLOP,
+            TexasHoldemRound.PREFLOP
+        ];
+
+        for (const round of rounds) {
+            const aggressorAddress = this.getLastAggressorForRound(round);
+            if (aggressorAddress) {
+                try {
+                    const player = this.getPlayer(aggressorAddress);
+                    // Only return if player is still eligible for showdown
+                    if (player && this.isPlayerEligibleForShowdown(player)) {
+                        return player;
+                    }
+                } catch {
+                    // Player not found, continue checking other rounds
+                    continue;
+                }
+            }
+        }
+
+        // No aggressor found - use positional order (first active player left of button)
+        return this.getFirstActivePlayerInPositionOrder();
+    }
+
+    /**
      * Finds the next player to act for a round
      */
     private findNextPlayerToActForRound(round: TexasHoldemRound): Player | undefined {

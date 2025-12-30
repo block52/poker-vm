@@ -19,8 +19,23 @@ abstract class BaseAction {
         const skipNextToActCheck = this.skipTurnOrderCheck.includes(this.type as PlayerActionType);
 
         if (this.type !== NonPlayerActionType.DEAL && !skipNextToActCheck) {
-            const nextPlayerAddress = this.game.getNextPlayerToAct();
-            if (nextPlayerAddress?.address !== player.address) throw new Error("Must be currently active player.");
+            // Use showdown-specific turn order for SHOW/MUCK during SHOWDOWN
+            const isShowdownAction = [PlayerActionType.SHOW, PlayerActionType.MUCK].includes(this.type as PlayerActionType);
+            const isShowdownRound = this.game.currentRound === TexasHoldemRound.SHOWDOWN;
+
+            if (isShowdownAction && isShowdownRound) {
+                const nextToShow = this.game.getNextPlayerToShow();
+                // If nextToShow is undefined, any active player can show/muck
+                if (nextToShow && nextToShow.address.toLowerCase() !== player.address.toLowerCase()) {
+                    throw new Error("Must be currently active player.");
+                }
+            } else {
+                // Normal betting round turn order
+                const nextPlayerAddress = this.game.getNextPlayerToAct();
+                if (nextPlayerAddress?.address !== player.address) {
+                    throw new Error("Must be currently active player.");
+                }
+            }
         }
 
         if (player.chips <= 0n && !this.zeroChipsAllowed.includes(this.type)) {

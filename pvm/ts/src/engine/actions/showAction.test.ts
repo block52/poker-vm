@@ -114,24 +114,32 @@ describe("ShowAction", () => {
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
-        it("should handle single live player scenario - different player", () => {
-            // Mock single live player that does NOT match current player
-            const differentPlayer = new Player("0xdifferent", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
-            const singleLivePlayer = [differentPlayer];
-            jest.spyOn(game, "findLivePlayers").mockReturnValue(singleLivePlayer);
+        it("should allow any player to show after first show (poker showdown rules)", () => {
+            // Mock that someone has already shown
+            jest.spyOn(game, "getActionsForRound").mockReturnValue([
+                { playerId: "0xother", action: PlayerActionType.SHOW, index: 1, seat: 1, timestamp: Date.now() }
+            ]);
 
-            // Should still return valid range (early return in verify)
-            const result = action.verify(player);
+            // Different player should be able to show after first show
+            const differentPlayer = new Player("0xdifferent", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            // After first show, any player can show (no turn order enforcement)
+            const result = action.verify(differentPlayer);
 
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
         it("should handle case-insensitive address comparison", () => {
-            // Test case insensitive address matching
+            // Test case insensitive address matching - player has lowercase address
+            // Next to show has uppercase address (same address, different case)
             const upperCasePlayer = new Player("0X980B8D8A16F5891F41871D878A479D81DA52334C", undefined, ONE_THOUSAND_TOKENS, undefined, PlayerStatus.ACTIVE);
-            const singleLivePlayer = [upperCasePlayer];
-            jest.spyOn(game, "findLivePlayers").mockReturnValue(singleLivePlayer);
 
+            // Mock that upperCasePlayer is next to show (first show scenario)
+            jest.spyOn(game, "getNextPlayerToShow").mockReturnValue(upperCasePlayer);
+            jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
+
+            // Player (lowercase address) should be able to show since addresses match case-insensitively
             const result = action.verify(player);
 
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });

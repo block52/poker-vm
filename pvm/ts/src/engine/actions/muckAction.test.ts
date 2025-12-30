@@ -230,7 +230,7 @@ describe("MuckAction", () => {
             jest.spyOn(game, "findWinners").mockReturnValue(false);
         });
 
-        it("should throw error if not the active player's turn", () => {
+        it("should allow any player to muck after first show (poker showdown rules)", () => {
             const otherPlayer = new Player(
                 "0x123456789abcdef123456789abcdef123456789a",
                 undefined,
@@ -239,12 +239,12 @@ describe("MuckAction", () => {
                 PlayerStatus.ACTIVE
             );
 
-            // Set up the game so 'player' is next to act, not 'otherPlayer'
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            // After someone has shown, any active player can muck (no turn order enforcement)
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
-            // otherPlayer should not be able to muck since it's not their turn
-            expect(() => action.verify(otherPlayer)).toThrow("Must be currently active player.");
+            // otherPlayer should be able to muck even if not their turn (poker showdown rules)
+            const result = action.verify(otherPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
         it("should allow MUCK only for active player during showdown", () => {
@@ -274,7 +274,7 @@ describe("MuckAction", () => {
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
-        it("should NOT allow ALL_IN player to MUCK when it is NOT their turn", () => {
+        it("should allow ALL_IN player to muck after first show (poker showdown rules)", () => {
             const allInPlayer = new Player(
                 "0x123456789abcdef123456789abcdef123456789a",
                 undefined,
@@ -283,12 +283,12 @@ describe("MuckAction", () => {
                 PlayerStatus.ALL_IN
             );
 
-            // Different player is next to act
-            jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
+            // After someone has shown, any player (including ALL_IN) can muck
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
 
-            // ALL_IN player should NOT be able to muck when it's not their turn
-            expect(() => action.verify(allInPlayer)).toThrow("Must be currently active player.");
+            // ALL_IN player should be able to muck after first show (poker showdown rules)
+            const result = action.verify(allInPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
     });
 
