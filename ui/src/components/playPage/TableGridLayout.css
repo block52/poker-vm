@@ -282,7 +282,7 @@
 .table-grid-9player {
   display: grid;
   grid-template-columns: 1fr 1.2fr 1.5fr 1.5fr 1.2fr 1fr;
-  grid-template-rows: 1fr 2fr 1fr;
+  grid-template-rows: 1.5fr 2fr 1fr;
   gap: 0.5rem;
   place-items: center;
   position: relative;
@@ -306,7 +306,7 @@
   grid-column: 1;
   grid-row: 2;
   align-self: start;
-  margin-top: 2rem;
+  margin-top: 5rem;
   justify-self: start;
   margin-left: -6rem;
 }
@@ -335,7 +335,7 @@
   grid-column: 6;
   grid-row: 2;
   align-self: start;
-  margin-top: 2rem;
+  margin-top: 5rem;
   justify-self: end;
   margin-right: -6rem;
 }
