@@ -134,6 +134,8 @@ import { useTurnNotification } from "../../hooks/useTurnNotification";
 
 // Grid Layout Demo (POC for issue #1593)
 import TableLayoutDemo from "./TableLayoutDemo";
+import Table4PlayerGrid from "./Table4PlayerGrid";
+import "./TableGridLayout.css";
 
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
@@ -245,6 +247,10 @@ const Table = React.memo(() => {
 
     // Grid Layout Demo toggle (development only)
     const [showGridDemo, setShowGridDemo] = useState(false);
+
+    // Grid Layout toggle (development/testing)
+    const [useGridLayout, setUseGridLayout] = useState(false);
+
     const [isCardVisible, setCardVisible] = useState(-1);
 
     // Leave table modal state
@@ -742,6 +748,98 @@ const Table = React.memo(() => {
         ]
     );
 
+    // Generate seat components for Grid layout (seat-number order, not position order)
+    const generateGridSeatComponents = useCallback(() => {
+        const components: React.ReactNode[] = [];
+
+        for (let seatIndex = 0; seatIndex < tableSize; seatIndex++) {
+            const seatNumber = seatIndex + 1;
+            const playerAtSeat = tableActivePlayers.find((p: PlayerDTO) => p.seat === seatNumber);
+            const isCurrentUser = playerAtSeat?.address?.toLowerCase() === userWalletAddress?.toLowerCase();
+
+            if (!playerAtSeat) {
+                // Vacant seat
+                components.push(
+                    <VacantPlayer
+                        key={seatNumber}
+                        index={seatNumber}
+                        left="0px" // Not used in Grid mode
+                        top="0px"  // Not used in Grid mode
+                        onJoin={updateBalanceOnPlayerJoin}
+                        useGridLayout={true}
+                    />
+                );
+            } else if (isCurrentUser) {
+                // Current user
+                components.push(
+                    <Player
+                        key={seatNumber}
+                        index={seatNumber}
+                        currentIndex={currentIndex}
+                        left="0px"  // Not used in Grid mode
+                        top="0px"   // Not used in Grid mode
+                        color={tableLayout.positions.players[seatIndex]?.color}
+                        useGridLayout={true}
+                    />
+                );
+            } else {
+                // Opposite player
+                components.push(
+                    <OppositePlayer
+                        key={seatNumber}
+                        index={seatNumber}
+                        currentIndex={currentIndex}
+                        left="0px"  // Not used in Grid mode
+                        top="0px"   // Not used in Grid mode
+                        color={tableLayout.positions.players[seatIndex]?.color}
+                        isCardVisible={isCardVisible}
+                        setCardVisible={setCardVisible}
+                        setStartIndex={setStartIndex}
+                        cardBackStyle={cardBackStyle}
+                        useGridLayout={true}
+                    />
+                );
+            }
+        }
+
+        return components;
+    }, [tableSize, tableActivePlayers, userWalletAddress, currentIndex, isCardVisible, cardBackStyle, updateBalanceOnPlayerJoin, tableLayout, setStartIndex, setCardVisible]);
+
+    // Center content for Grid layout (pot + community cards)
+    const gridCenterContent = useMemo(() => (
+        <div className="flex flex-col items-center justify-center gap-2">
+            <div className="pot-display">
+                Total Pot: <span style={{ fontWeight: "700px" }}>${potDisplayValues.totalPot}</span>
+            </div>
+            <div className="pot-display-secondary">
+                Main Pot: <span style={{ fontWeight: "700px" }}>${potDisplayValues.mainPot}</span>
+            </div>
+            <div className="flex gap-2 mt-4">{communityCardsElements}</div>
+        </div>
+    ), [potDisplayValues, communityCardsElements]);
+
+    // Generate turn animations for Grid layout (4-player only)
+    const gridTurnAnimations = useMemo(() => {
+        const animations: React.ReactNode[] = [];
+        for (let seatIndex = 0; seatIndex < tableSize; seatIndex++) {
+            const seatNumber = seatIndex + 1;
+            const isWinnerSeat = !!winnerInfo?.some(w => w.seat === seatNumber);
+            animations.push(!hasWinner ? <MemoizedTurnAnimation key={`turn-${seatNumber}`} index={seatIndex} /> : null);
+        }
+        return animations;
+    }, [tableSize, hasWinner, winnerInfo]);
+
+    // Generate win animations for Grid layout (4-player only)
+    const gridWinAnimations = useMemo(() => {
+        const animations: React.ReactNode[] = [];
+        for (let seatIndex = 0; seatIndex < tableSize; seatIndex++) {
+            const seatNumber = seatIndex + 1;
+            const isWinnerSeat = !!winnerInfo?.some(w => w.seat === seatNumber);
+            animations.push(isWinnerSeat ? <WinAnimation key={`win-${seatNumber}`} index={seatIndex} /> : null);
+        }
+        return animations;
+    }, [tableSize, winnerInfo]);
+
     const copyToClipboard = useCallback((text: string) => {
         navigator.clipboard.writeText(text);
     }, []);
@@ -1190,6 +1288,24 @@ const Table = React.memo(() => {
                                     </div>
                                     <div className="absolute inset-0 z-30">
                                         {/* ============================================================
+                                            CONDITIONAL RENDERING: Grid Layout vs Legacy Layout
+                                            ============================================================ */}
+
+                                        {useGridLayout && tableSize === 4 ? (
+                                            /* GRID LAYOUT (NEW) - CSS Grid positioning */
+                                            <Table4PlayerGrid
+                                                startIndex={startIndex}
+                                                viewportMode={viewportMode}
+                                                centerContent={gridCenterContent}
+                                                turnAnimations={gridTurnAnimations}
+                                                winAnimations={gridWinAnimations}
+                                            >
+                                                {generateGridSeatComponents() as [React.ReactNode, React.ReactNode, React.ReactNode, React.ReactNode]}
+                                            </Table4PlayerGrid>
+                                        ) : (
+                                            /* LEGACY LAYOUT - Absolute positioning */
+                                            <React.Fragment>
+                                            {/* ============================================================
                                             MAIN RENDER LOOP - APPLIES ROTATION TO ALL PLAYERS
                                             ============================================================
 
@@ -1208,29 +1324,31 @@ const Table = React.memo(() => {
                                             - positionIndex 1 → getComponentToRender → decides which seat appears at left
                                             - positionIndex 2 → getComponentToRender → decides which seat appears at top
                                             - etc.
-                                        */}
-                                        {tableLayout.positions.players.map((position, positionIndex) => {
-                                            // Calculate seat number for animations (turn indicator, winner effects)
-                                            // This uses the SAME REVERSED formula as getComponentToRender to stay in sync
-                                            const seatNum = ((positionIndex - startIndex + tableSize) % tableSize) + 1;
-                                            const isWinnerSeat = !!winnerInfo?.some(w => w.seat === seatNum);
+                                            */}
+                                            {tableLayout.positions.players.map((position, positionIndex) => {
+                                                // Calculate seat number for animations (turn indicator, winner effects)
+                                                // This uses the SAME REVERSED formula as getComponentToRender to stay in sync
+                                                const seatNum = ((positionIndex - startIndex + tableSize) % tableSize) + 1;
+                                                const isWinnerSeat = !!winnerInfo?.some(w => w.seat === seatNum);
 
-                                            // Get the actual component to render (Player, OppositePlayer, or VacantPlayer)
-                                            // This function handles all the rotation logic internally
-                                            const componentToRender = getComponentToRender(position, positionIndex);
+                                                // Get the actual component to render (Player, OppositePlayer, or VacantPlayer)
+                                                // This function handles all the rotation logic internally
+                                                const componentToRender = getComponentToRender(position, positionIndex);
 
-                                            return (
-                                                <div key={positionIndex} className="z-[10]">
-                                                    {/* turn indicator only when no winner yet */}
-                                                    {!hasWinner && <MemoizedTurnAnimation index={seatNum - 1} />}
+                                                return (
+                                                    <div key={positionIndex} className="z-[10]">
+                                                        {/* turn indicator only when no winner yet */}
+                                                        {!hasWinner && <MemoizedTurnAnimation index={seatNum - 1} />}
 
-                                                    {/* winner ripple when hand is over and this seat won */}
-                                                    {isWinnerSeat && <WinAnimation index={seatNum - 1} />}
+                                                        {/* winner ripple when hand is over and this seat won */}
+                                                        {isWinnerSeat && <WinAnimation index={seatNum - 1} />}
 
-                                                    {componentToRender}
-                                                </div>
-                                            );
-                                        })}
+                                                        {componentToRender}
+                                                    </div>
+                                                );
+                                            })}
+                                            </React.Fragment>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1395,12 +1513,24 @@ const Table = React.memo(() => {
                         <div className="font-bold mb-1 text-green-400">Grid Layout POC</div>
                         <button
                             onClick={() => setShowGridDemo(true)}
-                            className="w-full bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded text-xs font-semibold transition"
+                            className="w-full bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded text-xs font-semibold transition mb-2"
                         >
                             🎨 View Grid Demo
                         </button>
+                        {tableSize === 4 && (
+                            <button
+                                onClick={() => setUseGridLayout(!useGridLayout)}
+                                className={`w-full px-3 py-2 rounded text-xs font-semibold transition ${
+                                    useGridLayout
+                                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                }`}
+                            >
+                                {useGridLayout ? '✅ Grid Layout ON' : '⬜ Grid Layout OFF'}
+                            </button>
+                        )}
                         <div className="text-gray-400 text-[10px] mt-1">
-                            Issue #1593 - CSS Grid layout comparison
+                            Issue #1593 - {tableSize === 4 ? 'Toggle Grid layout above' : 'Grid only for 4-player'}
                         </div>
                     </div>
                 </div>
