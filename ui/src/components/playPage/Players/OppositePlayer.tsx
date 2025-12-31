@@ -68,9 +68,10 @@ type OppositePlayerProps = {
     setStartIndex: (index: number) => void;
     uiPosition?: number;
     cardBackStyle?: CardBackStyle;
+    useGridLayout?: boolean;
 };
 
-const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition, cardBackStyle }) => {
+const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, index, color, isCardVisible, setCardVisible, setStartIndex, uiPosition, cardBackStyle, useGridLayout = false }) => {
     const { playerData, stackValue, isFolded, isAllIn, isSittingOut, isBusted, holeCards, round } = usePlayerData(index);
     const { winnerInfo } = useWinnerInfo();
     const { equities, shouldShow: shouldShowEquity } = useAllInEquity();
@@ -150,11 +151,14 @@ const OppositePlayer: React.FC<OppositePlayerProps> = React.memo(({ left, top, i
             {/* Main player display */}
             <div
                 key={index}
-                className={`${opacityClass} absolute flex flex-col justify-center w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-[20]`}
+                className={`
+                    ${opacityClass}
+                    ${useGridLayout ? 'relative' : 'absolute transform -translate-x-1/2 -translate-y-1/2'}
+                    flex flex-col justify-center w-[160px] h-[140px] mt-[40px] cursor-pointer z-[20]
+                `}
                 style={{
-                    left: left,
-                    top: top,
-                    transition: "top 1s ease, left 1s ease",
+                    ...(useGridLayout ? {} : { left, top }),
+                    transition: useGridLayout ? "all 0.6s ease-in-out" : "top 1s ease, left 1s ease",
                     color: colors.ui.textSecondary
                 }}
                 onClick={() => {

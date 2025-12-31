@@ -66,7 +66,7 @@ import { microToUsdc } from "../../../constants/currency";
 import { useNetwork } from "../../../context/NetworkContext";
 
 const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo(
-    ({ left, top, index, onJoin, uiPosition }) => {
+    ({ left, top, index, onJoin, uiPosition, useGridLayout = false }) => {
         const { isUserAlreadyPlaying, canJoinSeat: checkCanJoinSeat } = useVacantSeatData();
         const { id: tableId } = useParams<{ id: string }>();
         const { gameOptions } = useGameOptions();
@@ -264,11 +264,16 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
 
         // Memoize container styles
         const containerStyle = useMemo(
-            () => ({
-                left,
-                top
-            }),
-            [left, top]
+            () => {
+                if (useGridLayout) {
+                    return {};
+                }
+                return {
+                    left,
+                    top
+                };
+            },
+            [left, top, useGridLayout]
         );
 
         // Memoize popup styles
@@ -301,7 +306,11 @@ const VacantPlayer: React.FC<VacantPlayerProps & { uiPosition?: number }> = memo
 
         return (
             <>
-                <div className="absolute cursor-pointer" style={containerStyle} onClick={handleSeatClick}>
+                <div
+                    className={`${useGridLayout ? 'relative' : 'absolute'} cursor-pointer`}
+                    style={containerStyle}
+                    onClick={handleSeatClick}
+                >
                     {/* Development Mode Debug Info */}
                     {import.meta.env.VITE_NODE_ENV === "development" && (
                         <div className="absolute top-[-50px] left-1/2 transform -translate-x-1/2 bg-gray-600 bg-opacity-80 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap z-50 border border-gray-400">

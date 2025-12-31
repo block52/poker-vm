@@ -15,8 +15,8 @@ import { getCardImageUrl } from "../../../utils/cardImages";
 import { useSitAndGoPlayerResults } from "../../../hooks/useSitAndGoPlayerResults";
 import { useAllInEquity } from "../../../hooks/useAllInEquity";
 
-const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
-    ({ left, top, index, currentIndex: _currentIndex, color, status: _status, uiPosition }) => {
+const Player: React.FC<PlayerProps & { uiPosition?: number; useGridLayout?: boolean }> = memo(
+    ({ left, top, index, currentIndex: _currentIndex, color, status: _status, uiPosition, useGridLayout = false }) => {
         const { id } = useParams<{ id: string }>();
         const { playerData, stackValue, isFolded, isAllIn, isSittingOut, isBusted, holeCards, round } = usePlayerData(index);
         const { winnerInfo } = useWinnerInfo();
@@ -178,12 +178,21 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
 
         // 7) container style for positioning
         const containerStyle = useMemo(
-            () => ({
-                left,
-                top,
-                transition: "top 1s ease, left 1s ease"
-            }),
-            [left, top]
+            () => {
+                if (useGridLayout) {
+                    // Grid layout uses relative positioning
+                    return {
+                        transition: "all 0.6s ease-in-out"
+                    };
+                }
+                // Legacy absolute positioning
+                return {
+                    left,
+                    top,
+                    transition: "top 1s ease, left 1s ease"
+                };
+            },
+            [left, top, useGridLayout]
         );
 
         // 8) status bar style (no pulse)
@@ -202,7 +211,11 @@ const Player: React.FC<PlayerProps & { uiPosition?: number }> = memo(
         return (
             <div
                 key={index}
-                className={`${opacityClass} absolute flex flex-col justify-center w-[160px] h-[140px] mt-[40px] transform -translate-x-1/2 -translate-y-1/2 cursor-pointer`}
+                className={`
+                    ${opacityClass}
+                    ${useGridLayout ? 'relative' : 'absolute transform -translate-x-1/2 -translate-y-1/2'}
+                    flex flex-col justify-center w-[160px] h-[140px] mt-[40px] cursor-pointer
+                `}
                 style={{ ...containerStyle, color: colors.ui.textSecondary }}
             >
                 {/* Development Mode Debug Info */}

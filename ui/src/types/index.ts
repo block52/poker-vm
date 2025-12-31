@@ -127,6 +127,7 @@ export interface VacantPlayerProps {
     left: string;
     top: string;
     onJoin?: () => void;
+    useGridLayout?: boolean;
 }
 
 // Type for PlayerCard component props
