@@ -132,6 +132,9 @@ import { getViewportMode } from "../../config/tableLayoutConfig";
 // Turn Notification
 import { useTurnNotification } from "../../hooks/useTurnNotification";
 
+// Grid Layout Demo (POC for issue #1593)
+import TableLayoutDemo from "./TableLayoutDemo";
+
 //* Here's the typical sequence of a poker hand:
 //* ANTE - Initial forced bets
 //* PREFLOP - Players get their hole cards, betting round
@@ -239,6 +242,9 @@ const Table = React.memo(() => {
 
     // Zoom is now managed by useTableLayout hook
     const [openSidebar, setOpenSidebar] = useState(false);
+
+    // Grid Layout Demo toggle (development only)
+    const [showGridDemo, setShowGridDemo] = useState(false);
     const [isCardVisible, setCardVisible] = useState(-1);
 
     // Leave table modal state
@@ -1385,8 +1391,23 @@ const Table = React.memo(() => {
                             {results ? JSON.stringify(results, null, 2) : "empty"}
                         </pre>
                     </div>
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                        <div className="font-bold mb-1 text-green-400">Grid Layout POC</div>
+                        <button
+                            onClick={() => setShowGridDemo(true)}
+                            className="w-full bg-green-700 hover:bg-green-600 text-white px-3 py-2 rounded text-xs font-semibold transition"
+                        >
+                            🎨 View Grid Demo
+                        </button>
+                        <div className="text-gray-400 text-[10px] mt-1">
+                            Issue #1593 - CSS Grid layout comparison
+                        </div>
+                    </div>
                 </div>
             )}
+
+            {/* Grid Layout Demo Modal */}
+            {showGridDemo && <TableLayoutDemo onClose={() => setShowGridDemo(false)} />}
 
             {/* Sit Out/Sit In Toggle - Professional Mobile Design */}
             {/* Only show SIT OUT button when hasSitOutAction is true and hasSitInAction is false */}

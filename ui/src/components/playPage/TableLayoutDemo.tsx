@@ -20,7 +20,11 @@ interface SeatData {
   stack?: number;
 }
 
-const TableLayoutDemo: React.FC = () => {
+interface TableLayoutDemoProps {
+  onClose?: () => void;
+}
+
+const TableLayoutDemo: React.FC<TableLayoutDemoProps> = ({ onClose }) => {
   const [rotationIndex, setRotationIndex] = useState(0);
   const [layoutMode, setLayoutMode] = useState<'current' | 'grid'>('grid');
 
@@ -341,7 +345,7 @@ export const viewportConfigs = {
         {/* Close Button */}
         <div className="flex justify-center mt-8">
           <button
-            onClick={() => window.history.back()}
+            onClick={onClose || (() => window.history.back())}
             className="bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition"
           >
             Close Demo
