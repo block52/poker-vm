@@ -67,30 +67,35 @@ export const PerformanceBenchmark: React.FC<PerformanceBenchmarkProps> = ({
   const renderCountRef = useRef<number>(0);
   const layoutShiftObserverRef = useRef<PerformanceObserver | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const layoutShiftsRef = useRef(0);
 
-  // Measure render time
-  const measureRenderTime = useCallback(() => {
-    const renderTime = performance.now();
+  // Track actual React renders (not animation frames)
+  useEffect(() => {
+    renderCountRef.current++;
+  });
+
+  // Measure frame time (for FPS calculation)
+  const measureFrameTime = useCallback(() => {
+    const frameTime = performance.now();
 
     if (initialRenderTimeRef.current === null) {
-      initialRenderTimeRef.current = renderTime;
+      initialRenderTimeRef.current = frameTime;
     }
 
-    const timeSinceLastRender = renderTime - lastFrameTimeRef.current;
-    renderTimesRef.current.push(timeSinceLastRender);
+    const timeSinceLastFrame = frameTime - lastFrameTimeRef.current;
+    renderTimesRef.current.push(timeSinceLastFrame);
 
-    // Keep only last 100 render times
+    // Keep only last 100 frame times
     if (renderTimesRef.current.length > 100) {
       renderTimesRef.current.shift();
     }
 
     const averageRenderTime = renderTimesRef.current.reduce((a, b) => a + b, 0) / renderTimesRef.current.length;
 
-    lastFrameTimeRef.current = renderTime;
-    renderCountRef.current++;
+    lastFrameTimeRef.current = frameTime;
 
     return {
-      lastRenderTime: timeSinceLastRender,
+      lastRenderTime: timeSinceLastFrame,
       averageRenderTime,
       renderCount: renderCountRef.current
     };
@@ -135,19 +140,19 @@ export const PerformanceBenchmark: React.FC<PerformanceBenchmarkProps> = ({
 
   // Update metrics
   const updateMetrics = useCallback(() => {
-    const renderMetrics = measureRenderTime();
+    const frameMetrics = measureFrameTime();
     const fpsMetrics = measureFPS();
     const memoryUsage = measureMemory();
 
     const newMetrics: PerformanceMetrics = {
       initialRenderTime: initialRenderTimeRef.current || 0,
-      averageRenderTime: renderMetrics.averageRenderTime,
-      lastRenderTime: renderMetrics.lastRenderTime,
-      renderCount: renderMetrics.renderCount,
+      averageRenderTime: frameMetrics.averageRenderTime,
+      lastRenderTime: frameMetrics.lastRenderTime,
+      renderCount: frameMetrics.renderCount,
       currentFPS: fpsMetrics.currentFPS,
       averageFPS: fpsMetrics.averageFPS,
       memoryUsage,
-      layoutShifts: metrics.layoutShifts,
+      layoutShifts: layoutShiftsRef.current,
       timestamp: Date.now()
     };
 
@@ -156,7 +161,7 @@ export const PerformanceBenchmark: React.FC<PerformanceBenchmarkProps> = ({
 
     // Schedule next measurement
     animationFrameRef.current = requestAnimationFrame(updateMetrics);
-  }, [measureRenderTime, measureFPS, measureMemory, metrics.layoutShifts, onMetricsUpdate]);
+  }, [measureFrameTime, measureFPS, measureMemory, onMetricsUpdate]);
 
   // Track layout shifts (CLS)
   useEffect(() => {
@@ -171,10 +176,7 @@ export const PerformanceBenchmark: React.FC<PerformanceBenchmarkProps> = ({
           }
 
           if (shifts > 0) {
-            setMetrics(prev => ({
-              ...prev,
-              layoutShifts: prev.layoutShifts + shifts
-            }));
+            layoutShiftsRef.current += shifts;
           }
         });
 
@@ -201,11 +203,6 @@ export const PerformanceBenchmark: React.FC<PerformanceBenchmarkProps> = ({
       }
     };
   }, [updateMetrics]);
-
-  // Track render count
-  useEffect(() => {
-    renderCountRef.current++;
-  });
 
   return (
     <div className="bg-gray-800 rounded p-3 text-xs">
