@@ -1251,20 +1251,24 @@ const Table = React.memo(() => {
                                             style={tableBoxShadowStyle}
                                         >
                                             {/* //! Table */}
-                                            <div className="table-logo">
-                                                <img src={clubLogo} alt="Club Logo" />
-                                            </div>
-                                            <div className="flex flex-col items-center justify-center -mt-20">
-                                                <div className="pot-display">
-                                                    Total Pot:
-                                                    <span style={{ fontWeight: "700px" }}> ${potDisplayValues.totalPot}</span>
-                                                </div>
-                                                <div className="pot-display-secondary">
-                                                    Main Pot:
-                                                    <span style={{ fontWeight: "700px" }}> ${potDisplayValues.mainPot}</span>
-                                                </div>
-                                                <div className="flex gap-2 mt-8">{communityCardsElements}</div>
-                                            </div>
+                                            {!useGridLayout && (
+                                                <>
+                                                    <div className="table-logo">
+                                                        <img src={clubLogo} alt="Club Logo" />
+                                                    </div>
+                                                    <div className="flex flex-col items-center justify-center -mt-20">
+                                                        <div className="pot-display">
+                                                            Total Pot:
+                                                            <span style={{ fontWeight: "700px" }}> ${potDisplayValues.totalPot}</span>
+                                                        </div>
+                                                        <div className="pot-display-secondary">
+                                                            Main Pot:
+                                                            <span style={{ fontWeight: "700px" }}> ${potDisplayValues.mainPot}</span>
+                                                        </div>
+                                                        <div className="flex gap-2 mt-8">{communityCardsElements}</div>
+                                                    </div>
+                                                </>
+                                            )}
 
                                             {/*//! CHIP */}
                                             {tableLayout.positions.chips.map((position, index) => {
@@ -1560,16 +1564,16 @@ const Table = React.memo(() => {
                         </div>
                     </div>
 
-                    {/* Performance Benchmarking */}
-                    <div className="mt-2 pt-2 border-t border-gray-700">
+                    {/* Performance Benchmarking - TEMPORARILY DISABLED TO TEST RENDER PERFORMANCE */}
+                    {/* <div className="mt-2 pt-2 border-t border-gray-700">
                         <PerformanceBenchmark
                             layoutType={useGridLayout ? 'grid' : 'legacy'}
                             tableSize={tableSize}
                         />
-                    </div>
+                    </div> */}
 
                     {/* Performance Comparison */}
-                    <PerformanceComparison />
+                    {/* <PerformanceComparison /> */}
                 </div>
             )}
 

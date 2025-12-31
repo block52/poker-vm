@@ -68,11 +68,7 @@ export const PerformanceBenchmark: React.FC<PerformanceBenchmarkProps> = ({
   const layoutShiftObserverRef = useRef<PerformanceObserver | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const layoutShiftsRef = useRef(0);
-
-  // Track actual React renders (not animation frames)
-  useEffect(() => {
-    renderCountRef.current++;
-  });
+  const frameCountRef = useRef(0);
 
   // Measure frame time (for FPS calculation)
   const measureFrameTime = useCallback(() => {
@@ -93,11 +89,12 @@ export const PerformanceBenchmark: React.FC<PerformanceBenchmarkProps> = ({
     const averageRenderTime = renderTimesRef.current.reduce((a, b) => a + b, 0) / renderTimesRef.current.length;
 
     lastFrameTimeRef.current = frameTime;
+    frameCountRef.current++;
 
     return {
       lastRenderTime: timeSinceLastFrame,
       averageRenderTime,
-      renderCount: renderCountRef.current
+      renderCount: frameCountRef.current
     };
   }, []);
 
