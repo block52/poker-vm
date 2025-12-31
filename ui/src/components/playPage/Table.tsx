@@ -135,6 +135,7 @@ import { useTurnNotification } from "../../hooks/useTurnNotification";
 // Grid Layout Demo (POC for issue #1593)
 import TableLayoutDemo from "./TableLayoutDemo";
 import Table4PlayerGrid from "./Table4PlayerGrid";
+import Table6PlayerGrid from "./Table6PlayerGrid";
 import "./TableGridLayout.css";
 
 //* Here's the typical sequence of a poker hand:
@@ -1292,7 +1293,7 @@ const Table = React.memo(() => {
                                             ============================================================ */}
 
                                         {useGridLayout && tableSize === 4 ? (
-                                            /* GRID LAYOUT (NEW) - CSS Grid positioning */
+                                            /* GRID LAYOUT (4-PLAYER) - CSS Grid positioning */
                                             <Table4PlayerGrid
                                                 startIndex={startIndex}
                                                 viewportMode={viewportMode}
@@ -1302,6 +1303,17 @@ const Table = React.memo(() => {
                                             >
                                                 {generateGridSeatComponents() as [React.ReactNode, React.ReactNode, React.ReactNode, React.ReactNode]}
                                             </Table4PlayerGrid>
+                                        ) : useGridLayout && tableSize === 6 ? (
+                                            /* GRID LAYOUT (6-PLAYER) - CSS Grid positioning */
+                                            <Table6PlayerGrid
+                                                startIndex={startIndex}
+                                                viewportMode={viewportMode}
+                                                centerContent={gridCenterContent}
+                                                turnAnimations={gridTurnAnimations}
+                                                winAnimations={gridWinAnimations}
+                                            >
+                                                {generateGridSeatComponents() as [React.ReactNode, React.ReactNode, React.ReactNode, React.ReactNode, React.ReactNode, React.ReactNode]}
+                                            </Table6PlayerGrid>
                                         ) : (
                                             /* LEGACY LAYOUT - Absolute positioning */
                                             <React.Fragment>
@@ -1517,7 +1529,7 @@ const Table = React.memo(() => {
                         >
                             🎨 View Grid Demo
                         </button>
-                        {tableSize === 4 && (
+                        {(tableSize === 4 || tableSize === 6) && (
                             <button
                                 onClick={() => setUseGridLayout(!useGridLayout)}
                                 className={`w-full px-3 py-2 rounded text-xs font-semibold transition ${
@@ -1530,7 +1542,7 @@ const Table = React.memo(() => {
                             </button>
                         )}
                         <div className="text-gray-400 text-[10px] mt-1">
-                            Issue #1593 - {tableSize === 4 ? 'Toggle Grid layout above' : 'Grid only for 4-player'}
+                            Issue #1593 - {(tableSize === 4 || tableSize === 6) ? `Toggle ${tableSize}p Grid above` : 'Grid for 4p/6p only'}
                         </div>
                     </div>
                 </div>

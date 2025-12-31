@@ -162,32 +162,114 @@
 }
 
 /* ========================================
-   6-PLAYER TABLE LAYOUT (Future)
+   6-PLAYER TABLE LAYOUT
    ======================================== */
 
 /**
- * Grid-based 6-player layout
- * Uses a 3x4 grid for better spacing
+ * Grid-based 6-player hexagonal layout
+ * Uses a 4x3 grid to create hexagon pattern:
+ *
+ *      [seat-3]  [seat-4]
+ *   [seat-2]   [center]   [seat-5]
+ *      [seat-1]  [seat-6]
  */
 .table-grid-6player {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  grid-template-rows: 0.5fr 1fr 1fr 0.5fr;
+  grid-template-columns: 1fr 1.5fr 1.5fr 1fr;
+  grid-template-rows: 1fr 2fr 1fr;
   gap: 1rem;
   place-items: center;
   position: relative;
   width: 100%;
   max-width: 900px;
-  aspect-ratio: 2 / 1;
+  aspect-ratio: 16 / 10;
 }
 
-/* 6-player seat positions */
-.seat-6player-1 { grid-column: 2; grid-row: 4; } /* Bottom center */
-.seat-6player-2 { grid-column: 1; grid-row: 3; } /* Bottom left */
-.seat-6player-3 { grid-column: 1; grid-row: 2; } /* Top left */
-.seat-6player-4 { grid-column: 2; grid-row: 1; } /* Top center */
-.seat-6player-5 { grid-column: 3; grid-row: 2; } /* Top right */
-.seat-6player-6 { grid-column: 3; grid-row: 3; } /* Bottom right */
+/* 6-player seat positions in hexagonal layout */
+.seat-6p-bottom-left {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.seat-6p-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.seat-6p-top-left {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.seat-6p-top-right {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.seat-6p-right {
+  grid-column: 4;
+  grid-row: 2;
+}
+
+.seat-6p-bottom-right {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+/* Center area spans 2 columns */
+.seat-6p-center {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 1;
+}
+
+/* Smooth transitions for 6-player layout */
+.table-grid-6player,
+.seat-6p-bottom-left,
+.seat-6p-left,
+.seat-6p-top-left,
+.seat-6p-top-right,
+.seat-6p-right,
+.seat-6p-bottom-right {
+  transition: transform 0.6s ease-in-out;
+}
+
+/* Responsive adjustments for 6-player */
+@media (max-width: 414px) and (orientation: portrait) {
+  .table-grid-6player {
+    grid-template-columns: 0.8fr 1.2fr 1.2fr 0.8fr;
+    grid-template-rows: 0.8fr 1.5fr 0.8fr;
+    gap: 0.5rem;
+    max-width: 100vw;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 926px) and (orientation: landscape) {
+  .table-grid-6player {
+    gap: 0.75rem;
+    max-width: 75vh;
+  }
+}
+
+@media (min-width: 927px) and (max-width: 1024px) {
+  .table-grid-6player {
+    max-width: 750px;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .table-grid-6player {
+    max-width: 950px;
+    gap: 1.5rem;
+  }
+}
 
 /* ========================================
    CHIP POSITIONS
