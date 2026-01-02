@@ -1,0 +1,472 @@
+/**
+ * CSS Grid Layout Styles for Poker Table
+ *
+ * This file demonstrates how pure CSS + Tailwind can replace
+ * the complex JavaScript positioning logic.
+ */
+
+/* ========================================
+   4-PLAYER TABLE LAYOUT
+   ======================================== */
+
+/**
+ * Grid-based 4-player layout
+ * Uses a 3x3 grid with seats at cardinal positions
+ */
+.table-grid-4player {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  grid-template-rows: 1fr 1.5fr 1fr;
+  gap: 0.5rem;
+  place-items: center;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+/* Seat positions in the grid */
+.seat-bottom {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.seat-top {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.seat-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.seat-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.seat-center {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ========================================
+   ROTATION SYSTEM
+   ======================================== */
+
+/**
+ * Alternative to JavaScript rotation logic
+ * Uses CSS transforms + grid reordering
+ */
+
+/* Rotation classes for the table container */
+.table-rotate-0 {
+  transform: rotate(0deg);
+}
+
+.table-rotate-90 {
+  transform: rotate(90deg);
+}
+
+.table-rotate-180 {
+  transform: rotate(180deg);
+}
+
+.table-rotate-270 {
+  transform: rotate(270deg);
+}
+
+/* Counter-rotation for seat content to keep upright */
+.seat-counter-rotate-0 {
+  transform: rotate(0deg);
+}
+
+.seat-counter-rotate-90 {
+  transform: rotate(-90deg);
+}
+
+.seat-counter-rotate-180 {
+  transform: rotate(-180deg);
+}
+
+.seat-counter-rotate-270 {
+  transform: rotate(-270deg);
+}
+
+/* Smooth rotation transitions */
+.table-grid-4player,
+.seat-bottom,
+.seat-top,
+.seat-left,
+.seat-right {
+  transition: transform 0.6s ease-in-out;
+}
+
+/* ========================================
+   RESPONSIVE LAYOUTS
+   ======================================== */
+
+/**
+ * Mobile Portrait (≤ 414px)
+ * Stack vertically, reduce sizing
+ */
+@media (max-width: 414px) and (orientation: portrait) {
+  .table-grid-4player {
+    grid-template-columns: 1fr 1.2fr 1fr;
+    grid-template-rows: 1fr 1.2fr 1fr;
+    gap: 0.25rem;
+    padding: 0.5rem;
+  }
+}
+
+/**
+ * Mobile Landscape (≤ 926px, landscape)
+ * Compact horizontal layout
+ */
+@media (max-width: 926px) and (orientation: landscape) {
+  .table-grid-4player {
+    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-rows: 1fr 1.5fr 1fr;
+    gap: 0.5rem;
+  }
+}
+
+/**
+ * Tablet (927px - 1024px)
+ * Medium-sized layout
+ */
+@media (min-width: 927px) and (max-width: 1024px) {
+  .table-grid-4player {
+    gap: 0.5rem;
+  }
+}
+
+/**
+ * Desktop (> 1024px)
+ * Full-sized layout
+ */
+@media (min-width: 1025px) {
+  .table-grid-4player {
+    gap: 0.5rem;
+  }
+}
+
+/* ========================================
+   6-PLAYER TABLE LAYOUT
+   ======================================== */
+
+/**
+ * Grid-based 6-player hexagonal layout
+ * Uses a 4x3 grid to create hexagon pattern:
+ *
+ *      [seat-3]  [seat-4]
+ *   [seat-2]   [center]   [seat-5]
+ *      [seat-1]  [seat-6]
+ */
+.table-grid-6player {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1.5fr 1fr;
+  grid-template-rows: 1fr 2fr 1fr;
+  gap: 1rem;
+  place-items: center;
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  aspect-ratio: 16 / 10;
+}
+
+/* 6-player seat positions in hexagonal layout */
+.seat-6p-bottom-left {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.seat-6p-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.seat-6p-top-left {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.seat-6p-top-right {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.seat-6p-right {
+  grid-column: 4;
+  grid-row: 2;
+}
+
+.seat-6p-bottom-right {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+/* Center area spans 2 columns */
+.seat-6p-center {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 1;
+}
+
+/* Smooth transitions for 6-player layout */
+.table-grid-6player,
+.seat-6p-bottom-left,
+.seat-6p-left,
+.seat-6p-top-left,
+.seat-6p-top-right,
+.seat-6p-right,
+.seat-6p-bottom-right {
+  transition: transform 0.6s ease-in-out;
+}
+
+/* Responsive adjustments for 6-player */
+@media (max-width: 414px) and (orientation: portrait) {
+  .table-grid-6player {
+    grid-template-columns: 0.8fr 1.2fr 1.2fr 0.8fr;
+    grid-template-rows: 0.8fr 1.5fr 0.8fr;
+    gap: 0.5rem;
+    max-width: 100vw;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 926px) and (orientation: landscape) {
+  .table-grid-6player {
+    gap: 0.75rem;
+    max-width: 75vh;
+  }
+}
+
+@media (min-width: 927px) and (max-width: 1024px) {
+  .table-grid-6player {
+    max-width: 750px;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .table-grid-6player {
+    max-width: 950px;
+    gap: 1.5rem;
+  }
+}
+
+/* ========================================
+   9-PLAYER TABLE LAYOUT
+   ======================================== */
+
+/**
+ * Grid-based 9-player elliptical layout
+ * Uses a 6x3 grid to create ellipse pattern:
+ *
+ *   [empty] [seat-4] [seat-5] [seat-6] [seat-7] [empty]
+ *   [seat-3]  [center] [center] [center]  [seat-8]
+ *   [empty] [seat-2] [seat-1] [seat-9] [empty]
+ */
+.table-grid-9player {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.5fr 1.5fr 1.2fr 1fr;
+  grid-template-rows: 1.5fr 2fr 1fr;
+  gap: 0.5rem;
+  place-items: center;
+  position: relative;
+  width: 100%;
+  max-width: 1100px;
+  aspect-ratio: 20 / 10;
+}
+
+/* 9-player seat positions in elliptical layout */
+.seat-9p-bottom-center {
+  grid-column: 3 / 5;
+  grid-row: 3;
+}
+
+.seat-9p-bottom-left {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.seat-9p-left {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  margin-top: 5rem;
+  justify-self: start;
+  margin-left: -6rem;
+}
+
+.seat-9p-top-left-corner {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.seat-9p-top-left {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.seat-9p-top-right {
+  grid-column: 4;
+  grid-row: 1;
+}
+
+.seat-9p-top-right-corner {
+  grid-column: 5;
+  grid-row: 1;
+}
+
+.seat-9p-right {
+  grid-column: 6;
+  grid-row: 2;
+  align-self: start;
+  margin-top: 5rem;
+  justify-self: end;
+  margin-right: -6rem;
+}
+
+.seat-9p-bottom-right {
+  grid-column: 5;
+  grid-row: 3;
+}
+
+/* Center area spans 3 columns */
+.seat-9p-center {
+  grid-column: 2 / 6;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 1;
+}
+
+/* Smooth transitions for 9-player layout */
+.table-grid-9player,
+.seat-9p-bottom-center,
+.seat-9p-bottom-left,
+.seat-9p-left,
+.seat-9p-top-left-corner,
+.seat-9p-top-left,
+.seat-9p-top-right,
+.seat-9p-top-right-corner,
+.seat-9p-right,
+.seat-9p-bottom-right {
+  transition: transform 0.6s ease-in-out;
+}
+
+/* Responsive adjustments for 9-player */
+@media (max-width: 414px) and (orientation: portrait) {
+  .table-grid-9player {
+    grid-template-columns: 0.8fr 1fr 1.2fr 1.2fr 1fr 0.8fr;
+    grid-template-rows: 0.8fr 1.5fr 0.8fr;
+    gap: 0.25rem;
+    max-width: 100vw;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 926px) and (orientation: landscape) {
+  .table-grid-9player {
+    gap: 0.5rem;
+    max-width: 80vh;
+  }
+}
+
+@media (min-width: 927px) and (max-width: 1024px) {
+  .table-grid-9player {
+    max-width: 850px;
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .table-grid-9player {
+    max-width: 1100px;
+    gap: 1rem;
+  }
+}
+
+/* ========================================
+   CHIP POSITIONS
+   ======================================== */
+
+/**
+ * Chip positions relative to seats
+ * Uses absolute positioning within grid cells
+ */
+.chip-position {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+/* Adjust chip positions for different seats */
+.seat-bottom .chip-position { bottom: -30px; }
+.seat-top .chip-position { top: -30px; bottom: auto; }
+.seat-left .chip-position { left: auto; right: -40px; transform: none; }
+.seat-right .chip-position { left: -40px; transform: none; }
+
+/* ========================================
+   DEALER BUTTON POSITIONS
+   ======================================== */
+
+/**
+ * Dealer button positioning
+ * Relative to seat positions
+ */
+.dealer-button {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  z-index: 10;
+  transition: all 0.6s ease-in-out;
+}
+
+/* Dealer positions for each seat */
+.seat-bottom .dealer-button { bottom: -60px; left: 50%; transform: translateX(-50%); }
+.seat-top .dealer-button { top: -60px; left: 50%; transform: translateX(-50%); }
+.seat-left .dealer-button { left: -60px; top: 50%; transform: translateY(-50%); }
+.seat-right .dealer-button { right: -60px; top: 50%; transform: translateY(-50%); }
+
+/* ========================================
+   COMPARISON NOTES
+   ======================================== */
+
+/**
+ * BEFORE (JS-based positioning):
+ * - 216+ hardcoded coordinates
+ * - Complex viewport detection
+ * - Manual position calculations
+ * - Difficult to maintain
+ *
+ * AFTER (CSS Grid):
+ * - ~40 lines of semantic CSS
+ * - Browser-native responsive layout
+ * - Easy to adjust spacing
+ * - Self-documenting structure
+ *
+ * PERFORMANCE BENEFITS:
+ * - No JavaScript layout calculations
+ * - GPU-accelerated CSS transforms
+ * - Reduced re-renders
+ * - Smaller bundle size
+ */
