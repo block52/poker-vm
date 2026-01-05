@@ -104,7 +104,7 @@ const TableLayoutDemo: React.FC<TableLayoutDemoProps> = ({ onClose }) => {
 
     if (tableSize === 4) {
       return (
-        <div className="table-grid-4player bg-gray-900 rounded-xl border-2 border-green-600 h-[400px]">
+        <div className="table-grid-4player bg-gray-900 rounded-xl border-2 border-green-600 h-[450px]">
           <div className="seat-bottom">{renderSeat(0)}</div>
           <div className="seat-top">{renderSeat(1)}</div>
           <div className="seat-left">{renderSeat(2)}</div>
