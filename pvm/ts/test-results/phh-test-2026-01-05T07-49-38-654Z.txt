@@ -1,0 +1,46 @@
+PHH Dataset Test Report
+Generated: 2026-01-05T07:49:38.654Z
+Dataset: tests/phh/fixtures/pluribus
+Max Hands: 1000
+
+================================================================================
+PHH DATASET TEST RESULTS
+================================================================================
+
+Total Hands Tested:    1000
+Successful Hands:      997
+Failed Hands:          3
+
+Success Rate:          99.70%
+Failure Rate:          0.30%
+
+--------------------------------------------------------------------------------
+ERROR BREAKDOWN
+--------------------------------------------------------------------------------
+
+[1 occurrences - 33.3% of failures]
+  Action 14 failed: Cannot bet - player must call or raise.
+
+[1 occurrences - 33.3% of failures]
+  Action 24 failed: Cannot bet - player must call or raise.
+
+[1 occurrences - 33.3% of failures]
+  Action 18 failed: Cannot bet - player must call or raise.
+
+--------------------------------------------------------------------------------
+ALL FAILED HANDS (3 total)
+--------------------------------------------------------------------------------
+
+File: 75.phh
+  Actions: 14/21 executed
+  Error: Action 14 failed: Cannot bet - player must call or raise.
+
+File: 11.phh
+  Actions: 24/28 executed
+  Error: Action 24 failed: Cannot bet - player must call or raise.
+
+File: 70.phh
+  Actions: 18/24 executed
+  Error: Action 18 failed: Cannot bet - player must call or raise.
+
+================================================================================
