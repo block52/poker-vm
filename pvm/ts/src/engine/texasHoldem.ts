@@ -213,9 +213,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     timeout: this._gameOptions.timeout,
                     type: this._gameOptions.type,
                     rake: this._gameOptions.rake,
-                    owner: this._gameOptions.owner
+                    owner: this._gameOptions.owner,
+                    startingStack: this._gameOptions.startingStack,
+                    blindLevelDuration: this._gameOptions.blindLevelDuration
                 };
-                this.blindsManager = new SitAndGoBlindsManager(10, gameOptions);
+                this.blindsManager = new SitAndGoBlindsManager(gameOptions);
                 break;
             case GameType.CASH:
             default:
@@ -410,6 +412,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     get owner(): string | undefined {
         return this._gameOptions.owner;
+    }
+
+    get startingStack(): bigint | undefined {
+        return this._gameOptions.startingStack;
+    }
+
+    get blindLevelDuration(): number | undefined {
+        return this._gameOptions.blindLevelDuration;
     }
 
     // Position getters
