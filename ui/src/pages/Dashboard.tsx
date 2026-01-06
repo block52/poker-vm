@@ -1185,7 +1185,7 @@ const Dashboard: React.FC = () => {
                                                 max="10"
                                                 className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
                                             />
-                                            <p className="text-xs text-gray-400 mt-1">All players pay the same entry fee</p>
+                                            <p className="text-xs text-gray-400 mt-1">All players pay the same buy in</p>
                                         </div>
                                     ) : (
                                         // For Cash games: Buy-in in Big Blinds (BB)
