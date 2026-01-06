@@ -629,22 +629,23 @@ export default function TableAdminPage() {
                         )}
                     </div>
 
-                    {/* Rake Configuration Section */}
+                    {/* Rake Configuration Section - Only for Cash Games */}
                     <div className="mb-4">
                         <div className="flex items-center gap-2 mb-3">
                             <input
                                 type="checkbox"
                                 id="enableRake"
-                                checked={enableRake}
+                                checked={enableRake && gameType === GameType.CASH}
                                 onChange={e => setEnableRake(e.target.checked)}
-                                className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                disabled={gameType !== GameType.CASH}
+                                className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
-                            <label htmlFor="enableRake" className="text-gray-300 text-sm font-medium">
-                                Enable Rake Collection
+                            <label htmlFor="enableRake" className={`text-sm font-medium ${gameType === GameType.CASH ? "text-gray-300" : "text-gray-500"}`}>
+                                Enable Rake Collection {gameType !== GameType.CASH && "(Cash games only)"}
                             </label>
                         </div>
 
-                        {enableRake && (
+                        {enableRake && gameType === GameType.CASH && (
                             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
                                 <div className="grid grid-cols-2 gap-3 mb-3">
                                     <div>
