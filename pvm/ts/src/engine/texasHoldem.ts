@@ -112,7 +112,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 rakeCap: BigInt(gameOptions.rake.rakeCap),
                 owner: gameOptions.rake.owner || gameOptions.owner || ""
             } : undefined,
-            owner: gameOptions.owner
+            owner: gameOptions.owner,
+            startingStack: gameOptions.startingStack !== undefined ? BigInt(gameOptions.startingStack) : undefined,
+            blindLevelDuration: gameOptions.blindLevelDuration
         };
 
         // Validate rake configuration
@@ -2026,7 +2028,15 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             gameOptions.bigBlind = BigInt(gameOptions?.bigBlind);
             gameOptions.timeout = gameOptions?.timeout ?? 30; // Default to 30 seconds if not provided
             gameOptions.type = gameOptions?.type;
-            
+
+            // Parse SNG/Tournament specific options
+            if (gameOptions.startingStack !== undefined) {
+                gameOptions.startingStack = BigInt(gameOptions.startingStack);
+            }
+            if (gameOptions.blindLevelDuration !== undefined) {
+                gameOptions.blindLevelDuration = Number(gameOptions.blindLevelDuration);
+            }
+
             // Parse rake config if present
             if (gameOptions.rake) {
                 gameOptions.rake = {
