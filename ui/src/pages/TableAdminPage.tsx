@@ -54,6 +54,20 @@ export default function TableAdminPage() {
     const [maxPlayers, setMaxPlayers] = useState(9);
     const [smallBlind, setSmallBlind] = useState("0.50");
     const [bigBlind, setBigBlind] = useState("1.00");
+
+    // Update blind defaults when game type changes
+    const handleGameTypeChange = (newType: GameType) => {
+        setGameType(newType);
+        if (newType === GameType.SIT_AND_GO || newType === GameType.TOURNAMENT) {
+            // SNG/Tournament: chip-based blinds (e.g., 25/50)
+            setSmallBlind("25");
+            setBigBlind("50");
+        } else {
+            // Cash game: dollar-based blinds (e.g., $0.50/$1.00)
+            setSmallBlind("0.50");
+            setBigBlind("1.00");
+        }
+    };
     // Buy-in in Big Blinds (BB) for Cash games
     const [minBuyInBB, setMinBuyInBB] = useState(20);
     const [maxBuyInBB, setMaxBuyInBB] = useState(100);
@@ -352,7 +366,7 @@ export default function TableAdminPage() {
                             <label className="text-gray-300 text-xs mb-1 block">Game Type</label>
                             <select
                                 value={gameType}
-                                onChange={e => setGameType(e.target.value as GameType)}
+                                onChange={e => handleGameTypeChange(e.target.value as GameType)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             >
                                 <option value={GameType.SIT_AND_GO}>Sit & Go</option>
@@ -378,22 +392,26 @@ export default function TableAdminPage() {
                     {/* Blinds - FIRST (needed to calculate buy-in) */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
-                            <label className="text-gray-300 text-xs mb-1 block">Small Blind ($)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">
+                                Small Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
+                            </label>
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0.01"
+                                step={gameType === GameType.CASH ? "0.01" : "1"}
+                                min={gameType === GameType.CASH ? "0.01" : "1"}
                                 value={smallBlind}
                                 onChange={e => setSmallBlind(e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
                         <div>
-                            <label className="text-gray-300 text-xs mb-1 block">Big Blind ($)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">
+                                Big Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
+                            </label>
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0.01"
+                                step={gameType === GameType.CASH ? "0.01" : "1"}
+                                min={gameType === GameType.CASH ? "0.01" : "1"}
                                 value={bigBlind}
                                 onChange={e => setBigBlind(e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
@@ -525,7 +543,7 @@ export default function TableAdminPage() {
                                         {startingStack} chips • Blinds increase every {blindLevelDuration} min
                                     </p>
                                     <p className="text-gray-500 text-xs mt-1">
-                                        Starting blinds: {parseInt(smallBlind) || 25}/{parseInt(bigBlind) || 50}
+                                        Starting blinds: {smallBlind}/{bigBlind} chips
                                     </p>
                                 </div>
                             </div>
