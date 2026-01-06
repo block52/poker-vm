@@ -11,6 +11,12 @@ export interface RakeOptions {
     owner: string;              // Address that receives the rake
 }
 
+// Type for SNG/Tournament specific options
+export interface SNGOptions {
+    startingStack: number;       // Starting chips for each player (in chips, not dollars)
+    blindLevelDuration?: number; // Minutes per blind level (default: 10)
+}
+
 // Type for creating new table options
 export interface CreateTableOptions {
     type: GameType;
@@ -21,6 +27,7 @@ export interface CreateTableOptions {
     smallBlind: number;
     bigBlind: number;
     rake?: RakeOptions;         // Optional rake configuration
+    sng?: SNGOptions;           // Optional SNG/Tournament configuration
 }
 
 // Type for useNewTable hook return
@@ -97,6 +104,19 @@ export const useNewTable = (): UseNewTableReturn => {
                 console.log(`  Owner: ${gameOptions.rake.owner}`);
             }
 
+            // Convert SNG options if provided
+            let sngConfig = undefined;
+            if (gameOptions.sng) {
+                sngConfig = {
+                    startingStack: BigInt(gameOptions.sng.startingStack),
+                    blindLevelDuration: gameOptions.sng.blindLevelDuration
+                };
+
+                console.log("🎰 SNG Configuration:");
+                console.log(`  Starting Stack: ${gameOptions.sng.startingStack} chips`);
+                console.log(`  Blind Level Duration: ${gameOptions.sng.blindLevelDuration ?? 10} minutes`);
+            }
+
             console.log("🚀 Creating New Game on Cosmos Blockchain:");
             console.log(`Creator: ${userAddress}`);
 
@@ -120,7 +140,8 @@ export const useNewTable = (): UseNewTableReturn => {
                 smallBlindB52USDC,
                 bigBlindB52USDC,
                 timeoutSeconds,
-                rakeConfig
+                rakeConfig,
+                sngConfig
             );
 
             if (txHash) {

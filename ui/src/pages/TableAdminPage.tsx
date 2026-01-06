@@ -59,6 +59,9 @@ export default function TableAdminPage() {
     const [maxBuyInBB, setMaxBuyInBB] = useState(100);
     // For tournaments: single buy-in amount
     const [tournamentBuyIn, setTournamentBuyIn] = useState("10");
+    // SNG/Tournament specific settings
+    const [startingStack, setStartingStack] = useState(1500);
+    const [blindLevelDuration, setBlindLevelDuration] = useState(10);
 
     // Calculate actual buy-in values from BB
     const { minBuyIn: calculatedMinBuyIn, maxBuyIn: calculatedMaxBuyIn } = useMemo(
@@ -139,6 +142,12 @@ export default function TableAdminPage() {
         const finalMinBuyIn = isTournament ? parseFloat(tournamentBuyIn) : calculatedMinBuyIn;
         const finalMaxBuyIn = isTournament ? parseFloat(tournamentBuyIn) : calculatedMaxBuyIn;
 
+        // Build SNG config if this is a tournament/SNG
+        const sngConfig = isTournament ? {
+            startingStack,
+            blindLevelDuration
+        } : undefined;
+
         console.log("📋 Table configuration:", {
             type: gameType,
             minBuyIn: finalMinBuyIn,
@@ -149,7 +158,8 @@ export default function TableAdminPage() {
             maxPlayers,
             smallBlind: parseFloat(smallBlind),
             bigBlind: parseFloat(bigBlind),
-            ...(rakeConfig && { rake: rakeConfig })
+            ...(rakeConfig && { rake: rakeConfig }),
+            ...(sngConfig && { sng: sngConfig })
         });
 
         // Store the table count before creating to verify a new table was added
@@ -165,7 +175,8 @@ export default function TableAdminPage() {
                 maxPlayers,
                 smallBlind: parseFloat(smallBlind),
                 bigBlind: parseFloat(bigBlind),
-                ...(rakeConfig && { rake: rakeConfig })
+                ...(rakeConfig && { rake: rakeConfig }),
+                ...(sngConfig && { sng: sngConfig })
             });
 
             console.log("✅ createTable returned:", result);
@@ -393,17 +404,130 @@ export default function TableAdminPage() {
                     {/* Buy-In Section */}
                     <div className="mb-4">
                         {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
-                            <div>
-                                <label className="text-gray-300 text-xs mb-1 block">Tournament Buy-In ($)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={tournamentBuyIn}
-                                    onChange={e => setTournamentBuyIn(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                                    placeholder="e.g., 10.00"
-                                />
-                                <p className="text-gray-500 text-xs mt-1">All players pay the same entry fee</p>
+                            <div className="space-y-4">
+                                {/* Entry Fee */}
+                                <div>
+                                    <label className="text-gray-300 text-xs mb-1 block">Entry Fee ($)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={tournamentBuyIn}
+                                        onChange={e => setTournamentBuyIn(e.target.value)}
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                        placeholder="e.g., 10.00"
+                                    />
+                                    <p className="text-gray-500 text-xs mt-1">All players pay the same entry fee</p>
+                                </div>
+
+                                {/* Starting Stack */}
+                                <div>
+                                    <label className="text-gray-300 text-xs mb-2 block">Starting Stack (chips)</label>
+                                    <div className="flex gap-2 flex-wrap mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStartingStack(1000)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                startingStack === 1000
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Turbo (1000)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStartingStack(1500)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                startingStack === 1500
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Standard (1500)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStartingStack(3000)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                startingStack === 3000
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Deep Stack (3000)
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min="100"
+                                        step="100"
+                                        value={startingStack}
+                                        onChange={e => setStartingStack(Number(e.target.value))}
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                    />
+                                </div>
+
+                                {/* Blind Level Duration */}
+                                <div>
+                                    <label className="text-gray-300 text-xs mb-2 block">Blind Level Duration</label>
+                                    <div className="flex gap-2 flex-wrap mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(3)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 3
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Hyper (3 min)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(5)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 5
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Turbo (5 min)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(10)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 10
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Standard (10 min)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(15)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 15
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Deep (15 min)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* SNG Settings Summary */}
+                                <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
+                                    <p className="text-gray-400 text-xs mb-1">SNG Settings:</p>
+                                    <p className="text-green-400 text-sm font-medium">
+                                        {startingStack} chips • Blinds increase every {blindLevelDuration} min
+                                    </p>
+                                    <p className="text-gray-500 text-xs mt-1">
+                                        Starting blinds: {parseInt(smallBlind) || 25}/{parseInt(bigBlind) || 50}
+                                    </p>
+                                </div>
                             </div>
                         ) : (
                             <>
