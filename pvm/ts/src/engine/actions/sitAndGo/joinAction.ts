@@ -1,4 +1,4 @@
-import { NonPlayerActionType, TexasHoldemRound, PlayerActionType } from "@block52/poker-vm-sdk";
+import { NonPlayerActionType, PlayerActionType } from "@block52/poker-vm-sdk";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
 import { IAction, Range } from "../../types";
@@ -17,21 +17,14 @@ class JoinAction extends BaseAction implements IAction {
             throw new Error("Player already exists in the game.");
         }
 
-        // Block joining after the game has started (blinds posted)
-        // This action is only used for SNG games, so no game type check needed
-        if (this.game.currentRound !== TexasHoldemRound.ANTE) {
-            throw new Error("Cannot join a SNG/Tournament table after the game has started.");
-        }
-
-        // Also check if any blinds have been posted in the ANTE round
-        const anteActions = this.game.getPreviousActions().filter(
+        // Block joining after the game has started (any blind posted)
+        const hasStarted = this.game.getPreviousActions().some(
             a => a.action === PlayerActionType.SMALL_BLIND || a.action === PlayerActionType.BIG_BLIND
         );
-        if (anteActions.length > 0) {
+        if (hasStarted) {
             throw new Error("Cannot join a SNG/Tournament table after the game has started.");
         }
 
-        // Now we can use the actual min/max buy-in values
         return {
             minAmount: this.game.minBuyIn,
             maxAmount: this.game.maxBuyIn
