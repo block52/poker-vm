@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound } from "@block52/poker-vm-sdk";
+import { NonPlayerActionType, PlayerActionType, PlayerStatus, TexasHoldemRound, GameType } from "@block52/poker-vm-sdk";
 import BaseAction from "./baseAction";
 import { Player } from "../../models/player";
 import { Range } from "../types";
@@ -7,15 +7,31 @@ import { Range } from "../types";
  * ForfeitAndLeaveAction allows a player to leave the table regardless of game state.
  * If the player is active in a hand, they will be folded first, then removed from the table.
  * This is useful for testing and for situations where a player needs to leave immediately.
+ *
+ * Note: For SNG/Tournament games, players cannot leave once the game has started (actionCount > 0).
  */
 class ForfeitAndLeaveAction extends BaseAction {
     get type(): NonPlayerActionType {
         return NonPlayerActionType.LEAVE;
     }
 
-    // Override verify - this action is always allowed (player forfeits their hand if needed)
+    // Override verify - check restrictions for SNG/Tournament games
     verify(player: Player): Range {
-        // Always allow forfeit and leave - no restrictions
+        // Block leaving for SNG/Tournament games after the game has started
+        // Game is considered "started" when we're past the ANTE round (blinds have been posted)
+        if (this.game.type === GameType.SIT_AND_GO || this.game.type === GameType.TOURNAMENT) {
+            if (this.game.currentRound !== TexasHoldemRound.ANTE) {
+                throw new Error("Cannot leave a SNG/Tournament table after the game has started.");
+            }
+            // Also check if any blinds have been posted in the ANTE round
+            const anteActions = this.game.getPreviousActions().filter(
+                a => a.action === PlayerActionType.SMALL_BLIND || a.action === PlayerActionType.BIG_BLIND
+            );
+            if (anteActions.length > 0) {
+                throw new Error("Cannot leave a SNG/Tournament table after the game has started.");
+            }
+        }
+
         return { minAmount: player.chips, maxAmount: player.chips };
     }
 

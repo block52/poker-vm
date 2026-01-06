@@ -294,4 +294,51 @@ describe("Sit and Go - Simple Tournament", () => {
             expect(game.findActivePlayers()[0].address).toBe(PLAYER_1);
         });
     });
+
+    describe("Leave Table Restrictions", () => {
+        it("should allow leaving before blinds are posted (game not started)", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Still in ANTE round, no blinds posted - player should be able to leave
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, actionIndex++, undefined, undefined, Date.now());
+            }).not.toThrow();
+
+            // Verify player left
+            expect(game.getPlayerCount()).toBe(2);
+        });
+
+        it("should block leaving after first blind is posted", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Post small blind - game has now started
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, actionIndex++, SMALL_BLIND, undefined, Date.now());
+
+            // Player should NOT be able to leave now
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, actionIndex++, undefined, undefined, Date.now());
+            }).toThrow("Cannot leave a SNG/Tournament table after the game has started.");
+
+            // Verify player is still in the game
+            expect(game.getPlayerCount()).toBe(3);
+        });
+
+        it("should block leaving during any stage of an active hand", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Post blinds and deal
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, actionIndex++, SMALL_BLIND, undefined, Date.now());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, actionIndex++, BIG_BLIND, undefined, Date.now());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, actionIndex++, undefined, undefined, Date.now());
+
+            // Try to leave during preflop - should be blocked
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, actionIndex++, undefined, undefined, Date.now());
+            }).toThrow("Cannot leave a SNG/Tournament table after the game has started.");
+        });
+    });
 });
