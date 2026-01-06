@@ -294,4 +294,100 @@ describe("Sit and Go - Simple Tournament", () => {
             expect(game.findActivePlayers()[0].address).toBe(PLAYER_1);
         });
     });
+
+    describe("Join Table Restrictions", () => {
+        const PLAYER_4 = "0x4444444444444444444444444444444444444444";
+
+        it("should allow joining before blinds are posted (game not started)", () => {
+            const game = createGame();
+
+            // Join first two players
+            game.performAction(PLAYER_1, NonPlayerActionType.JOIN, actionIndex++, STARTING_STACK, "seat=1", Date.now());
+            game.performAction(PLAYER_2, NonPlayerActionType.JOIN, actionIndex++, STARTING_STACK, "seat=2", Date.now());
+
+            // Still in ANTE round, no blinds posted - third player should be able to join
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.JOIN, actionIndex++, STARTING_STACK, "seat=3", Date.now());
+            }).not.toThrow();
+
+            // Verify player joined
+            expect(game.getPlayerCount()).toBe(3);
+        });
+
+        it("should block joining after first blind is posted", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Post small blind - game has now started
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, actionIndex++, SMALL_BLIND, undefined, Date.now());
+
+            // Fourth player should NOT be able to join now (even if there was room)
+            expect(() => {
+                game.performAction(PLAYER_4, NonPlayerActionType.JOIN, actionIndex++, STARTING_STACK, "seat=4", Date.now());
+            }).toThrow("Cannot join a SNG/Tournament table after the game has started.");
+        });
+
+        it("should block joining during any stage of an active hand", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Post blinds and deal
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, actionIndex++, SMALL_BLIND, undefined, Date.now());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, actionIndex++, BIG_BLIND, undefined, Date.now());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, actionIndex++, undefined, undefined, Date.now());
+
+            // Try to join during preflop - should be blocked
+            expect(() => {
+                game.performAction(PLAYER_4, NonPlayerActionType.JOIN, actionIndex++, STARTING_STACK, "seat=4", Date.now());
+            }).toThrow("Cannot join a SNG/Tournament table after the game has started.");
+        });
+    });
+
+    describe("Leave Table Restrictions", () => {
+        it("should allow leaving before blinds are posted (game not started)", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Still in ANTE round, no blinds posted - player should be able to leave
+            expect(game.currentRound).toBe(TexasHoldemRound.ANTE);
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, actionIndex++, undefined, undefined, Date.now());
+            }).not.toThrow();
+
+            // Verify player left
+            expect(game.getPlayerCount()).toBe(2);
+        });
+
+        it("should block leaving after first blind is posted", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Post small blind - game has now started
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, actionIndex++, SMALL_BLIND, undefined, Date.now());
+
+            // Player should NOT be able to leave now
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, actionIndex++, undefined, undefined, Date.now());
+            }).toThrow("Cannot leave a SNG/Tournament table after the game has started.");
+
+            // Verify player is still in the game
+            expect(game.getPlayerCount()).toBe(3);
+        });
+
+        it("should block leaving during any stage of an active hand", () => {
+            const game = createGame();
+            joinAllPlayers(game);
+
+            // Post blinds and deal
+            game.performAction(PLAYER_1, PlayerActionType.SMALL_BLIND, actionIndex++, SMALL_BLIND, undefined, Date.now());
+            game.performAction(PLAYER_2, PlayerActionType.BIG_BLIND, actionIndex++, BIG_BLIND, undefined, Date.now());
+            game.performAction(PLAYER_1, NonPlayerActionType.DEAL, actionIndex++, undefined, undefined, Date.now());
+
+            // Try to leave during preflop - should be blocked
+            expect(() => {
+                game.performAction(PLAYER_3, NonPlayerActionType.LEAVE, actionIndex++, undefined, undefined, Date.now());
+            }).toThrow("Cannot leave a SNG/Tournament table after the game has started.");
+        });
+    });
 });

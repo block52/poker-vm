@@ -1,4 +1,4 @@
-import { NonPlayerActionType, PlayerStatus } from "@block52/poker-vm-sdk";
+import { NonPlayerActionType, PlayerStatus, PlayerActionType } from "@block52/poker-vm-sdk";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
 import { IAction, Range } from "../../types";
@@ -9,7 +9,7 @@ class LeaveAction extends BaseAction implements IAction {
         return NonPlayerActionType.LEAVE;
     }
 
-    // Override verify method to allow leaving anytime
+    // Override verify method - block leaving after game starts for SNG/Tournament
     verify(player: Player): Range {
         if (player.status !== PlayerStatus.ACTIVE) {
             throw new Error("Player is not active and cannot leave.");
@@ -17,6 +17,14 @@ class LeaveAction extends BaseAction implements IAction {
 
         if (player.chips <= 0n) {
             throw new Error("Player has no chips and cannot leave.");
+        }
+
+        // Block leaving after the game has started (any blind posted)
+        const hasStarted = this.game.getPreviousActions().some(
+            a => a.action === PlayerActionType.SMALL_BLIND || a.action === PlayerActionType.BIG_BLIND
+        );
+        if (hasStarted) {
+            throw new Error("Cannot leave a SNG/Tournament table after the game has started.");
         }
 
         return { minAmount: 0n, maxAmount: 0n };
