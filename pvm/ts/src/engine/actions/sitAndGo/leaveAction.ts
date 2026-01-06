@@ -9,7 +9,7 @@ class LeaveAction extends BaseAction implements IAction {
         return NonPlayerActionType.LEAVE;
     }
 
-    // Override verify method - block leaving after game starts
+    // Override verify method - block leaving after game starts for SNG/Tournament
     verify(player: Player): Range {
         if (player.status !== PlayerStatus.ACTIVE) {
             throw new Error("Player is not active and cannot leave.");
