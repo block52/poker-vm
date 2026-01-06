@@ -1,4 +1,4 @@
-import { NonPlayerActionType } from "@block52/poker-vm-sdk";
+import { NonPlayerActionType, PlayerActionType } from "@block52/poker-vm-sdk";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
 import { IAction, Range } from "../../types";
@@ -13,16 +13,18 @@ class JoinAction extends BaseAction implements IAction {
 
     // Override verify method for join action
     verify(player: Player): Range {
-
-        // if (this.game.status !== "waiting-for-players") {
-        //     throw new Error("Game is not in the waiting-for-players state.");
-        // }
-
         if (this.game.exists(player.address)) {
             throw new Error("Player already exists in the game.");
         }
 
-        // Now we can use the actual min/max buy-in values
+        // Block joining after the game has started (any blind posted)
+        const hasStarted = this.game.getPreviousActions().some(
+            a => a.action === PlayerActionType.SMALL_BLIND || a.action === PlayerActionType.BIG_BLIND
+        );
+        if (hasStarted) {
+            throw new Error("Cannot join a SNG/Tournament table after the game has started.");
+        }
+
         return {
             minAmount: this.game.minBuyIn,
             maxAmount: this.game.maxBuyIn
