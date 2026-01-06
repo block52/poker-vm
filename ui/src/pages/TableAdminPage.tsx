@@ -424,9 +424,9 @@ export default function TableAdminPage() {
                     <div className="mb-4">
                         {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
                             <div className="space-y-4">
-                                {/* Entry Fee */}
+                                {/* Buy In */}
                                 <div>
-                                    <label className="text-gray-300 text-xs mb-1 block">Entry Fee ($)</label>
+                                    <label className="text-gray-300 text-xs mb-1 block">Buy In ($)</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -435,7 +435,7 @@ export default function TableAdminPage() {
                                         className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                                         placeholder="e.g., 10.00"
                                     />
-                                    <p className="text-gray-500 text-xs mt-1">All players pay the same entry fee</p>
+                                    <p className="text-gray-500 text-xs mt-1">All players pay the same buy in</p>
                                 </div>
 
                                 {/* Starting Stack */}

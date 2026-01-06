@@ -72,7 +72,7 @@ export const useNewTable = (): UseNewTableReturn => {
 
             console.log("🎮 Game Settings:");
             console.log(`  Game Type: ${gameOptions.type}`);
-            console.log(`  Entry Fee: $${gameOptions.minBuyIn} - $${gameOptions.maxBuyIn}`);
+            console.log(`  Buy In: $${gameOptions.minBuyIn} - $${gameOptions.maxBuyIn}`);
             console.log(`  Blinds: $${gameOptions.smallBlind}/$${gameOptions.bigBlind} (input)`);
             console.log(`  Blinds: ${smallBlindB52USDC}/${bigBlindB52USDC} usdc (converted)`);
 
