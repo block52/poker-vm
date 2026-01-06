@@ -272,11 +272,23 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const actionCount = this.getPreviousActions().length + 1; // This is the next count, so need to add 1
 
         // Reset all players
-        for (const player of this.getSeatedPlayers()) {
+        const players = this.getSeatedPlayers();
+        for (const player of players) {
             player.reinit();
 
-            // Players with 0 chips should be marked as BUSTED
-            if (player.chips === 0n) {
+            // Players with 0 chips should be marked as BUSTED (for SNG/Tournament)
+            if ((this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) && player.chips === 0n) {
+                // Only add to results if not already there
+                const alreadyInResults = this._results.some(r => r.playerId === player.id);
+                if (!alreadyInResults) {
+                    const place = this._gameOptions.minPlayers - this._results.length;
+                    const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
+                    const payout = payoutManager.calculatePayout(place);
+                    this._results.push({ place, playerId: player.id, payout });
+                }
+                player.updateStatus(PlayerStatus.BUSTED);
+            } else if (player.chips === 0n) {
+                // Cash game: mark as BUSTED
                 player.updateStatus(PlayerStatus.BUSTED);
             }
 
