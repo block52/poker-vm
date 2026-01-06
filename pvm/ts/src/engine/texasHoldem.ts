@@ -281,8 +281,10 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 // Only add to results if not already there
                 const alreadyInResults = this._results.some(r => r.playerId === player.id);
                 if (!alreadyInResults) {
-                    const place = this._gameOptions.minPlayers - this._results.length;
-                    const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
+                    // Use actual entrants count (all seated players) minus already busted to calculate place
+                    const actualEntrants = players.length;
+                    const place = actualEntrants - this._results.length;
+                    const payoutManager = new PayoutManager(this._gameOptions.startingStack ?? this._gameOptions.minBuyIn, players);
                     const payout = payoutManager.calculatePayout(place);
                     this._results.push({ place, playerId: player.id, payout });
                 }
@@ -1871,10 +1873,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             for (const player of players) {
                 if (player.chips === 0n) {
                     // The player is now BUSTED after the pots awarded.
-                    const place = this._gameOptions.minPlayers - this._results.length;
+                    // Use actual entrants count (all seated players) minus already busted to calculate place
+                    const actualEntrants = players.length;
+                    const place = actualEntrants - this._results.length;
 
                     // Get payouts from the payout manager
-                    const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
+                    const payoutManager = new PayoutManager(this._gameOptions.startingStack ?? this._gameOptions.minBuyIn, players);
                     const payout = payoutManager.calculatePayout(place);
 
                     // Need to do transfer back to player here
