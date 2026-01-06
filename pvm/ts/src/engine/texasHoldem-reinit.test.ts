@@ -129,7 +129,8 @@ describe("Texas Holdem - Reinit", () => {
         it("should mark tournament players with 0 chips as BUSTED on reInit", () => {
             const tournamentGameOptions = {
                 ...gameOptions,
-                type: GameType.TOURNAMENT
+                type: GameType.TOURNAMENT,
+                startingStack: ONE_HUNDRED_TOKENS // Match cash game buy-in for consistent test behavior
             };
 
             const game = TexasHoldemGame.fromJson(baseGameConfig, tournamentGameOptions);

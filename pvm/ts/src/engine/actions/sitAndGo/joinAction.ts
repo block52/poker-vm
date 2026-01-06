@@ -2,7 +2,9 @@ import { NonPlayerActionType } from "@block52/poker-vm-sdk";
 import BaseAction from "./../baseAction";
 import { Player } from "../../../models/player";
 import { IAction, Range } from "../../types";
-import { ethers } from "ethers";
+
+// Default starting stack for SNG if not configured (1500 chips)
+const DEFAULT_STARTING_STACK = 1500n;
 
 class JoinAction extends BaseAction implements IAction {
     get type(): NonPlayerActionType {
@@ -38,8 +40,8 @@ class JoinAction extends BaseAction implements IAction {
             throw new Error("Player does not have enough funds to cover the buy-in.");
         }
 
-        // For testing purposes, we give the player 10,000 chips
-        const chips: bigint = ethers.parseEther("10000");
+        // Use configured starting stack or default (1500 chips)
+        const chips: bigint = this.game.startingStack ?? DEFAULT_STARTING_STACK;
         player.chips = chips;
 
         // Find an available seat or use the requested one

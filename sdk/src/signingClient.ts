@@ -41,6 +41,14 @@ export interface RakeConfig {
 }
 
 /**
+ * SNG/Tournament specific configuration
+ */
+export interface SNGConfig {
+    startingStack: bigint;       // Starting chips for each player (in chips, not dollars)
+    blindLevelDuration?: number; // Minutes per blind level (default: 10)
+}
+
+/**
  * Message type for creating a game
  * This should match your blockchain's message structure
  */
@@ -59,6 +67,9 @@ export interface MsgCreateGame {
     rakePercentage?: number;
     rakeCap?: string;
     owner?: string;
+    // SNG/Tournament specific options
+    startingStack?: string;       // Starting chips (in chips, not dollars)
+    blindLevelDuration?: number;  // Minutes per blind level
 }
 
 /**
@@ -193,7 +204,8 @@ export class SigningCosmosClient extends CosmosClient {
         smallBlindB52USDC: bigint,
         bigBlindB52USDC: bigint,
         timeout: number,
-        rakeConfig?: RakeConfig
+        rakeConfig?: RakeConfig,
+        sngConfig?: SNGConfig
     ): Promise<string> {
         await this.initializeSigningClient();
 
@@ -225,6 +237,14 @@ export class SigningCosmosClient extends CosmosClient {
             msgCreateGame.owner = rakeConfig.owner;
         }
 
+        // Add SNG/Tournament configuration if provided
+        if (sngConfig) {
+            msgCreateGame.startingStack = sngConfig.startingStack.toString();
+            if (sngConfig.blindLevelDuration !== undefined) {
+                msgCreateGame.blindLevelDuration = sngConfig.blindLevelDuration;
+            }
+        }
+
         // Create the transaction message
         const msg: EncodeObject = {
             typeUrl: "/pokerchain.poker.v1.MsgCreateGame",
@@ -249,6 +269,10 @@ export class SigningCosmosClient extends CosmosClient {
                 rakePercentage: rakeConfig.rakePercentage,
                 rakeCap: rakeConfig.rakeCap.toString(),
                 owner: rakeConfig.owner
+            }),
+            ...(sngConfig && {
+                startingStack: sngConfig.startingStack.toString(),
+                blindLevelDuration: sngConfig.blindLevelDuration
             })
         });
 

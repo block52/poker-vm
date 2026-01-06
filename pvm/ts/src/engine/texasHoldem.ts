@@ -112,7 +112,9 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                 rakeCap: BigInt(gameOptions.rake.rakeCap),
                 owner: gameOptions.rake.owner || gameOptions.owner || ""
             } : undefined,
-            owner: gameOptions.owner
+            owner: gameOptions.owner,
+            startingStack: gameOptions.startingStack !== undefined ? BigInt(gameOptions.startingStack) : undefined,
+            blindLevelDuration: gameOptions.blindLevelDuration
         };
 
         // Validate rake configuration
@@ -213,9 +215,11 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
                     timeout: this._gameOptions.timeout,
                     type: this._gameOptions.type,
                     rake: this._gameOptions.rake,
-                    owner: this._gameOptions.owner
+                    owner: this._gameOptions.owner,
+                    startingStack: this._gameOptions.startingStack,
+                    blindLevelDuration: this._gameOptions.blindLevelDuration
                 };
-                this.blindsManager = new SitAndGoBlindsManager(10, gameOptions);
+                this.blindsManager = new SitAndGoBlindsManager(gameOptions);
                 break;
             case GameType.CASH:
             default:
@@ -268,11 +272,25 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
         const actionCount = this.getPreviousActions().length + 1; // This is the next count, so need to add 1
 
         // Reset all players
-        for (const player of this.getSeatedPlayers()) {
+        const players = this.getSeatedPlayers();
+        for (const player of players) {
             player.reinit();
 
-            // Players with 0 chips should be marked as BUSTED
-            if (player.chips === 0n) {
+            // Players with 0 chips should be marked as BUSTED (for SNG/Tournament)
+            if ((this.type === GameType.SIT_AND_GO || this.type === GameType.TOURNAMENT) && player.chips === 0n) {
+                // Only add to results if not already there
+                const alreadyInResults = this._results.some(r => r.playerId === player.id);
+                if (!alreadyInResults) {
+                    // Use actual entrants count (all seated players) minus already busted to calculate place
+                    const actualEntrants = players.length;
+                    const place = actualEntrants - this._results.length;
+                    const payoutManager = new PayoutManager(this._gameOptions.startingStack ?? this._gameOptions.minBuyIn, players);
+                    const payout = payoutManager.calculatePayout(place);
+                    this._results.push({ place, playerId: player.id, payout });
+                }
+                player.updateStatus(PlayerStatus.BUSTED);
+            } else if (player.chips === 0n) {
+                // Cash game: mark as BUSTED
                 player.updateStatus(PlayerStatus.BUSTED);
             }
 
@@ -410,6 +428,14 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
 
     get owner(): string | undefined {
         return this._gameOptions.owner;
+    }
+
+    get startingStack(): bigint | undefined {
+        return this._gameOptions.startingStack;
+    }
+
+    get blindLevelDuration(): number | undefined {
+        return this._gameOptions.blindLevelDuration;
     }
 
     // Position getters
@@ -1847,10 +1873,12 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             for (const player of players) {
                 if (player.chips === 0n) {
                     // The player is now BUSTED after the pots awarded.
-                    const place = this._gameOptions.minPlayers - this._results.length;
+                    // Use actual entrants count (all seated players) minus already busted to calculate place
+                    const actualEntrants = players.length;
+                    const place = actualEntrants - this._results.length;
 
                     // Get payouts from the payout manager
-                    const payoutManager = new PayoutManager(this._gameOptions.minBuyIn, players);
+                    const payoutManager = new PayoutManager(this._gameOptions.startingStack ?? this._gameOptions.minBuyIn, players);
                     const payout = payoutManager.calculatePayout(place);
 
                     // Need to do transfer back to player here
@@ -2016,7 +2044,15 @@ class TexasHoldemGame implements IDealerGameInterface, IPoker, IUpdate {
             gameOptions.bigBlind = BigInt(gameOptions?.bigBlind);
             gameOptions.timeout = gameOptions?.timeout ?? 30; // Default to 30 seconds if not provided
             gameOptions.type = gameOptions?.type;
-            
+
+            // Parse SNG/Tournament specific options
+            if (gameOptions.startingStack !== undefined) {
+                gameOptions.startingStack = BigInt(gameOptions.startingStack);
+            }
+            if (gameOptions.blindLevelDuration !== undefined) {
+                gameOptions.blindLevelDuration = Number(gameOptions.blindLevelDuration);
+            }
+
             // Parse rake config if present
             if (gameOptions.rake) {
                 gameOptions.rake = {
