@@ -76,6 +76,7 @@ export default function TableAdminPage() {
     // SNG/Tournament specific settings
     const [startingStack, setStartingStack] = useState(1500);
     const [blindLevelDuration, setBlindLevelDuration] = useState(10);
+    const [showStructure, setShowStructure] = useState(false);
 
     // Calculate actual buy-in values from BB
     const { minBuyIn: calculatedMinBuyIn, maxBuyIn: calculatedMaxBuyIn } = useMemo(
@@ -628,6 +629,58 @@ export default function TableAdminPage() {
                             </>
                         )}
                     </div>
+
+                    {/* Show Structure Section - Only for SNG/Tournament */}
+                    {(gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT) && (
+                        <div className="mb-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <input
+                                    type="checkbox"
+                                    id="showStructure"
+                                    checked={showStructure}
+                                    onChange={e => setShowStructure(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                />
+                                <label htmlFor="showStructure" className="text-gray-300 text-sm font-medium">
+                                    Show Blind Structure
+                                </label>
+                            </div>
+
+                            {showStructure && (
+                                <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="text-gray-400 border-b border-gray-700">
+                                                <th className="text-left py-2 px-2">Level</th>
+                                                <th className="text-left py-2 px-2">Small Blind</th>
+                                                <th className="text-left py-2 px-2">Big Blind</th>
+                                                <th className="text-left py-2 px-2">Duration</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-gray-300">
+                                            {Array.from({ length: 10 }, (_, i) => {
+                                                const sb = parseInt(smallBlind) || 25;
+                                                const bb = parseInt(bigBlind) || 50;
+                                                const levelSB = sb * Math.pow(2, i);
+                                                const levelBB = bb * Math.pow(2, i);
+                                                return (
+                                                    <tr key={i} className={i === 0 ? "bg-green-900/20" : ""}>
+                                                        <td className="py-2 px-2">{i + 1}</td>
+                                                        <td className="py-2 px-2">{levelSB.toLocaleString()}</td>
+                                                        <td className="py-2 px-2">{levelBB.toLocaleString()}</td>
+                                                        <td className="py-2 px-2">{blindLevelDuration} min</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                    <p className="text-gray-500 text-xs mt-3">
+                                        * Blinds double each level. Level 1 is highlighted.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Rake Configuration Section - Only for Cash Games */}
                     <div className="mb-4">
