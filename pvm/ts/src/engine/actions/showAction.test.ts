@@ -237,7 +237,7 @@ describe("ShowAction", () => {
     });
 
     describe("turn order enforcement", () => {
-        it("should throw error if not the active player's turn", () => {
+        it("should allow SHOW out of turn during showdown (any player can show)", () => {
             const otherPlayer = new Player(
                 "0x123456789abcdef123456789abcdef123456789a",
                 undefined,
@@ -256,8 +256,9 @@ describe("ShowAction", () => {
             ];
             jest.spyOn(game, "findLivePlayers").mockReturnValue(livePlayers);
 
-            // otherPlayer should not be able to show since it's not their turn
-            expect(() => action.verify(otherPlayer)).toThrow("Must be currently active player.");
+            // SHOW is allowed out of turn - any active player can show during showdown
+            const result = action.verify(otherPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
         it("should allow SHOW only for active player during showdown", () => {
@@ -299,7 +300,7 @@ describe("ShowAction", () => {
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
-        it("should NOT allow ALL_IN player to SHOW when it is NOT their turn", () => {
+        it("should allow ALL_IN player to SHOW out of turn during showdown", () => {
             const allInPlayer = new Player(
                 "0x123456789abcdef123456789abcdef123456789a",
                 undefined,
@@ -318,8 +319,9 @@ describe("ShowAction", () => {
             ];
             jest.spyOn(game, "findLivePlayers").mockReturnValue(livePlayers);
 
-            // ALL_IN player should NOT be able to show when it's not their turn
-            expect(() => action.verify(allInPlayer)).toThrow("Must be currently active player.");
+            // ALL_IN player CAN show out of turn during showdown
+            const result = action.verify(allInPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
     });
 

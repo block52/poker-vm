@@ -261,7 +261,19 @@ export class PhhRunner {
                     // Get the player's current bet this round and calculate difference
                     const raiseTotal = BigInt(action.amount || 0);
                     const raiseAdditional = this.getRaiseAdditionalAmount(game, action.player, raiseTotal);
-                    this.performPlayerAction(game, action.player, PlayerActionType.RAISE, raiseAdditional, timestamp);
+
+                    // Check if RAISE is a legal action and if amount meets minimum
+                    const address = this.playerAddress(action.player);
+                    const legalActions = game.getLegalActions(address);
+                    const raiseAction = legalActions.find(a => a.action === PlayerActionType.RAISE);
+
+                    // If RAISE isn't legal (player can't afford min raise) or amount is below min, use ALL_IN
+                    if (!raiseAction || (raiseAction.min && raiseAdditional < BigInt(raiseAction.min))) {
+                        // PHH amount is below min raise or player can't afford min - use ALL_IN instead
+                        this.performPlayerAction(game, action.player, PlayerActionType.ALL_IN, undefined, timestamp);
+                    } else {
+                        this.performPlayerAction(game, action.player, PlayerActionType.RAISE, raiseAdditional, timestamp);
+                    }
                 }
                 break;
 

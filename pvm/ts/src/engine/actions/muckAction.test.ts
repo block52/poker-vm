@@ -230,7 +230,7 @@ describe("MuckAction", () => {
             jest.spyOn(game, "findWinners").mockReturnValue(false);
         });
 
-        it("should throw error if not the active player's turn", () => {
+        it("should allow MUCK out of turn during showdown (any player can muck)", () => {
             const otherPlayer = new Player(
                 "0x123456789abcdef123456789abcdef123456789a",
                 undefined,
@@ -243,8 +243,9 @@ describe("MuckAction", () => {
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ACTIVE);
 
-            // otherPlayer should not be able to muck since it's not their turn
-            expect(() => action.verify(otherPlayer)).toThrow("Must be currently active player.");
+            // MUCK is allowed out of turn - any active player can muck during showdown
+            const result = action.verify(otherPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
         it("should allow MUCK only for active player during showdown", () => {
@@ -274,7 +275,7 @@ describe("MuckAction", () => {
             expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
 
-        it("should NOT allow ALL_IN player to MUCK when it is NOT their turn", () => {
+        it("should allow ALL_IN player to MUCK out of turn during showdown", () => {
             const allInPlayer = new Player(
                 "0x123456789abcdef123456789abcdef123456789a",
                 undefined,
@@ -287,8 +288,9 @@ describe("MuckAction", () => {
             jest.spyOn(game, "getNextPlayerToAct").mockReturnValue(player);
             jest.spyOn(game, "getPlayerStatus").mockReturnValue(PlayerStatus.ALL_IN);
 
-            // ALL_IN player should NOT be able to muck when it's not their turn
-            expect(() => action.verify(allInPlayer)).toThrow("Must be currently active player.");
+            // ALL_IN player CAN muck out of turn during showdown
+            const result = action.verify(allInPlayer);
+            expect(result).toEqual({ minAmount: 0n, maxAmount: 0n });
         });
     });
 

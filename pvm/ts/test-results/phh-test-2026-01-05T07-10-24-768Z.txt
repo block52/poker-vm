@@ -1,0 +1,43 @@
+PHH Dataset Test Report
+Generated: 2026-01-05T07:10:24.768Z
+Dataset: tests/phh/fixtures/pluribus
+Max Hands: 100
+
+================================================================================
+PHH DATASET TEST RESULTS
+================================================================================
+
+Total Hands Tested:    100
+Successful Hands:      97
+Failed Hands:          3
+
+Success Rate:          97.00%
+Failure Rate:          3.00%
+
+--------------------------------------------------------------------------------
+ERROR BREAKDOWN
+--------------------------------------------------------------------------------
+
+[2 occurrences - 66.7% of failures]
+  Action 22 failed: Must be currently active player.
+
+[1 occurrences - 33.3% of failures]
+  Action 26 failed: Must be currently active player.
+
+--------------------------------------------------------------------------------
+ALL FAILED HANDS (3 total)
+--------------------------------------------------------------------------------
+
+File: 44.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+File: 61.phh
+  Actions: 26/28 executed
+  Error: Action 26 failed: Must be currently active player.
+
+File: 66.phh
+  Actions: 22/24 executed
+  Error: Action 22 failed: Must be currently active player.
+
+================================================================================
