@@ -82,6 +82,8 @@ export type GameOptions = {
     type: GameType; // Optional for cash games
     rake?: RakeConfig; // Optional rake configuration
     owner?: string; // Table owner who collects rake fees
+    startingStack?: bigint; // Starting chips for SNG/Tournament (in chips, not dollars)
+    blindLevelDuration?: number; // Minutes per blind level for SNG/Tournament (default: 10)
     otherOptions?: Record<string, any>; // Placeholder for future options
 };
 
@@ -96,6 +98,8 @@ export type GameOptionsDTO = {
     type?: GameType; // Optional for cash games
     rake?: RakeConfigDTO; // Optional rake configuration
     owner?: string; // Table owner who collects rake fees
+    startingStack?: string; // Starting chips for SNG/Tournament (in chips, not dollars)
+    blindLevelDuration?: number; // Minutes per blind level for SNG/Tournament (default: 10)
     otherOptions?: Record<string, any>; // Placeholder for future options
 };
 

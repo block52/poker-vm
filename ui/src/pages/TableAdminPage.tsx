@@ -54,11 +54,29 @@ export default function TableAdminPage() {
     const [maxPlayers, setMaxPlayers] = useState(9);
     const [smallBlind, setSmallBlind] = useState("0.50");
     const [bigBlind, setBigBlind] = useState("1.00");
+
+    // Update blind defaults when game type changes
+    const handleGameTypeChange = (newType: GameType) => {
+        setGameType(newType);
+        if (newType === GameType.SIT_AND_GO || newType === GameType.TOURNAMENT) {
+            // SNG/Tournament: chip-based blinds (e.g., 25/50)
+            setSmallBlind("25");
+            setBigBlind("50");
+        } else {
+            // Cash game: dollar-based blinds (e.g., $0.50/$1.00)
+            setSmallBlind("0.50");
+            setBigBlind("1.00");
+        }
+    };
     // Buy-in in Big Blinds (BB) for Cash games
     const [minBuyInBB, setMinBuyInBB] = useState(20);
     const [maxBuyInBB, setMaxBuyInBB] = useState(100);
     // For tournaments: single buy-in amount
     const [tournamentBuyIn, setTournamentBuyIn] = useState("10");
+    // SNG/Tournament specific settings
+    const [startingStack, setStartingStack] = useState(1500);
+    const [blindLevelDuration, setBlindLevelDuration] = useState(10);
+    const [showStructure, setShowStructure] = useState(false);
 
     // Calculate actual buy-in values from BB
     const { minBuyIn: calculatedMinBuyIn, maxBuyIn: calculatedMaxBuyIn } = useMemo(
@@ -139,6 +157,12 @@ export default function TableAdminPage() {
         const finalMinBuyIn = isTournament ? parseFloat(tournamentBuyIn) : calculatedMinBuyIn;
         const finalMaxBuyIn = isTournament ? parseFloat(tournamentBuyIn) : calculatedMaxBuyIn;
 
+        // Build SNG config if this is a tournament/SNG
+        const sngConfig = isTournament ? {
+            startingStack,
+            blindLevelDuration
+        } : undefined;
+
         console.log("📋 Table configuration:", {
             type: gameType,
             minBuyIn: finalMinBuyIn,
@@ -149,7 +173,8 @@ export default function TableAdminPage() {
             maxPlayers,
             smallBlind: parseFloat(smallBlind),
             bigBlind: parseFloat(bigBlind),
-            ...(rakeConfig && { rake: rakeConfig })
+            ...(rakeConfig && { rake: rakeConfig }),
+            ...(sngConfig && { sng: sngConfig })
         });
 
         // Store the table count before creating to verify a new table was added
@@ -165,7 +190,8 @@ export default function TableAdminPage() {
                 maxPlayers,
                 smallBlind: parseFloat(smallBlind),
                 bigBlind: parseFloat(bigBlind),
-                ...(rakeConfig && { rake: rakeConfig })
+                ...(rakeConfig && { rake: rakeConfig }),
+                ...(sngConfig && { sng: sngConfig })
             });
 
             console.log("✅ createTable returned:", result);
@@ -341,7 +367,7 @@ export default function TableAdminPage() {
                             <label className="text-gray-300 text-xs mb-1 block">Game Type</label>
                             <select
                                 value={gameType}
-                                onChange={e => setGameType(e.target.value as GameType)}
+                                onChange={e => handleGameTypeChange(e.target.value as GameType)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             >
                                 <option value={GameType.SIT_AND_GO}>Sit & Go</option>
@@ -367,22 +393,26 @@ export default function TableAdminPage() {
                     {/* Blinds - FIRST (needed to calculate buy-in) */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
-                            <label className="text-gray-300 text-xs mb-1 block">Small Blind ($)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">
+                                Small Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
+                            </label>
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0.01"
+                                step={gameType === GameType.CASH ? "0.01" : "1"}
+                                min={gameType === GameType.CASH ? "0.01" : "1"}
                                 value={smallBlind}
                                 onChange={e => setSmallBlind(e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
                             />
                         </div>
                         <div>
-                            <label className="text-gray-300 text-xs mb-1 block">Big Blind ($)</label>
+                            <label className="text-gray-300 text-xs mb-1 block">
+                                Big Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
+                            </label>
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0.01"
+                                step={gameType === GameType.CASH ? "0.01" : "1"}
+                                min={gameType === GameType.CASH ? "0.01" : "1"}
                                 value={bigBlind}
                                 onChange={e => setBigBlind(e.target.value)}
                                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
@@ -393,17 +423,130 @@ export default function TableAdminPage() {
                     {/* Buy-In Section */}
                     <div className="mb-4">
                         {gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT ? (
-                            <div>
-                                <label className="text-gray-300 text-xs mb-1 block">Tournament Buy-In ($)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={tournamentBuyIn}
-                                    onChange={e => setTournamentBuyIn(e.target.value)}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                                    placeholder="e.g., 10.00"
-                                />
-                                <p className="text-gray-500 text-xs mt-1">All players pay the same entry fee</p>
+                            <div className="space-y-4">
+                                {/* Buy In */}
+                                <div>
+                                    <label className="text-gray-300 text-xs mb-1 block">Buy In ($)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={tournamentBuyIn}
+                                        onChange={e => setTournamentBuyIn(e.target.value)}
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                        placeholder="e.g., 10.00"
+                                    />
+                                    <p className="text-gray-500 text-xs mt-1">All players pay the same buy in</p>
+                                </div>
+
+                                {/* Starting Stack */}
+                                <div>
+                                    <label className="text-gray-300 text-xs mb-2 block">Starting Stack (chips)</label>
+                                    <div className="flex gap-2 flex-wrap mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStartingStack(1000)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                startingStack === 1000
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Turbo (1000)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStartingStack(1500)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                startingStack === 1500
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Standard (1500)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStartingStack(3000)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                startingStack === 3000
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Deep Stack (3000)
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min="100"
+                                        step="100"
+                                        value={startingStack}
+                                        onChange={e => setStartingStack(Number(e.target.value))}
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                                    />
+                                </div>
+
+                                {/* Blind Level Duration */}
+                                <div>
+                                    <label className="text-gray-300 text-xs mb-2 block">Blind Level Duration</label>
+                                    <div className="flex gap-2 flex-wrap mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(3)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 3
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Hyper (3 min)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(5)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 5
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Turbo (5 min)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(10)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 10
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Standard (10 min)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBlindLevelDuration(15)}
+                                            className={`px-3 py-1.5 text-xs rounded transition-all duration-200 ${
+                                                blindLevelDuration === 15
+                                                    ? "bg-blue-600 text-white"
+                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                            }`}
+                                        >
+                                            Deep (15 min)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* SNG Settings Summary */}
+                                <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
+                                    <p className="text-gray-400 text-xs mb-1">SNG Settings:</p>
+                                    <p className="text-green-400 text-sm font-medium">
+                                        {startingStack} chips • Blinds increase every {blindLevelDuration} min
+                                    </p>
+                                    <p className="text-gray-500 text-xs mt-1">
+                                        Starting blinds: {smallBlind}/{bigBlind} chips
+                                    </p>
+                                </div>
                             </div>
                         ) : (
                             <>
@@ -487,22 +630,75 @@ export default function TableAdminPage() {
                         )}
                     </div>
 
-                    {/* Rake Configuration Section */}
+                    {/* Show Structure Section - Only for SNG/Tournament */}
+                    {(gameType === GameType.SIT_AND_GO || gameType === GameType.TOURNAMENT) && (
+                        <div className="mb-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <input
+                                    type="checkbox"
+                                    id="showStructure"
+                                    checked={showStructure}
+                                    onChange={e => setShowStructure(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                />
+                                <label htmlFor="showStructure" className="text-gray-300 text-sm font-medium">
+                                    Show Blind Structure
+                                </label>
+                            </div>
+
+                            {showStructure && (
+                                <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="text-gray-400 border-b border-gray-700">
+                                                <th className="text-left py-2 px-2">Level</th>
+                                                <th className="text-left py-2 px-2">Small Blind</th>
+                                                <th className="text-left py-2 px-2">Big Blind</th>
+                                                <th className="text-left py-2 px-2">Duration</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-gray-300">
+                                            {Array.from({ length: 10 }, (_, i) => {
+                                                const sb = parseInt(smallBlind) || 25;
+                                                const bb = parseInt(bigBlind) || 50;
+                                                const levelSB = sb * Math.pow(2, i);
+                                                const levelBB = bb * Math.pow(2, i);
+                                                return (
+                                                    <tr key={i} className={i === 0 ? "bg-green-900/20" : ""}>
+                                                        <td className="py-2 px-2">{i + 1}</td>
+                                                        <td className="py-2 px-2">{levelSB.toLocaleString()}</td>
+                                                        <td className="py-2 px-2">{levelBB.toLocaleString()}</td>
+                                                        <td className="py-2 px-2">{blindLevelDuration} min</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                    <p className="text-gray-500 text-xs mt-3">
+                                        * Blinds double each level. Level 1 is highlighted.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Rake Configuration Section - Only for Cash Games */}
                     <div className="mb-4">
                         <div className="flex items-center gap-2 mb-3">
                             <input
                                 type="checkbox"
                                 id="enableRake"
-                                checked={enableRake}
+                                checked={enableRake && gameType === GameType.CASH}
                                 onChange={e => setEnableRake(e.target.checked)}
-                                className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                disabled={gameType !== GameType.CASH}
+                                className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
-                            <label htmlFor="enableRake" className="text-gray-300 text-sm font-medium">
-                                Enable Rake Collection
+                            <label htmlFor="enableRake" className={`text-sm font-medium ${gameType === GameType.CASH ? "text-gray-300" : "text-gray-500"}`}>
+                                Enable Rake Collection {gameType !== GameType.CASH && "(Cash games only)"}
                             </label>
                         </div>
 
-                        {enableRake && (
+                        {enableRake && gameType === GameType.CASH && (
                             <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
                                 <div className="grid grid-cols-2 gap-3 mb-3">
                                     <div>

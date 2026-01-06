@@ -32,6 +32,9 @@ library
                     , TexasHoldem.Evaluation
                     , TexasHoldem.BetManager
                     , TexasHoldem.DealerManager
+                    , TexasHoldem.Phh
+                    , TexasHoldem.Phh.Types
+                    , TexasHoldem.Phh.Parser
     build-depends:    base >= 4.17 && < 5
                     , containers >= 0.6
                     , mtl >= 2.2
@@ -48,6 +51,26 @@ executable texas-holdem-demo
                     , texas-holdem
                     , containers >= 0.6
                     , text >= 2.0
+    hs-source-dirs:   app
+    default-language: Haskell2010
+
+executable phh-runner
+    import:           warnings
+    main-is:          PhhRunner.hs
+    build-depends:    base >= 4.17 && < 5
+                    , texas-holdem
+                    , containers >= 0.6
+                    , directory >= 1.3
+                    , filepath >= 1.4
+    hs-source-dirs:   app
+    default-language: Haskell2010
+
+executable texas-holdem-example
+    import:           warnings
+    main-is:          Example.hs
+    build-depends:    base >= 4.17 && < 5
+                    , texas-holdem
+                    , containers >= 0.6
     hs-source-dirs:   app
     default-language: Haskell2010
 

@@ -29,8 +29,9 @@ export class SitAndGoBlindsManager implements IBlindsManager {
     start: Date | undefined;
     private readonly levelLength: number; // in minutes
 
-    constructor(levelLength: number, gameOptions: GameOptions, start?: Date) {
-        this.levelLength = levelLength;
+    constructor(gameOptions: GameOptions, start?: Date) {
+        // Use blindLevelDuration from gameOptions, default to 10 minutes
+        this.levelLength = gameOptions.blindLevelDuration ?? 10;
         this.gameOptions = gameOptions;
         this.start = start;
     }
