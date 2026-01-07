@@ -5,6 +5,23 @@ import { colors, hexToRgba } from "../utils/colorConfig";
 import { sortTablesByAvailableSeats } from "../utils/tableSortingUtils";
 
 /**
+ * Format buy-in display based on game type
+ * SNG/Tournament: Shows single buy-in amount (fixed buy-in)
+ * Cash Game: Shows min-max range
+ */
+const formatBuyIn = (game: { gameType?: string; minBuyIn?: string; maxBuyIn?: string }) => {
+    const isTournament = game.gameType === "sit-and-go" || game.gameType === "tournament";
+    const minBuyIn = formatMicroAsUsdc(game.minBuyIn || "0", 2);
+
+    if (isTournament) {
+        return `$${minBuyIn}`;
+    }
+
+    const maxBuyIn = formatMicroAsUsdc(game.maxBuyIn || "0", 2);
+    return `$${minBuyIn} - $${maxBuyIn}`;
+};
+
+/**
  * TableList - Displays available poker tables in a table format
  * Used on the landing page RHS
  * Join buttons open tables in a new tab for better user experience
@@ -259,7 +276,7 @@ const TableList: React.FC = () => {
                                     </td>
                                     <td className="px-4 py-4 text-center">
                                         <span className="text-gray-300 font-mono text-sm">
-                                            ${formatMicroAsUsdc(game.minBuyIn || "0", 2)} - ${formatMicroAsUsdc(game.maxBuyIn || "0", 2)}
+                                            {formatBuyIn(game)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-4 text-center">
