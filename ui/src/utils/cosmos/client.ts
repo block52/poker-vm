@@ -62,33 +62,40 @@ export const getCosmosClient = (
 
     const network = customEndpoints ? null : networkOrEndpoints as NetworkEndpoints;
 
-    // If custom endpoints are provided and different from current, clear the client
-    if (customEndpoints) {
-        if (
-            !currentEndpoints ||
-            currentEndpoints.rpc !== customEndpoints.rpc ||
-            currentEndpoints.rest !== customEndpoints.rest
-        ) {
-            clientInstance = null;
-            currentEndpoints = customEndpoints;
-        }
+    // Get the actual endpoints to use (either custom or from network config)
+    const newEndpoints = customEndpoints
+        ? { rpc: customEndpoints.rpc, rest: customEndpoints.rest }
+        : { rpc: network!.rpc, rest: network!.rest };
+
+    // Clear client if endpoints have changed (network switch or custom endpoint change)
+    if (
+        currentEndpoints &&
+        (currentEndpoints.rpc !== newEndpoints.rpc || currentEndpoints.rest !== newEndpoints.rest)
+    ) {
+        console.log("🔄 [CosmosClient] Network changed, clearing cached client");
+        console.log("   Old:", currentEndpoints);
+        console.log("   New:", newEndpoints);
+        clientInstance = null;
     }
 
     if (!clientInstance) {
         const mnemonic = getCosmosMnemonic();
+        const config = customEndpoints
+            ? getCosmosConfigWithEndpoints(customEndpoints.rpc, customEndpoints.rest)
+            : getDefaultCosmosConfig(network!);
+
         if (!mnemonic) {
             // For read-only operations (like explorer), create client without mnemonic
-            const config = customEndpoints
-                ? getCosmosConfigWithEndpoints(customEndpoints.rpc, customEndpoints.rest)
-                : getDefaultCosmosConfig(network!);
             clientInstance = new CosmosClient(config);
         } else {
-            const config = customEndpoints
-                ? getCosmosConfigWithEndpoints(customEndpoints.rpc, customEndpoints.rest)
-                : getDefaultCosmosConfig(network!);
             clientInstance = new CosmosClient({ ...config, mnemonic });
         }
+
+        // Track current endpoints for change detection
+        currentEndpoints = newEndpoints;
+        console.log("✅ [CosmosClient] Created new client for:", newEndpoints);
     }
+
     return clientInstance;
 };
 
