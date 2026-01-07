@@ -10,20 +10,20 @@ import useWalletBalance from "../hooks/DepositPage/useWalletBalance";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-import { STORAGE_PUBLIC_KEY } from "../hooks/useUserWallet";
-import { CONTRACT_ADDRESSES } from "../constants";
-import useUserWallet from "../hooks/useUserWallet";
+import { BASE_USDC_ADDRESS, COSMOS_BRIDGE_ADDRESS } from "../config/constants";
+import { useCosmosWallet } from "../hooks";
 import { formatUSDCToSimpleDollars, convertAmountToBigInt } from "../utils/numberUtils";
 import { colors, getAnimationGradient, hexToRgba } from "../utils/colorConfig";
+import { microToUsdc } from "../constants/currency";
 
 const Deposit: React.FC = () => {
-    const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
-    const BRIDGE_ADDRESS = CONTRACT_ADDRESSES.bridgeAddress;
+    // Use Base Chain addresses for USDC deposits
+    const USDC_ADDRESS = BASE_USDC_ADDRESS;
+    const BRIDGE_ADDRESS = COSMOS_BRIDGE_ADDRESS;
 
     const { open, disconnect, isConnected, address } = useUserWalletConnect();
     const { deposit, isDepositPending, isDepositConfirmed, isPending, depositError } = useDepositUSDC();
     const { isApprovePending, isApproveConfirmed, isLoading, approve, approveError } = useApprove();
-    const [publicKey, setPublicKey] = useState<string>();
     const [amount, setAmount] = useState<string>("0");
     const { decimals } = useDecimal(USDC_ADDRESS);
     const [walletAllowance, setWalletAllowance] = useState<bigint>(BigInt(0));
@@ -31,8 +31,13 @@ const Deposit: React.FC = () => {
     const [tmpDepositAmount, setTmpDepositAmount] = useState<bigint>(BigInt(0));
     const { allowance } = useAllowance();
     const { balance } = useWalletBalance();
-    const { accountData } = useUserWallet();
-    const b52Balance = accountData?.balance;
+    const cosmosWallet = useCosmosWallet();
+    // Get USDC balance from Cosmos wallet (formatted to 2 decimal places)
+    const b52Balance = useMemo(() => {
+        const usdcBalance = cosmosWallet.balance.find(b => b.denom === "usdc");
+        if (!usdcBalance) return "0.00";
+        return microToUsdc(usdcBalance.amount).toFixed(2);
+    }, [cosmosWallet.balance]);
 
     const navigate = useNavigate();
 
@@ -122,27 +127,33 @@ const Deposit: React.FC = () => {
     }, [allowance]);
 
     useEffect(() => {
-        const localKey = localStorage.getItem(STORAGE_PUBLIC_KEY);
-        if (!localKey) return setPublicKey(undefined);
-
-        setPublicKey(localKey);
-    }, []);
-
-    useEffect(() => {
         if (isDepositConfirmed) {
-            toast.success(`You have deposited ${amount}USDC to address(${BRIDGE_ADDRESS}) successfully`, { autoClose: 5000 });
+            toast.success(`Deposit successful! USDC sent to your game wallet.`, { autoClose: 5000 });
             setAmount("0");
             setWalletAllowance(w => w - tmpDepositAmount);
+            // Refresh Cosmos wallet balance
+            cosmosWallet.refreshBalance();
         }
-    }, [BRIDGE_ADDRESS, amount, isDepositConfirmed, tmpDepositAmount]);
+    }, [isDepositConfirmed, tmpDepositAmount, cosmosWallet]);
+
+    // Track if we've shown the approval toast to prevent duplicates
+    const [approvalToastShown, setApprovalToastShown] = React.useState(false);
 
     useEffect(() => {
-        if (isApproveConfirmed) {
-            toast.success(`You have approved ${amount}USDC successfully`, { autoClose: 5000 });
-            setAmount("0");
+        if (isApproveConfirmed && !approvalToastShown && tmpWalletAllowance > 0n) {
+            toast.success(`Account activated! You can now deposit USDC anytime.`, { autoClose: 5000 });
             setWalletAllowance(tmpWalletAllowance);
+            setApprovalToastShown(true);
+            // Don't reset amount - let user proceed to deposit
         }
-    }, [amount, isApproveConfirmed, tmpWalletAllowance]);
+    }, [isApproveConfirmed, tmpWalletAllowance, approvalToastShown]);
+
+    // Reset toast flag when starting a new approval
+    useEffect(() => {
+        if (isLoading || isApprovePending) {
+            setApprovalToastShown(false);
+        }
+    }, [isLoading, isApprovePending]);
 
     useEffect(() => {
         if (depositError) {
@@ -169,27 +180,33 @@ const Deposit: React.FC = () => {
         }
 
         try {
-            const amountInBigInt = convertAmountToBigInt(amount, decimals);
-            await approve(USDC_ADDRESS, BRIDGE_ADDRESS, amountInBigInt);
-            setTmpWalletAllowance(amountInBigInt);
+            // Approve unlimited (max uint256) like Uniswap - user only needs to approve once
+            const maxApproval = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            await approve(USDC_ADDRESS, BRIDGE_ADDRESS, maxApproval);
+            setTmpWalletAllowance(maxApproval);
         } catch (err) {
             console.error("Approval failed:", err);
         }
     };
 
     const handleDeposit = async () => {
+        if (!cosmosWallet.address) {
+            console.error("No Cosmos wallet address. Please create or import a wallet first.");
+            toast.error("Please create or import a game wallet first.", { autoClose: 5000 });
+            return;
+        }
+
         if (allowed) {
             try {
-                if (publicKey) {
-                    const amountInBigInt = convertAmountToBigInt(amount, decimals);
-                    await deposit(amountInBigInt, publicKey, USDC_ADDRESS);
-                    setTmpDepositAmount(amountInBigInt);
-                }
+                const amountInBigInt = convertAmountToBigInt(amount, decimals);
+                // Deposit to CosmosBridge with Cosmos address as receiver
+                await deposit(amountInBigInt, cosmosWallet.address);
+                setTmpDepositAmount(amountInBigInt);
             } catch (err) {
                 console.error("Deposit failed:", err);
             }
         } else {
-            console.error("Insufficient allowance. Please approve more USDC.");
+            console.error("Insufficient allowance. Please activate USDC deposits first.");
         }
     };
 
@@ -255,7 +272,7 @@ const Deposit: React.FC = () => {
                         )}
                         <div className="p-3 rounded-lg bg-gray-900 border border-gray-700 flex items-center justify-between">
                             <span className="text-gray-400 text-sm">Game Wallet Balance</span>
-                            <span className="text-white font-semibold">${formatUSDCToSimpleDollars(b52Balance ?? "0")} USDC</span>
+                            <span className="text-white font-semibold">${b52Balance} USDC</span>
                         </div>
                     </div>
 
@@ -309,7 +326,7 @@ const Deposit: React.FC = () => {
                             style={buttonStyle(colors.brand.primary)}
                             disabled={+amount === 0 || isApprovePending || isLoading}
                         >
-                            {isLoading || isApprovePending ? "Approving..." : "Approve"}
+                            {isLoading || isApprovePending ? "Activating..." : "Activate USDC Deposits"}
                             {(isLoading || isApprovePending) && <img src={spinner} className="w-5 h-5" alt="loading" />}
                         </button>
                     )}
