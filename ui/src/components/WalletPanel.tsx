@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { colors, hexToRgba } from "../utils/colorConfig";
-import { useCosmosWallet } from "../hooks";
+import { useCosmosWallet, useUserWalletConnect } from "../hooks";
 import { microToUsdc } from "../constants/currency";
 
 // Copy to clipboard utility
@@ -32,6 +32,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({
 }) => {
     const navigate = useNavigate();
     const cosmosWallet = useCosmosWallet();
+    const { isConnected: isWeb3Connected, open: openWeb3Modal, disconnect: disconnectWeb3, address: web3Address } = useUserWalletConnect();
 
     // Check if has STAKE balance for gas
     const hasStakeBalance = useMemo(() => {
@@ -39,11 +40,11 @@ const WalletPanel: React.FC<WalletPanelProps> = ({
         return stakeBalance && parseInt(stakeBalance.amount) > 0;
     }, [cosmosWallet.balance]);
 
-    // Get USDC balance
+    // Get USDC balance (formatted to 2 decimal places)
     const usdcBalance = useMemo(() => {
         const balance = cosmosWallet.balance.find(b => b.denom === "usdc");
         if (!balance) return "0.00";
-        return microToUsdc(balance.amount);
+        return microToUsdc(balance.amount).toFixed(2);
     }, [cosmosWallet.balance]);
 
     // Get STAKE balance
@@ -228,6 +229,41 @@ const WalletPanel: React.FC<WalletPanelProps> = ({
                     >
                         Transfer
                     </button>
+                </div>
+
+                {/* Web3 Wallet Connection (for Base Chain deposits) */}
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-400 text-sm">Base Chain Wallet</span>
+                        {isWeb3Connected && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">Connected</span>
+                        )}
+                    </div>
+                    {isWeb3Connected ? (
+                        <div className="space-y-2">
+                            <div className="p-2 rounded-lg bg-gray-900/50 border border-gray-700/50">
+                                <p className="text-gray-300 text-xs font-mono truncate">{web3Address}</p>
+                            </div>
+                            <button
+                                onClick={disconnectWeb3}
+                                className="w-full py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90 border border-gray-600 text-gray-300 hover:bg-gray-700"
+                            >
+                                Disconnect
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={openWeb3Modal}
+                            className="w-full py-3 rounded-lg text-white font-semibold transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                            style={buttonStyle(colors.brand.primary)}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                            Connect Web3 Wallet
+                        </button>
+                    )}
+                    <p className="text-gray-500 text-xs mt-2">Required for USDC deposits from Base Chain</p>
                 </div>
 
                 {/* Bridge Link */}

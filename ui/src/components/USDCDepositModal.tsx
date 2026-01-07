@@ -4,6 +4,7 @@ import { parseUnits, formatUnits, parseAbi } from "viem";
 import { colors, hexToRgba } from "../utils/colorConfig";
 import { BASE_USDC_ADDRESS, COSMOS_BRIDGE_ADDRESS, BASE_CHAIN_ID } from "../config/constants";
 import { getCosmosAddress } from "../utils/cosmos";
+import { useUserWalletConnect } from "../hooks";
 
 interface USDCDepositModalProps {
     isOpen: boolean;
@@ -44,6 +45,7 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
     const publicClient = usePublicClient();
     const { switchChain } = useSwitchChain();
     const [isSwitching, setIsSwitching] = useState(false);
+    const { open: openWeb3Modal } = useUserWalletConnect();
 
     // Get Cosmos address from localStorage (where b52USDC will be minted)
     const cosmosAddress = getCosmosAddress();
@@ -136,8 +138,8 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
     }, [amount, allowance]);
 
     const handleApprove = async () => {
-        console.log("📍 [4] Starting USDC approval process");
-        
+        console.log("📍 [4] Starting USDC approval process (unlimited)");
+
         if (!walletClient || !walletAddress || !publicClient) {
             setError("Please connect your wallet");
             return;
@@ -147,10 +149,10 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
         setError(null);
 
         try {
-            const amountToApprove = parseUnits(amount, 6);
-            console.log("📍 [5] Approving amount:", {
-                amount,
-                amountInUnits: amountToApprove.toString(),
+            // Approve unlimited (max uint256) like Uniswap - user only needs to approve once
+            const maxApproval = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            console.log("📍 [5] Approving unlimited amount:", {
+                maxApproval: maxApproval.toString(),
                 spender: BRIDGE_ADDRESS
             });
 
@@ -159,13 +161,13 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                 address: USDC_ADDRESS,
                 abi: USDC_ABI,
                 functionName: "approve",
-                args: [BRIDGE_ADDRESS, amountToApprove],
+                args: [BRIDGE_ADDRESS, maxApproval],
                 account: walletAddress
             });
 
             const hash = await walletClient.writeContract(request);
             console.log("📍 [6] Approval transaction sent:", hash);
-            
+
             // Wait for transaction confirmation
             const receipt = await publicClient.waitForTransactionReceipt({ hash });
             console.log("📍 [7] Approval confirmed:", {
@@ -174,11 +176,11 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                 status: receipt.status
             });
 
-            // Update allowance
-            setAllowance(amountToApprove);
+            // Update allowance to max
+            setAllowance(maxApproval);
             setNeedsApproval(false);
-            
-            console.log("✅ [8] USDC approval successful");
+
+            console.log("✅ [8] USDC unlimited approval successful");
         } catch (err) {
             console.error("❌ Approval error:", err);
             setError(err instanceof Error ? err.message : "Failed to approve USDC");
@@ -303,6 +305,45 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                 </div>
 
                 <div className="space-y-4">
+                    {/* Wallet Connection Required */}
+                    {!isConnected && (
+                        <div className="space-y-4">
+                            <div className="bg-yellow-900 bg-opacity-50 border border-yellow-500 rounded-lg p-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-2xl">🔗</span>
+                                    <p className="text-yellow-300 font-semibold">Web3 Wallet Required</p>
+                                </div>
+                                <p className="text-gray-300 text-sm">
+                                    Connect your Web3 wallet (MetaMask, WalletConnect, etc.) to deposit USDC from Base Chain.
+                                </p>
+                            </div>
+                            <button
+                                onClick={openWeb3Modal}
+                                className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2"
+                                style={{
+                                    background: `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
+                                }}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                </svg>
+                                Connect Web3 Wallet
+                            </button>
+                            <button
+                                onClick={onClose}
+                                className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200"
+                                style={{
+                                    background: `linear-gradient(135deg, ${colors.accent.danger} 0%, ${hexToRgba(colors.accent.danger, 0.8)} 100%)`
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Main Deposit UI - only show when connected */}
+                    {isConnected && (
+                    <>
                     {/* Balance Display */}
                     <div className="bg-gray-800 rounded-lg p-3">
                         <div className="text-sm text-gray-400">USDC Balance</div>
@@ -384,7 +425,7 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                                         : `linear-gradient(135deg, ${colors.brand.primary} 0%, ${hexToRgba(colors.brand.primary, 0.8)} 100%)`
                                 }}
                             >
-                                {isApproving ? "Approving..." : "Approve USDC"}
+                                {isApproving ? "Activating..." : "Activate USDC Deposits"}
                             </button>
                         ) : (
                             <button
@@ -411,6 +452,8 @@ const USDCDepositModal: React.FC<USDCDepositModalProps> = ({ isOpen, onClose, on
                             Cancel
                         </button>
                     </div>
+                    </>
+                    )}
                 </div>
             </div>
         </div>

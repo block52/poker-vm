@@ -3,16 +3,15 @@ import useUserWalletConnect from "./useUserWalletConnect";
 import { erc20abi } from "../../abis/erc20ABI";
 import { FunctionName } from "../../types";
 import { useMemo } from "react";
-import { CONTRACT_ADDRESSES } from "../../constants";
+import { BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../../config/constants";
 
 const useWalletBalance = () => {
     const { address } = useUserWalletConnect();
-    const USDC_ADDRESS = CONTRACT_ADDRESSES.USDC;
 
     const wagmiContractConfig = {
-        address: USDC_ADDRESS as `0x${string}`,
+        address: BASE_USDC_ADDRESS as `0x${string}`,
         abi: erc20abi,
-        chainId: 1
+        chainId: BASE_CHAIN_ID
     };
 
     const {
