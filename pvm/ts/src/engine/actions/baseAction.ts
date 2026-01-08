@@ -8,8 +8,8 @@ abstract class BaseAction {
     private readonly zeroChipsAllowed = [NonPlayerActionType.SIT_OUT, PlayerActionType.FOLD, NonPlayerActionType.DEAL, PlayerActionType.ALL_IN, PlayerActionType.SHOW, PlayerActionType.MUCK];
     // Actions that are allowed for ALL_IN players (in addition to ACTIVE players)
     private readonly allInAllowed = [PlayerActionType.SHOW, PlayerActionType.MUCK];
-    // Actions that skip the turn order check - empty to enforce turn order for all player actions
-    private readonly skipTurnOrderCheck: PlayerActionType[] = [];
+    // Actions that skip the turn order check - SHOW/MUCK can happen in any order during showdown
+    private readonly skipTurnOrderCheck: PlayerActionType[] = [PlayerActionType.SHOW, PlayerActionType.MUCK];
     constructor(protected game: TexasHoldemGame, protected update: IUpdate) { }
 
     abstract get type(): PlayerActionType | NonPlayerActionType;
