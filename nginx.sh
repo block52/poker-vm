@@ -95,6 +95,10 @@ done
 log "Copying new configuration..."
 cp "$SOURCE_CONF" "$DEFAULT_CONF"
 
+# Replace placeholder server_name with actual node domain
+log "Setting server_name to $NODE_DOMAIN..."
+sed -i "s/server_name _;/server_name $NODE_DOMAIN;/g" "$DEFAULT_CONF"
+
 # Create new symlink to our config
 log "Linking $DEFAULT_CONF to /etc/nginx/sites-enabled/default..."
 ln -s "$DEFAULT_CONF" /etc/nginx/sites-enabled/default
@@ -153,9 +157,9 @@ else
 fi
 
 
-# Setup SSL certificates with certbot for app and node subdomains
-log "Setting up SSL certificates with certbot..."
-certbot --nginx --expand -d "$NODE_DOMAIN" -d "$APP_DOMAIN" --non-interactive --agree-tos -m admin@$MAIN_DOMAIN || warning "Certbot may require manual intervention. Check certbot output."
+# Setup SSL certificates with certbot for node subdomain
+log "Setting up SSL certificates with certbot for $NODE_DOMAIN..."
+certbot --nginx -d "$NODE_DOMAIN" --non-interactive --agree-tos -m admin@$MAIN_DOMAIN || warning "Certbot may require manual intervention. Check certbot output."
 
 # Final nginx config test and restart
 log "Final nginx configuration test..."

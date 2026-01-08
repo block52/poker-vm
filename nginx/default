@@ -1,95 +1,107 @@
-# Default server configuration
+# Cosmos Node Configuration
+# This template is designed for Block52 Poker VM nodes running:
+# - Cosmos REST API on port 1317
+# - Tendermint RPC on port 26657
+# - PVM WebSocket server on port 8585
+# - gRPC on port 9090
 #
-server {
-    # Add index.php to the list if you are using PHP
-    index index.html;
+# Usage: Run nginx.sh with your domain (e.g., bash nginx.sh block52.xyz)
+# Certbot will add SSL certificates automatically.
 
-    server_name node1.block52.xyz;
-
-    location / {
-        # First attempt to serve request as file, then
-        # as directory, then fall back to displaying a 404.
-        proxy_pass         http://127.0.0.1:8545/;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-        # WebSocket support
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-
+# HTTPS - REST API (port 443)
+# Note: SSL configuration will be added by certbot
 server {
     listen 80;
-    server_name rest.block52.xyz;
+    listen [::]:80;
+    server_name _;
 
+    # Logging
+    access_log /var/log/nginx/node_access.log;
+    error_log /var/log/nginx/node_error.log;
+
+    # Increase timeouts for blockchain operations
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+
+    # CORS headers for API (applied to all locations)
+    add_header Access-Control-Allow-Origin * always;
+    add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+    add_header Access-Control-Allow-Headers "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization" always;
+    add_header Access-Control-Expose-Headers "Content-Length,Content-Range" always;
+
+    # Handle preflight requests
+    if ($request_method = 'OPTIONS') {
+        return 204;
+    }
+
+    # REST API - Cosmos SDK (port 1317)
     location / {
         proxy_pass http://127.0.0.1:1317;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
 
-# Bot API server configuration
-server {
-    # index index.html;
-    server_name botapi.block52.xyz;
-
-    location / {
-        proxy_pass         http://127.0.0.1:8080/;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        # Hide backend CORS headers to avoid duplicates (nginx adds them at server level)
+        proxy_hide_header Access-Control-Allow-Origin;
+        proxy_hide_header Access-Control-Allow-Methods;
+        proxy_hide_header Access-Control-Allow-Headers;
+        proxy_hide_header Access-Control-Expose-Headers;
 
         # WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-
-        # CORS headers for API
-        add_header 'Access-Control-Allow-Origin' 'https://bots.block52.xyz' always;
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, PATCH, PUT, DELETE, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, x-api-key' always;
-        add_header 'Access-Control-Allow-Credentials' 'true' always;
-
-        # Handle preflight requests
-        if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' 'https://bots.block52.xyz';
-            add_header 'Access-Control-Allow-Methods' 'GET, POST, PATCH, PUT, DELETE, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, x-api-key';
-            add_header 'Access-Control-Allow-Credentials' 'true';
-            add_header 'Access-Control-Max-Age' 1728000;
-            add_header 'Content-Type' 'text/plain; charset=utf-8';
-            add_header 'Content-Length' 0;
-            return 204;
-        }
     }
-}
 
-server {
-    if ($host = botapi.block52.xyz) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
+    # Tendermint RPC (port 26657)
+    location /rpc/ {
+        proxy_pass http://127.0.0.1:26657/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
 
-    listen 80;
-    listen [::]:80;
-    server_name botapi.block52.xyz;
-    return 404; # managed by Certbot
-}
+        # Hide backend CORS headers to avoid duplicates
+        proxy_hide_header Access-Control-Allow-Origin;
+        proxy_hide_header Access-Control-Allow-Methods;
+        proxy_hide_header Access-Control-Allow-Headers;
+        proxy_hide_header Access-Control-Expose-Headers;
 
-server {
-    if ($host = node1.block52.xyz) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
+        # WebSocket support for subscriptions
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
 
-    listen 80 default_server;
-    listen [::]:80 default_server;
+    # PVM WebSocket health check
+    location /ws-health {
+        proxy_pass http://127.0.0.1:8585/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
 
-    server_name node1.block52.xyz;
-    return 404; # managed by Certbot
+    # PVM WebSocket endpoint
+    location /ws {
+        proxy_pass http://127.0.0.1:8585/ws;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+
+        # WebSocket support - critical for PVM
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # Prevent connection timeout for long-lived connections
+        proxy_read_timeout 86400;
+    }
 }
