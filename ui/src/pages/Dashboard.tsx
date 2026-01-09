@@ -9,6 +9,7 @@ import { BASE_RPC_URL, BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../config/consta
 import { useAccount as useWagmiAccount, useSwitchChain } from "wagmi";
 
 import { calculateBuyIn } from "../utils/buyInUtils";
+import { BLIND_LEVELS, DEFAULT_BLIND_LEVEL_INDEX } from "../constants/blindLevels";
 
 const RPC_URL = BASE_RPC_URL; // Base Chain RPC for USDC balance queries
 const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
@@ -85,32 +86,6 @@ const Dashboard: React.FC = () => {
     const [selectedContractAddress, setSelectedContractAddress] = useState("0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7");
     const [createGameError, setCreateGameError] = useState("");
     
-    // Blind level options
-    const BLIND_LEVELS = [
-        { label: "0.01 / 0.02", smallBlind: 0.01, bigBlind: 0.02 },
-        { label: "0.02 / 0.05", smallBlind: 0.02, bigBlind: 0.05 },
-        { label: "0.05 / 0.10", smallBlind: 0.05, bigBlind: 0.10 },
-        { label: "0.10 / 0.25", smallBlind: 0.10, bigBlind: 0.25 },
-        { label: "0.25 / 0.50", smallBlind: 0.25, bigBlind: 0.50 },
-        { label: "0.50 / 1.00", smallBlind: 0.50, bigBlind: 1.00 },
-        { label: "1.00 / 2.00", smallBlind: 1.00, bigBlind: 2.00 },
-        { label: "2.50 / 5.00", smallBlind: 2.50, bigBlind: 5.00 },
-        { label: "5.00 / 10.00", smallBlind: 5.00, bigBlind: 10.00 },
-        { label: "10.00 / 20.00", smallBlind: 10.00, bigBlind: 20.00 },
-        { label: "25.00 / 50.00", smallBlind: 25.00, bigBlind: 50.00 },
-        { label: "50.00 / 100.00", smallBlind: 50.00, bigBlind: 100.00 },
-        { label: "100.00 / 200.00", smallBlind: 100.00, bigBlind: 200.00 },
-        { label: "200.00 / 400.00", smallBlind: 200.00, bigBlind: 400.00 },
-        { label: "300.00 / 600.00", smallBlind: 300.00, bigBlind: 600.00 },
-        { label: "500.00 / 1,000.00", smallBlind: 500.00, bigBlind: 1000.00 },
-        { label: "1,000.00 / 2,000.00", smallBlind: 1000.00, bigBlind: 2000.00 },
-        { label: "2,000.00 / 4,000.00", smallBlind: 2000.00, bigBlind: 4000.00 },
-        { label: "5,000.00 / 10,000.00", smallBlind: 5000.00, bigBlind: 10000.00 },
-        { label: "10,000.00 / 20,000.00", smallBlind: 10000.00, bigBlind: 20000.00 },
-        { label: "20,000.00 / 40,000.00", smallBlind: 20000.00, bigBlind: 40000.00 },
-        { label: "25,000.00 / 50,000.00", smallBlind: 25000.00, bigBlind: 50000.00 }
-    ];
-    
     // Modal game options
     const [modalGameType, setModalGameType] = useState<GameType>(GameType.SIT_AND_GO);
     const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
@@ -119,7 +94,7 @@ const Dashboard: React.FC = () => {
     const [modalMinPlayers, setModalMinPlayers] = useState(2);
     const [modalMaxPlayers, setModalMaxPlayers] = useState(9);
     // Selected blind level (index in BLIND_LEVELS array)
-    const [selectedBlindLevel, setSelectedBlindLevel] = useState(5); // Default to "0.50 / 1.00"
+    const [selectedBlindLevel, setSelectedBlindLevel] = useState(DEFAULT_BLIND_LEVEL_INDEX);
     // Buy-in fields in Big Blinds (BB) for Cash games
     const [modalMinBuyInBB, setModalMinBuyInBB] = useState(20);   // 20 BB default
     const [modalMaxBuyInBB, setModalMaxBuyInBB] = useState(100);  // 100 BB default
