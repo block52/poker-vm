@@ -57,11 +57,13 @@ export default function TableAdminPage() {
     // Selected blind level (index in BLIND_LEVELS array)
     const [selectedBlindLevel, setSelectedBlindLevel] = useState(DEFAULT_BLIND_LEVEL_INDEX);
     
-    // Get current blind values from selected level
-    const smallBlind = BLIND_LEVELS[selectedBlindLevel].smallBlind.toString();
-    const bigBlind = BLIND_LEVELS[selectedBlindLevel].bigBlind.toString();
+    // Get current blind values from selected level (memoized to prevent unnecessary string conversions)
+    const smallBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].smallBlind.toString(), [selectedBlindLevel]);
+    const bigBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].bigBlind.toString(), [selectedBlindLevel]);
 
     // Update blind defaults when game type changes
+    // Note: Users can manually select any blind level from the dropdown regardless of game type
+    // This provides flexibility while maintaining a consistent UX across all game types
     const handleGameTypeChange = (newType: GameType) => {
         setGameType(newType);
         // For all game types, keep the current blind level selection

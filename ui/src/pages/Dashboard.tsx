@@ -99,9 +99,9 @@ const Dashboard: React.FC = () => {
     const [modalMinBuyInBB, setModalMinBuyInBB] = useState(20);   // 20 BB default
     const [modalMaxBuyInBB, setModalMaxBuyInBB] = useState(100);  // 100 BB default
     
-    // Get current blind values from selected level
-    const modalSmallBlind = BLIND_LEVELS[selectedBlindLevel].smallBlind;
-    const modalBigBlind = BLIND_LEVELS[selectedBlindLevel].bigBlind;
+    // Get current blind values from selected level (memoized to prevent unnecessary recalculation)
+    const modalSmallBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].smallBlind, [selectedBlindLevel]);
+    const modalBigBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].bigBlind, [selectedBlindLevel]);
 
     // Calculate actual buy-in values from BB using utility function
     const { minBuyIn: calculatedMinBuyIn, maxBuyIn: calculatedMaxBuyIn } = useMemo(
