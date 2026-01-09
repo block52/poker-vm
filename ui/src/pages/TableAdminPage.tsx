@@ -48,24 +48,54 @@ export default function TableAdminPage() {
     const { createTable, isCreating, error: createError } = useNewTable();
     const { games: fetchedGames, isLoading, error: gamesError, refetch } = useFindGames();
 
+    // Blind level options
+    const BLIND_LEVELS = [
+        { label: "0.01 / 0.02", smallBlind: 0.01, bigBlind: 0.02 },
+        { label: "0.02 / 0.05", smallBlind: 0.02, bigBlind: 0.05 },
+        { label: "0.05 / 0.10", smallBlind: 0.05, bigBlind: 0.10 },
+        { label: "0.10 / 0.25", smallBlind: 0.10, bigBlind: 0.25 },
+        { label: "0.25 / 0.50", smallBlind: 0.25, bigBlind: 0.50 },
+        { label: "0.50 / 1.00", smallBlind: 0.50, bigBlind: 1.00 },
+        { label: "1.00 / 2.00", smallBlind: 1.00, bigBlind: 2.00 },
+        { label: "2.50 / 5.00", smallBlind: 2.50, bigBlind: 5.00 },
+        { label: "5.00 / 10.00", smallBlind: 5.00, bigBlind: 10.00 },
+        { label: "10.00 / 20.00", smallBlind: 10.00, bigBlind: 20.00 },
+        { label: "25.00 / 50.00", smallBlind: 25.00, bigBlind: 50.00 },
+        { label: "50.00 / 100.00", smallBlind: 50.00, bigBlind: 100.00 },
+        { label: "100.00 / 200.00", smallBlind: 100.00, bigBlind: 200.00 },
+        { label: "200.00 / 400.00", smallBlind: 200.00, bigBlind: 400.00 },
+        { label: "300.00 / 600.00", smallBlind: 300.00, bigBlind: 600.00 },
+        { label: "500.00 / 1,000.00", smallBlind: 500.00, bigBlind: 1000.00 },
+        { label: "1,000.00 / 2,000.00", smallBlind: 1000.00, bigBlind: 2000.00 },
+        { label: "2,000.00 / 4,000.00", smallBlind: 2000.00, bigBlind: 4000.00 },
+        { label: "5,000.00 / 10,000.00", smallBlind: 5000.00, bigBlind: 10000.00 },
+        { label: "10,000.00 / 20,000.00", smallBlind: 10000.00, bigBlind: 20000.00 },
+        { label: "20,000.00 / 40,000.00", smallBlind: 20000.00, bigBlind: 40000.00 },
+        { label: "25,000.00 / 50,000.00", smallBlind: 25000.00, bigBlind: 50000.00 }
+    ];
+
     // Default table settings for Cash Game, 9 players, Texas Hold'em
     const [gameType, setGameType] = useState<GameType>(GameType.CASH);
     const [minPlayers] = useState(2);
     const [maxPlayers, setMaxPlayers] = useState(9);
-    const [smallBlind, setSmallBlind] = useState("0.50");
-    const [bigBlind, setBigBlind] = useState("1.00");
+    
+    // Selected blind level (index in BLIND_LEVELS array)
+    const [selectedBlindLevel, setSelectedBlindLevel] = useState(5); // Default to "0.50 / 1.00"
+    
+    // Get current blind values from selected level
+    const smallBlind = BLIND_LEVELS[selectedBlindLevel].smallBlind.toString();
+    const bigBlind = BLIND_LEVELS[selectedBlindLevel].bigBlind.toString();
 
     // Update blind defaults when game type changes
     const handleGameTypeChange = (newType: GameType) => {
         setGameType(newType);
         if (newType === GameType.SIT_AND_GO || newType === GameType.TOURNAMENT) {
-            // SNG/Tournament: chip-based blinds (e.g., 25/50)
-            setSmallBlind("25");
-            setBigBlind("50");
+            // SNG/Tournament: Use a chip-based blind level - find 25/50 or use index 0
+            const chipBlindIndex = BLIND_LEVELS.findIndex(l => l.smallBlind === 25 && l.bigBlind === 50);
+            setSelectedBlindLevel(chipBlindIndex >= 0 ? chipBlindIndex : 0);
         } else {
-            // Cash game: dollar-based blinds (e.g., $0.50/$1.00)
-            setSmallBlind("0.50");
-            setBigBlind("1.00");
+            // Cash game: Use default 0.50/1.00
+            setSelectedBlindLevel(5);
         }
     };
     // Buy-in in Big Blinds (BB) for Cash games
@@ -390,34 +420,22 @@ export default function TableAdminPage() {
                         </div>
                     </div>
 
-                    {/* Blinds - FIRST (needed to calculate buy-in) */}
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                            <label className="text-gray-300 text-xs mb-1 block">
-                                Small Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
-                            </label>
-                            <input
-                                type="number"
-                                step={gameType === GameType.CASH ? "0.01" : "1"}
-                                min={gameType === GameType.CASH ? "0.01" : "1"}
-                                value={smallBlind}
-                                onChange={e => setSmallBlind(e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-gray-300 text-xs mb-1 block">
-                                Big Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
-                            </label>
-                            <input
-                                type="number"
-                                step={gameType === GameType.CASH ? "0.01" : "1"}
-                                min={gameType === GameType.CASH ? "0.01" : "1"}
-                                value={bigBlind}
-                                onChange={e => setBigBlind(e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                            />
-                        </div>
+                    {/* Blinds Dropdown */}
+                    <div className="mb-3">
+                        <label className="text-gray-300 text-xs mb-1 block">
+                            Game Size (Small Blind / Big Blind)
+                        </label>
+                        <select
+                            value={selectedBlindLevel}
+                            onChange={e => setSelectedBlindLevel(Number(e.target.value))}
+                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                        >
+                            {BLIND_LEVELS.map((level, index) => (
+                                <option key={index} value={index}>
+                                    {level.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Buy-In Section */}
