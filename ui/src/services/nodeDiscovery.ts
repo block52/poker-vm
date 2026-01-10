@@ -20,6 +20,10 @@ export interface DiscoveredNode {
     listenAddr: string;
     endpoints: NetworkEndpoints | null;
     isPreset: boolean;
+    isIpBased: boolean;
+    probeStatus?: "pending" | "reachable" | "unreachable";
+    blockHeight?: string | null;
+    chainId?: string | null;
 }
 
 /**
@@ -69,24 +73,41 @@ function extractDomain(listenAddr: string): string | null {
 
 /**
  * Build potential endpoints from a discovered peer
+ * Returns endpoints and whether the node is IP-based
  */
-function buildEndpointsFromPeer(peer: DiscoveredPeer): NetworkEndpoints | null {
+function buildEndpointsFromPeer(peer: DiscoveredPeer): { endpoints: NetworkEndpoints | null; isIpBased: boolean } {
     const domain = extractDomain(peer.listenAddr);
 
     if (domain) {
         // Domain-based node - use HTTPS with standard paths
         return {
-            name: peer.moniker,
-            rest: `https://${domain}`,
-            rpc: `https://${domain}/rpc/`,
-            grpc: `grpcs://${domain}:9443`,
-            ws: `wss://${domain}/ws`
+            endpoints: {
+                name: peer.moniker,
+                rest: `https://${domain}`,
+                rpc: `https://${domain}/rpc/`,
+                grpc: `grpcs://${domain}:9443`,
+                ws: `wss://${domain}/ws`
+            },
+            isIpBased: false
         };
     }
 
-    // IP-based node - these are usually firewalled, skip them
-    // Most nodes don't expose REST API on raw IPs
-    return null;
+    // IP-based node - try HTTP on standard ports
+    const ip = peer.remoteIp;
+    if (ip && ip !== "0.0.0.0" && ip !== "127.0.0.1") {
+        return {
+            endpoints: {
+                name: peer.moniker || `Node ${ip}`,
+                rest: `http://${ip}:1317`,
+                rpc: `http://${ip}:26657`,
+                grpc: `http://${ip}:9090`,
+                ws: `ws://${ip}:8585/ws`
+            },
+            isIpBased: true
+        };
+    }
+
+    return { endpoints: null, isIpBased: false };
 }
 
 /**
@@ -142,7 +163,7 @@ export async function discoverNodes(
 
     // Convert peers to nodes
     const nodes: DiscoveredNode[] = allPeers.map(peer => {
-        const endpoints = buildEndpointsFromPeer(peer);
+        const { endpoints, isIpBased } = buildEndpointsFromPeer(peer);
 
         // Check if this matches an existing preset (by comparing domains/IPs)
         const isPreset = existingPresets.some(preset => {
@@ -157,11 +178,87 @@ export async function discoverNodes(
             remoteIp: peer.remoteIp,
             listenAddr: peer.listenAddr,
             endpoints,
-            isPreset
+            isPreset,
+            isIpBased,
+            probeStatus: "pending" as const
         };
     });
 
     return nodes;
+}
+
+/**
+ * Probe a node's endpoints to check if it's reachable
+ * Returns reachability status and node info if successful
+ */
+export async function probeNodeEndpoints(endpoints: NetworkEndpoints): Promise<{
+    reachable: boolean;
+    blockHeight: string | null;
+    chainId: string | null;
+}> {
+    // Try REST API first (most reliable for Cosmos nodes)
+    try {
+        const response = await fetch(
+            `${endpoints.rest}/cosmos/base/tendermint/v1beta1/blocks/latest`,
+            { signal: AbortSignal.timeout(5000) }
+        );
+
+        if (response.ok) {
+            const data = await response.json();
+            const header = data.block?.header || data.sdk_block?.header;
+            return {
+                reachable: true,
+                blockHeight: header?.height || null,
+                chainId: header?.chain_id || null
+            };
+        }
+    } catch {
+        // REST failed, try RPC /status endpoint
+    }
+
+    // Try RPC /status endpoint as fallback
+    try {
+        const rpcUrl = endpoints.rpc.endsWith("/") ? endpoints.rpc : `${endpoints.rpc}/`;
+        const rpcResponse = await fetch(
+            `${rpcUrl}status`,
+            { signal: AbortSignal.timeout(5000) }
+        );
+        if (rpcResponse.ok) {
+            const data = await rpcResponse.json();
+            return {
+                reachable: true,
+                blockHeight: data.result?.sync_info?.latest_block_height || null,
+                chainId: data.result?.node_info?.network || null
+            };
+        }
+    } catch {
+        // Both failed
+    }
+
+    return { reachable: false, blockHeight: null, chainId: null };
+}
+
+/**
+ * Probe multiple nodes in parallel and update their status
+ */
+export async function probeNodes(nodes: DiscoveredNode[]): Promise<DiscoveredNode[]> {
+    const results = await Promise.all(
+        nodes.map(async (node) => {
+            if (!node.endpoints) {
+                return { ...node, probeStatus: "unreachable" as const };
+            }
+
+            const probeResult = await probeNodeEndpoints(node.endpoints);
+            return {
+                ...node,
+                probeStatus: probeResult.reachable ? "reachable" as const : "unreachable" as const,
+                blockHeight: probeResult.blockHeight,
+                chainId: probeResult.chainId
+            };
+        })
+    );
+
+    return results;
 }
 
 /**

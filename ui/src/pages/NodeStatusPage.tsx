@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
-import { NETWORK_PRESETS, NetworkEndpoints } from "../context/NetworkContext";
+import { useParams, Link, useLocation } from "react-router-dom";
+import { NETWORK_PRESETS, NetworkEndpoints, useNetwork } from "../context/NetworkContext";
 import { AnimatedBackground } from "../components/common/AnimatedBackground";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { ExplorerHeader } from "../components/explorer/ExplorerHeader";
@@ -78,6 +78,8 @@ function formatBlockTime(time: string): string {
 
 export default function NodeStatusPage() {
     const { name } = useParams<{ name: string }>();
+    const location = useLocation();
+    const { discoveredNetworks } = useNetwork();
     const [status, setStatus] = useState<NodeStatus>({
         online: false,
         nodeInfo: null,
@@ -89,10 +91,14 @@ export default function NodeStatusPage() {
     const [loading, setLoading] = useState(true);
 
     // Find the network by name (case-insensitive, URL-decoded)
+    // Check presets first, then discovered networks, then URL state
     const decodedName = decodeURIComponent(name || "");
+    const networkFromState = location.state?.network as NetworkEndpoints | undefined;
     const network = NETWORK_PRESETS.find(
         n => n.name.toLowerCase() === decodedName.toLowerCase()
-    );
+    ) || discoveredNetworks.find(
+        n => n.name.toLowerCase() === decodedName.toLowerCase()
+    ) || networkFromState;
 
     const fetchNodeStatus = useCallback(async (networkConfig: NetworkEndpoints) => {
         setLoading(true);

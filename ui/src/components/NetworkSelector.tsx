@@ -3,7 +3,7 @@ import { useNetwork } from "../context/NetworkContext";
 import { colors, hexToRgba } from "../utils/colorConfig";
 
 export const NetworkSelector: React.FC = () => {
-    const { currentNetwork, setNetwork, availableNetworks } = useNetwork();
+    const { currentNetwork, setNetwork, availableNetworks, discoveredNetworks } = useNetwork();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -77,11 +77,12 @@ export const NetworkSelector: React.FC = () => {
                         border: `1px solid ${hexToRgba(colors.brand.primary, 0.3)}`
                     }}
                 >
+                    {/* Preset Networks */}
                     {availableNetworks.map((network, index) => {
                         const isSelected = network.name === currentNetwork.name;
                         return (
                             <button
-                                key={index}
+                                key={`preset-${index}`}
                                 onClick={() => {
                                     setNetwork(network);
                                     setIsOpen(false);
@@ -89,7 +90,7 @@ export const NetworkSelector: React.FC = () => {
                                 className="w-full text-left px-4 py-3 transition-all duration-200"
                                 style={{
                                     backgroundColor: isSelected ? hexToRgba(colors.brand.primary, 0.2) : "transparent",
-                                    borderBottom: index < availableNetworks.length - 1 ? `1px solid ${hexToRgba(colors.brand.primary, 0.1)}` : "none"
+                                    borderBottom: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
                                 }}
                                 onMouseEnter={e => {
                                     if (!isSelected) {
@@ -127,6 +128,73 @@ export const NetworkSelector: React.FC = () => {
                             </button>
                         );
                     })}
+
+                    {/* Discovered Networks Section */}
+                    {discoveredNetworks.length > 0 && (
+                        <>
+                            {/* Section Header */}
+                            <div
+                                className="px-4 py-2 text-xs font-semibold uppercase tracking-wider"
+                                style={{
+                                    backgroundColor: hexToRgba(colors.brand.primary, 0.05),
+                                    color: colors.ui.textSecondary,
+                                    borderBottom: `1px solid ${hexToRgba(colors.brand.primary, 0.1)}`
+                                }}
+                            >
+                                Discovered
+                            </div>
+                            {discoveredNetworks.map((network, index) => {
+                                const isSelected = network.name === currentNetwork.name;
+                                return (
+                                    <button
+                                        key={`discovered-${index}`}
+                                        onClick={() => {
+                                            setNetwork(network);
+                                            setIsOpen(false);
+                                        }}
+                                        className="w-full text-left px-4 py-3 transition-all duration-200"
+                                        style={{
+                                            backgroundColor: isSelected ? hexToRgba(colors.brand.primary, 0.2) : "transparent",
+                                            borderBottom: index < discoveredNetworks.length - 1 ? `1px solid ${hexToRgba(colors.brand.primary, 0.1)}` : "none"
+                                        }}
+                                        onMouseEnter={e => {
+                                            if (!isSelected) {
+                                                e.currentTarget.style.backgroundColor = hexToRgba(colors.brand.primary, 0.1);
+                                            }
+                                        }}
+                                        onMouseLeave={e => {
+                                            if (!isSelected) {
+                                                e.currentTarget.style.backgroundColor = "transparent";
+                                            }
+                                        }}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span
+                                                className="font-semibold text-sm"
+                                                style={{
+                                                    color: isSelected ? colors.brand.primary : "#ffffff"
+                                                }}
+                                            >
+                                                {network.name}
+                                            </span>
+                                            {isSelected && (
+                                                <svg className="w-4 h-4" style={{ color: colors.brand.primary }} fill="currentColor" viewBox="0 0 20 20">
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <div className="text-xs" style={{ color: colors.ui.textSecondary }}>
+                                            <div className="font-mono">{network.rest}</div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </>
+                    )}
                 </div>
             )}
         </div>
