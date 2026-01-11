@@ -115,9 +115,14 @@ interface NetworkContextType {
     currentNetwork: NetworkEndpoints;
     setNetwork: (network: NetworkEndpoints) => void;
     availableNetworks: NetworkEndpoints[];
+    discoveredNetworks: NetworkEndpoints[];
+    addDiscoveredNetwork: (network: NetworkEndpoints) => void;
+    removeDiscoveredNetwork: (name: string) => void;
 }
 
 const NetworkContext = createContext<NetworkContextType | undefined>(undefined);
+
+const DISCOVERED_NETWORKS_KEY = "discoveredNetworks";
 
 export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Initialize network from localStorage or default to Texas Hodl
@@ -142,13 +147,49 @@ export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children })
         return NETWORK_PRESETS[1]; // Texas Hodl
     });
 
+    // Initialize discovered networks from localStorage
+    const [discoveredNetworks, setDiscoveredNetworks] = useState<NetworkEndpoints[]>(() => {
+        const saved = localStorage.getItem(DISCOVERED_NETWORKS_KEY);
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch {
+                return [];
+            }
+        }
+        return [];
+    });
+
     // Save to localStorage whenever network changes
     useEffect(() => {
         localStorage.setItem("selectedNetwork", JSON.stringify(currentNetwork));
     }, [currentNetwork]);
 
+    // Save discovered networks to localStorage
+    useEffect(() => {
+        localStorage.setItem(DISCOVERED_NETWORKS_KEY, JSON.stringify(discoveredNetworks));
+    }, [discoveredNetworks]);
+
     const setNetwork = (network: NetworkEndpoints) => {
         setCurrentNetwork(network);
+    };
+
+    const addDiscoveredNetwork = (network: NetworkEndpoints) => {
+        setDiscoveredNetworks(prev => {
+            // Avoid duplicates by name
+            if (prev.some(n => n.name === network.name)) {
+                return prev;
+            }
+            // Also check if it matches a preset
+            if (NETWORK_PRESETS.some(p => p.name === network.name || p.rest === network.rest)) {
+                return prev;
+            }
+            return [...prev, network];
+        });
+    };
+
+    const removeDiscoveredNetwork = (name: string) => {
+        setDiscoveredNetworks(prev => prev.filter(n => n.name !== name));
     };
 
     return (
@@ -156,7 +197,10 @@ export const NetworkProvider: React.FC<{ children: ReactNode }> = ({ children })
             value={{
                 currentNetwork,
                 setNetwork,
-                availableNetworks: NETWORK_PRESETS
+                availableNetworks: NETWORK_PRESETS,
+                discoveredNetworks,
+                addDiscoveredNetwork,
+                removeDiscoveredNetwork
             }}
         >
             {children}
