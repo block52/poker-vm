@@ -9,6 +9,7 @@ import { BASE_RPC_URL, BASE_USDC_ADDRESS, BASE_CHAIN_ID } from "../config/consta
 import { useAccount as useWagmiAccount, useSwitchChain } from "wagmi";
 
 import { calculateBuyIn } from "../utils/buyInUtils";
+import { BLIND_LEVELS, DEFAULT_BLIND_LEVEL_INDEX } from "../constants/blindLevels";
 
 const RPC_URL = BASE_RPC_URL; // Base Chain RPC for USDC balance queries
 const USDC_ABI = ["function balanceOf(address account) view returns (uint256)"];
@@ -84,6 +85,7 @@ const Dashboard: React.FC = () => {
     const [showCreateGameModal, setShowCreateGameModal] = useState(false);
     const [selectedContractAddress, setSelectedContractAddress] = useState("0x4c1d6ea77a2ba47dcd0771b7cde0df30a6df1bfaa7");
     const [createGameError, setCreateGameError] = useState("");
+    
     // Modal game options
     const [modalGameType, setModalGameType] = useState<GameType>(GameType.SIT_AND_GO);
     const [modalSitAndGoBuyIn, setModalSitAndGoBuyIn] = useState(1); // Single buy-in for Sit & Go
@@ -91,12 +93,15 @@ const Dashboard: React.FC = () => {
     // For Cash Game: min/max players
     const [modalMinPlayers, setModalMinPlayers] = useState(2);
     const [modalMaxPlayers, setModalMaxPlayers] = useState(9);
-    // Small/Big Blind fields (in dollars)
-    const [modalSmallBlind, setModalSmallBlind] = useState(0.5);
-    const [modalBigBlind, setModalBigBlind] = useState(1);
+    // Selected blind level (index in BLIND_LEVELS array)
+    const [selectedBlindLevel, setSelectedBlindLevel] = useState(DEFAULT_BLIND_LEVEL_INDEX);
     // Buy-in fields in Big Blinds (BB) for Cash games
     const [modalMinBuyInBB, setModalMinBuyInBB] = useState(20);   // 20 BB default
     const [modalMaxBuyInBB, setModalMaxBuyInBB] = useState(100);  // 100 BB default
+    
+    // Get current blind values from selected level (memoized to prevent unnecessary recalculation)
+    const modalSmallBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].smallBlind, [selectedBlindLevel]);
+    const modalBigBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].bigBlind, [selectedBlindLevel]);
 
     // Calculate actual buy-in values from BB using utility function
     const { minBuyIn: calculatedMinBuyIn, maxBuyIn: calculatedMaxBuyIn } = useMemo(
@@ -1144,32 +1149,20 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* Small Blind and Big Blind fields - FIRST for Cash games */}
-                                    <div className="flex gap-4">
-                                        <div className="flex-1">
-                                            <label className="block text-white text-sm mb-1">Small Blind ($)</label>
-                                            <input
-                                                type="number"
-                                                value={modalSmallBlind}
-                                                onChange={e => setModalSmallBlind(Number(e.target.value))}
-                                                min="0.01"
-                                                max="10000"
-                                                step="0.01"
-                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <label className="block text-white text-sm mb-1">Big Blind ($)</label>
-                                            <input
-                                                type="number"
-                                                value={modalBigBlind}
-                                                onChange={e => setModalBigBlind(Number(e.target.value))}
-                                                min="0.01"
-                                                max="10000"
-                                                step="0.01"
-                                                className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
-                                            />
-                                        </div>
+                                    {/* Blind Level Dropdown */}
+                                    <div>
+                                        <label className="block text-white text-sm mb-1">Game Size (Small Blind / Big Blind)</label>
+                                        <select
+                                            value={selectedBlindLevel}
+                                            onChange={e => setSelectedBlindLevel(Number(e.target.value))}
+                                            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200"
+                                        >
+                                            {BLIND_LEVELS.map((level, index) => (
+                                                <option key={index} value={index}>
+                                                    {level.label}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     {/* Show different fields based on game type */}

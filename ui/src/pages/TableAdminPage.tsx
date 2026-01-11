@@ -11,6 +11,7 @@ import { AnimatedBackground } from "../components/common/AnimatedBackground";
 import TableList from "../components/TableList";
 import { calculateBuyIn, BUY_IN_PRESETS } from "../utils/buyInUtils";
 import { sortTablesByAvailableSeats } from "../utils/tableSortingUtils";
+import { BLIND_LEVELS, DEFAULT_BLIND_LEVEL_INDEX } from "../constants/blindLevels";
 
 // Game creation fee in base units (1 usdc = 0.000001 USDC)
 // This matches GameCreationCost in pokerchain/x/poker/types/types.go
@@ -52,21 +53,21 @@ export default function TableAdminPage() {
     const [gameType, setGameType] = useState<GameType>(GameType.CASH);
     const [minPlayers] = useState(2);
     const [maxPlayers, setMaxPlayers] = useState(9);
-    const [smallBlind, setSmallBlind] = useState("0.50");
-    const [bigBlind, setBigBlind] = useState("1.00");
+    
+    // Selected blind level (index in BLIND_LEVELS array)
+    const [selectedBlindLevel, setSelectedBlindLevel] = useState(DEFAULT_BLIND_LEVEL_INDEX);
+    
+    // Get current blind values from selected level (memoized to prevent unnecessary string conversions)
+    const smallBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].smallBlind.toString(), [selectedBlindLevel]);
+    const bigBlind = useMemo(() => BLIND_LEVELS[selectedBlindLevel].bigBlind.toString(), [selectedBlindLevel]);
 
     // Update blind defaults when game type changes
+    // Note: Users can manually select any blind level from the dropdown regardless of game type
+    // This provides flexibility while maintaining a consistent UX across all game types
     const handleGameTypeChange = (newType: GameType) => {
         setGameType(newType);
-        if (newType === GameType.SIT_AND_GO || newType === GameType.TOURNAMENT) {
-            // SNG/Tournament: chip-based blinds (e.g., 25/50)
-            setSmallBlind("25");
-            setBigBlind("50");
-        } else {
-            // Cash game: dollar-based blinds (e.g., $0.50/$1.00)
-            setSmallBlind("0.50");
-            setBigBlind("1.00");
-        }
+        // For all game types, keep the current blind level selection
+        // Users can adjust it manually using the dropdown
     };
     // Buy-in in Big Blinds (BB) for Cash games
     const [minBuyInBB, setMinBuyInBB] = useState(20);
@@ -390,34 +391,22 @@ export default function TableAdminPage() {
                         </div>
                     </div>
 
-                    {/* Blinds - FIRST (needed to calculate buy-in) */}
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                            <label className="text-gray-300 text-xs mb-1 block">
-                                Small Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
-                            </label>
-                            <input
-                                type="number"
-                                step={gameType === GameType.CASH ? "0.01" : "1"}
-                                min={gameType === GameType.CASH ? "0.01" : "1"}
-                                value={smallBlind}
-                                onChange={e => setSmallBlind(e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-gray-300 text-xs mb-1 block">
-                                Big Blind {gameType === GameType.CASH ? "($)" : "(chips)"}
-                            </label>
-                            <input
-                                type="number"
-                                step={gameType === GameType.CASH ? "0.01" : "1"}
-                                min={gameType === GameType.CASH ? "0.01" : "1"}
-                                value={bigBlind}
-                                onChange={e => setBigBlind(e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
-                            />
-                        </div>
+                    {/* Blinds Dropdown */}
+                    <div className="mb-3">
+                        <label className="text-gray-300 text-xs mb-1 block">
+                            Game Size (Small Blind / Big Blind)
+                        </label>
+                        <select
+                            value={selectedBlindLevel}
+                            onChange={e => setSelectedBlindLevel(Number(e.target.value))}
+                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm"
+                        >
+                            {BLIND_LEVELS.map((level, index) => (
+                                <option key={index} value={index}>
+                                    {level.label}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Buy-In Section */}
