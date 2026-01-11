@@ -13,7 +13,8 @@
         "hh:deploy:bridge": "npx hardhat ignition deploy ./ignition/modules/Bridge.ts --network mainnet --verify",
         "hh:deploy:deposit": "npx hardhat ignition deploy ./ignition/modules/Deposit.ts --network mainnet --verify",
         "hh:deploy:rio": "npx hardhat ignition deploy ./ignition/modules/RIOToken.ts --network mainnet --verify",
-        "hh:deploy:cosmos-bridge:base": "npx hardhat ignition deploy ./ignition/modules/CosmosBridge.ts --network base --verify"
+        "hh:deploy:cosmos-bridge:base": "npx hardhat ignition deploy ./ignition/modules/CosmosBridge.ts --network base --verify",
+        "hh:deploy:cosmos-bridge:mainnet": "npx hardhat ignition deploy ./ignition/modules/CosmosBridgeMainnet.ts --network mainnet --verify"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",

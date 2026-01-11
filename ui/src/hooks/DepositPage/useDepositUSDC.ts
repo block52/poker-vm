@@ -1,15 +1,20 @@
-import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useWriteContract, useWaitForTransactionReceipt, useChainId } from "wagmi";
 import { useCallback, useMemo } from "react";
-import { COSMOS_BRIDGE_ADDRESS } from "../../config/constants";
+import { COSMOS_BRIDGE_ADDRESS, BASE_COSMOS_BRIDGE_ADDRESS, BASE_CHAIN_ID } from "../../config/constants";
 import { parseAbi } from "viem";
 
-// CosmosBridge ABI for Base Chain
+// CosmosBridge ABI (same for both Ethereum and Base)
 const COSMOS_BRIDGE_ABI = parseAbi([
     "function depositUnderlying(uint256 amount, string calldata receiver) external returns(uint256)"
 ]);
 
 const useDepositUSDC = () => {
-    const BRIDGE_ADDRESS = COSMOS_BRIDGE_ADDRESS;
+    const chainId = useChainId();
+
+    // Select bridge address based on connected chain
+    const BRIDGE_ADDRESS = chainId === BASE_CHAIN_ID
+        ? BASE_COSMOS_BRIDGE_ADDRESS
+        : COSMOS_BRIDGE_ADDRESS; // Default to Ethereum mainnet
 
     const { data: hash, writeContract, isPending, error } = useWriteContract();
 
